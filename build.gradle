@@ -1,0 +1,56 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+	id 'org.springframework.boot' version '2.1.6.RELEASE'
+	id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.iexec.sms'
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories {
+	mavenCentral()
+	maven {
+		url "https://nexus.iex.ec/repository/maven-public/"
+	}
+	maven { url "https://jitpack.io" }
+}
+
+dependencies {
+	compile "org.springframework.boot:spring-boot-starter-web"
+
+	// iexec
+	compile "com.iexec.common:iexec-common:$iexecCommonVersion"
+
+	// lombok
+	compileOnly "org.projectlombok:lombok:1.18.2"
+	annotationProcessor "org.projectlombok:lombok:1.18.2"
+
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+}
+
+def imageName = "nexus.iex.ec/iexec-sms"
+
+
+project.ext.getDockerImageNameFull = {
+	def imageNameWithVersion = imageName + ":${version}"
+	return imageNameWithVersion
+}
+
+task prepareDockerFile(type: Copy) {
+	from 'src/main/resources/'
+	into 'build/resources/main/'
+	filter(ReplaceTokens, tokens: [projectversion: "${version}".toString()])
+}
+
+task buildImage(type: Exec) {
+	description 'Building iexec-sms Docker image'
+	commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile-untrusted -t " + getDockerImageNameFull() + " . ")
+}
+
+buildImage.dependsOn prepareDockerFile

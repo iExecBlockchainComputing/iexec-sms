@@ -1,0 +1,14 @@
+FROM azul/zulu-openjdk-alpine:11.0.3-jre
+#FROM iexechub/java-scone:11.0.3
+
+COPY build/resources/main/entrypoint.sh entrypoint.sh
+
+RUN chmod +x entrypoint.sh
+
+COPY build/libs/iexec-sms-@projectversion@.jar iexec-sms.jar
+
+ENV LOCAL_FILE_PATH /upload
+
+ENTRYPOINT ["./entrypoint.sh"]
+
+# docker run -it -p 15000:15000 nexus.iex.ec/iexec-sms:0.0.1
