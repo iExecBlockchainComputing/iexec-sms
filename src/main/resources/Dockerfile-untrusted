@@ -7,7 +7,7 @@ RUN chmod +x entrypoint.sh
 
 COPY build/libs/iexec-sms-@projectversion@.jar iexec-sms.jar
 
-ENV LOCAL_FILE_PATH /upload
+ENV MONGO_HOST sms-mongo
 
 ENTRYPOINT ["./entrypoint.sh"]
 
