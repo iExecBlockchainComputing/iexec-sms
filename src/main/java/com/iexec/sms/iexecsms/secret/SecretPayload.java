@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SecretPayload {
 
-    public String symmetricKey;
-    public String credentials;
+    private String symmetricKey;
+    private String credentials;
     // ...
 
 

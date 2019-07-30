@@ -7,6 +7,6 @@ spring:
   data:
     mongodb:
       database: iexec-sms
-      host: ${MONGO_HOST:localhost}
-      port: ${MONGO_PORT:37017}
+      host: ${IEXEC_SMS_MONGO_HOST:localhost}
+      port: ${IEXEC_SMS_MONGO_PORT:37017}
 
