@@ -1,2 +1,12 @@
 server:
   port: ${IEXEC_SMS_PORT:15000}
+
+# Not sure it's a good idea but here is a link for an embedded mongodb
+# https://www.baeldung.com/spring-boot-embedded-mongodb
+spring:
+  data:
+    mongodb:
+      database: iexec-sms
+      host: ${IEXEC_SMS_MONGO_HOST:localhost}
+      port: ${IEXEC_SMS_MONGO_PORT:37017}
+
