@@ -60,13 +60,9 @@ public class AuthorizationService {
             return true;
         }
 
-        log.error("isAuthorizedToGetKeys failed (invalid signature) [chainTaskId:{}, isWorkerpoolSignatureValid:{}, " +
-                "chainTaskId:{}]", chainTaskId, isWorkerSignatureValid, isWorkerpoolSignatureValid);
+        log.error("isAuthorizedToGetKeys failed (invalid signature) [chainTaskId:{}, isWorkerSignatureValid:{}, " +
+                "isWorkerpoolSignatureValid:{}]", chainTaskId, isWorkerSignatureValid, isWorkerpoolSignatureValid);
         return false;
-    }
-
-    public boolean isTeeTask(String chainTaskId) {
-        return iexecHubService.isTeeTask(chainTaskId);
     }
 
     private boolean isWorkerSignatureOfAuthorizationValid(Authorization authorization) {

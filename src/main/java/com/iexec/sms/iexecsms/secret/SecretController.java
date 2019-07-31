@@ -28,6 +28,7 @@ public class SecretController {
      * Note
      * Blockchain checks are already made here:
      * `authorizationService.isAuthorizedToGetKeys(authorization)` (@ResponseBody Authorization authorization)
+     * `iexecHubService.isTeeTask(chainTaskId)`
      * */
     @GetMapping("/secret/{owner}")
     public ResponseEntity<Secret> getSecret(@RequestParam String owner) {
