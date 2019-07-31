@@ -8,6 +8,7 @@ RUN chmod +x entrypoint.sh
 COPY build/libs/iexec-sms-@projectversion@.jar iexec-sms.jar
 
 ENV IEXEC_SMS_MONGO_HOST sms-mongo
+ENV IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS http://chain:8545
 
 ENTRYPOINT ["./entrypoint.sh"]
 
