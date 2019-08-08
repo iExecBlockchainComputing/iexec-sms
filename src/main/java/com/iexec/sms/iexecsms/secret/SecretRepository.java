@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface SecretRepository extends MongoRepository<Secret, String> {
 
-    Optional<Secret> findSecretByOwner(String owner);
+    Optional<Secret> findSecretByAddress(String address);
 
 }

@@ -1,12 +1,12 @@
 package com.iexec.sms.iexecsms.secret;
 
 
+import com.iexec.common.sms.SmsRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -18,9 +18,8 @@ public class SecretController {
         this.secretService = secretService;
     }
 
-    /*
-     *
-     * Handle workflow when is/isnt tee task :
+    /**
+     * Used by the NON Tee workflow:
      * https://github.com/iExecBlockchainComputing/SMS/blob/tee-scone-autonome/python/daemon.py#L280
      *
      * Note
@@ -28,23 +27,24 @@ public class SecretController {
      * `authorizationService.isAuthorizedToGetKeys(authorization)` (@ResponseBody Authorization authorization)
      * `iexecHubService.isTeeTask(chainTaskId)`
      * */
-    // TODO: not sure this is correct here
+    @GetMapping("/secret/{address}")
+    public ResponseEntity<Secret> getSecret(@RequestParam String address, @RequestBody SmsRequest smsRequest) {
 
-    /**
-     * @GetMapping("/secret/{address}") public ResponseEntity<Secret> getSecret(@RequestParam String address) {
-     * Optional<Secret> secret = secretService.getSecret(address);
-     *
-     * if (secret.isPresent()) {
-     * return ResponseEntity.ok(secret.get());
-     * }
-     *
-     * return ResponseEntity.notFound().build();
-     * }
-     */
+        // TODO: check that the request is legitimate with all signatures and authorization on the blockchain
 
-    // TODO: there should be a signature from the sender to check that it is correct
+        Optional<Secret> secret = secretService.getSecret(address);
+        if (secret.isPresent()) {
+            return ResponseEntity.ok(secret.get());
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+
     @PostMapping("/secret/{address}")
     public ResponseEntity setSecret(@RequestParam String address, @RequestBody SecretPayload secretPayload) {
+        // TODO: there should be a signature from the sender to check that it is correct
+
         boolean isSecretSet = secretService.setSecret(Secret.builder().address(address).payload(secretPayload).build());
 
         if (isSecretSet) {

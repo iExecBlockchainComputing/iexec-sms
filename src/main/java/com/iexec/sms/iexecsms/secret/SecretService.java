@@ -17,7 +17,7 @@ public class SecretService {
     }
 
     Optional<Secret> getSecret(String owner) {
-        return secretRepository.findSecretByOwner(owner);
+        return secretRepository.findSecretByAddress(owner);
     }
 
     /*
@@ -30,7 +30,7 @@ public class SecretService {
         String owner = newSecret.getAddress();
         SecretPayload newSecretPayload = newSecret.getPayload();
 
-        Optional<Secret> optionalExistingSecret = secretRepository.findSecretByOwner(owner);
+        Optional<Secret> optionalExistingSecret = secretRepository.findSecretByAddress(owner);
         Secret secretToSave;
         if (optionalExistingSecret.isPresent()) {
             Secret existingSecret = optionalExistingSecret.get();
