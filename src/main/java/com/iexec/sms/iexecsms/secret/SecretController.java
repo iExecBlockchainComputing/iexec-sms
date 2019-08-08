@@ -1,22 +1,20 @@
 package com.iexec.sms.iexecsms.secret;
 
 
-import com.iexec.sms.iexecsms.authorization.AuthorizationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 public class SecretController {
 
-    private AuthorizationService authorizationService;
     private SecretService secretService;
 
-    public SecretController(AuthorizationService authorizationService, SecretService secretService) {
-        this.authorizationService = authorizationService;
+    public SecretController(SecretService secretService) {
         this.secretService = secretService;
     }
 
@@ -30,20 +28,24 @@ public class SecretController {
      * `authorizationService.isAuthorizedToGetKeys(authorization)` (@ResponseBody Authorization authorization)
      * `iexecHubService.isTeeTask(chainTaskId)`
      * */
-    @GetMapping("/secret/{owner}")
-    public ResponseEntity<Secret> getSecret(@RequestParam String owner) {
-        Optional<Secret> secret = secretService.getSecret(owner);
+    // TODO: not sure this is correct here
 
-        if (secret.isPresent()) {
-            return ResponseEntity.ok(secret.get());
-        }
+    /**
+     * @GetMapping("/secret/{address}") public ResponseEntity<Secret> getSecret(@RequestParam String address) {
+     * Optional<Secret> secret = secretService.getSecret(address);
+     *
+     * if (secret.isPresent()) {
+     * return ResponseEntity.ok(secret.get());
+     * }
+     *
+     * return ResponseEntity.notFound().build();
+     * }
+     */
 
-        return ResponseEntity.notFound().build();
-    }
-
-    @PostMapping("/secret/{owner}")
-    public ResponseEntity setSecret(@RequestParam() String owner, @RequestBody SecretPayload secretPayload) {
-        boolean isSecretSet = secretService.setSecret(Secret.builder().owner(owner).payload(secretPayload).build());
+    // TODO: there should be a signature from the sender to check that it is correct
+    @PostMapping("/secret/{address}")
+    public ResponseEntity setSecret(@RequestParam String address, @RequestBody SecretPayload secretPayload) {
+        boolean isSecretSet = secretService.setSecret(Secret.builder().address(address).payload(secretPayload).build());
 
         if (isSecretSet) {
             return ResponseEntity.ok().build();

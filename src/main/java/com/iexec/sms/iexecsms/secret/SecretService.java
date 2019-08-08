@@ -21,13 +21,13 @@ public class SecretService {
     }
 
     /*
-     * Remove secret logs in prod (*)
-     * */
+     * TODO: Remove secret logs in prod (*)
+     */
     boolean setSecret(Secret newSecret) {
-        if (newSecret == null || newSecret.getOwner() == null || newSecret.getPayload() == null) {
+        if (newSecret == null || newSecret.getAddress() == null || newSecret.getPayload() == null) {
             return false;
         }
-        String owner = newSecret.getOwner();
+        String owner = newSecret.getAddress();
         SecretPayload newSecretPayload = newSecret.getPayload();
 
         Optional<Secret> optionalExistingSecret = secretRepository.findSecretByOwner(owner);
@@ -40,7 +40,7 @@ public class SecretService {
             secretToSave = existingSecret;
         } else {
             log.info("New secret [owner:{}, newSecretPayload:{}]", owner, newSecretPayload);// (*)
-            secretToSave = Secret.builder().owner(owner).payload(newSecretPayload).build();
+            secretToSave = Secret.builder().address(owner).payload(newSecretPayload).build();
         }
 
         return secretRepository.save(secretToSave) != null;

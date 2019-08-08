@@ -31,7 +31,7 @@ public class AuthorizationService {
         }
         String chainTaskId = authorization.getChainTaskId();
         Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
-        if (optionalChainTask.isEmpty()) {
+        if (!optionalChainTask.isPresent()) {
             log.error("isAuthorizedToGetKeys failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
             return false;
         }
@@ -45,7 +45,7 @@ public class AuthorizationService {
         }
 
         Optional<ChainDeal> optionalChainDeal = iexecHubService.getChainDeal(chainDealId);
-        if (optionalChainDeal.isEmpty()) {
+        if (!optionalChainDeal.isPresent()) {
             log.error("isAuthorizedToGetKeys failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
             return false;
         }

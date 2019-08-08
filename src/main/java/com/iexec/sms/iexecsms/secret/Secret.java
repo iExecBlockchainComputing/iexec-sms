@@ -12,7 +12,7 @@ public class Secret {
 
     @Id
     private String id;
-    private String owner;
+    private String address;
     private SecretPayload payload;
 
 }
