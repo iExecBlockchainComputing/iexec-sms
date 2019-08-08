@@ -27,7 +27,7 @@ public class SecretController {
      * `authorizationService.isAuthorizedToGetKeys(authorization)` (@ResponseBody Authorization authorization)
      * `iexecHubService.isTeeTask(chainTaskId)`
      * */
-    @GetMapping("/secret/{address}")
+    @GetMapping("/secrets/{address}")
     public ResponseEntity<Secret> getSecret(@RequestParam String address, @RequestBody SmsRequest smsRequest) {
 
         // TODO: check that the request is legitimate with all signatures and authorization on the blockchain
@@ -41,7 +41,7 @@ public class SecretController {
     }
 
 
-    @PostMapping("/secret/{address}")
+    @PostMapping("/secrets/{address}")
     public ResponseEntity setSecret(@RequestParam String address, @RequestBody SecretPayload secretPayload) {
         // TODO: there should be a signature from the sender to check that it is correct
 

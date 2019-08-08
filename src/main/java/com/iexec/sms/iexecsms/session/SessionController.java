@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SessionController {
 
-    @PostMapping("/session/generate")
+    @PostMapping("/sessions/generate")
     public ResponseEntity<SconeSecureSessionResponse> generateSecureSession(@RequestBody SmsRequest smsRequest) {
 
         // TODO contact the CAS and perform whatever is needed

@@ -18,7 +18,7 @@ public class AttestationController {
         this.attestationService = attestationService;
     }
 
-    @PostMapping("/attestation/generate/{taskId}")
+    @PostMapping("/attestations/generate/{taskId}")
     public ResponseEntity<Attestation> generateAttestation(@RequestParam String taskId) {
         Optional<Attestation> oAttestation = attestationService.getOrCreate(taskId);
 
