@@ -17,6 +17,7 @@ public class SessionController {
     public ResponseEntity<SconeSecureSessionResponse> generateSecureSession(@RequestBody SmsRequest smsRequest) {
 
         // TODO contact the CAS and perform whatever is needed
+        // This is here that the palaemon configuration file should be created and sent to the cas
 
         return ResponseEntity.notFound().build();
     }
