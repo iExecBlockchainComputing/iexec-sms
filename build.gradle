@@ -19,8 +19,20 @@ repositories {
 	maven { url "https://jitpack.io" }
 }
 
+ext {
+	//Greenwich.SR2 is a patch for Greenwich.RELEASE
+	springCloudVersion = 'Greenwich.SR2'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
 dependencies {
 	compile "org.springframework.boot:spring-boot-starter-web"
+	compile "org.springframework.cloud:spring-cloud-starter-openfeign"
 
 	// iexec
 	compile "com.iexec.common:iexec-common:$iexecCommonVersion"
@@ -31,6 +43,9 @@ dependencies {
 	// swagger
 	compile "io.springfox:springfox-swagger2:2.9.2"
 	compile "io.springfox:springfox-swagger-ui:2.9.2"
+
+	// velocity for templating
+	compile "org.apache.velocity:velocity:1.7"
 
 	// lombok
 	compileOnly "org.projectlombok:lombok:1.18.2"

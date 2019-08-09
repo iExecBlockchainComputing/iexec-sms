@@ -19,6 +19,10 @@ public class SessionController {
         // TODO contact the CAS and perform whatever is needed
         // This is here that the palaemon configuration file should be created and sent to the cas
 
+        // Palaemon file should be generated and a call to the CAS with this file should happen here.
+
+
+
         return ResponseEntity.notFound().build();
     }
 }

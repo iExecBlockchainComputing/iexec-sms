@@ -1,0 +1,35 @@
+name: $SESSION_ID
+digest: create
+
+services:
+   - name: app
+     image_name: image
+     mrenclaves: [$MRENCLAVE]
+     tags: [demo]
+     pwd: /
+     command: $COMMAND
+     fspf_path: /fspf.pb
+     fspf_key: $FSPF_KEY
+     fspf_tag: $FSPF_TAG
+
+   - name: encryption
+     image_name: image
+     mrenclaves: [$MRENCLAVE]
+     tags: [demo]
+     pwd: /
+     command: python /signer/signer.py encrypt
+     fspf_path: /fspf.pb
+     fspf_key: $FSPF_KEY
+     fspf_tag: $FSPF_TAG
+     environment:
+         enclave_key: $ENCLAVE_KEY
+         taskid: $TASK_ID
+         worker: $WORKER_ADDRESS
+
+images:
+   - name: image
+     mrenclaves: [$MRENCLAVE]
+     tags: [demo]
+     volumes:
+        - name: scone
+          path: /scone
