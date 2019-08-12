@@ -55,7 +55,6 @@ public class SessionController {
         // TODO: send all to the CAS to generate the session
         System.out.println(sw);
         SconeSecureSessionResponse data;
-        data.getData().
 
         return ResponseEntity.notFound().build();
     }
