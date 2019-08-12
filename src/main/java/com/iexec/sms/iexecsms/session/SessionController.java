@@ -4,6 +4,7 @@ package com.iexec.sms.iexecsms.session;
 import com.iexec.common.sms.SmsRequest;
 import com.iexec.common.sms.scone.SconeSecureSessionResponse;
 import com.iexec.sms.iexecsms.PalaemonHelperService;
+import com.iexec.sms.iexecsms.cas.CasService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,9 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class SessionController {
 
     private PalaemonHelperService palaemonHelperService;
+    private CasService casService;
 
-    public SessionController(PalaemonHelperService palaemonHelperService) {
+    public SessionController(PalaemonHelperService palaemonHelperService,
+                             CasService casService) {
         this.palaemonHelperService = palaemonHelperService;
+        this.casService = casService;
     }
 
     @PostMapping("/sessions/generate")
@@ -28,8 +32,6 @@ public class SessionController {
         String configFile = palaemonHelperService.getPalaemonConfigurationFile(taskId, workerAddress);
         System.out.println(configFile);
 
-        // TODO: send all to the CAS to generate the session
-        
-        return ResponseEntity.notFound().build();
+        return casService.postStuffWithPalaemon(configFile);
     }
 }
