@@ -18,6 +18,9 @@ public class AttestationController {
         this.attestationService = attestationService;
     }
 
+    /**
+     * Called by the core, not the worker
+     */
     @PostMapping("/attestations/generate/{taskId}")
     public ResponseEntity<Attestation> generateAttestation(@RequestParam String taskId) {
         Optional<Attestation> oAttestation = attestationService.getOrCreate(taskId);
