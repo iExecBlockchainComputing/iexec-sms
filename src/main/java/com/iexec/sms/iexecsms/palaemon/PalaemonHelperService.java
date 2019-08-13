@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms;
+package com.iexec.sms.iexecsms.palaemon;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
@@ -14,6 +14,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PalaemonHelperService {
@@ -62,7 +63,7 @@ public class PalaemonHelperService {
 
         Map<String, String> tokens = new HashMap<>();
         tokens.put(SESSIONS_ID_PROPERTY, RandomStringUtils.randomAlphanumeric(10));
-        // TODO: COMMAND missing
+        tokens.put(COMMAND_PROPERTY, String.join(",", chainDeal.getParams()));
         tokens.put(MRENCLAVE_PROPERTY, mrEnclave);
         tokens.put(FSPF_KEY_PROPERTY, fspfKey);
         tokens.put(FSPF_TAG_PROPERTY, fspfTag);

@@ -3,8 +3,8 @@ package com.iexec.sms.iexecsms.session;
 
 import com.iexec.common.sms.SmsRequest;
 import com.iexec.common.sms.scone.SconeSecureSessionResponse;
-import com.iexec.sms.iexecsms.PalaemonHelperService;
 import com.iexec.sms.iexecsms.cas.CasService;
+import com.iexec.sms.iexecsms.palaemon.PalaemonHelperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +32,7 @@ public class SessionController {
         String configFile = palaemonHelperService.getPalaemonConfigurationFile(taskId, workerAddress);
         System.out.println(configFile);
 
+        // TODO: check if we should just not simply return the sessionID
         return casService.postStuffWithPalaemon(configFile);
     }
 }
