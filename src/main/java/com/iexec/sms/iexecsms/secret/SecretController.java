@@ -33,11 +33,7 @@ public class SecretController {
         // TODO: check that the request is legitimate with all signatures and authorization on the blockchain
 
         Optional<Secret> secret = secretService.getSecret(address);
-        if (secret.isPresent()) {
-            return ResponseEntity.ok(secret.get());
-        }
-
-        return ResponseEntity.notFound().build();
+        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
@@ -46,11 +42,9 @@ public class SecretController {
         // TODO: there should be a signature from the sender to check that it is correct
 
         boolean isSecretSet = secretService.setSecret(Secret.builder().address(address).payload(secretPayload).build());
-
         if (isSecretSet) {
             return ResponseEntity.ok().build();
         }
-
         return ResponseEntity.notFound().build();
     }
 

@@ -24,10 +24,6 @@ public class AttestationController {
     @PostMapping("/attestations/generate/{taskId}")
     public ResponseEntity<Attestation> generateAttestation(@RequestParam String taskId) {
         Optional<Attestation> oAttestation = attestationService.getOrCreate(taskId);
-
-        if (oAttestation.isPresent()) {
-            return ResponseEntity.ok(oAttestation.get());
-        }
-        return ResponseEntity.notFound().build();
+        return oAttestation.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
