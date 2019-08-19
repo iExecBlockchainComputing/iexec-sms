@@ -29,7 +29,8 @@ public class SessionController {
 
         String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
         String workerAddress = smsRequest.getSmsSecretRequestData().getWorkerAddress();
-        String configFile = palaemonHelperService.getPalaemonConfigurationFile(taskId, workerAddress);
+        String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
+        String configFile = palaemonHelperService.getPalaemonConfigurationFile(taskId, workerAddress, attestingEnclave);
         System.out.println(configFile);
 
         // TODO: check if we should just not simply return the sessionID

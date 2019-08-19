@@ -4,6 +4,8 @@ import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
+import com.iexec.sms.iexecsms.secret.Secret;
+import com.iexec.sms.iexecsms.secret.SecretService;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -14,7 +16,6 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class PalaemonHelperService {
@@ -22,24 +23,34 @@ public class PalaemonHelperService {
     private String PALAEMON_CONFIG_FILE_WITH_DATASET = "src/main/resources/palaemonConfTemplateWithDataset.vm";
     private String PALAEMON_CONFIG_FILE_WITHOUT_DATASET = "src/main/resources/palaemonConfTemplateWithoutDataset.vm";
 
-    private String SESSIONS_ID_PROPERTY = "SESSION_ID";
-    private String COMMAND_PROPERTY = "PROPERTY";
-    private String MRENCLAVE_PROPERTY = "MRENCLAVE";
-    private String FSPF_KEY_PROPERTY = "FSPF_KEY";
-    private String FSPF_TAG_PROPERTY = "FSPF_TAG";
-    private String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
+    //palaemon
+    private String SESSION_ID_PROPERTY = "SESSION_ID";
+    //app
+    private String APP_MRENCLAVE_PROPERTY = "MRENCLAVE";
+    private String APP_FSPF_KEY_PROPERTY = "FSPF_KEY";
+    private String APP_FSPF_TAG_PROPERTY = "FSPF_TAG";
+    //data
+    private String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
+    private String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
+    //computing
+    private String COMMAND_PROPERTY = "COMMAND";
     private String TASK_ID_PROPERTY = "TASK_ID";
     private String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
-    private String DATA_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
-    private String DATA_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
+    private String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
+    //TODO: scone volumes infos
 
     private IexecHubService iexecHubService;
+    private SecretService secretService;
 
-    public PalaemonHelperService(IexecHubService iexecHubService) {
+    public PalaemonHelperService(IexecHubService iexecHubService,
+                                 SecretService secretService) {
         this.iexecHubService = iexecHubService;
+        this.secretService = secretService;
     }
 
-    private Map<String, String> getTokenList(String taskId, String workerAddress) throws Exception {
+    private Map<String, String> getTokenList(String taskId, String workerAddress, String attestingEnclave) throws Exception {
+        String sessionId = RandomStringUtils.randomAlphanumeric(10);
+
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
             return new HashMap<>();
@@ -51,39 +62,65 @@ public class PalaemonHelperService {
         }
         ChainDeal chainDeal = oChainDeal.get();
         String chainAppId = chainDeal.getChainApp().getChainAppId();
+        String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
+        String dealParams = String.join(",", chainDeal.getParams());
 
-        // The field MREnclave in the smart contract actually contains 3 fields separated by a '|':
-        // fspf_key, fspf_tag and MREnclave
-        byte[] mrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
-        String mrEnclaveFull = BytesUtils.bytesToString(mrEnclaveBytes);
-        String[] fields = mrEnclaveFull.split("|");
-        String fspfKey = fields[0];
-        String fspfTag = fields[1];
-        String mrEnclave = fields[2];
+        //The field MREnclave in the SC contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
+        byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
+        String appMrEnclaveFull = BytesUtils.bytesToString(appMrEnclaveBytes);
+        String[] appFields = appMrEnclaveFull.split("|");
+        String appFspfKey = appFields[0];
+        String appFspfTag = appFields[1];
+        String appMrEnclave = appFields[2];
+
+        //TODO: dont use '|' in generic strings (use separate values in db instead)
+        //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
+        Optional<Secret> datasetSecret = secretService.getSecret(chainDatasetId);
+        String datasetFspfKey = "";
+        String datasetFspfTag = "";
+        if (datasetSecret.isPresent()){
+            String datasetSecretKey = datasetSecret.get().getPayload().getSymmetricKey();
+            String[] datasetFields = datasetSecretKey.split("|");
+            datasetFspfKey = datasetFields[0];
+            datasetFspfTag = datasetFields[1];
+        }
 
         Map<String, String> tokens = new HashMap<>();
-        tokens.put(SESSIONS_ID_PROPERTY, RandomStringUtils.randomAlphanumeric(10));
-        tokens.put(COMMAND_PROPERTY, String.join(",", chainDeal.getParams()));
-        tokens.put(MRENCLAVE_PROPERTY, mrEnclave);
-        tokens.put(FSPF_KEY_PROPERTY, fspfKey);
-        tokens.put(FSPF_TAG_PROPERTY, fspfTag);
-        // TODO: ENCLAVE_KEY missing
+        //palaemon
+        tokens.put(SESSION_ID_PROPERTY, sessionId);
+        //app
+        tokens.put(APP_MRENCLAVE_PROPERTY, appMrEnclave);
+        tokens.put(APP_FSPF_KEY_PROPERTY, appFspfKey);
+        tokens.put(APP_FSPF_TAG_PROPERTY, appFspfTag);
+        //data
+        if (!datasetFspfKey.isEmpty()){
+            tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
+        }
+        if (!datasetFspfTag.isEmpty()){
+            tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfTag);
+        }
+        //computing
+        tokens.put(COMMAND_PROPERTY, dealParams);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
-        // TODO: DATASET tokens missing
+        if (!attestingEnclave.isEmpty()){
+            tokens.put(ENCLAVE_KEY_PROPERTY, attestingEnclave);
+        }
+        //scone volumes infos
+
         return tokens;
     }
 
-    public String getPalaemonConfigurationFile(String taskId, String workerAddress) throws Exception {
+    public String getPalaemonConfigurationFile(String taskId, String workerAddress, String attestingEnclave) throws Exception {
 
         // Palaemon file should be generated and a call to the CAS with this file should happen here.
-        Map<String, String> tokens = getTokenList(taskId, workerAddress);
+        Map<String, String> tokens = getTokenList(taskId, workerAddress, attestingEnclave);
 
         VelocityEngine ve = new VelocityEngine();
         ve.init();
 
         Template t;
-        if(tokens.containsKey(DATA_FSPF_KEY_PROPERTY) && tokens.containsKey(DATA_FSPF_TAG_PROPERTY)) {
+        if(tokens.containsKey(DATASET_FSPF_KEY_PROPERTY) && tokens.containsKey(DATASET_FSPF_TAG_PROPERTY)) {
             t = ve.getTemplate(PALAEMON_CONFIG_FILE_WITH_DATASET);
         } else {
             t = ve.getTemplate(PALAEMON_CONFIG_FILE_WITHOUT_DATASET);

@@ -16,7 +16,7 @@ public class SecretService {
         this.secretRepository = secretRepository;
     }
 
-    Optional<Secret> getSecret(String owner) {
+    public Optional<Secret> getSecret(String owner) {
         return secretRepository.findSecretByAddress(owner);
     }
 
