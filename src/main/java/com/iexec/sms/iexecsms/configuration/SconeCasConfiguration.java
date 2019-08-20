@@ -18,7 +18,7 @@ public class SconeCasConfiguration {
     @Value("${scone.cas.port}")
     private String port;
 
-    public String getURL() {
-        return host + ":" + port;
+    public String getUrl() {
+        return "http://" + host + ":" + port;
     }
 }

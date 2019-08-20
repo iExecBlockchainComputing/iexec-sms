@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "CasClient",
-        url = "#{SconeCasConfigurationService.casURL}")
+        url = "#{sconeCasConfigurationService.casUrl}")
 public interface CasClient {
 
     @PostMapping("/session")

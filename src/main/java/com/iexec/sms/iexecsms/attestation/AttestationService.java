@@ -1,8 +1,9 @@
 package com.iexec.sms.iexecsms.attestation;
 
+import com.iexec.common.security.Attestation;
+import com.iexec.common.security.CredentialsModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
 
 import java.util.Optional;
@@ -27,7 +28,7 @@ public class AttestationService {
         // otherwise create it
         try {
             Attestation attest = attestationRepository.save(Attestation.builder()
-                    .credentials(Credentials.create(Keys.createEcKeyPair()))
+                    .credentials(new CredentialsModel(Keys.createEcKeyPair()))
                     .taskId(taskId)
                     .build());
             return Optional.of(attest);

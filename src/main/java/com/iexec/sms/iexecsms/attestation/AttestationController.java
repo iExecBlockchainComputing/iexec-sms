@@ -1,10 +1,9 @@
 package com.iexec.sms.iexecsms.attestation;
 
+import com.iexec.common.security.Attestation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -22,7 +21,7 @@ public class AttestationController {
      * Called by the core, not the worker
      */
     @PostMapping("/attestations/generate/{taskId}")
-    public ResponseEntity<Attestation> generateAttestation(@RequestParam String taskId) {
+    public ResponseEntity<Attestation> generateAttestation(@PathVariable String taskId) {
         Optional<Attestation> oAttestation = attestationService.getOrCreate(taskId);
         return oAttestation.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }

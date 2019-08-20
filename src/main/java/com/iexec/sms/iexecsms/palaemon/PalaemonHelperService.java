@@ -20,24 +20,23 @@ import java.util.Optional;
 @Service
 public class PalaemonHelperService {
 
-    private String PALAEMON_CONFIG_FILE_WITH_DATASET = "src/main/resources/palaemonConfTemplateWithDataset.vm";
-    private String PALAEMON_CONFIG_FILE_WITHOUT_DATASET = "src/main/resources/palaemonConfTemplateWithoutDataset.vm";
+    private static final String PALAEMON_CONFIG_FILE_WITH_DATASET = "src/main/resources/palaemonConfTemplateWithDataset.vm";
+    private static final  String PALAEMON_CONFIG_FILE_WITHOUT_DATASET = "src/main/resources/palaemonConfTemplateWithoutDataset.vm";
 
     //palaemon
-    private String SESSION_ID_PROPERTY = "SESSION_ID";
+    private static final  String SESSION_ID_PROPERTY = "SESSION_ID";
     //app
-    private String APP_MRENCLAVE_PROPERTY = "MRENCLAVE";
-    private String APP_FSPF_KEY_PROPERTY = "FSPF_KEY";
-    private String APP_FSPF_TAG_PROPERTY = "FSPF_TAG";
+    private static final  String APP_MRENCLAVE_PROPERTY = "MRENCLAVE";
+    private static final  String APP_FSPF_KEY_PROPERTY = "FSPF_KEY";
+    private static final  String APP_FSPF_TAG_PROPERTY = "FSPF_TAG";
     //data
-    private String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
-    private String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
+    private static final  String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
+    private static final  String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
     //computing
-    private String COMMAND_PROPERTY = "COMMAND";
-    private String TASK_ID_PROPERTY = "TASK_ID";
-    private String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
-    private String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
-    //TODO: scone volumes infos
+    private static final  String COMMAND_PROPERTY = "COMMAND";
+    private static final  String TASK_ID_PROPERTY = "TASK_ID";
+    private static final  String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
+    private static final  String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
 
     private IexecHubService iexecHubService;
     private SecretService secretService;
@@ -63,7 +62,7 @@ public class PalaemonHelperService {
         ChainDeal chainDeal = oChainDeal.get();
         String chainAppId = chainDeal.getChainApp().getChainAppId();
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
-        String dealParams = String.join(",", chainDeal.getParams());
+        String dealParams = String.join(",", chainDeal.getParams().getIexecArgs());
 
         //The field MREnclave in the SC contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
         byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
@@ -106,7 +105,6 @@ public class PalaemonHelperService {
         if (!attestingEnclave.isEmpty()){
             tokens.put(ENCLAVE_KEY_PROPERTY, attestingEnclave);
         }
-        //scone volumes infos
 
         return tokens;
     }

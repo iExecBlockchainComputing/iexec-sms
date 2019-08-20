@@ -2,7 +2,6 @@ package com.iexec.sms.iexecsms.session;
 
 
 import com.iexec.common.sms.SmsRequest;
-import com.iexec.common.sms.scone.SconeSecureSessionResponse;
 import com.iexec.sms.iexecsms.cas.CasService;
 import com.iexec.sms.iexecsms.palaemon.PalaemonHelperService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ public class SessionController {
     }
 
     @PostMapping("/sessions/generate")
-    public ResponseEntity<SconeSecureSessionResponse> generateSecureSession(@RequestBody SmsRequest smsRequest) throws Exception {
+    public ResponseEntity generateSecureSession(@RequestBody SmsRequest smsRequest) throws Exception {
 
         String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
         String workerAddress = smsRequest.getSmsSecretRequestData().getWorkerAddress();

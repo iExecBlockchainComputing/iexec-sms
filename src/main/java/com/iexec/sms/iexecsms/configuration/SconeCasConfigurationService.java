@@ -11,7 +11,7 @@ public class SconeCasConfigurationService {
         this.sconeCasConfiguration = sconeCasConfiguration;
     }
 
-    public String getCasURL() {
-        return sconeCasConfiguration.getURL();
+    public String getCasUrl() {
+        return sconeCasConfiguration.getUrl();
     }
 }
