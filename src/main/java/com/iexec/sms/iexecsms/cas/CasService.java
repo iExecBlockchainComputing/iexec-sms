@@ -14,9 +14,8 @@ public class CasService {
         this.casClient = casClient;
     }
 
-    // TODO: rename this method with a more relevant name
     @Retryable(value = FeignException.class)
-    public ResponseEntity postStuffWithPalaemon(String configFile) {
-        return casClient.postStuffWithPalaemon(configFile);
+    public ResponseEntity generateSecureSessionWithPalaemonFile(String palaemonFile) {
+        return casClient.generateSecureSessionWithPalaemonFile(palaemonFile);
     }
 }

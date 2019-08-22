@@ -1,5 +1,15 @@
 server:
-  port: ${IEXEC_SMS_PORT:15000}
+  port: ${IEXEC_SMS_PORT:15443}
+  http:
+    enabled: ${IEXEC_SMS_HTTP_ENABLED:true}
+    port: ${IEXEC_SMS_HTTP_PORT:15000}
+  ssl:
+    key-store: ${IEXEC_SMS_SSL_KEYSTORE:./src/main/resources/iexec-sms-dev-keystore.p12} #ssl-keystore-dev.p12}
+    key-store-password: ${IEXEC_SMS_SSL_KEYSTORE_PASSWORD:whatever}
+    keyStoreType: ${IEXEC_SMS_SSL_KEYSTORE_TYPE:PKCS12}
+    keyAlias: ${IEXEC_SMS_SSL_KEYSTORE_ALIAS:localhost}
+
+logging.level.com.iexec.sms.iexecsms.cas.CasClient: DEBUG #testing
 
 # Not sure it's a good idea but here is a link for an embedded mongodb
 # https://www.baeldung.com/spring-boot-embedded-mongodb
@@ -21,3 +31,8 @@ scone:
   cas:
     host: ${IEXEC_SCONE_CAS_HOST:localhost}
     port: ${IEXEC_SCONE_CAS_PORT:18765}
+
+palaemon:
+  configFile:
+    withDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET:./src/main/resources/palaemonConfTemplateWithDataset.vm}
+    withoutDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET:./src/main/resources/palaemonConfTemplateWithoutDataset.vm}

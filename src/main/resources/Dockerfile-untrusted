@@ -2,6 +2,8 @@ FROM azul/zulu-openjdk-alpine:11.0.3-jre
 #FROM iexechub/java-scone:11.0.3
 
 COPY build/resources/main/entrypoint.sh entrypoint.sh
+COPY build/resources/main/palaemonConfTemplateWithDataset.vm palaemonConfTemplateWithDataset.vm
+COPY build/resources/main/palaemonConfTemplateWithoutDataset.vm palaemonConfTemplateWithoutDataset.vm
 
 RUN chmod +x entrypoint.sh
 
@@ -9,6 +11,13 @@ COPY build/libs/iexec-sms-@projectversion@.jar iexec-sms.jar
 
 ENV IEXEC_SMS_MONGO_HOST sms-mongo
 ENV IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS http://chain:8545
+ENV IEXEC_SCONE_CAS_HOST iexec-cas
+ENV IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET palaemonConfTemplateWithDataset.vm
+ENV IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET palaemonConfTemplateWithoutDataset.vm
+
+COPY src/main/resources/iexec-sms-dev-keystore.p12 iexec-sms-dev-keystore.p12
+ENV IEXEC_SMS_SSL_KEYSTORE iexec-sms-dev-keystore.p12
+#RUN keytool -list -v -keystore iexec-sms-dev-keystore.p12 -storepass whatever
 
 ENTRYPOINT ["./entrypoint.sh"]
 

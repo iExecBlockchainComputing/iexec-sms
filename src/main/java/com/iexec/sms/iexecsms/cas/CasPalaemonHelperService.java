@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.palaemon;
+package com.iexec.sms.iexecsms.cas;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
@@ -18,31 +18,31 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class PalaemonHelperService {
-
-    private static final String PALAEMON_CONFIG_FILE_WITH_DATASET = "src/main/resources/palaemonConfTemplateWithDataset.vm";
-    private static final  String PALAEMON_CONFIG_FILE_WITHOUT_DATASET = "src/main/resources/palaemonConfTemplateWithoutDataset.vm";
+public class CasPalaemonHelperService {
 
     //palaemon
-    private static final  String SESSION_ID_PROPERTY = "SESSION_ID";
+    private static final String SESSION_ID_PROPERTY = "SESSION_ID";
     //app
-    private static final  String APP_MRENCLAVE_PROPERTY = "MRENCLAVE";
-    private static final  String APP_FSPF_KEY_PROPERTY = "FSPF_KEY";
-    private static final  String APP_FSPF_TAG_PROPERTY = "FSPF_TAG";
+    private static final String APP_MRENCLAVE_PROPERTY = "MRENCLAVE";
+    private static final String APP_FSPF_KEY_PROPERTY = "FSPF_KEY";
+    private static final String APP_FSPF_TAG_PROPERTY = "FSPF_TAG";
     //data
-    private static final  String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
-    private static final  String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
+    private static final String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
+    private static final String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
     //computing
-    private static final  String COMMAND_PROPERTY = "COMMAND";
-    private static final  String TASK_ID_PROPERTY = "TASK_ID";
-    private static final  String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
-    private static final  String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
+    private static final String COMMAND_PROPERTY = "COMMAND";
+    private static final String TASK_ID_PROPERTY = "TASK_ID";
+    private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
+    private static final String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
 
+    private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
     private IexecHubService iexecHubService;
     private SecretService secretService;
 
-    public PalaemonHelperService(IexecHubService iexecHubService,
-                                 SecretService secretService) {
+    public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
+                                    IexecHubService iexecHubService,
+                                    SecretService secretService) {
+        this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
         this.iexecHubService = iexecHubService;
         this.secretService = secretService;
     }
@@ -77,7 +77,7 @@ public class PalaemonHelperService {
         Optional<Secret> datasetSecret = secretService.getSecret(chainDatasetId);
         String datasetFspfKey = "";
         String datasetFspfTag = "";
-        if (datasetSecret.isPresent()){
+        if (datasetSecret.isPresent()) {
             String datasetSecretKey = datasetSecret.get().getPayload().getSymmetricKey();
             String[] datasetFields = datasetSecretKey.split("|");
             datasetFspfKey = datasetFields[0];
@@ -92,17 +92,17 @@ public class PalaemonHelperService {
         tokens.put(APP_FSPF_KEY_PROPERTY, appFspfKey);
         tokens.put(APP_FSPF_TAG_PROPERTY, appFspfTag);
         //data
-        if (!datasetFspfKey.isEmpty()){
+        if (!datasetFspfKey.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
         }
-        if (!datasetFspfTag.isEmpty()){
+        if (!datasetFspfTag.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfTag);
         }
         //computing
         tokens.put(COMMAND_PROPERTY, dealParams);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
-        if (!attestingEnclave.isEmpty()){
+        if (!attestingEnclave.isEmpty()) {
             tokens.put(ENCLAVE_KEY_PROPERTY, attestingEnclave);
         }
 
@@ -118,10 +118,10 @@ public class PalaemonHelperService {
         ve.init();
 
         Template t;
-        if(tokens.containsKey(DATASET_FSPF_KEY_PROPERTY) && tokens.containsKey(DATASET_FSPF_TAG_PROPERTY)) {
-            t = ve.getTemplate(PALAEMON_CONFIG_FILE_WITH_DATASET);
+        if (tokens.containsKey(DATASET_FSPF_KEY_PROPERTY) && tokens.containsKey(DATASET_FSPF_TAG_PROPERTY)) {
+            t = ve.getTemplate(casPalaemonHelperConfiguration.getPalaemonConfigFileWithDataset());
         } else {
-            t = ve.getTemplate(PALAEMON_CONFIG_FILE_WITHOUT_DATASET);
+            t = ve.getTemplate(casPalaemonHelperConfiguration.getPalaemonConfigFileWithoutDataset());
         }
         VelocityContext context = new VelocityContext();
         // copy all data from the tokens into context

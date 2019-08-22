@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.configuration;
+package com.iexec.sms.iexecsms.cas;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SconeCasConfiguration {
+public class CasConfiguration {
 
     @Value("${scone.cas.host}")
     private String host;
@@ -19,6 +19,6 @@ public class SconeCasConfiguration {
     private String port;
 
     public String getUrl() {
-        return "http://" + host + ":" + port;
+        return "https://" + host + ":" + port;
     }
 }

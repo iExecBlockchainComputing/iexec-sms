@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "CasClient",
-        url = "#{sconeCasConfigurationService.casUrl}")
+        url = "#{casConfigurationService.casUrl}", configuration = CasClientFeignConfiguration.class)
 public interface CasClient {
 
-    @PostMapping("/session")
-    ResponseEntity postStuffWithPalaemon(@RequestBody String palaemonFileContent) throws FeignException;
+    @PostMapping(value = "/session")
+    ResponseEntity generateSecureSessionWithPalaemonFile(@RequestBody String data) throws FeignException;
 }
