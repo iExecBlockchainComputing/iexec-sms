@@ -5,7 +5,7 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.secret.Secret;
-import com.iexec.sms.iexecsms.secret.SecretService;
+import com.iexec.sms.iexecsms.secret.SecretFolderService;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -35,16 +35,18 @@ public class CasPalaemonHelperService {
     private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
     private static final String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
 
+    private static final String FIELD_SPLITTER = "|";//"\\|";//TODO: set splitter
+
     private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
     private IexecHubService iexecHubService;
-    private SecretService secretService;
+    private SecretFolderService secretFolderService;
 
     public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
                                     IexecHubService iexecHubService,
-                                    SecretService secretService) {
+                                    SecretFolderService secretFolderService) {
         this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
         this.iexecHubService = iexecHubService;
-        this.secretService = secretService;
+        this.secretFolderService = secretFolderService;
     }
 
     private Map<String, String> getTokenList(String taskId, String workerAddress, String attestingEnclave) throws Exception {
@@ -67,19 +69,19 @@ public class CasPalaemonHelperService {
         //The field MREnclave in the SC contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
         byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
         String appMrEnclaveFull = BytesUtils.bytesToString(appMrEnclaveBytes);
-        String[] appFields = appMrEnclaveFull.split("|");
+        String[] appFields = appMrEnclaveFull.split(FIELD_SPLITTER);
         String appFspfKey = appFields[0];
         String appFspfTag = appFields[1];
         String appMrEnclave = appFields[2];
 
         //TODO: dont use '|' in generic strings (use separate values in db instead)
         //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
-        Optional<Secret> datasetSecret = secretService.getSecret(chainDatasetId);
+        Optional<Secret> datasetSecret = secretFolderService.getSecret(chainDatasetId, "Kd");
         String datasetFspfKey = "";
         String datasetFspfTag = "";
         if (datasetSecret.isPresent()) {
-            String datasetSecretKey = datasetSecret.get().getPayload().getSymmetricKey();
-            String[] datasetFields = datasetSecretKey.split("|");
+            String datasetSecretKey = datasetSecret.get().getValue();
+            String[] datasetFields = datasetSecretKey.split(FIELD_SPLITTER);
             datasetFspfKey = datasetFields[0];
             datasetFspfTag = datasetFields[1];
         }

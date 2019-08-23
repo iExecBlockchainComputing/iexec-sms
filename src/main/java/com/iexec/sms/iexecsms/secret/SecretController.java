@@ -4,6 +4,9 @@ package com.iexec.sms.iexecsms.secret;
 import com.iexec.common.security.Signature;
 import com.iexec.common.sms.SmsRequest;
 import com.iexec.common.sms.SmsRequestData;
+import com.iexec.common.utils.BytesUtils;
+import com.iexec.common.utils.HashUtils;
+import com.iexec.common.utils.SignatureUtils;
 import com.iexec.sms.iexecsms.authorization.Authorization;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,52 +20,75 @@ import java.util.Optional;
 @RestController
 public class SecretController {
 
-    private SecretService secretService;
+    private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
+    private SecretFolderService secretFolderService;
     private AuthorizationService authorizationService;
 
-    public SecretController(SecretService secretService,
-                            AuthorizationService authorizationService) {
-        this.secretService = secretService;
+    public SecretController(
+            SecretFolderService secretFolderService,
+            AuthorizationService authorizationService) {
+        this.secretFolderService = secretFolderService;
         this.authorizationService = authorizationService;
     }
 
-    /**
-     * Used by the NON Tee workflow:
-     * https://github.com/iExecBlockchainComputing/SMS/blob/tee-scone-autonome/python/daemon.py#L280
-     * <p>
-     * Note
-     * Blockchain checks are already made here:
-     * `authorizationService.isAuthorizedToGetKeys(authorization)` (@ResponseBody Authorization authorization)
-     * `iexecHubService.isTeeTask(chainTaskId)`
-     *
-     * @return
-     */
-    @GetMapping("/secrets/{address}")
-    public ResponseEntity getSecret(@RequestParam String address, @RequestBody SmsRequest smsRequest) {
-
-        // Check that the demand is legitimate
-        SmsRequestData data = smsRequest.getSmsSecretRequestData();
-        Authorization authorization = Authorization.builder()
-                .chainTaskId(data.getChainTaskId())
-                .enclaveAddress(data.getEnclaveChallenge())
-                .workerAddress(data.getWorkerAddress())
-                .workerSignature(new Signature(data.getWorkerSignature()))
-                .workerpoolSignature(new Signature(data.getCoreSignature())).build();
-
-        if (!authorizationService.isAuthorizedToGetKeys(authorization)) {
-            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
-        }
-
-        Optional<Secret> secret = secretService.getSecret(address);
+    /*
+     * Dev endpoint for seeing all secrets of an address
+     * */
+    @GetMapping("/secrets/{address}/folder")
+    public ResponseEntity getSecretFolderV2(@RequestParam String address) {
+        Optional<SecretFolder> secret = secretFolderService.getSecretFolder(address);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /*
+     * Non-required signatures for dev
+     * */
+    @GetMapping("/secrets/{address}/v2")
+    public ResponseEntity getSecretV2(@RequestParam String address,
+                                      @RequestParam String secretAlias,
+                                      @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                      @RequestParam(required = false) String signature) {
+        if (checkSignature) {
+            byte[] message = BytesUtils.stringToBytes(HashUtils.concatenateAndHash(
+                    DOMAIN,
+                    address,
+                    HashUtils.sha256(secretAlias)));
+            Signature signatureToCheck = new Signature(signature);
 
-    @PostMapping("/secrets/{address}")
-    public ResponseEntity setSecret(@RequestParam String address, @RequestBody SecretPayload secretPayload) {
-        // TODO: should there be a signature from the sender to check that it is correct ?
+            boolean isSignatureValid = SignatureUtils.isSignatureValid(message, signatureToCheck, address);
 
-        boolean isSecretSet = secretService.setSecret(Secret.builder().address(address).payload(secretPayload).build());
+            if (!isSignatureValid) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        Optional<Secret> secret = secretFolderService.getSecret(address, secretAlias);
+        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /*
+     * Non-required signatures for dev
+     * */
+    @PostMapping("/secrets/{address}/v2")
+    public ResponseEntity setSecretV2(@RequestParam String address,
+                                      @RequestBody Secret secret,
+                                      @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                      @RequestParam(required = false) String signature) {
+        if (checkSignature) {
+            byte[] message = BytesUtils.stringToBytes(HashUtils.concatenateAndHash(
+                    DOMAIN,
+                    address,
+                    secret.getHash()));
+            Signature signatureToCheck = new Signature(signature);
+
+            boolean isSignatureValid = SignatureUtils.isSignatureValid(message, signatureToCheck, address);
+
+            if (!isSignatureValid) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        boolean isSecretSet = secretFolderService.updateSecret(address, secret);
         if (isSecretSet) {
             return ResponseEntity.ok().build();
         }
