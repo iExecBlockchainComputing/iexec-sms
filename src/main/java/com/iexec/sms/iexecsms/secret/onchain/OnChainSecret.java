@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.secret.iexec;
+package com.iexec.sms.iexecsms.secret.onchain;
 
 import com.iexec.sms.iexecsms.secret.Secret;
 import lombok.*;
@@ -9,12 +9,12 @@ import org.springframework.data.annotation.Id;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class IexecSecret extends Secret {
+public class OnChainSecret extends Secret {
 
     @Id
     private String id;
 
-    public IexecSecret(String address, String value) {
+    public OnChainSecret(String address, String value) {
         super(address, value);
     }
 }

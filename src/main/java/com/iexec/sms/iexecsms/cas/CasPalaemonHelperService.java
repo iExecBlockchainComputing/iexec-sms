@@ -5,14 +5,20 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.secret.Secret;
-import com.iexec.sms.iexecsms.secret.user.UserSecretsService;
+import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
+import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
+import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.stereotype.Service;
+import org.web3j.utils.Numeric;
 
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -35,18 +41,18 @@ public class CasPalaemonHelperService {
     private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
     private static final String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
 
-    private static final String FIELD_SPLITTER = "|";//"\\|";//TODO: set splitter
+    private static final String FIELD_SPLITTER = "\\|";
 
     private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
     private IexecHubService iexecHubService;
-    private UserSecretsService userSecretsService;
+    private OnChainSecretService onChainSecretService;
 
     public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
                                     IexecHubService iexecHubService,
-                                    UserSecretsService userSecretsService) {
+                                    OnChainSecretService onChainSecretService) {
         this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
         this.iexecHubService = iexecHubService;
-        this.userSecretsService = userSecretsService;
+        this.onChainSecretService = onChainSecretService;
     }
 
     private Map<String, String> getTokenList(String taskId, String workerAddress, String attestingEnclave) throws Exception {
@@ -68,7 +74,7 @@ public class CasPalaemonHelperService {
 
         //The field MREnclave in the SC contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
         byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
-        String appMrEnclaveFull = BytesUtils.bytesToString(appMrEnclaveBytes);
+        String appMrEnclaveFull = BytesUtils.hexStringToAscii(BytesUtils.bytesToString(appMrEnclaveBytes));
         String[] appFields = appMrEnclaveFull.split(FIELD_SPLITTER);
         String appFspfKey = appFields[0];
         String appFspfTag = appFields[1];
@@ -76,7 +82,7 @@ public class CasPalaemonHelperService {
 
         //TODO: dont use '|' in generic strings (use separate values in db instead)
         //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
-        Optional<Secret> datasetSecret = userSecretsService.getSecret(chainDatasetId, "Kd");
+        Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId);
         String datasetFspfKey = "";
         String datasetFspfTag = "";
         if (datasetSecret.isPresent()) {

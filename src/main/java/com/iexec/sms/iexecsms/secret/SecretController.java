@@ -3,10 +3,10 @@ package com.iexec.sms.iexecsms.secret;
 
 import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
-import com.iexec.sms.iexecsms.secret.iexec.IexecSecret;
-import com.iexec.sms.iexecsms.secret.iexec.IexecSecretService;
-import com.iexec.sms.iexecsms.secret.user.UserSecrets;
-import com.iexec.sms.iexecsms.secret.user.UserSecretsService;
+import com.iexec.sms.iexecsms.secret.offchain.OffChainSecrets;
+import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
+import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
+import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,31 +20,23 @@ public class SecretController {
 
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private AuthorizationService authorizationService;
-    private IexecSecretService iexecSecretService;
-    private UserSecretsService userSecretsService;
+    private OnChainSecretService onChainSecretService;
+    private OffChainSecretsService offChainSecretsService;
 
     public SecretController(AuthorizationService authorizationService,
-                            UserSecretsService userSecretsService,
-                            IexecSecretService iexecSecretService) {
-        this.userSecretsService = userSecretsService;
+                            OffChainSecretsService offChainSecretsService,
+                            OnChainSecretService onChainSecretService) {
+        this.offChainSecretsService = offChainSecretsService;
         this.authorizationService = authorizationService;
-        this.iexecSecretService = iexecSecretService;
+        this.onChainSecretService = onChainSecretService;
     }
 
-    /*
-     * Dev endpoint for seeing all secrets of an address
-     * */
-    @GetMapping("/secrets/users/all")
-    public ResponseEntity getUserSecretsV2(@RequestParam String address) {
-        Optional<UserSecrets> secret = userSecretsService.getUserSecrets(address);
-        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
 
     /*
      * Non-required signatures for dev
      * */
-    @GetMapping("/secrets/iexec")
-    public ResponseEntity getIexecSecretV2(@RequestParam String secretAddress,
+    @GetMapping("/secrets/onchain")
+    public ResponseEntity getOnChainSecret(@RequestParam String secretAddress,
                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
                                            @RequestParam(required = false) String signature) {
         if (checkSignature) {
@@ -52,71 +44,56 @@ public class SecretController {
                     DOMAIN,
                     secretAddress);
 
-            //TODO: use isAuthorized(..) and isAuthorizedOnExecution(..)
+            //TODO: also isAuthorizedOnExecution(..)
             if (!authorizationService.isSignedByOwner(message, signature, secretAddress)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
-        Optional<IexecSecret> secret = iexecSecretService.getSecret(secretAddress);
+        Optional<OnChainSecret> secret = onChainSecretService.getSecret(secretAddress);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     /*
      * Non-required signatures for dev
      * */
-    @GetMapping("/secrets/user/")
-    public ResponseEntity getSecretV2(@RequestParam String userAddress,
-                                      @RequestParam String secretId,
-                                      @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                      @RequestParam(required = false) String signature) {
+    @GetMapping("/secrets/offchain")
+    public ResponseEntity getOffChainSecret(@RequestParam String ownerAddress,
+                                            @RequestParam String secretAddress,
+                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                            @RequestParam(required = false) String signature) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
-                    userAddress,
-                    HashUtils.sha256(secretId));
+                    ownerAddress,
+                    HashUtils.sha256(secretAddress));
 
-            if (!authorizationService.isSignedByHimself(message, signature, userAddress)) {
+            if (!authorizationService.isSignedByHimself(message, signature, ownerAddress)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
-        Optional<Secret> secret = userSecretsService.getSecret(userAddress, secretId);
+        Optional<Secret> secret = offChainSecretsService.getSecret(ownerAddress, secretAddress);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+
     /*
-     * Non-required signatures for dev
+     * Dev endpoint for seeing all secrets of an ownerAddress
      * */
-    @PostMapping("/secrets/user")
-    public ResponseEntity setSecretV2(@RequestParam String userAddress,
-                                      @RequestBody Secret secret,
-                                      @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                      @RequestParam(required = false) String signature) {
-        if (checkSignature) {
-            String message = HashUtils.concatenateAndHash(
-                    DOMAIN,
-                    userAddress,
-                    secret.getHash());
-
-            if (!authorizationService.isSignedByHimself(message, signature, userAddress)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-        }
-
-        boolean isSecretSet = userSecretsService.updateSecret(userAddress, secret);
-        if (isSecretSet) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping("/secrets/offchain/all")
+    public ResponseEntity getOffChainSecrets(@RequestParam String address) {
+        Optional<OffChainSecrets> secret = offChainSecretsService.getOffChainSecrets(address);
+        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
     /*
      * Non-required signatures for dev
      * */
-    @PostMapping("/secrets/iexec")
-    public ResponseEntity setIexecSecretV2(@RequestParam String secretAddress,
+    @PostMapping("/secrets/onchain")
+    public ResponseEntity setOnChainSecret(@RequestParam String secretAddress,
                                            @RequestBody String secretValue,
                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
                                            @RequestParam(required = false) String signature) {
@@ -131,8 +108,35 @@ public class SecretController {
             }
         }
 
-        iexecSecretService.updateSecret(secretAddress, secretValue);
+        onChainSecretService.updateSecret(secretAddress, secretValue);
         return ResponseEntity.ok().build();
+    }
+
+
+    /*
+     * Non-required signatures for dev
+     * */
+    @PostMapping("/secrets/offchain")
+    public ResponseEntity setOffChainSecret(@RequestParam String ownerAddress,
+                                            @RequestBody Secret secret,
+                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                            @RequestParam(required = false) String signature) {
+        if (checkSignature) {
+            String message = HashUtils.concatenateAndHash(
+                    DOMAIN,
+                    ownerAddress,
+                    secret.getHash());
+
+            if (!authorizationService.isSignedByHimself(message, signature, ownerAddress)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        boolean isSecretSet = offChainSecretsService.updateSecret(ownerAddress, secret);
+        if (isSecretSet) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
 }

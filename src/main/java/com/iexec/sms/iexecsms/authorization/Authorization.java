@@ -22,7 +22,7 @@ public class Authorization {
 
     public String getAuthorizationHash() {
         if (chainTaskId != null && workerAddress != null && enclaveAddress != null) {
-            return HashUtils.concatenateAndHash(chainTaskId, workerAddress, enclaveAddress);
+            return HashUtils.concatenateAndHash(workerAddress, chainTaskId, enclaveAddress);
         }
         return "";
     }

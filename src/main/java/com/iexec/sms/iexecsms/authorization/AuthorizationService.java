@@ -93,13 +93,13 @@ public class AuthorizationService {
 
     public boolean isAuthorized(String message, String signature, String address) {
         if (isSignedByHimself(message, signature, address)) {
-            log.info("Signature is authorized for address (self) [address:{}", address);
+            log.info("Signature is authorized for ownerAddress (self) [ownerAddress:{}", address);
             return true;
         } else if (isSignedByOwner(message, signature, address)) {
-            log.info("Signature is authorized for address (owner) [address:{}", address);
+            log.info("Signature is authorized for ownerAddress (owner) [ownerAddress:{}", address);
             return true;
         }
-        log.error("Address cant be authorized to push [address:{}", address);
+        log.error("Address cant be authorized to push [ownerAddress:{}", address);
         return false;
     }
 

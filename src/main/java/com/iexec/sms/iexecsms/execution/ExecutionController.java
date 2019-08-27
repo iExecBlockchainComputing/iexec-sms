@@ -10,7 +10,8 @@ import com.iexec.sms.iexecsms.authorization.Authorization;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
 import com.iexec.sms.iexecsms.cas.CasPalaemonHelperService;
 import com.iexec.sms.iexecsms.cas.CasService;
-import com.iexec.sms.iexecsms.secret.user.UserSecretsService;
+import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
+import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,24 +29,27 @@ public class ExecutionController {
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private final CasPalaemonHelperService casPalaemonHelperService;
     private final CasService casService;
-    private UserSecretsService userSecretsService;
+    private OffChainSecretsService offChainSecretsService;
+    private OnChainSecretService onChainSecretService;
     private AuthorizationService authorizationService;
 
     public ExecutionController(
-            UserSecretsService userSecretsService,
+            OffChainSecretsService offChainSecretsService,
+            OnChainSecretService onChainSecretService,
             AuthorizationService authorizationService,
             CasPalaemonHelperService casPalaemonHelperService,
             CasService casService) {
-        this.userSecretsService = userSecretsService;
+        this.offChainSecretsService = offChainSecretsService;
+        this.onChainSecretService = onChainSecretService;
         this.authorizationService = authorizationService;
         this.casPalaemonHelperService = casPalaemonHelperService;
         this.casService = casService;
     }
 
     /*
-     * Retrieve secrets when non-tee execution
+     * Retrieve secrets when non-tee execution : We shouldn't do this..
      * */
-    @GetMapping("/executions/nontee/secrets")
+    @PostMapping("/executions/nontee/secrets")
     public ResponseEntity getNonTeeExecutionSecretsV2(@RequestBody SmsRequest smsRequest) {
         // Check that the demand is legitimate -> move workerSignature outside of authorization
         // see secret controller for auth
@@ -62,7 +66,9 @@ public class ExecutionController {
         }
 
         SmsSecretResponseData nonTeeSecrets = SmsSecretResponseData.builder().build();
-        //TODO: fetch secrets - userSecretsService.getSecret("xx") for each address
+
+        //onChainSecretService.getSecret()
+
         SmsSecretResponse smsSecretResponse = SmsSecretResponse.builder()
                 .data(nonTeeSecrets)
                 .build();
@@ -73,7 +79,7 @@ public class ExecutionController {
     /*
      * Retrieve session when tee execution
      * */
-    @GetMapping("/executions/tee/session")
+    @PostMapping("/executions/tee/session/generate")
     public ResponseEntity getTeeExecutionSessionV2(@RequestBody SmsRequest smsRequest) throws Exception {
         // Check that the demand is legitimate -> move workerSignature outside of authorization
         // see secret controller for auth

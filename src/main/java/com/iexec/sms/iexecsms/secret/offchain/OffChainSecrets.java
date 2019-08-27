@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.secret.user;
+package com.iexec.sms.iexecsms.secret.offchain;
 
 import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.iexecsms.secret.Secret;
@@ -12,21 +12,21 @@ import java.util.List;
 @Data
 @Getter
 @Slf4j
-public class UserSecrets {
+public class OffChainSecrets {
 
     @Id
     private String id;
-    private String address;
+    private String ownerAddress;
     private List<Secret> secrets;
 
-    public UserSecrets(String address) {
-        this.address = address;
+    public OffChainSecrets(String ownerAddress) {
+        this.ownerAddress = ownerAddress;
         this.secrets = new ArrayList<>();
     }
 
     public String getHash(){
         return HashUtils.concatenateAndHash(
-                HashUtils.sha256(address)//,
+                HashUtils.sha256(ownerAddress)//,
                 //payload.getHash()
         );
     }

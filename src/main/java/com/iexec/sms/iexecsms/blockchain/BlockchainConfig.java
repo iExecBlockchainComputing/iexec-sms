@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 public class BlockchainConfig {
 
-    @Value("${blockchain.address}")
+    @Value("${blockchain.id}")
     private Integer chainId;
 
     @Value("${blockchain.nodeAddress}")

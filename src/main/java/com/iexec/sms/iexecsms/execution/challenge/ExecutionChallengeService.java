@@ -30,6 +30,8 @@ public class ExecutionChallengeService {
                     .credentials(new EthereumCredentials(Keys.createEcKeyPair()))
                     .taskId(taskId)
                     .build());
+            log.info("Created execution challenge [chainTaskId:{}, enclaveChallenge:{}]",
+                    taskId, attestor.getCredentials().getAddress());
             return Optional.of(attestor);
         } catch (Exception e) {
             log.error("Couldn't create credentials [exception:{}]", e.getMessage());

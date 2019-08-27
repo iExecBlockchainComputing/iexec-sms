@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.secret.user;
+package com.iexec.sms.iexecsms.secret.offchain;
 
 
 import com.iexec.sms.iexecsms.secret.Secret;
@@ -9,36 +9,36 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class UserSecretsService {
+public class OffChainSecretsService {
 
-    private UserSecretsRepository userSecretsRepository;
+    private OffChainSecretsRepository offChainSecretsRepository;
 
-    public UserSecretsService(UserSecretsRepository userSecretsRepository) {
-        this.userSecretsRepository = userSecretsRepository;
+    public OffChainSecretsService(OffChainSecretsRepository offChainSecretsRepository) {
+        this.offChainSecretsRepository = offChainSecretsRepository;
     }
 
-    public Optional<UserSecrets> getUserSecrets(String address) {
-        Optional<UserSecrets> oldFolder = userSecretsRepository.findUserSecretsByOwnerAddress(address);
+    public Optional<OffChainSecrets> getOffChainSecrets(String address) {
+        Optional<OffChainSecrets> oldOffChainSecrets = offChainSecretsRepository.findOffChainSecretsByOwnerAddress(address);
 
-        if (!oldFolder.isPresent()) {
-            UserSecrets newUserSecrets = new UserSecrets(address);
-            return Optional.of(userSecretsRepository.save(newUserSecrets));
+        if (!oldOffChainSecrets.isPresent()) {
+            OffChainSecrets newOffChainSecrets = new OffChainSecrets(address);
+            return Optional.of(offChainSecretsRepository.save(newOffChainSecrets));
         }
 
-        return oldFolder;
+        return oldOffChainSecrets;
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress) {
-        Optional<UserSecrets> optionalSecretFolder = this.getUserSecrets(ownerAddress);
+        Optional<OffChainSecrets> optionalOffChainSecrets = this.getOffChainSecrets(ownerAddress);
 
-        if (!optionalSecretFolder.isPresent()) {
+        if (!optionalOffChainSecrets.isPresent()) {
             log.error("Failed to getSecret (secret folder missing) [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
             return Optional.empty();
         }
 
-        UserSecrets userSecrets = optionalSecretFolder.get();
+        OffChainSecrets offChainSecrets = optionalOffChainSecrets.get();
 
-        Secret secret = userSecrets.getSecret(secretAddress);
+        Secret secret = offChainSecrets.getSecret(secretAddress);
 
         if (secret != null) {
             return Optional.of(secret);
@@ -49,21 +49,21 @@ public class UserSecretsService {
 
 
     public boolean updateSecret(String ownerAddress, Secret newSecret) {
-        Optional<UserSecrets> optionalSecretFolder = this.getUserSecrets(ownerAddress);
+        Optional<OffChainSecrets> optionalSecretFolder = this.getOffChainSecrets(ownerAddress);
 
         if (!optionalSecretFolder.isPresent()) {
             log.error("Failed to updateSecret (secret folder missing) [ownerAddress:{}, secret:{}]", ownerAddress, newSecret);
             return false;
         }
 
-        UserSecrets userSecrets = optionalSecretFolder.get();
-        Secret existingSecret = userSecrets.getSecret(newSecret.getAddress());
+        OffChainSecrets offChainSecrets = optionalSecretFolder.get();
+        Secret existingSecret = offChainSecrets.getSecret(newSecret.getAddress());
 
         if (existingSecret == null) {
             log.info("Adding newSecret [ownerAddress:{}, secretAddress:{}, secretValue:{}]",
                     ownerAddress, newSecret.getAddress(), newSecret.getValue());
-            userSecrets.getSecrets().add(newSecret);
-            userSecretsRepository.save(userSecrets);
+            offChainSecrets.getSecrets().add(newSecret);
+            offChainSecretsRepository.save(offChainSecrets);
             return true;
         }
 
@@ -71,7 +71,7 @@ public class UserSecretsService {
             log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValue:{}, newSecretValue:{}]",
                     ownerAddress, newSecret.getAddress(), existingSecret.getValue(), newSecret.getValue());
             existingSecret.setValue(newSecret.getValue());
-            userSecretsRepository.save(userSecrets);
+            offChainSecretsRepository.save(offChainSecrets);
             return true;
         }
 
