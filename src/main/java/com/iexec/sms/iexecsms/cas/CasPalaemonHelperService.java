@@ -5,7 +5,7 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.secret.Secret;
-import com.iexec.sms.iexecsms.secret.SecretFolderService;
+import com.iexec.sms.iexecsms.secret.user.UserSecretsService;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -39,14 +39,14 @@ public class CasPalaemonHelperService {
 
     private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
     private IexecHubService iexecHubService;
-    private SecretFolderService secretFolderService;
+    private UserSecretsService userSecretsService;
 
     public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
                                     IexecHubService iexecHubService,
-                                    SecretFolderService secretFolderService) {
+                                    UserSecretsService userSecretsService) {
         this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
         this.iexecHubService = iexecHubService;
-        this.secretFolderService = secretFolderService;
+        this.userSecretsService = userSecretsService;
     }
 
     private Map<String, String> getTokenList(String taskId, String workerAddress, String attestingEnclave) throws Exception {
@@ -76,7 +76,7 @@ public class CasPalaemonHelperService {
 
         //TODO: dont use '|' in generic strings (use separate values in db instead)
         //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
-        Optional<Secret> datasetSecret = secretFolderService.getSecret(chainDatasetId, "Kd");
+        Optional<Secret> datasetSecret = userSecretsService.getSecret(chainDatasetId, "Kd");
         String datasetFspfKey = "";
         String datasetFspfTag = "";
         if (datasetSecret.isPresent()) {

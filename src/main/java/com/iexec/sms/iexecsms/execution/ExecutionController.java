@@ -10,7 +10,7 @@ import com.iexec.sms.iexecsms.authorization.Authorization;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
 import com.iexec.sms.iexecsms.cas.CasPalaemonHelperService;
 import com.iexec.sms.iexecsms.cas.CasService;
-import com.iexec.sms.iexecsms.secret.SecretFolderService;
+import com.iexec.sms.iexecsms.secret.user.UserSecretsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +28,15 @@ public class ExecutionController {
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private final CasPalaemonHelperService casPalaemonHelperService;
     private final CasService casService;
-    private SecretFolderService secretFolderService;
+    private UserSecretsService userSecretsService;
     private AuthorizationService authorizationService;
 
     public ExecutionController(
-            SecretFolderService secretFolderService,
+            UserSecretsService userSecretsService,
             AuthorizationService authorizationService,
             CasPalaemonHelperService casPalaemonHelperService,
             CasService casService) {
-        this.secretFolderService = secretFolderService;
+        this.userSecretsService = userSecretsService;
         this.authorizationService = authorizationService;
         this.casPalaemonHelperService = casPalaemonHelperService;
         this.casService = casService;
@@ -57,12 +57,12 @@ public class ExecutionController {
                 .workerSignature(new Signature(data.getWorkerSignature()))//move this
                 .workerpoolSignature(new Signature(data.getCoreSignature())).build();
 
-        if (!authorizationService.isAuthorizedToGetKeys(authorization)) {
+        if (!authorizationService.isAuthorizedOnExecution(authorization)) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
 
         SmsSecretResponseData nonTeeSecrets = SmsSecretResponseData.builder().build();
-        //TODO: fetch secrets - secretFolderService.getSecret("xx") for each alias
+        //TODO: fetch secrets - userSecretsService.getSecret("xx") for each address
         SmsSecretResponse smsSecretResponse = SmsSecretResponse.builder()
                 .data(nonTeeSecrets)
                 .build();
@@ -85,7 +85,7 @@ public class ExecutionController {
                 .workerSignature(new Signature(data.getWorkerSignature()))//move this
                 .workerpoolSignature(new Signature(data.getCoreSignature())).build();
 
-        if (!authorizationService.isAuthorizedToGetKeys(authorization)) {
+        if (!authorizationService.isAuthorizedOnExecution(authorization)) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
 

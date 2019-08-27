@@ -1,6 +1,7 @@
-package com.iexec.sms.iexecsms.secret;
+package com.iexec.sms.iexecsms.secret.user;
 
 import com.iexec.common.utils.HashUtils;
+import com.iexec.sms.iexecsms.secret.Secret;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
@@ -11,14 +12,14 @@ import java.util.List;
 @Data
 @Getter
 @Slf4j
-public class SecretFolder {
+public class UserSecrets {
 
     @Id
     private String id;
     private String address;
     private List<Secret> secrets;
 
-    public SecretFolder(String address) {
+    public UserSecrets(String address) {
         this.address = address;
         this.secrets = new ArrayList<>();
     }
@@ -30,9 +31,9 @@ public class SecretFolder {
         );
     }
 
-    Secret getSecret(String secretAlias) {
+    Secret getSecret(String secretId) {
         for (Secret secret: secrets) {
-            if (secret.getAlias().equals(secretAlias)) {
+            if (secret.getAddress().equals(secretId)) {
                 return secret;
             }
         }

@@ -10,15 +10,12 @@ import lombok.*;
 @AllArgsConstructor
 public class Secret {
 
-    private String alias;
+    private String address; //0xdataset1 or aws.amazon.com
     private String value;
-
-    //private String symmetricKey; //(Kd, Kb, Ke)
-    //private String beneficiaryCredentials; //dropbox, AWS, TODO think about
 
     public String getHash() {
         return HashUtils.concatenateAndHash(
-                HashUtils.sha256(alias),
+                HashUtils.sha256(address),
                 HashUtils.sha256(value)
         );
     }

@@ -1,14 +1,12 @@
 package com.iexec.sms.iexecsms.secret;
 
 
-import com.iexec.common.security.Signature;
-import com.iexec.common.sms.SmsRequest;
-import com.iexec.common.sms.SmsRequestData;
-import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.HashUtils;
-import com.iexec.common.utils.SignatureUtils;
-import com.iexec.sms.iexecsms.authorization.Authorization;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
+import com.iexec.sms.iexecsms.secret.iexec.IexecSecret;
+import com.iexec.sms.iexecsms.secret.iexec.IexecSecretService;
+import com.iexec.sms.iexecsms.secret.user.UserSecrets;
+import com.iexec.sms.iexecsms.secret.user.UserSecretsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,78 +19,120 @@ import java.util.Optional;
 public class SecretController {
 
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
-    private SecretFolderService secretFolderService;
     private AuthorizationService authorizationService;
+    private IexecSecretService iexecSecretService;
+    private UserSecretsService userSecretsService;
 
-    public SecretController(
-            SecretFolderService secretFolderService,
-            AuthorizationService authorizationService) {
-        this.secretFolderService = secretFolderService;
+    public SecretController(AuthorizationService authorizationService,
+                            UserSecretsService userSecretsService,
+                            IexecSecretService iexecSecretService) {
+        this.userSecretsService = userSecretsService;
         this.authorizationService = authorizationService;
+        this.iexecSecretService = iexecSecretService;
     }
 
     /*
      * Dev endpoint for seeing all secrets of an address
      * */
-    @GetMapping("/secrets/{address}/folder")
-    public ResponseEntity getSecretFolderV2(@RequestParam String address) {
-        Optional<SecretFolder> secret = secretFolderService.getSecretFolder(address);
+    @GetMapping("/secrets/users/all")
+    public ResponseEntity getUserSecretsV2(@RequestParam String address) {
+        Optional<UserSecrets> secret = userSecretsService.getUserSecrets(address);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /*
      * Non-required signatures for dev
      * */
-    @GetMapping("/secrets/{address}/v2")
-    public ResponseEntity getSecretV2(@RequestParam String address,
-                                      @RequestParam String secretAlias,
-                                      @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                      @RequestParam(required = false) String signature) {
+    @GetMapping("/secrets/iexec")
+    public ResponseEntity getIexecSecretV2(@RequestParam String secretAddress,
+                                           @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                           @RequestParam(required = false) String signature) {
         if (checkSignature) {
-            byte[] message = BytesUtils.stringToBytes(HashUtils.concatenateAndHash(
+            String message = HashUtils.concatenateAndHash(
                     DOMAIN,
-                    address,
-                    HashUtils.sha256(secretAlias)));
-            Signature signatureToCheck = new Signature(signature);
+                    secretAddress);
 
-            boolean isSignatureValid = SignatureUtils.isSignatureValid(message, signatureToCheck, address);
-
-            if (!isSignatureValid) {
+            //TODO: use isAuthorized(..) and isAuthorizedOnExecution(..)
+            if (!authorizationService.isSignedByOwner(message, signature, secretAddress)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
-        Optional<Secret> secret = secretFolderService.getSecret(address, secretAlias);
+        Optional<IexecSecret> secret = iexecSecretService.getSecret(secretAddress);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /*
      * Non-required signatures for dev
      * */
-    @PostMapping("/secrets/{address}/v2")
-    public ResponseEntity setSecretV2(@RequestParam String address,
+    @GetMapping("/secrets/user/")
+    public ResponseEntity getSecretV2(@RequestParam String userAddress,
+                                      @RequestParam String secretId,
+                                      @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                      @RequestParam(required = false) String signature) {
+        if (checkSignature) {
+            String message = HashUtils.concatenateAndHash(
+                    DOMAIN,
+                    userAddress,
+                    HashUtils.sha256(secretId));
+
+            if (!authorizationService.isSignedByHimself(message, signature, userAddress)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        Optional<Secret> secret = userSecretsService.getSecret(userAddress, secretId);
+        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /*
+     * Non-required signatures for dev
+     * */
+    @PostMapping("/secrets/user")
+    public ResponseEntity setSecretV2(@RequestParam String userAddress,
                                       @RequestBody Secret secret,
                                       @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
                                       @RequestParam(required = false) String signature) {
         if (checkSignature) {
-            byte[] message = BytesUtils.stringToBytes(HashUtils.concatenateAndHash(
+            String message = HashUtils.concatenateAndHash(
                     DOMAIN,
-                    address,
-                    secret.getHash()));
-            Signature signatureToCheck = new Signature(signature);
+                    userAddress,
+                    secret.getHash());
 
-            boolean isSignatureValid = SignatureUtils.isSignatureValid(message, signatureToCheck, address);
-
-            if (!isSignatureValid) {
+            if (!authorizationService.isSignedByHimself(message, signature, userAddress)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
-        boolean isSecretSet = secretFolderService.updateSecret(address, secret);
+        boolean isSecretSet = userSecretsService.updateSecret(userAddress, secret);
         if (isSecretSet) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+
+    /*
+     * Non-required signatures for dev
+     * */
+    @PostMapping("/secrets/iexec")
+    public ResponseEntity setIexecSecretV2(@RequestParam String secretAddress,
+                                           @RequestBody String secretValue,
+                                           @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                           @RequestParam(required = false) String signature) {
+        if (checkSignature) {
+            String message = HashUtils.concatenateAndHash(
+                    DOMAIN,
+                    secretAddress,
+                    secretValue);
+
+            if (!authorizationService.isSignedByOwner(message, signature, secretAddress)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        iexecSecretService.updateSecret(secretAddress, secretValue);
+        return ResponseEntity.ok().build();
     }
 
 }
