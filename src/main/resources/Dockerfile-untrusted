@@ -15,9 +15,9 @@ ENV IEXEC_SCONE_CAS_HOST iexec-cas
 ENV IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET palaemonConfTemplateWithDataset.vm
 ENV IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET palaemonConfTemplateWithoutDataset.vm
 
-COPY src/main/resources/iexec-sms-dev-keystore.p12 iexec-sms-dev-keystore.p12
-ENV IEXEC_SMS_SSL_KEYSTORE iexec-sms-dev-keystore.p12
-#RUN keytool -list -v -keystore iexec-sms-dev-keystore.p12 -storepass whatever
+COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
+ENV IEXEC_SMS_SSL_KEYSTORE /ssl-keystore-dev.p12
+RUN keytool -list -v -keystore ssl-keystore-dev.p12 -storepass whatever
 
 ENTRYPOINT ["./entrypoint.sh"]
 

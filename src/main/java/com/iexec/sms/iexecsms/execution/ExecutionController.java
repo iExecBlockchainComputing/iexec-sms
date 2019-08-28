@@ -13,9 +13,9 @@ import com.iexec.sms.iexecsms.cas.CasService;
 import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -80,7 +80,7 @@ public class ExecutionController {
      * Retrieve session when tee execution
      * */
     @PostMapping("/executions/tee/session/generate")
-    public ResponseEntity getTeeExecutionSessionV2(@RequestBody SmsRequest smsRequest) throws Exception {
+    public ResponseEntity generateTeeExecutionSession(@RequestBody SmsRequest smsRequest) throws Exception {
         // Check that the demand is legitimate -> move workerSignature outside of authorization
         // see secret controller for auth
         SmsRequestData data = smsRequest.getSmsSecretRequestData();
@@ -98,30 +98,18 @@ public class ExecutionController {
         String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
         String workerAddress = smsRequest.getSmsSecretRequestData().getWorkerAddress();
         String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
-        String configFile = casPalaemonHelperService.getPalaemonConfigurationFile(taskId, workerAddress, attestingEnclave);
+        String sessionId = String.format("%s0000%s", taskId, RandomStringUtils.randomAlphanumeric(10));
+        String configFile = casPalaemonHelperService.getPalaemonConfigurationFile(sessionId, taskId, workerAddress, attestingEnclave);
+        System.out.println("## Palaemon config ##"); //dev logs
         System.out.println(configFile);
+        System.out.println("#####################");
+        boolean isSessionCreated = casService.generateSecureSessionWithPalaemonFile(configFile.getBytes());
 
-        // TODO: check if we should just not simply return the sessionID
-        // TODO: return appropriate type
-        ResponseEntity responseEntity = casService.generateSecureSessionWithPalaemonFile(configFile);
+        if (isSessionCreated) {
+            return ResponseEntity.ok(taskId);
+        }
 
-        return responseEntity;
-    }
-
-
-    /*
-     * Remove this by replacing generateSecureSessionV1 by getTeeExecutionSessionV2
-     * */
-    @PostMapping("/sessions/generate")
-    public ResponseEntity generateSecureSessionV1(@RequestBody SmsRequest smsRequest) throws Exception {
-        String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
-        String workerAddress = smsRequest.getSmsSecretRequestData().getWorkerAddress();
-        String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
-        String configFile = casPalaemonHelperService.getPalaemonConfigurationFile(taskId, workerAddress, attestingEnclave);
-        System.out.println(configFile);
-
-        // TODO: check if we should just not simply return the sessionID
-        return casService.generateSecureSessionWithPalaemonFile(configFile);
+        return ResponseEntity.notFound().build();
     }
 
 }

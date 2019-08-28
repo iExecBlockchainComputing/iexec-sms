@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.execution.challenge;
+package com.iexec.sms.iexecsms.challenge;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 

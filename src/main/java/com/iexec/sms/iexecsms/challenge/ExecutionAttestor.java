@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.execution.challenge;
+package com.iexec.sms.iexecsms.challenge;
 
 import com.iexec.sms.iexecsms.credential.EthereumCredentials;
 import lombok.AllArgsConstructor;

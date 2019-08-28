@@ -1,6 +1,5 @@
 package com.iexec.sms.iexecsms.credential;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,15 +17,18 @@ import java.math.BigInteger;
 public class EthereumCredentials {
 
     private String address;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private BigInteger privateKey;
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private BigInteger publicKey;
+    private String privateKey;
+    private String publicKey;
 
     public EthereumCredentials(ECKeyPair ecKeyPair) {
         this.address = Numeric.prependHexPrefix(Keys.getAddress(ecKeyPair));
-        this.privateKey = ecKeyPair.getPrivateKey();
-        this.publicKey = ecKeyPair.getPublicKey();
+        this.privateKey = toHex(ecKeyPair.getPrivateKey());
+        this.publicKey = toHex(ecKeyPair.getPublicKey());
+
+    }
+
+    private String toHex(BigInteger input) {
+        return Numeric.prependHexPrefix(input.toString(16));
     }
 
 }

@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.execution.challenge;
+package com.iexec.sms.iexecsms.challenge;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

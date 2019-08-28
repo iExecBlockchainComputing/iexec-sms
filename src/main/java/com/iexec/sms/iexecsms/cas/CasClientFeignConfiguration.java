@@ -8,23 +8,25 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.ResourceUtils;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.security.KeyStore;
 
 @Configuration
 @Slf4j
+/*
+ *
+ * Client side authentication
+ * The CAS will remember the SMS with the sms certificate (located inside the sms keystore)
+ *
+ * */
 public class CasClientFeignConfiguration {
 
-    private CasClientConfiguration casClientConfiguration;
+    private SslConfiguration sslConfiguration;
 
-    public CasClientFeignConfiguration(CasClientConfiguration casClientConfiguration) {
-        this.casClientConfiguration = casClientConfiguration;
+    public CasClientFeignConfiguration(SslConfiguration sslConfiguration) {
+        this.sslConfiguration = sslConfiguration;
     }
 
     @Bean
@@ -34,29 +36,23 @@ public class CasClientFeignConfiguration {
 
     @Bean
     public Client feignClient() throws Exception {
+        //We dont want to check CAS identity for now, used NoopHostnameVerifier(..)
         return new Client.Default(getSSLSocketFactory(), new NoopHostnameVerifier());
     }
 
     private SSLSocketFactory getSSLSocketFactory() throws Exception {
         TrustStrategy acceptingTrustStrategy = (chain, authType) -> true;
 
-        char[] password = casClientConfiguration.getSslKeystorePassword().toCharArray();
+        char[] password = sslConfiguration.getSslKeystorePassword().toCharArray();
 
         SSLContext sslContext = SSLContexts.custom()
-                .setKeyStoreType("PKCS12")
-                .loadKeyMaterial(new File(casClientConfiguration.getSslKeystore()), password, password, (aliases, socket) -> "localhost")
+                .setKeyStoreType(sslConfiguration.getSslKeystoreType())
+                .loadKeyMaterial(new File(sslConfiguration.getSslKeystore()),
+                        password,
+                        password,
+                        (aliases, socket) -> sslConfiguration.getSslKeyAlias())
                 .loadTrustMaterial(null, acceptingTrustStrategy)
                 .build();
         return sslContext.getSocketFactory();
-
-    }
-
-    private KeyStore getKeyStore(String file, char[] password) throws Exception {
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        File key = ResourceUtils.getFile(file);
-        try (InputStream in = new FileInputStream(key)) {
-            keyStore.load(in, password);
-        }
-        return keyStore;
     }
 }

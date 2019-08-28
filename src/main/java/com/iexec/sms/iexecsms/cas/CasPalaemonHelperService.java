@@ -4,21 +4,16 @@ import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
-import com.iexec.sms.iexecsms.secret.Secret;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
+import com.iexec.sms.iexecsms.challenge.ExecutionAttestor;
+import com.iexec.sms.iexecsms.challenge.ExecutionChallengeService;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.stereotype.Service;
-import org.web3j.utils.Numeric;
 
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -46,18 +41,20 @@ public class CasPalaemonHelperService {
     private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
     private IexecHubService iexecHubService;
     private OnChainSecretService onChainSecretService;
+    private ExecutionChallengeService executionChallengeService;
 
     public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
                                     IexecHubService iexecHubService,
-                                    OnChainSecretService onChainSecretService) {
+                                    OnChainSecretService onChainSecretService,
+                                    ExecutionChallengeService executionChallengeService
+    ) {
         this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
         this.iexecHubService = iexecHubService;
         this.onChainSecretService = onChainSecretService;
+        this.executionChallengeService = executionChallengeService;
     }
 
-    private Map<String, String> getTokenList(String taskId, String workerAddress, String attestingEnclave) throws Exception {
-        String sessionId = RandomStringUtils.randomAlphanumeric(10);
-
+    public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
             return new HashMap<>();
@@ -92,6 +89,8 @@ public class CasPalaemonHelperService {
             datasetFspfTag = datasetFields[1];
         }
 
+        Optional<ExecutionAttestor> executionAttestor = executionChallengeService.getOrCreate(taskId);
+
         Map<String, String> tokens = new HashMap<>();
         //palaemon
         tokens.put(SESSION_ID_PROPERTY, sessionId);
@@ -110,17 +109,18 @@ public class CasPalaemonHelperService {
         tokens.put(COMMAND_PROPERTY, dealParams);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
-        if (!attestingEnclave.isEmpty()) {
-            tokens.put(ENCLAVE_KEY_PROPERTY, attestingEnclave);
+
+        if (!attestingEnclave.isEmpty() && executionAttestor.isPresent()
+                && executionAttestor.get().getCredentials().getPrivateKey() != null) {
+            tokens.put(ENCLAVE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
         }
 
         return tokens;
     }
 
-    public String getPalaemonConfigurationFile(String taskId, String workerAddress, String attestingEnclave) throws Exception {
-
+    public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         // Palaemon file should be generated and a call to the CAS with this file should happen here.
-        Map<String, String> tokens = getTokenList(taskId, workerAddress, attestingEnclave);
+        Map<String, String> tokens = getTokenList(sessionId, taskId, workerAddress, attestingEnclave);
 
         VelocityEngine ve = new VelocityEngine();
         ve.init();
