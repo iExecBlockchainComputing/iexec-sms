@@ -98,15 +98,18 @@ public class ExecutionController {
         String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
         String workerAddress = smsRequest.getSmsSecretRequestData().getWorkerAddress();
         String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
-        String sessionId = String.format("%s0000%s", taskId, RandomStringUtils.randomAlphanumeric(10));
+        //String sessionId = String.format("%s0000%s", taskId, RandomStringUtils.randomAlphanumeric(10));
+        String sessionId = RandomStringUtils.randomAlphanumeric(10);
         String configFile = casPalaemonHelperService.getPalaemonConfigurationFile(sessionId, taskId, workerAddress, attestingEnclave);
         System.out.println("## Palaemon config ##"); //dev logs
         System.out.println(configFile);
         System.out.println("#####################");
-        boolean isSessionCreated = casService.generateSecureSessionWithPalaemonFile(configFile.getBytes());
+
+        boolean isSessionCreated = casService.generateSecureSessionWithRestTemplate(configFile.getBytes());
+
 
         if (isSessionCreated) {
-            return ResponseEntity.ok(taskId);
+            return ResponseEntity.ok(sessionId);
         }
 
         return ResponseEntity.notFound().build();

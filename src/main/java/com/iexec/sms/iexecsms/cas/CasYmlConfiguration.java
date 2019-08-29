@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CasConfiguration {
+public class CasYmlConfiguration {
 
     @Value("${scone.cas.host}")
     private String host;
