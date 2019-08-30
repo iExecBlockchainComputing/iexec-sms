@@ -10,10 +10,9 @@ server:
     key-alias: ${IEXEC_SMS_SSL_KEYSTORE_ALIAS:iexec-core}
     client-auth: need
 
-logging:
-  level:
-    #com.iexec.sms.iexecsms.cas.CasClient: DEBUG
-    #org.apache.http: DEBUG
+#logging.level:
+  #com.iexec.sms.iexecsms.cas.CasClient: DEBUG
+  #org.apache.http: DEBUG
 
 # Not sure it's a good idea but here is a link for an embedded mongodb
 # https://www.baeldung.com/spring-boot-embedded-mongodb

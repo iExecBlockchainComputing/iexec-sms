@@ -103,7 +103,7 @@ public class CasPalaemonHelperService {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
         }
         if (!datasetFspfTag.isEmpty()) {
-            tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfTag);
+            tokens.put(DATASET_FSPF_TAG_PROPERTY, datasetFspfTag);
         }
         //computing
         tokens.put(COMMAND_PROPERTY, dealParams);
