@@ -25,6 +25,7 @@ services:
          enclave_key: $ENCLAVE_KEY
          taskid: $TASK_ID
          worker: $WORKER_ADDRESS
+         beneficiary_key: $BENEFICIARY_KEY
 
 images:
    - name: image
@@ -40,3 +41,4 @@ volumes:
    - name: iexec_in
      fspf_tag: $DATA_FSPF_TAG
      fspf_key: $DATA_FSPF_KEY
+   - name: scone

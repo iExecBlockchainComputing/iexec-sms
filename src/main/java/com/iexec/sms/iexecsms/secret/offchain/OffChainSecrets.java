@@ -31,9 +31,9 @@ public class OffChainSecrets {
         );
     }
 
-    Secret getSecret(String secretId) {
+    public Secret getSecret(String secretAddress) {
         for (Secret secret: secrets) {
-            if (secret.getAddress().equals(secretId)) {
+            if (secret.getAddress().equals(secretAddress)) {
                 return secret;
             }
         }

@@ -25,6 +25,7 @@ services:
          enclave_key: $ENCLAVE_KEY
          taskid: $TASK_ID
          worker: $WORKER_ADDRESS
+         beneficiary_key: $BENEFICIARY_KEY
 
 images:
    - name: image

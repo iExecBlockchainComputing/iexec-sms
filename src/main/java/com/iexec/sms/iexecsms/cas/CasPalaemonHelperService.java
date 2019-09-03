@@ -6,6 +6,9 @@ import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.challenge.ExecutionAttestor;
 import com.iexec.sms.iexecsms.challenge.ExecutionChallengeService;
+import com.iexec.sms.iexecsms.secret.Secret;
+import com.iexec.sms.iexecsms.secret.offchain.OffChainSecrets;
+import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
 import org.apache.velocity.Template;
@@ -35,22 +38,27 @@ public class CasPalaemonHelperService {
     private static final String TASK_ID_PROPERTY = "TASK_ID";
     private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
     private static final String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
+    //result encryption
+    private static final String BENEFICIARY_KEY_PROPERTY = "BENEFICIARY_KEY";
 
     private static final String FIELD_SPLITTER = "\\|";
 
     private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
     private IexecHubService iexecHubService;
     private OnChainSecretService onChainSecretService;
+    private OffChainSecretsService offChainSecretsService;
     private ExecutionChallengeService executionChallengeService;
 
     public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
                                     IexecHubService iexecHubService,
                                     OnChainSecretService onChainSecretService,
+                                    OffChainSecretsService offChainSecretsService,
                                     ExecutionChallengeService executionChallengeService
     ) {
         this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
         this.iexecHubService = iexecHubService;
         this.onChainSecretService = onChainSecretService;
+        this.offChainSecretsService = offChainSecretsService;
         this.executionChallengeService = executionChallengeService;
     }
 
@@ -91,6 +99,14 @@ public class CasPalaemonHelperService {
 
         Optional<ExecutionAttestor> executionAttestor = executionChallengeService.getOrCreate(taskId);
 
+        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
+
+        String beneficiaryKey = "''";//empty value in yml
+        if (!beneficiaryOffChainSecrets.isEmpty()) {
+            Secret beneficiaryKeySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
+            beneficiaryKey = beneficiaryKeySecret.getValue();
+        }
+
         Map<String, String> tokens = new HashMap<>();
         //palaemon
         tokens.put(SESSION_ID_PROPERTY, sessionId);
@@ -109,6 +125,8 @@ public class CasPalaemonHelperService {
         tokens.put(COMMAND_PROPERTY, dealParams);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
+        //result encryption
+        tokens.put(BENEFICIARY_KEY_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
 
         if (!attestingEnclave.isEmpty() && executionAttestor.isPresent()
                 && executionAttestor.get().getCredentials().getPrivateKey() != null) {

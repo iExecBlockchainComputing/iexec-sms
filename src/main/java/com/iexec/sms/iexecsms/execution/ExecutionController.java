@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.web3j.crypto.Keys;
 
 import java.util.Optional;
 
@@ -67,6 +68,7 @@ public class ExecutionController {
 
         SmsSecretResponseData nonTeeSecrets = SmsSecretResponseData.builder().build();
 
+        //TODO: Get Kd, Kb (& Ke? Do we really need it?)
         //onChainSecretService.getSecret()
 
         SmsSecretResponse smsSecretResponse = SmsSecretResponse.builder()
@@ -96,10 +98,9 @@ public class ExecutionController {
         }
 
         String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
-        String workerAddress = smsRequest.getSmsSecretRequestData().getWorkerAddress();
+        String workerAddress = Keys.toChecksumAddress(smsRequest.getSmsSecretRequestData().getWorkerAddress());
         String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
-        //String sessionId = String.format("%s0000%s", taskId, RandomStringUtils.randomAlphanumeric(10));
-        String sessionId = RandomStringUtils.randomAlphanumeric(10);
+        String sessionId = String.format("%s0000%s", RandomStringUtils.randomAlphanumeric(10), taskId);
         String configFile = casPalaemonHelperService.getPalaemonConfigurationFile(sessionId, taskId, workerAddress, attestingEnclave);
         System.out.println("## Palaemon config ##"); //dev logs
         System.out.println(configFile);
