@@ -4,15 +4,11 @@ server:
     enabled: ${IEXEC_SMS_HTTP_ENABLED:true}
     port: ${IEXEC_SMS_HTTP_PORT:15000}
   ssl:
-    key-store: ${IEXEC_SMS_SSL_KEYSTORE:./src/main/resources/ssl-keystore-dev.p12}
+    key-store: ${IEXEC_SMS_SSL_KEYSTORE:./src/main/resources/ssl-keystore-dev.p12} #iexec-core dev certificate for dev
     key-store-password: ${IEXEC_SMS_SSL_KEYSTORE_PASSWORD:whatever}
     key-store-type: ${IEXEC_SMS_SSL_KEYSTORE_TYPE:PKCS12}
     key-alias: ${IEXEC_SMS_SSL_KEYSTORE_ALIAS:iexec-core}
     client-auth: need
-
-#logging.level:
-  #com.iexec.sms.iexecsms.cas.CasClient: DEBUG
-  #org.apache.http: DEBUG
 
 # Not sure it's a good idea but here is a link for an embedded mongodb
 # https://www.baeldung.com/spring-boot-embedded-mongodb

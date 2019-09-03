@@ -17,7 +17,6 @@ ENV IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET palaemonConfTemplateWithoutDatase
 
 COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
 ENV IEXEC_SMS_SSL_KEYSTORE /ssl-keystore-dev.p12
-RUN keytool -list -v -keystore ssl-keystore-dev.p12 -storepass whatever
 
 ENTRYPOINT ["./entrypoint.sh"]
 
