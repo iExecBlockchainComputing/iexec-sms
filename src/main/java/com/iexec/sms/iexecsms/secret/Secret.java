@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 public class Secret {
 
-    private String address; //0xdataset1 or aws.amazon.com
+    private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
     private String value;
 
     public String getHash() {

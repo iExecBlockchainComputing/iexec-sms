@@ -125,13 +125,12 @@ public class CasPalaemonHelperService {
         tokens.put(COMMAND_PROPERTY, dealParams);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
-        //result encryption
-        tokens.put(BENEFICIARY_KEY_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
-
         if (!attestingEnclave.isEmpty() && executionAttestor.isPresent()
                 && executionAttestor.get().getCredentials().getPrivateKey() != null) {
             tokens.put(ENCLAVE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
         }
+        //result encryption
+        tokens.put(BENEFICIARY_KEY_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
 
         return tokens;
     }

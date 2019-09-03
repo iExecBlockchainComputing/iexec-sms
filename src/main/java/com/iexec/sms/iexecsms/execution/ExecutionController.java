@@ -83,8 +83,7 @@ public class ExecutionController {
      * */
     @PostMapping("/executions/tee/session/generate")
     public ResponseEntity generateTeeExecutionSession(@RequestBody SmsRequest smsRequest) throws Exception {
-        // Check that the demand is legitimate -> move workerSignature outside of authorization
-        // see secret controller for auth
+        //TODO move workerSignature outside of smsRequest (Use an authorization)
         SmsRequestData data = smsRequest.getSmsSecretRequestData();
         Authorization authorization = Authorization.builder()
                 .chainTaskId(data.getChainTaskId())
@@ -102,11 +101,11 @@ public class ExecutionController {
         String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
         String sessionId = String.format("%s0000%s", RandomStringUtils.randomAlphanumeric(10), taskId);
         String configFile = casPalaemonHelperService.getPalaemonConfigurationFile(sessionId, taskId, workerAddress, attestingEnclave);
-        System.out.println("## Palaemon config ##"); //dev logs
+        System.out.println("## Palaemon config ##"); //dev logs, lets keep them for now
         System.out.println(configFile);
         System.out.println("#####################");
 
-        boolean isSessionCreated = casService.generateSecureSessionWithRestTemplate(configFile.getBytes());
+        boolean isSessionCreated = casService.generateSecureSession(configFile.getBytes());
 
 
         if (isSessionCreated) {

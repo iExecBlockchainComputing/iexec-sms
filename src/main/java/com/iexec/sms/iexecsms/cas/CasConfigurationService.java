@@ -48,16 +48,4 @@ public class CasConfigurationService {
         return new RestTemplate(factory);
     }
 
-    @Bean
-    Logger.Level feignLoggerLevel() {
-        return Logger.Level.FULL;
-    }
-
-    /*
-     * Unused
-     * */
-    @Bean
-    public Client feignClient() throws Exception {
-        return new Client.Default(sslService.getSSLSocketFactory(), new NoopHostnameVerifier());
-    }
 }

@@ -1,8 +1,8 @@
 package com.iexec.sms.iexecsms.secret.offchain;
 
-import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.iexecsms.secret.Secret;
-import lombok.*;
+import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
 
@@ -19,20 +19,13 @@ public class OffChainSecrets {
     private String ownerAddress;
     private List<Secret> secrets;
 
-    public OffChainSecrets(String ownerAddress) {
+    OffChainSecrets(String ownerAddress) {
         this.ownerAddress = ownerAddress;
         this.secrets = new ArrayList<>();
     }
 
-    public String getHash(){
-        return HashUtils.concatenateAndHash(
-                HashUtils.sha256(ownerAddress)//,
-                //payload.getHash()
-        );
-    }
-
     public Secret getSecret(String secretAddress) {
-        for (Secret secret: secrets) {
+        for (Secret secret : secrets) {
             if (secret.getAddress().equals(secretAddress)) {
                 return secret;
             }

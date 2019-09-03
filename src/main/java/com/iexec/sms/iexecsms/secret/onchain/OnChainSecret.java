@@ -14,7 +14,7 @@ public class OnChainSecret extends Secret {
     @Id
     private String id;
 
-    public OnChainSecret(String address, String value) {
+    OnChainSecret(String address, String value) {
         super(address, value);
     }
 }
