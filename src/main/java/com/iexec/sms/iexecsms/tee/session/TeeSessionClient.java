@@ -12,13 +12,13 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TeeSessionClient {
 
-    private TeeSessionConfiguration teeSessionConfiguration;
     private SslRestClient sslRestClient;
+    private TeeCasConfiguration teeCasConfiguration;
 
     public TeeSessionClient(
-            TeeSessionConfiguration teeSessionConfiguration,
+            TeeCasConfiguration teeCasConfiguration,
             SslRestClient sslRestClient) {
-        this.teeSessionConfiguration = teeSessionConfiguration;
+        this.teeCasConfiguration = teeCasConfiguration;
         this.sslRestClient = sslRestClient;
     }
 
@@ -29,7 +29,7 @@ public class TeeSessionClient {
         HttpEntity<byte[]> httpEntity = new HttpEntity<>(palaemonFile, headers);
         ResponseEntity<String> response = null;
         try {
-            response = sslRestClient.getRestTemplate().exchange(teeSessionConfiguration.getCasUrl() + "/session",
+            response = sslRestClient.getRestTemplate().exchange(teeCasConfiguration.getCasUrl() + "/session",
                     HttpMethod.POST, httpEntity, String.class);
         } catch (Exception e) {
             log.error("Failed to generateSecureSession");

@@ -43,19 +43,19 @@ public class TeeSessionHelper {
 
     private static final String FIELD_SPLITTER = "\\|";
 
-    private TeeSessionConfiguration teeSessionConfiguration;
+    private TeeSessionHelperConfiguration teeSessionHelperConfiguration;
     private IexecHubService iexecHubService;
     private OnChainSecretService onChainSecretService;
     private OffChainSecretsService offChainSecretsService;
     private TeeChallengeService teeChallengeService;
 
     public TeeSessionHelper(
-            TeeSessionConfiguration teeSessionConfiguration,
+            TeeSessionHelperConfiguration teeSessionHelperConfiguration,
             IexecHubService iexecHubService,
             OnChainSecretService onChainSecretService,
             OffChainSecretsService offChainSecretsService,
             TeeChallengeService teeChallengeService) {
-        this.teeSessionConfiguration = teeSessionConfiguration;
+        this.teeSessionHelperConfiguration = teeSessionHelperConfiguration;
         this.iexecHubService = iexecHubService;
         this.onChainSecretService = onChainSecretService;
         this.offChainSecretsService = offChainSecretsService;
@@ -144,9 +144,9 @@ public class TeeSessionHelper {
 
         Template t;
         if (tokens.containsKey(DATASET_FSPF_KEY_PROPERTY) && tokens.containsKey(DATASET_FSPF_TAG_PROPERTY)) {
-            t = ve.getTemplate(teeSessionConfiguration.getPalaemonConfigFileWithDataset());
+            t = ve.getTemplate(teeSessionHelperConfiguration.getPalaemonConfigFileWithDataset());
         } else {
-            t = ve.getTemplate(teeSessionConfiguration.getPalaemonConfigFileWithoutDataset());
+            t = ve.getTemplate(teeSessionHelperConfiguration.getPalaemonConfigFileWithoutDataset());
         }
         VelocityContext context = new VelocityContext();
         // copy all data from the tokens into context

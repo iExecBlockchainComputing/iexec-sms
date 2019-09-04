@@ -10,13 +10,7 @@ import org.springframework.stereotype.Component;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TeeSessionConfiguration {
-
-    @Value("${scone.cas.host}")
-    private String host;
-
-    @Value("${scone.cas.port}")
-    private String port;
+public class TeeSessionHelperConfiguration {
 
     @Value("${scone.cas.palaemon.configFile.withDataset}")
     private String palaemonConfigFileWithDataset;
@@ -24,7 +18,4 @@ public class TeeSessionConfiguration {
     @Value("${scone.cas.palaemon.configFile.withoutDataset}")
     private String palaemonConfigFileWithoutDataset;
 
-    public String getCasUrl() {
-        return "https://" + host + ":" + port;
-    }
 }
