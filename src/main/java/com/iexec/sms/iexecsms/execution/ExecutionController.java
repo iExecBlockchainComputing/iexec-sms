@@ -6,6 +6,7 @@ import com.iexec.common.sms.SmsRequest;
 import com.iexec.common.sms.SmsRequestData;
 import com.iexec.common.sms.secrets.SmsSecretResponse;
 import com.iexec.common.sms.secrets.SmsSecretResponseData;
+import com.iexec.common.sms.secrets.TaskSecrets;
 import com.iexec.sms.iexecsms.authorization.Authorization;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
 import com.iexec.sms.iexecsms.cas.CasPalaemonHelperService;
@@ -30,6 +31,7 @@ public class ExecutionController {
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private final CasPalaemonHelperService casPalaemonHelperService;
     private final CasService casService;
+    private NonTeeExecutionService nonTeeExecutionService;
     private OffChainSecretsService offChainSecretsService;
     private OnChainSecretService onChainSecretService;
     private AuthorizationService authorizationService;
@@ -39,12 +41,14 @@ public class ExecutionController {
             OnChainSecretService onChainSecretService,
             AuthorizationService authorizationService,
             CasPalaemonHelperService casPalaemonHelperService,
-            CasService casService) {
+            CasService casService,
+            NonTeeExecutionService nonTeeExecutionService) {
         this.offChainSecretsService = offChainSecretsService;
         this.onChainSecretService = onChainSecretService;
         this.authorizationService = authorizationService;
         this.casPalaemonHelperService = casPalaemonHelperService;
         this.casService = casService;
+        this.nonTeeExecutionService = nonTeeExecutionService;
     }
 
     /*
@@ -62,17 +66,21 @@ public class ExecutionController {
                 .workerSignature(new Signature(data.getWorkerSignature()))//move this
                 .workerpoolSignature(new Signature(data.getCoreSignature())).build();
 
-        if (!authorizationService.isAuthorizedOnExecution(authorization)) {
+        if (!authorizationService.isAuthorizedOnExecution(authorization, false)) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
 
-        SmsSecretResponseData nonTeeSecrets = SmsSecretResponseData.builder().build();
+        Optional<TaskSecrets> nonTeeTaskSecrets = nonTeeExecutionService.getNonTeeTaskSecrets(data.getChainTaskId());
+        if (nonTeeTaskSecrets.isEmpty()) {
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }
 
-        //TODO: Get Kd, Kb (& Ke? Do we really need it?)
-        //onChainSecretService.getSecret()
+        SmsSecretResponseData smsSecretResponseData = SmsSecretResponseData.builder()
+                .secrets(nonTeeTaskSecrets.get())
+                .build();
 
         SmsSecretResponse smsSecretResponse = SmsSecretResponse.builder()
-                .data(nonTeeSecrets)
+                .data(smsSecretResponseData)
                 .build();
 
         return Optional.of(smsSecretResponse).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -92,7 +100,7 @@ public class ExecutionController {
                 .workerSignature(new Signature(data.getWorkerSignature()))//move this
                 .workerpoolSignature(new Signature(data.getCoreSignature())).build();
 
-        if (!authorizationService.isAuthorizedOnExecution(authorization)) {
+        if (!authorizationService.isAuthorizedOnExecution(authorization, true)) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
 

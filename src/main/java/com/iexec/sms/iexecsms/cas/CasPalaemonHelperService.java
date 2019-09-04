@@ -2,6 +2,8 @@ package com.iexec.sms.iexecsms.cas;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
+import com.iexec.common.sms.secrets.SmsSecret;
+import com.iexec.common.sms.secrets.TaskSecrets;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.challenge.ExecutionAttestor;

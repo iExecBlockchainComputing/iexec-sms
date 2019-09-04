@@ -26,12 +26,19 @@ public class AuthorizationService {
         this.iexecHubService = iexecHubService;
     }
 
-    public boolean isAuthorizedOnExecution(Authorization authorization) {
+    public boolean isAuthorizedOnExecution(Authorization authorization, boolean isTeeEndpoint) {
         if (authorization == null || authorization.getChainTaskId().isEmpty()) {
             log.error("isAuthorizedOnExecution failed (empty params)");
             return false;
         }
         String chainTaskId = authorization.getChainTaskId();
+
+        boolean isAllowedToAccessEndpoint = isTeeEndpoint == iexecHubService.isTeeTask(chainTaskId);
+        if (!isAllowedToAccessEndpoint){
+            log.error("isAuthorizedOnExecution failed (unauthorized endpoint) [chainTaskId:{}]", chainTaskId);
+            return false;
+        }
+
         Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
         if (!optionalChainTask.isPresent()) {
             log.error("isAuthorizedOnExecution failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
