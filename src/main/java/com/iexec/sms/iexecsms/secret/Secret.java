@@ -1,18 +1,23 @@
 package com.iexec.sms.iexecsms.secret;
 
+import com.iexec.common.utils.HashUtils;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 
 @Data
 @Getter
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class Secret {
 
-    @Id
-    private String id;
-    private String owner;
-    private SecretPayload payload;
+    private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
+    private String value;
+
+    public String getHash() {
+        return HashUtils.concatenateAndHash(
+                HashUtils.sha256(address),
+                HashUtils.sha256(value)
+        );
+    }
 
 }

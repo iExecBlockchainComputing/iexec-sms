@@ -4,6 +4,8 @@ package com.iexec.sms.iexecsms.authorization;
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.ChainTaskStatus;
+import com.iexec.common.security.Signature;
+import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.SignatureUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,15 +26,22 @@ public class AuthorizationService {
         this.iexecHubService = iexecHubService;
     }
 
-    public boolean isAuthorizedToGetKeys(Authorization authorization) {
+    public boolean isAuthorizedOnExecution(Authorization authorization, boolean isTeeEndpoint) {
         if (authorization == null || authorization.getChainTaskId().isEmpty()) {
-            log.error("isAuthorizedToGetKeys failed (empty params)");
+            log.error("isAuthorizedOnExecution failed (empty params)");
             return false;
         }
         String chainTaskId = authorization.getChainTaskId();
+
+        boolean isAllowedToAccessEndpoint = isTeeEndpoint == iexecHubService.isTeeTask(chainTaskId);
+        if (!isAllowedToAccessEndpoint) {
+            log.error("isAuthorizedOnExecution failed (unauthorized endpoint) [chainTaskId:{}]", chainTaskId);
+            return false;
+        }
+
         Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
-        if (optionalChainTask.isEmpty()) {
-            log.error("isAuthorizedToGetKeys failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
+        if (!optionalChainTask.isPresent()) {
+            log.error("isAuthorizedOnExecution failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
             return false;
         }
         ChainTask chainTask = optionalChainTask.get();
@@ -40,13 +49,13 @@ public class AuthorizationService {
         String chainDealId = chainTask.getDealid();
 
         if (!taskStatus.equals(ChainTaskStatus.ACTIVE)) {
-            log.error("isAuthorizedToGetKeys failed (task not active) [chainTaskId:{}, status:{}]", chainTaskId, taskStatus);
+            log.error("isAuthorizedOnExecution failed (task not active) [chainTaskId:{}, status:{}]", chainTaskId, taskStatus);
             return false;
         }
 
         Optional<ChainDeal> optionalChainDeal = iexecHubService.getChainDeal(chainDealId);
-        if (optionalChainDeal.isEmpty()) {
-            log.error("isAuthorizedToGetKeys failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
+        if (!optionalChainDeal.isPresent()) {
+            log.error("isAuthorizedOnExecution failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
             return false;
         }
         ChainDeal chainDeal = optionalChainDeal.get();
@@ -60,7 +69,7 @@ public class AuthorizationService {
             return true;
         }
 
-        log.error("isAuthorizedToGetKeys failed (invalid signature) [chainTaskId:{}, isWorkerSignatureValid:{}, " +
+        log.error("isAuthorizedOnExecution failed (invalid signature) [chainTaskId:{}, isWorkerSignatureValid:{}, " +
                 "isWorkerpoolSignatureValid:{}]", chainTaskId, isWorkerSignatureValid, isWorkerpoolSignatureValid);
         return false;
     }
@@ -89,5 +98,12 @@ public class AuthorizationService {
                 workerpoolAddress);
     }
 
+    public boolean isSignedByHimself(String message, String signature, String address) {
+        return SignatureUtils.isSignatureValid(BytesUtils.stringToBytes(message), new Signature(signature), address);
+    }
 
+    public boolean isSignedByOwner(String message, String signature, String address) {
+        String owner = iexecHubService.getOwner(address);
+        return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
+    }
 }

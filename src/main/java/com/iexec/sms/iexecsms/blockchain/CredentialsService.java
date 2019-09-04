@@ -20,7 +20,7 @@ public class CredentialsService {
         try {
             ECKeyPair ecKeyPair = Keys.createEcKeyPair();
             credentials = Credentials.create(ecKeyPair);
-            log.info("Load wallet beneficiaryCredentials (new) [address:{}] ", credentials.getAddress());
+            log.info("Load wallet beneficiaryCredentials (new) [ownerAddress:{}] ", credentials.getAddress());
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
             log.error("Credentials cannot be loaded [exception:{}] ", e);
         }
