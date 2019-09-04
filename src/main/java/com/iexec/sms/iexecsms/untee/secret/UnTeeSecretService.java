@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.execution;
+package com.iexec.sms.iexecsms.untee.secret;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
@@ -17,16 +17,16 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class NonTeeExecutionService {
+public class UnTeeSecretService {
 
 
     private IexecHubService iexecHubService;
     private OnChainSecretService onChainSecretService;
     private OffChainSecretsService offChainSecretsService;
 
-    public NonTeeExecutionService(IexecHubService iexecHubService,
-                                  OnChainSecretService onChainSecretService,
-                                  OffChainSecretsService offChainSecretsService
+    public UnTeeSecretService(IexecHubService iexecHubService,
+                              OnChainSecretService onChainSecretService,
+                              OffChainSecretsService offChainSecretsService
     ) {
         this.iexecHubService = iexecHubService;
         this.onChainSecretService = onChainSecretService;
@@ -38,18 +38,18 @@ public class NonTeeExecutionService {
     * Untested yet
     *
     * */
-    public Optional<TaskSecrets> getNonTeeTaskSecrets(String chainTaskId) {
+    public Optional<TaskSecrets> getUnTeeTaskSecrets(String chainTaskId) {
         TaskSecrets.TaskSecretsBuilder taskSecretsBuilder = TaskSecrets.builder();
 
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(chainTaskId);
         if (!oChainTask.isPresent()) {
-            log.error("getNonTeeTaskSecrets failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
+            log.error("getUnTeeTaskSecrets failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         ChainTask chainTask = oChainTask.get();
         Optional<ChainDeal> oChainDeal = iexecHubService.getChainDeal(chainTask.getDealid());
         if (!oChainDeal.isPresent()) {
-            log.error("getNonTeeTaskSecrets failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
+            log.error("getUnTeeTaskSecrets failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         ChainDeal chainDeal = oChainDeal.get();
@@ -57,7 +57,7 @@ public class NonTeeExecutionService {
 
         Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId);
         if (!datasetSecret.isPresent()) {
-            log.error("getNonTeeTaskSecrets failed (datasetSecret failed) [chainTaskId:{}]", chainTaskId);
+            log.error("getUnTeeTaskSecrets failed (datasetSecret failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         taskSecretsBuilder.datasetSecret(SmsSecret.builder()
@@ -67,12 +67,12 @@ public class NonTeeExecutionService {
 
         Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
         if (!beneficiaryOffChainSecrets.isPresent()) {
-            log.error("getNonTeeTaskSecrets failed (beneficiaryOffChainSecrets failed) [chainTaskId:{}]", chainTaskId);
+            log.error("getUnTeeTaskSecrets failed (beneficiaryOffChainSecrets failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         Secret beneficiarySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
         if (beneficiarySecret == null) {
-            log.error("getNonTeeTaskSecrets failed (beneficiarySecret empty) [chainTaskId:{}]", chainTaskId);
+            log.error("getUnTeeTaskSecrets failed (beneficiarySecret empty) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         taskSecretsBuilder.beneficiarySecret(SmsSecret.builder()

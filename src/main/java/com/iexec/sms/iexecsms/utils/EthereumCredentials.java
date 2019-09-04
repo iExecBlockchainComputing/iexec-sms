@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.credential;
+package com.iexec.sms.iexecsms.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

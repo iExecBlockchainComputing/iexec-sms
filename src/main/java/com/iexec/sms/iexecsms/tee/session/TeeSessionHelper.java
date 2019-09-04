@@ -1,18 +1,16 @@
-package com.iexec.sms.iexecsms.cas;
+package com.iexec.sms.iexecsms.tee.session;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
-import com.iexec.common.sms.secrets.SmsSecret;
-import com.iexec.common.sms.secrets.TaskSecrets;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
-import com.iexec.sms.iexecsms.challenge.ExecutionAttestor;
-import com.iexec.sms.iexecsms.challenge.ExecutionChallengeService;
 import com.iexec.sms.iexecsms.secret.Secret;
 import com.iexec.sms.iexecsms.secret.offchain.OffChainSecrets;
 import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
 import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
+import com.iexec.sms.iexecsms.tee.challenge.TeeChallenge;
+import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -24,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class CasPalaemonHelperService {
+public class TeeSessionHelper {
 
     //palaemon
     private static final String SESSION_ID_PROPERTY = "SESSION_ID";
@@ -45,23 +43,23 @@ public class CasPalaemonHelperService {
 
     private static final String FIELD_SPLITTER = "\\|";
 
-    private CasPalaemonHelperConfiguration casPalaemonHelperConfiguration;
+    private TeeSessionConfiguration teeSessionConfiguration;
     private IexecHubService iexecHubService;
     private OnChainSecretService onChainSecretService;
     private OffChainSecretsService offChainSecretsService;
-    private ExecutionChallengeService executionChallengeService;
+    private TeeChallengeService teeChallengeService;
 
-    public CasPalaemonHelperService(CasPalaemonHelperConfiguration casPalaemonHelperConfiguration,
-                                    IexecHubService iexecHubService,
-                                    OnChainSecretService onChainSecretService,
-                                    OffChainSecretsService offChainSecretsService,
-                                    ExecutionChallengeService executionChallengeService
-    ) {
-        this.casPalaemonHelperConfiguration = casPalaemonHelperConfiguration;
+    public TeeSessionHelper(
+            TeeSessionConfiguration teeSessionConfiguration,
+            IexecHubService iexecHubService,
+            OnChainSecretService onChainSecretService,
+            OffChainSecretsService offChainSecretsService,
+            TeeChallengeService teeChallengeService) {
+        this.teeSessionConfiguration = teeSessionConfiguration;
         this.iexecHubService = iexecHubService;
         this.onChainSecretService = onChainSecretService;
         this.offChainSecretsService = offChainSecretsService;
-        this.executionChallengeService = executionChallengeService;
+        this.teeChallengeService = teeChallengeService;
     }
 
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
@@ -99,7 +97,7 @@ public class CasPalaemonHelperService {
             datasetFspfTag = datasetFields[1];
         }
 
-        Optional<ExecutionAttestor> executionAttestor = executionChallengeService.getOrCreate(taskId);
+        Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId);
 
         Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
 
@@ -146,9 +144,9 @@ public class CasPalaemonHelperService {
 
         Template t;
         if (tokens.containsKey(DATASET_FSPF_KEY_PROPERTY) && tokens.containsKey(DATASET_FSPF_TAG_PROPERTY)) {
-            t = ve.getTemplate(casPalaemonHelperConfiguration.getPalaemonConfigFileWithDataset());
+            t = ve.getTemplate(teeSessionConfiguration.getPalaemonConfigFileWithDataset());
         } else {
-            t = ve.getTemplate(casPalaemonHelperConfiguration.getPalaemonConfigFileWithoutDataset());
+            t = ve.getTemplate(teeSessionConfiguration.getPalaemonConfigFileWithoutDataset());
         }
         VelocityContext context = new VelocityContext();
         // copy all data from the tokens into context

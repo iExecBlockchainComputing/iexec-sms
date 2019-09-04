@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.cas;
+package com.iexec.sms.iexecsms.tee.session;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CasYmlConfiguration {
+public class TeeSessionConfiguration {
 
     @Value("${scone.cas.host}")
     private String host;
@@ -18,7 +18,13 @@ public class CasYmlConfiguration {
     @Value("${scone.cas.port}")
     private String port;
 
-    public String getUrl() {
+    @Value("${scone.cas.palaemon.configFile.withDataset}")
+    private String palaemonConfigFileWithDataset;
+
+    @Value("${scone.cas.palaemon.configFile.withoutDataset}")
+    private String palaemonConfigFileWithoutDataset;
+
+    public String getCasUrl() {
         return "https://" + host + ":" + port;
     }
 }

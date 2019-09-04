@@ -1,6 +1,6 @@
-package com.iexec.sms.iexecsms.challenge;
+package com.iexec.sms.iexecsms.tee.challenge;
 
-import com.iexec.sms.iexecsms.credential.EthereumCredentials;
+import com.iexec.sms.iexecsms.utils.EthereumCredentials;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExecutionAttestor {
+public class TeeChallenge {
 
     private String taskId;
     private EthereumCredentials credentials;

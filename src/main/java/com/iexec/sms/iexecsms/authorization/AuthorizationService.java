@@ -34,7 +34,7 @@ public class AuthorizationService {
         String chainTaskId = authorization.getChainTaskId();
 
         boolean isAllowedToAccessEndpoint = isTeeEndpoint == iexecHubService.isTeeTask(chainTaskId);
-        if (!isAllowedToAccessEndpoint){
+        if (!isAllowedToAccessEndpoint) {
             log.error("isAuthorizedOnExecution failed (unauthorized endpoint) [chainTaskId:{}]", chainTaskId);
             return false;
         }
@@ -98,29 +98,12 @@ public class AuthorizationService {
                 workerpoolAddress);
     }
 
-    public boolean isAuthorized(String message, String signature, String address) {
-        if (isSignedByHimself(message, signature, address)) {
-            log.info("Signature is authorized for ownerAddress (self) [ownerAddress:{}", address);
-            return true;
-        } else if (isSignedByOwner(message, signature, address)) {
-            log.info("Signature is authorized for ownerAddress (owner) [ownerAddress:{}", address);
-            return true;
-        }
-        log.error("Address cant be authorized to push [ownerAddress:{}", address);
-        return false;
-    }
-
     public boolean isSignedByHimself(String message, String signature, String address) {
         return SignatureUtils.isSignatureValid(BytesUtils.stringToBytes(message), new Signature(signature), address);
     }
 
     public boolean isSignedByOwner(String message, String signature, String address) {
         String owner = iexecHubService.getOwner(address);
-        if (!owner.isEmpty() && isSignedByHimself(message, signature, owner)) {
-            return true;
-        }
-        return false;
+        return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
     }
-
-
 }
