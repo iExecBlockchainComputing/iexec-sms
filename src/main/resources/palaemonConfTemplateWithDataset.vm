@@ -3,37 +3,43 @@ digest: create
 
 services:
    - name: app
-     image_name: image
-     mrenclaves: [$MRENCLAVE]
+     image_name: image1
+     mrenclaves: [$APP_MRENCLAVE]
      tags: [demo]
      pwd: /
      command: $COMMAND
      fspf_path: /fspf.pb
-     fspf_key: $FSPF_KEY
-     fspf_tag: $FSPF_TAG
+     fspf_key: $APP_FSPF_KEY
+     fspf_tag: $APP_FSPF_TAG
 
    - name: encryption
-     image_name: image
-     mrenclaves: [$MRENCLAVE]
+     image_name: image2
+     mrenclaves: [$SIGNER_MRENCLAVE]
      tags: [demo]
      pwd: /
-     command: python /signer/signer.py encrypt
+     command: python /signer/signer.py
      fspf_path: /fspf.pb
-     fspf_key: $FSPF_KEY
-     fspf_tag: $FSPF_TAG
+     fspf_key: $SIGNER_FSPF_KEY
+     fspf_tag: $SIGNER_FSPF_TAG
      environment:
-         enclave_key: $ENCLAVE_KEY
-         taskid: $TASK_ID
-         worker: $WORKER_ADDRESS
-         beneficiary_key: $BENEFICIARY_KEY
+         TEE_CHALLENGE_PRIVATE_KEY: $TEE_CHALLENGE_PRIVATE_KEY
+         TASK_ID: $TASK_ID
+         WORKER_ADDRESS: $WORKER_ADDRESS
+         BENEFICIARY_PUBLIC_KEY_BASE64: $BENEFICIARY_PUBLIC_KEY_BASE64
 
 images:
-   - name: image
-     mrenclaves: [$MRENCLAVE]
+   - name: image1
+     mrenclaves: [$APP_MRENCLAVE]
      tags: [demo]
      volumes:
         - name: iexec_in
           path: /iexec_in
+        - name: scone
+          path: /scone
+   - name: image2
+     mrenclaves: [$SIGNER_MRENCLAVE]
+     tags: [demo]
+     volumes:
         - name: scone
           path: /scone
 

@@ -27,19 +27,23 @@ public class TeeSessionHelper {
     //palaemon
     private static final String SESSION_ID_PROPERTY = "SESSION_ID";
     //app
-    private static final String APP_MRENCLAVE_PROPERTY = "MRENCLAVE";
-    private static final String APP_FSPF_KEY_PROPERTY = "FSPF_KEY";
-    private static final String APP_FSPF_TAG_PROPERTY = "FSPF_TAG";
+    private static final String APP_FSPF_KEY_PROPERTY = "APP_FSPF_KEY";
+    private static final String APP_FSPF_TAG_PROPERTY = "APP_FSPF_TAG";
+    private static final String APP_MRENCLAVE_PROPERTY = "APP_MRENCLAVE";
+    //signer
+    private static final String SIGNER_FSPF_KEY_PROPERTY = "SIGNER_FSPF_KEY";
+    private static final String SIGNER_FSPF_TAG_PROPERTY = "SIGNER_FSPF_TAG";
+    private static final String SIGNER_MRENCLAVE_PROPERTY = "SIGNER_MRENCLAVE";
     //data
-    private static final String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
     private static final String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
+    private static final String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
     //computing
     private static final String COMMAND_PROPERTY = "COMMAND";
     private static final String TASK_ID_PROPERTY = "TASK_ID";
     private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
-    private static final String ENCLAVE_KEY_PROPERTY = "ENCLAVE_KEY";
+    private static final String TEE_CHALLENGE_PRIVATE_KEY_PROPERTY = "TEE_CHALLENGE_PRIVATE_KEY";
     //result encryption
-    private static final String BENEFICIARY_KEY_PROPERTY = "BENEFICIARY_KEY";
+    private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
 
     private static final String FIELD_SPLITTER = "\\|";
 
@@ -74,7 +78,7 @@ public class TeeSessionHelper {
         }
         ChainDeal chainDeal = oChainDeal.get();
         String chainAppId = chainDeal.getChainApp().getChainAppId();
-        String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
+
         String dealParams = String.join(",", chainDeal.getParams().getIexecArgs());
 
         //The field MREnclave in the SC contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
@@ -85,16 +89,27 @@ public class TeeSessionHelper {
         String appFspfTag = appFields[1];
         String appMrEnclave = appFields[2];
 
+        //Signer
+        String signerMrEnclaveFull = "d7453a4dec5682e9e617c9839f7ff29a10900ef36bc4a9e0c836fa438978c63c|967983ec9d5fe20d2a4ecb74fd4121ee|4e6758e38f332d8eb718bc0037dbdedd00d3bb196dd3ff894938b32156179c38";
+        String[] signerFields = signerMrEnclaveFull.split(FIELD_SPLITTER);
+        String signerFspfKey = signerFields[0];
+        String signerFspfTag = signerFields[1];
+        String signerMrEnclave = signerFields[2];
+
         //TODO: dont use '|' in generic strings (use separate values in db instead)
         //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
-        Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId);
         String datasetFspfKey = "";
         String datasetFspfTag = "";
-        if (datasetSecret.isPresent()) {
-            String datasetSecretKey = datasetSecret.get().getValue();
-            String[] datasetFields = datasetSecretKey.split(FIELD_SPLITTER);
-            datasetFspfKey = datasetFields[0];
-            datasetFspfTag = datasetFields[1];
+        if (chainDeal.getChainDataset() != null){
+            String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
+            Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId);
+
+            if (datasetSecret.isPresent()) {
+                String datasetSecretKey = datasetSecret.get().getValue();
+                String[] datasetFields = datasetSecretKey.split(FIELD_SPLITTER);
+                datasetFspfKey = datasetFields[0];
+                datasetFspfTag = datasetFields[1];
+            }
         }
 
         Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId);
@@ -111,9 +126,13 @@ public class TeeSessionHelper {
         //palaemon
         tokens.put(SESSION_ID_PROPERTY, sessionId);
         //app
-        tokens.put(APP_MRENCLAVE_PROPERTY, appMrEnclave);
         tokens.put(APP_FSPF_KEY_PROPERTY, appFspfKey);
         tokens.put(APP_FSPF_TAG_PROPERTY, appFspfTag);
+        tokens.put(APP_MRENCLAVE_PROPERTY, appMrEnclave);
+        //signer
+        tokens.put(SIGNER_FSPF_KEY_PROPERTY, signerFspfKey);
+        tokens.put(SIGNER_FSPF_TAG_PROPERTY, signerFspfTag);
+        tokens.put(SIGNER_MRENCLAVE_PROPERTY, signerMrEnclave);
         //data
         if (!datasetFspfKey.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
@@ -127,10 +146,10 @@ public class TeeSessionHelper {
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
         if (!attestingEnclave.isEmpty() && executionAttestor.isPresent()
                 && executionAttestor.get().getCredentials().getPrivateKey() != null) {
-            tokens.put(ENCLAVE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
+            tokens.put(TEE_CHALLENGE_PRIVATE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
         }
         //result encryption
-        tokens.put(BENEFICIARY_KEY_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
+        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
 
         return tokens;
     }
