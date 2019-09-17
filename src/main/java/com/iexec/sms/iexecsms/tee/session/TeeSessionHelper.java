@@ -34,6 +34,10 @@ public class TeeSessionHelper {
     private static final String SIGNER_FSPF_KEY_PROPERTY = "SIGNER_FSPF_KEY";
     private static final String SIGNER_FSPF_TAG_PROPERTY = "SIGNER_FSPF_TAG";
     private static final String SIGNER_MRENCLAVE_PROPERTY = "SIGNER_MRENCLAVE";
+    //uploader
+    private static final String UPLOADER_FSPF_KEY_PROPERTY = "UPLOADER_FSPF_KEY";
+    private static final String UPLOADER_FSPF_TAG_PROPERTY = "UPLOADER_FSPF_TAG";
+    private static final String UPLOADER_MRENCLAVE_PROPERTY = "UPLOADER_MRENCLAVE";
     //data
     private static final String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
     private static final String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
@@ -44,6 +48,8 @@ public class TeeSessionHelper {
     private static final String TEE_CHALLENGE_PRIVATE_KEY_PROPERTY = "TEE_CHALLENGE_PRIVATE_KEY";
     //result encryption
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
+    //dropbox
+    private static final String BENEFICIARY_DROPBOX_TOKEN_PROPERTY = "BENEFICIARY_DROPBOX_TOKEN";
 
     private static final String FIELD_SPLITTER = "\\|";
 
@@ -66,6 +72,7 @@ public class TeeSessionHelper {
         this.teeChallengeService = teeChallengeService;
     }
 
+    //TODO: refactor templating (mrenclave, key, tag too)
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
@@ -90,11 +97,18 @@ public class TeeSessionHelper {
         String appMrEnclave = appFields[2];
 
         //Signer
+        //TODO: Move signer tag, key & mrenclave to yml or task description
         String signerMrEnclaveFull = "d7453a4dec5682e9e617c9839f7ff29a10900ef36bc4a9e0c836fa438978c63c|967983ec9d5fe20d2a4ecb74fd4121ee|4e6758e38f332d8eb718bc0037dbdedd00d3bb196dd3ff894938b32156179c38";
         String[] signerFields = signerMrEnclaveFull.split(FIELD_SPLITTER);
         String signerFspfKey = signerFields[0];
         String signerFspfTag = signerFields[1];
         String signerMrEnclave = signerFields[2];
+
+        String uploaderMrEnclaveFull = "32b904959ac4c785728cce13cb2bed848c9714a5ca7b7a30d485f271661fef91|c254899a73d86f614329c60ac3361255|faa282e9a6028179bdf67670fb7400f050b627d03d2be8bdcc3fb698f14534ef";
+        String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
+        String uploaderFspfKey = uploaderFields[0];
+        String uploaderFspfTag = uploaderFields[1];
+        String uploaderMrEnclave = uploaderFields[2];
 
         //TODO: dont use '|' in generic strings (use separate values in db instead)
         //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
@@ -119,7 +133,18 @@ public class TeeSessionHelper {
         String beneficiaryKey = "''";//empty value in yml
         if (!beneficiaryOffChainSecrets.isEmpty()) {
             Secret beneficiaryKeySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
-            beneficiaryKey = beneficiaryKeySecret.getValue();
+            if (beneficiaryKeySecret!= null){
+                beneficiaryKey = beneficiaryKeySecret.getValue();
+            }
+        }
+
+        //TODO: Generify beneficiary secret retrieval & templating
+        String beneficiaryDropboxToken = "''";//empty value in yml
+        if (!beneficiaryOffChainSecrets.isEmpty()) {
+            Secret beneficiaryDropboxTokenSecret = beneficiaryOffChainSecrets.get().getSecret("dropbox-token");
+            if (beneficiaryDropboxTokenSecret!= null){
+                beneficiaryDropboxToken = beneficiaryDropboxTokenSecret.getValue();
+            }
         }
 
         Map<String, String> tokens = new HashMap<>();
@@ -133,6 +158,10 @@ public class TeeSessionHelper {
         tokens.put(SIGNER_FSPF_KEY_PROPERTY, signerFspfKey);
         tokens.put(SIGNER_FSPF_TAG_PROPERTY, signerFspfTag);
         tokens.put(SIGNER_MRENCLAVE_PROPERTY, signerMrEnclave);
+        //uploader
+        tokens.put(UPLOADER_FSPF_KEY_PROPERTY, uploaderFspfKey);
+        tokens.put(UPLOADER_FSPF_TAG_PROPERTY, uploaderFspfTag);
+        tokens.put(UPLOADER_MRENCLAVE_PROPERTY, uploaderMrEnclave);
         //data
         if (!datasetFspfKey.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
@@ -151,8 +180,14 @@ public class TeeSessionHelper {
         //result encryption
         tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
 
+        if (beneficiaryDropboxToken != null && !beneficiaryDropboxToken.isEmpty()) {
+            tokens.put(BENEFICIARY_DROPBOX_TOKEN_PROPERTY, beneficiaryDropboxToken);
+        }
+
         return tokens;
     }
+
+    //TODO: Add signer after upload
 
     public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         // Palaemon file should be generated and a call to the CAS with this file should happen here.

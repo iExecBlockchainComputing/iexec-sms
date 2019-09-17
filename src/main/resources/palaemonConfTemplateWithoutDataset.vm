@@ -27,6 +27,21 @@ services:
          WORKER_ADDRESS: $WORKER_ADDRESS
          BENEFICIARY_PUBLIC_KEY_BASE64: $BENEFICIARY_PUBLIC_KEY_BASE64
 
+   - name: uploader
+     image_name: image3
+     mrenclaves: [$UPLOADER_MRENCLAVE]
+     tags: [demo]
+     pwd: /
+     command: java -jar /app/dropbox-uploader.jar
+     fspf_path: /fspf.pb
+     fspf_key: $UPLOADER_FSPF_KEY
+     fspf_tag: $UPLOADER_FSPF_TAG
+     environment:
+         DROPBOX_ACCESS_TOKEN: $BENEFICIARY_DROPBOX_TOKEN
+         LOCAL_FILE_PATH: /scone/$TASK_ID_result.zip
+         REMOTE_FILENAME: $TASK_ID.zip
+         LD_LIBRARY_PATH: /usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64/server:/usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64:/usr/lib/jvm/java-1.8-openjdk/jre/../lib/amd64:/usr/lib
+
 images:
    - name: image
      mrenclaves: [$APP_MRENCLAVE]
@@ -36,6 +51,12 @@ images:
           path: /scone
    - name: image2
      mrenclaves: [$SIGNER_MRENCLAVE]
+     tags: [demo]
+     volumes:
+        - name: scone
+          path: /scone
+   - name: image3
+     mrenclaves: [$UPLOADER_MRENCLAVE]
      tags: [demo]
      volumes:
         - name: scone
