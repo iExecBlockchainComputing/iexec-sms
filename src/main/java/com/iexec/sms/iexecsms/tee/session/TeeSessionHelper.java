@@ -104,7 +104,7 @@ public class TeeSessionHelper {
         String signerFspfTag = signerFields[1];
         String signerMrEnclave = signerFields[2];
 
-        String uploaderMrEnclaveFull = "32b904959ac4c785728cce13cb2bed848c9714a5ca7b7a30d485f271661fef91|c254899a73d86f614329c60ac3361255|faa282e9a6028179bdf67670fb7400f050b627d03d2be8bdcc3fb698f14534ef";
+        String uploaderMrEnclaveFull = "6b19b5c3718f45744415b1c9f2ce72289df0eb8310229b68c7869bdc34f6c838|c053055b3fe70ab017498d6eef55e7ea|e2decef172e34e3490aed952dcacf50aae117629b06c8baec8dd16baf55e4599";
         String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
         String uploaderFspfKey = uploaderFields[0];
         String uploaderFspfTag = uploaderFields[1];

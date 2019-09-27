@@ -38,9 +38,10 @@ services:
      fspf_tag: $UPLOADER_FSPF_TAG
      environment:
          DROPBOX_ACCESS_TOKEN: $BENEFICIARY_DROPBOX_TOKEN
-         LOCAL_FILE_PATH: /scone/$TASK_ID_result.zip
-         REMOTE_FILENAME: $TASK_ID.zip
-         LD_LIBRARY_PATH: /usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64/server:/usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64:/usr/lib/jvm/java-1.8-openjdk/jre/../lib/amd64:/usr/lib
+         LOCAL_FILE_PATH: /scone/${TASK_ID}_result.zip
+         REMOTE_FILENAME: ${TASK_ID}.zip
+         LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
+         JAVA_TOOL_OPTIONS: -Xmx256m
 
 images:
    - name: image
