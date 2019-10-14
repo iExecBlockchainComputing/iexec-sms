@@ -27,4 +27,7 @@ public class BlockchainConfig {
     @Value("${blockchain.gasPriceCap}")
     private long gasPriceCap;
 
+    @Value("${blockchain.isSidechain}")
+    private boolean isSidechain;
+
 }
