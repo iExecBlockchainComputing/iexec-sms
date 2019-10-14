@@ -74,7 +74,13 @@ public class TeeSessionHelper {
         this.teeChallengeService = teeChallengeService;
     }
 
-    //TODO: refactor templating (mrenclave, key, tag too)
+    /*
+    *
+    * Signer <=> Encrypter for now
+    *
+    *
+    * Nb: MREnclave from request param contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
+    * */
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
@@ -90,7 +96,7 @@ public class TeeSessionHelper {
 
         String dealParams = String.join(",", chainDeal.getParams().getIexecArgs());
 
-        //The field MREnclave in the SC contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
+        // App
         byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
         String appMrEnclaveFull = BytesUtils.hexStringToAscii(BytesUtils.bytesToString(appMrEnclaveBytes));
         String[] appFields = appMrEnclaveFull.split(FIELD_SPLITTER);
@@ -98,22 +104,21 @@ public class TeeSessionHelper {
         String appFspfTag = appFields[1];
         String appMrEnclave = appFields[2];
 
-        //Signer
-        //TODO: Move signer tag, key & mrenclave to yml or task description
+        // Signer
         String signerMrEnclaveFull = teeSessionHelperConfiguration.getSconeEncrypterMrEnclave();
         String[] signerFields = signerMrEnclaveFull.split(FIELD_SPLITTER);
         String signerFspfKey = signerFields[0];
         String signerFspfTag = signerFields[1];
         String signerMrEnclave = signerFields[2];
 
+        // Uploader
         String uploaderMrEnclaveFull = teeSessionHelperConfiguration.getSconeUploaderDropboxMrEnclave();
         String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
         String uploaderFspfKey = uploaderFields[0];
         String uploaderFspfTag = uploaderFields[1];
         String uploaderMrEnclave = uploaderFields[2];
 
-        //TODO: dont use '|' in generic strings (use separate values in db instead)
-        //The field symmetricKey in the db contains 2 datasetFields separated by a '|': datasetFspfKey & datasetFspfKey
+        // Dataset (optional)
         String datasetFspfKey = "";
         String datasetFspfTag = "";
         if (chainDeal.getChainDataset() != null){
