@@ -14,6 +14,8 @@ import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -98,13 +100,13 @@ public class TeeSessionHelper {
 
         //Signer
         //TODO: Move signer tag, key & mrenclave to yml or task description
-        String signerMrEnclaveFull = "d7453a4dec5682e9e617c9839f7ff29a10900ef36bc4a9e0c836fa438978c63c|967983ec9d5fe20d2a4ecb74fd4121ee|4e6758e38f332d8eb718bc0037dbdedd00d3bb196dd3ff894938b32156179c38";
+        String signerMrEnclaveFull = teeSessionHelperConfiguration.getSconeEncrypterMrEnclave();
         String[] signerFields = signerMrEnclaveFull.split(FIELD_SPLITTER);
         String signerFspfKey = signerFields[0];
         String signerFspfTag = signerFields[1];
         String signerMrEnclave = signerFields[2];
 
-        String uploaderMrEnclaveFull = "927e5555a8eb204ec0d5aa70f9f3bd55ef575ff68eb6edf82364c2ae14f83256|2a3fce429fedb8a222548e8ba673303b|a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e";
+        String uploaderMrEnclaveFull = teeSessionHelperConfiguration.getSconeUploaderDropboxMrEnclave();
         String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
         String uploaderFspfKey = uploaderFields[0];
         String uploaderFspfTag = uploaderFields[1];
