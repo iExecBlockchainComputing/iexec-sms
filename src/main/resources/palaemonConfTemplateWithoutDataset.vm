@@ -40,6 +40,9 @@ services:
          DROPBOX_ACCESS_TOKEN: $BENEFICIARY_DROPBOX_TOKEN
          LOCAL_FILE_PATH: /scone/${TASK_ID}_result.zip
          REMOTE_FILENAME: ${TASK_ID}.zip
+         TEE_CHALLENGE_PRIVATE_KEY: $TEE_CHALLENGE_PRIVATE_KEY
+         TASK_ID: $TASK_ID
+         WORKER_ADDRESS: $WORKER_ADDRESS
          LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
          JAVA_TOOL_OPTIONS: -Xmx256m
 
