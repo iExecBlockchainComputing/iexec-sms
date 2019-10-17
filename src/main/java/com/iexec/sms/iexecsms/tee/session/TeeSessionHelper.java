@@ -26,6 +26,7 @@ import java.util.Optional;
 @Service
 public class TeeSessionHelper {
 
+    //TODO - prefix all envvars by IEXEC_*
     //palaemon
     private static final String SESSION_ID_PROPERTY = "SESSION_ID";
     //app
@@ -33,11 +34,11 @@ public class TeeSessionHelper {
     private static final String APP_FSPF_TAG_PROPERTY = "APP_FSPF_TAG";
     private static final String APP_MRENCLAVE_PROPERTY = "APP_MRENCLAVE";
     //signer
-    private static final String SIGNER_FSPF_KEY_PROPERTY = "SIGNER_FSPF_KEY";
+    private static final String SIGNER_FSPF_KEY_PROPERTY = "SIGNER_FSPF_KEY";//Signer should be renamed encrypter
     private static final String SIGNER_FSPF_TAG_PROPERTY = "SIGNER_FSPF_TAG";
     private static final String SIGNER_MRENCLAVE_PROPERTY = "SIGNER_MRENCLAVE";
     //uploader
-    private static final String UPLOADER_FSPF_KEY_PROPERTY = "UPLOADER_FSPF_KEY";
+    private static final String UPLOADER_FSPF_KEY_PROPERTY = "UPLOADER_FSPF_KEY";//Uploader should be rename to uploader&signer
     private static final String UPLOADER_FSPF_TAG_PROPERTY = "UPLOADER_FSPF_TAG";
     private static final String UPLOADER_MRENCLAVE_PROPERTY = "UPLOADER_MRENCLAVE";
     //data
@@ -50,6 +51,8 @@ public class TeeSessionHelper {
     private static final String TEE_CHALLENGE_PRIVATE_KEY_PROPERTY = "TEE_CHALLENGE_PRIVATE_KEY";
     //result encryption
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
+    //storage
+    private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";
     //dropbox
     private static final String BENEFICIARY_DROPBOX_TOKEN_PROPERTY = "BENEFICIARY_DROPBOX_TOKEN";
 
@@ -75,10 +78,6 @@ public class TeeSessionHelper {
     }
 
     /*
-    *
-    * Signer <=> Encrypter for now
-    *
-    *
     * Nb: MREnclave from request param contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
     * */
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
@@ -133,10 +132,9 @@ public class TeeSessionHelper {
             }
         }
 
+        //encryption
         Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId);
-
         Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
-
         String beneficiaryKey = "''";//empty value in yml
         if (!beneficiaryOffChainSecrets.isEmpty()) {
             Secret beneficiaryKeySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
@@ -145,6 +143,8 @@ public class TeeSessionHelper {
             }
         }
 
+        // storage
+        String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
         //TODO: Generify beneficiary secret retrieval & templating
         String beneficiaryDropboxToken = "''";//empty value in yml
         if (!beneficiaryOffChainSecrets.isEmpty()) {
@@ -184,9 +184,11 @@ public class TeeSessionHelper {
                 && executionAttestor.get().getCredentials().getPrivateKey() != null) {
             tokens.put(TEE_CHALLENGE_PRIVATE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
         }
-        //result encryption
+        //encryption
         tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
 
+        //storage
+        tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
         if (beneficiaryDropboxToken != null && !beneficiaryDropboxToken.isEmpty()) {
             tokens.put(BENEFICIARY_DROPBOX_TOKEN_PROPERTY, beneficiaryDropboxToken);
         }
@@ -194,7 +196,6 @@ public class TeeSessionHelper {
         return tokens;
     }
 
-    //TODO: Add signer after upload
 
     public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         // Palaemon file should be generated and a call to the CAS with this file should happen here.
