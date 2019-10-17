@@ -14,8 +14,6 @@ import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -111,7 +109,7 @@ public class TeeSessionHelper {
         String signerMrEnclave = signerFields[2];
 
         // Uploader
-        String uploaderMrEnclaveFull = teeSessionHelperConfiguration.getSconeUploaderDropboxMrEnclave();
+        String uploaderMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
         String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
         String uploaderFspfKey = uploaderFields[0];
         String uploaderFspfTag = uploaderFields[1];
