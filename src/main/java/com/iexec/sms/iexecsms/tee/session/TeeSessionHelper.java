@@ -52,7 +52,7 @@ public class TeeSessionHelper {
     //storage
     private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";
     //dropbox
-    private static final String BENEFICIARY_DROPBOX_TOKEN_PROPERTY = "BENEFICIARY_DROPBOX_TOKEN";
+    private static final String REQUESTER_DROPBOX_TOKEN_PROPERTY = "REQUESTER_DROPBOX_TOKEN";
 
     private static final String FIELD_SPLITTER = "\\|";
 
@@ -142,13 +142,16 @@ public class TeeSessionHelper {
         }
 
         // storage
+        // we need a signature of the beneficiary to push to the beneficiary private storage space
+        // waiting for that feature we only allow to push to the requester private storage space
+        Optional<OffChainSecrets> requsterOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getRequester());
         String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
         //TODO: Generify beneficiary secret retrieval & templating
-        String beneficiaryDropboxToken = "''";//empty value in yml
-        if (!beneficiaryOffChainSecrets.isEmpty()) {
-            Secret beneficiaryDropboxTokenSecret = beneficiaryOffChainSecrets.get().getSecret("dropbox-token");
-            if (beneficiaryDropboxTokenSecret!= null){
-                beneficiaryDropboxToken = beneficiaryDropboxTokenSecret.getValue();
+        String requesterDropboxToken = "''";//empty value in yml
+        if (!requsterOffChainSecrets.isEmpty()) {
+            Secret requesterDropboxTokenSecret = requsterOffChainSecrets.get().getSecret("dropbox-token");
+            if (requesterDropboxTokenSecret!= null){
+                requesterDropboxToken = requesterDropboxTokenSecret.getValue();
             }
         }
 
@@ -187,8 +190,8 @@ public class TeeSessionHelper {
 
         //storage
         tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
-        if (beneficiaryDropboxToken != null && !beneficiaryDropboxToken.isEmpty()) {
-            tokens.put(BENEFICIARY_DROPBOX_TOKEN_PROPERTY, beneficiaryDropboxToken);
+        if (requesterDropboxToken != null && !requesterDropboxToken.isEmpty()) {
+            tokens.put(REQUESTER_DROPBOX_TOKEN_PROPERTY, requesterDropboxToken);
         }
 
         return tokens;
