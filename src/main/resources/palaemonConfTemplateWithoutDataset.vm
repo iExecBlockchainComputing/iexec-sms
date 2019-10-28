@@ -42,6 +42,7 @@ services:
          TASK_ID: $TASK_ID
          WORKER_ADDRESS: $WORKER_ADDRESS
          IEXEC_REQUESTER_STORAGE_LOCATION: $IEXEC_REQUESTER_STORAGE_LOCATION
+         BENEFICIARY_PUBLIC_KEY_BASE64: $BENEFICIARY_PUBLIC_KEY_BASE64
          LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
          JAVA_TOOL_OPTIONS: -Xmx256m
 
