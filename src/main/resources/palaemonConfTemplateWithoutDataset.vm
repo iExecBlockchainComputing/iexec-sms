@@ -12,7 +12,7 @@ services:
      fspf_key: $APP_FSPF_KEY
      fspf_tag: $APP_FSPF_TAG
 
-   - name: uploader
+   - name: post-compute
      image_name: image3
      mrenclaves: [$UPLOADER_MRENCLAVE]
      tags: [demo]
