@@ -36,7 +36,5 @@ scone:
         withDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET:./src/main/resources/palaemonConfTemplateWithDataset.vm}
         withoutDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET:./src/main/resources/palaemonConfTemplateWithoutDataset.vm}
   mrenclave: # TODO: Read that from requester params
-    encrypter: # nexus.iex.ec/tee-encrypter-only:1.0.0
-      "86d8f0a922a5602c2455bb402c15d559f6c4d488076878d8e681411b2c2224ad|74b6611ac1be12b0f4cd57e5dea69a70|4e6758e38f332d8eb718bc0037dbdedd00d3bb196dd3ff894938b32156179c38"
     tee-post-compute: # nexus.iex.ec/tee-worker-post-compute:1.0.0
       "64e3ce810df5935931893e2a2797e4246a7902d5f033f90687bd08604fb45b59|9d5ef23f57e005e3d1b6569f95b0cb1b|a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e"

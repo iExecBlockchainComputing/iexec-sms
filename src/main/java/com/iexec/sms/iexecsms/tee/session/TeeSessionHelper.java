@@ -31,14 +31,10 @@ public class TeeSessionHelper {
     private static final String APP_FSPF_KEY_PROPERTY = "APP_FSPF_KEY";
     private static final String APP_FSPF_TAG_PROPERTY = "APP_FSPF_TAG";
     private static final String APP_MRENCLAVE_PROPERTY = "APP_MRENCLAVE";
-    //signer
-    private static final String SIGNER_FSPF_KEY_PROPERTY = "SIGNER_FSPF_KEY";//Signer should be renamed encrypter
-    private static final String SIGNER_FSPF_TAG_PROPERTY = "SIGNER_FSPF_TAG";
-    private static final String SIGNER_MRENCLAVE_PROPERTY = "SIGNER_MRENCLAVE";
-    //uploader
-    private static final String UPLOADER_FSPF_KEY_PROPERTY = "UPLOADER_FSPF_KEY";//Uploader should be rename to uploader&signer
-    private static final String UPLOADER_FSPF_TAG_PROPERTY = "UPLOADER_FSPF_TAG";
-    private static final String UPLOADER_MRENCLAVE_PROPERTY = "UPLOADER_MRENCLAVE";
+    //post-compute
+    private static final String POST_COMPUTE_FSPF_KEY_PROPERTY = "POST_COMPUTE_FSPF_KEY";
+    private static final String POST_COMPUTE_FSPF_TAG_PROPERTY = "POST_COMPUTE_FSPF_TAG";
+    private static final String POST_COMPUTE_MRENCLAVE_PROPERTY = "POST_COMPUTE_MRENCLAVE";
     //data
     private static final String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
     private static final String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
@@ -102,19 +98,12 @@ public class TeeSessionHelper {
         String appFspfTag = appFields[1];
         String appMrEnclave = appFields[2];
 
-        // Signer
-        String signerMrEnclaveFull = teeSessionHelperConfiguration.getSconeEncrypterMrEnclave();
-        String[] signerFields = signerMrEnclaveFull.split(FIELD_SPLITTER);
-        String signerFspfKey = signerFields[0];
-        String signerFspfTag = signerFields[1];
-        String signerMrEnclave = signerFields[2];
-
-        // Uploader
-        String uploaderMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
-        String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
-        String uploaderFspfKey = uploaderFields[0];
-        String uploaderFspfTag = uploaderFields[1];
-        String uploaderMrEnclave = uploaderFields[2];
+        // Post-compute
+        String postComputeMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
+        String[] postComputeFields = postComputeMrEnclaveFull.split(FIELD_SPLITTER);
+        String postComputeFspfKey = postComputeFields[0];
+        String postComputeFspfTag = postComputeFields[1];
+        String postComputeMrEnclave = postComputeFields[2];
 
         // Dataset (optional)
         String datasetFspfKey = "";
@@ -164,14 +153,10 @@ public class TeeSessionHelper {
         tokens.put(APP_FSPF_KEY_PROPERTY, appFspfKey);
         tokens.put(APP_FSPF_TAG_PROPERTY, appFspfTag);
         tokens.put(APP_MRENCLAVE_PROPERTY, appMrEnclave);
-        //signer
-        tokens.put(SIGNER_FSPF_KEY_PROPERTY, signerFspfKey);
-        tokens.put(SIGNER_FSPF_TAG_PROPERTY, signerFspfTag);
-        tokens.put(SIGNER_MRENCLAVE_PROPERTY, signerMrEnclave);
-        //uploader
-        tokens.put(UPLOADER_FSPF_KEY_PROPERTY, uploaderFspfKey);
-        tokens.put(UPLOADER_FSPF_TAG_PROPERTY, uploaderFspfTag);
-        tokens.put(UPLOADER_MRENCLAVE_PROPERTY, uploaderMrEnclave);
+        //post-compute
+        tokens.put(POST_COMPUTE_FSPF_KEY_PROPERTY, postComputeFspfKey);
+        tokens.put(POST_COMPUTE_FSPF_TAG_PROPERTY, postComputeFspfTag);
+        tokens.put(POST_COMPUTE_MRENCLAVE_PROPERTY, postComputeMrEnclave);
         //data
         if (!datasetFspfKey.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
