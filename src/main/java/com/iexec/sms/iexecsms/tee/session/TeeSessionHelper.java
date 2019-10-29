@@ -47,12 +47,13 @@ public class TeeSessionHelper {
     private static final String TASK_ID_PROPERTY = "TASK_ID";
     private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
     private static final String TEE_CHALLENGE_PRIVATE_KEY_PROPERTY = "TEE_CHALLENGE_PRIVATE_KEY";
-    //result encryption
+    // encryption
+    private static final String IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY = "IEXEC_REQUESTER_RESULT_ENCRYPTION";
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
     //storage
     private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";
-    //dropbox
     private static final String REQUESTER_DROPBOX_TOKEN_PROPERTY = "REQUESTER_DROPBOX_TOKEN";
+
 
     private static final String FIELD_SPLITTER = "\\|";
 
@@ -146,6 +147,7 @@ public class TeeSessionHelper {
         // waiting for that feature we only allow to push to the requester private storage space
         Optional<OffChainSecrets> requsterOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getRequester());
         String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
+        String resultEncryption = chainDeal.getParams().getIexecResultEncryption();
         //TODO: Generify beneficiary secret retrieval & templating
         String requesterDropboxToken = "''";//empty value in yml
         if (!requsterOffChainSecrets.isEmpty()) {
@@ -186,7 +188,8 @@ public class TeeSessionHelper {
             tokens.put(TEE_CHALLENGE_PRIVATE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
         }
         //encryption
-        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
+        tokens.put(IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY, resultEncryption);//TODO read that onchain from enclave instead?
+        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client
 
         //storage
         tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
