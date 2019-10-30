@@ -4,33 +4,64 @@ digest: create
 services:
    - name: app
      image_name: image
-     mrenclaves: [$MRENCLAVE]
+     mrenclaves: [$APP_MRENCLAVE]
      tags: [demo]
      pwd: /
      command: $COMMAND
      fspf_path: /fspf.pb
-     fspf_key: $FSPF_KEY
-     fspf_tag: $FSPF_TAG
+     fspf_key: $APP_FSPF_KEY
+     fspf_tag: $APP_FSPF_TAG
 
    - name: encryption
-     image_name: image
-     mrenclaves: [$MRENCLAVE]
+     image_name: image2
+     mrenclaves: [$SIGNER_MRENCLAVE]
      tags: [demo]
      pwd: /
-     command: python /signer/signer.py encrypt
+     command: python /signer/signer.py
      fspf_path: /fspf.pb
-     fspf_key: $FSPF_KEY
-     fspf_tag: $FSPF_TAG
+     fspf_key: $SIGNER_FSPF_KEY
+     fspf_tag: $SIGNER_FSPF_TAG
      environment:
-         enclave_key: $ENCLAVE_KEY
-         taskid: $TASK_ID
-         worker: $WORKER_ADDRESS
-         beneficiary_key: $BENEFICIARY_KEY
+         TEE_CHALLENGE_PRIVATE_KEY: $TEE_CHALLENGE_PRIVATE_KEY
+         TASK_ID: $TASK_ID
+         WORKER_ADDRESS: $WORKER_ADDRESS
+         BENEFICIARY_PUBLIC_KEY_BASE64: $BENEFICIARY_PUBLIC_KEY_BASE64
+
+   - name: uploader
+     image_name: image3
+     mrenclaves: [$UPLOADER_MRENCLAVE]
+     tags: [demo]
+     pwd: /
+     command: java -jar /app/dropbox-uploader.jar
+     fspf_path: /fspf.pb
+     fspf_key: $UPLOADER_FSPF_KEY
+     fspf_tag: $UPLOADER_FSPF_TAG
+     environment:
+         DROPBOX_ACCESS_TOKEN: $BENEFICIARY_DROPBOX_TOKEN
+         LOCAL_FILE_PATH: /scone/${TASK_ID}_result.zip
+         REMOTE_FILENAME: ${TASK_ID}.zip
+         LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
+         JAVA_TOOL_OPTIONS: -Xmx256m
 
 images:
    - name: image
-     mrenclaves: [$MRENCLAVE]
+     mrenclaves: [$APP_MRENCLAVE]
      tags: [demo]
      volumes:
         - name: scone
           path: /scone
+   - name: image2
+     mrenclaves: [$SIGNER_MRENCLAVE]
+     tags: [demo]
+     volumes:
+        - name: scone
+          path: /scone
+   - name: image3
+     mrenclaves: [$UPLOADER_MRENCLAVE]
+     tags: [demo]
+     volumes:
+        - name: scone
+          path: /scone
+
+volumes:
+   - name: scone

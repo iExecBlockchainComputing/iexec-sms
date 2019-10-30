@@ -9,7 +9,12 @@ import org.springframework.stereotype.Service;
 public class Web3jService extends Web3jAbstractService {
 
     public Web3jService(BlockchainConfig blockchainConfig) {
-        super(blockchainConfig.getNodeAddress(), blockchainConfig.getGasPriceMultiplier(), blockchainConfig.getGasPriceCap());
+        super(
+                blockchainConfig.getNodeAddress(),
+                blockchainConfig.getGasPriceMultiplier(),
+                blockchainConfig.getGasPriceCap(),
+                blockchainConfig.isSidechain()
+        );
     }
 
 }
