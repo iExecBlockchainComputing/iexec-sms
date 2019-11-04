@@ -14,8 +14,6 @@ import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -26,20 +24,17 @@ import java.util.Optional;
 @Service
 public class TeeSessionHelper {
 
+    //TODO - prefix all envvars by IEXEC_*
     //palaemon
     private static final String SESSION_ID_PROPERTY = "SESSION_ID";
     //app
     private static final String APP_FSPF_KEY_PROPERTY = "APP_FSPF_KEY";
     private static final String APP_FSPF_TAG_PROPERTY = "APP_FSPF_TAG";
     private static final String APP_MRENCLAVE_PROPERTY = "APP_MRENCLAVE";
-    //signer
-    private static final String SIGNER_FSPF_KEY_PROPERTY = "SIGNER_FSPF_KEY";
-    private static final String SIGNER_FSPF_TAG_PROPERTY = "SIGNER_FSPF_TAG";
-    private static final String SIGNER_MRENCLAVE_PROPERTY = "SIGNER_MRENCLAVE";
-    //uploader
-    private static final String UPLOADER_FSPF_KEY_PROPERTY = "UPLOADER_FSPF_KEY";
-    private static final String UPLOADER_FSPF_TAG_PROPERTY = "UPLOADER_FSPF_TAG";
-    private static final String UPLOADER_MRENCLAVE_PROPERTY = "UPLOADER_MRENCLAVE";
+    //post-compute
+    private static final String POST_COMPUTE_FSPF_KEY_PROPERTY = "POST_COMPUTE_FSPF_KEY";
+    private static final String POST_COMPUTE_FSPF_TAG_PROPERTY = "POST_COMPUTE_FSPF_TAG";
+    private static final String POST_COMPUTE_MRENCLAVE_PROPERTY = "POST_COMPUTE_MRENCLAVE";
     //data
     private static final String DATASET_FSPF_KEY_PROPERTY = "DATA_FSPF_KEY";
     private static final String DATASET_FSPF_TAG_PROPERTY = "DATA_FSPF_TAG";
@@ -48,10 +43,13 @@ public class TeeSessionHelper {
     private static final String TASK_ID_PROPERTY = "TASK_ID";
     private static final String WORKER_ADDRESS_PROPERTY = "WORKER_ADDRESS";
     private static final String TEE_CHALLENGE_PRIVATE_KEY_PROPERTY = "TEE_CHALLENGE_PRIVATE_KEY";
-    //result encryption
+    // encryption
+    private static final String IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY = "IEXEC_REQUESTER_RESULT_ENCRYPTION";
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
-    //dropbox
-    private static final String BENEFICIARY_DROPBOX_TOKEN_PROPERTY = "BENEFICIARY_DROPBOX_TOKEN";
+    //storage
+    private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";
+    private static final String REQUESTER_DROPBOX_TOKEN_PROPERTY = "REQUESTER_DROPBOX_TOKEN";
+
 
     private static final String FIELD_SPLITTER = "\\|";
 
@@ -75,10 +73,6 @@ public class TeeSessionHelper {
     }
 
     /*
-    *
-    * Signer <=> Encrypter for now
-    *
-    *
     * Nb: MREnclave from request param contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
     * */
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
@@ -104,19 +98,12 @@ public class TeeSessionHelper {
         String appFspfTag = appFields[1];
         String appMrEnclave = appFields[2];
 
-        // Signer
-        String signerMrEnclaveFull = teeSessionHelperConfiguration.getSconeEncrypterMrEnclave();
-        String[] signerFields = signerMrEnclaveFull.split(FIELD_SPLITTER);
-        String signerFspfKey = signerFields[0];
-        String signerFspfTag = signerFields[1];
-        String signerMrEnclave = signerFields[2];
-
-        // Uploader
-        String uploaderMrEnclaveFull = teeSessionHelperConfiguration.getSconeUploaderDropboxMrEnclave();
-        String[] uploaderFields = uploaderMrEnclaveFull.split(FIELD_SPLITTER);
-        String uploaderFspfKey = uploaderFields[0];
-        String uploaderFspfTag = uploaderFields[1];
-        String uploaderMrEnclave = uploaderFields[2];
+        // Post-compute
+        String postComputeMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
+        String[] postComputeFields = postComputeMrEnclaveFull.split(FIELD_SPLITTER);
+        String postComputeFspfKey = postComputeFields[0];
+        String postComputeFspfTag = postComputeFields[1];
+        String postComputeMrEnclave = postComputeFields[2];
 
         // Dataset (optional)
         String datasetFspfKey = "";
@@ -133,10 +120,9 @@ public class TeeSessionHelper {
             }
         }
 
+        //encryption
         Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId);
-
         Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
-
         String beneficiaryKey = "''";//empty value in yml
         if (!beneficiaryOffChainSecrets.isEmpty()) {
             Secret beneficiaryKeySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
@@ -145,12 +131,18 @@ public class TeeSessionHelper {
             }
         }
 
+        // storage
+        // we need a signature of the beneficiary to push to the beneficiary private storage space
+        // waiting for that feature we only allow to push to the requester private storage space
+        Optional<OffChainSecrets> requsterOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getRequester());
+        String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
+        String resultEncryption = chainDeal.getParams().getIexecResultEncryption();
         //TODO: Generify beneficiary secret retrieval & templating
-        String beneficiaryDropboxToken = "''";//empty value in yml
-        if (!beneficiaryOffChainSecrets.isEmpty()) {
-            Secret beneficiaryDropboxTokenSecret = beneficiaryOffChainSecrets.get().getSecret("dropbox-token");
-            if (beneficiaryDropboxTokenSecret!= null){
-                beneficiaryDropboxToken = beneficiaryDropboxTokenSecret.getValue();
+        String requesterDropboxToken = "''";//empty value in yml
+        if (!requsterOffChainSecrets.isEmpty()) {
+            Secret requesterDropboxTokenSecret = requsterOffChainSecrets.get().getSecret("dropbox-token");
+            if (requesterDropboxTokenSecret!= null){
+                requesterDropboxToken = requesterDropboxTokenSecret.getValue();
             }
         }
 
@@ -161,14 +153,10 @@ public class TeeSessionHelper {
         tokens.put(APP_FSPF_KEY_PROPERTY, appFspfKey);
         tokens.put(APP_FSPF_TAG_PROPERTY, appFspfTag);
         tokens.put(APP_MRENCLAVE_PROPERTY, appMrEnclave);
-        //signer
-        tokens.put(SIGNER_FSPF_KEY_PROPERTY, signerFspfKey);
-        tokens.put(SIGNER_FSPF_TAG_PROPERTY, signerFspfTag);
-        tokens.put(SIGNER_MRENCLAVE_PROPERTY, signerMrEnclave);
-        //uploader
-        tokens.put(UPLOADER_FSPF_KEY_PROPERTY, uploaderFspfKey);
-        tokens.put(UPLOADER_FSPF_TAG_PROPERTY, uploaderFspfTag);
-        tokens.put(UPLOADER_MRENCLAVE_PROPERTY, uploaderMrEnclave);
+        //post-compute
+        tokens.put(POST_COMPUTE_FSPF_KEY_PROPERTY, postComputeFspfKey);
+        tokens.put(POST_COMPUTE_FSPF_TAG_PROPERTY, postComputeFspfTag);
+        tokens.put(POST_COMPUTE_MRENCLAVE_PROPERTY, postComputeMrEnclave);
         //data
         if (!datasetFspfKey.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
@@ -184,17 +172,19 @@ public class TeeSessionHelper {
                 && executionAttestor.get().getCredentials().getPrivateKey() != null) {
             tokens.put(TEE_CHALLENGE_PRIVATE_KEY_PROPERTY, executionAttestor.get().getCredentials().getPrivateKey());
         }
-        //result encryption
-        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client //TODO deocode in scone runtime app
+        //encryption
+        tokens.put(IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY, resultEncryption);//TODO read that onchain from enclave instead?
+        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client
 
-        if (beneficiaryDropboxToken != null && !beneficiaryDropboxToken.isEmpty()) {
-            tokens.put(BENEFICIARY_DROPBOX_TOKEN_PROPERTY, beneficiaryDropboxToken);
+        //storage
+        tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
+        if (requesterDropboxToken != null && !requesterDropboxToken.isEmpty()) {
+            tokens.put(REQUESTER_DROPBOX_TOKEN_PROPERTY, requesterDropboxToken);
         }
 
         return tokens;
     }
 
-    //TODO: Add signer after upload
 
     public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         // Palaemon file should be generated and a call to the CAS with this file should happen here.
