@@ -40,7 +40,7 @@ images:
         - name: scone
           path: /scone
    - name: image3
-     mrenclaves: [$UPLOADER_MRENCLAVE]
+     mrenclaves: [$POST_COMPUTE_MRENCLAVE]
      tags: [demo]
      volumes:
         - name: scone

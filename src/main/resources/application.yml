@@ -18,6 +18,7 @@ spring:
       database: iexec-sms
       host: ${IEXEC_SMS_MONGO_HOST:localhost}
       port: ${IEXEC_SMS_MONGO_PORT:37017}
+      #ssl-enabled: true
 
 blockchain:
   id: ${IEXEC_CHAIN_ID:17}

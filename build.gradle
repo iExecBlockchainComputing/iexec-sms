@@ -113,7 +113,7 @@ task prepareDockerFile(type: Copy) {
 
 task buildImage(type: Exec) {
     description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile-untrusted -t " + getDockerImageNameFull() + " . &&" +
+    commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile-untrusted -t " + getDockerImageNameFull() + " . &&" + //build/resources/main/Dockerfile-untrusted
             "docker tag " + getDockerImageNameFull() + " " + imageName + ":dev")
 }
 buildImage.dependsOn prepareDockerFile
