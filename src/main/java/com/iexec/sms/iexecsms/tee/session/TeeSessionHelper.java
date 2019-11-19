@@ -110,7 +110,7 @@ public class TeeSessionHelper {
         String datasetFspfTag = "";
         if (chainDeal.getChainDataset() != null){
             String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
-            Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId);
+            Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId, true);
 
             if (datasetSecret.isPresent()) {
                 String datasetSecretKey = datasetSecret.get().getValue();
@@ -122,7 +122,7 @@ public class TeeSessionHelper {
 
         //encryption
         Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId);
-        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
+        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary(), true);
         String beneficiaryKey = "''";//empty value in yml
         if (!beneficiaryOffChainSecrets.isEmpty()) {
             Secret beneficiaryKeySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
@@ -134,7 +134,7 @@ public class TeeSessionHelper {
         // storage
         // we need a signature of the beneficiary to push to the beneficiary private storage space
         // waiting for that feature we only allow to push to the requester private storage space
-        Optional<OffChainSecrets> requsterOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getRequester());
+        Optional<OffChainSecrets> requsterOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getRequester(), true);
         String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
         String resultEncryption = chainDeal.getParams().getIexecResultEncryption();
         //TODO: Generify beneficiary secret retrieval & templating

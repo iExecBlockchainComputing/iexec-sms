@@ -55,7 +55,7 @@ public class UnTeeSecretService {
         ChainDeal chainDeal = oChainDeal.get();
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
 
-        Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId);
+        Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId, true);
         if (!datasetSecret.isPresent()) {
             log.error("getUnTeeTaskSecrets failed (datasetSecret failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
@@ -65,7 +65,7 @@ public class UnTeeSecretService {
                 .secret(datasetSecret.get().getValue())
                 .build());
 
-        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary());
+        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary(), true);
         if (!beneficiaryOffChainSecrets.isPresent()) {
             log.error("getUnTeeTaskSecrets failed (beneficiaryOffChainSecrets failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();

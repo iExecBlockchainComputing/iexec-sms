@@ -1,6 +1,7 @@
 package com.iexec.sms.iexecsms.secret.onchain;
 
 
+import com.iexec.sms.iexecsms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -11,29 +12,58 @@ import java.util.Optional;
 public class OnChainSecretService {
 
     private OnChainSecretRepository onChainSecretRepository;
+    private EncryptionService encryptionService;
 
-    public OnChainSecretService(OnChainSecretRepository onChainSecretRepository) {
+    public OnChainSecretService(OnChainSecretRepository onChainSecretRepository,
+                                EncryptionService encryptionService) {
         this.onChainSecretRepository = onChainSecretRepository;
+        this.encryptionService = encryptionService;
+    }
+
+    public Optional<OnChainSecret> getSecret(String secretAddress, boolean shouldDecryptValue) {
+        Optional<OnChainSecret> optionalSecret = onChainSecretRepository.findOnChainSecretByAddress(secretAddress);
+
+        if (!optionalSecret.isEmpty()) {
+            OnChainSecret secret = optionalSecret.get();
+            if (shouldDecryptValue) {
+                secret.decryptValue(encryptionService);
+            }
+            return Optional.of(secret);
+        }
+
+        return Optional.empty();
+
     }
 
     public Optional<OnChainSecret> getSecret(String secretAddress) {
-        return onChainSecretRepository.findOnChainSecretByAddress(secretAddress);
+        return getSecret(secretAddress, false);
+
     }
 
-    public void updateSecret(String secretAddress, String newSecretValue) {
+    /*
+     *
+     * Stores encrypted secrets
+     * */
+    public void updateSecret(String secretAddress, String unencryptedSecretValue) {
+        OnChainSecret onChainSecret = new OnChainSecret(secretAddress, unencryptedSecretValue);
+        onChainSecret.encryptValue(encryptionService);
+
         Optional<OnChainSecret> optionalExistingSecret = getSecret(secretAddress);
 
         if (!optionalExistingSecret.isPresent()) {
-            log.info("Adding newSecret [secretAddress:{}, newSecretValue:{}]", secretAddress, newSecretValue);
-            onChainSecretRepository.save(new OnChainSecret(secretAddress, newSecretValue));
+            onChainSecretRepository.save(onChainSecret);
+            log.info("Added newSecret [secretAddress:{}, secretValue:{}]",
+                    secretAddress, onChainSecret.getValue());
             return;
         }
 
         OnChainSecret existingSecret = optionalExistingSecret.get();
-        log.info("Updating secret [secretAddress:{}, oldSecretValue:{}, newSecretValue:{}]",
-                secretAddress, existingSecret.getValue(), newSecretValue);
-        existingSecret.setValue(newSecretValue);
+        existingSecret.setValue(onChainSecret.getValue(), true);
+
         onChainSecretRepository.save(existingSecret);
+
+        log.info("Updated secret [secretAddress:{}, secretValue:{}]",
+                secretAddress, onChainSecret.getValue());
     }
 
 }

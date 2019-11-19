@@ -38,7 +38,8 @@ public class SecretController {
     @GetMapping("/secrets/onchain")
     public ResponseEntity getOnChainSecret(@RequestParam String secretAddress,
                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                           @RequestParam(required = false) String signature) {
+                                           @RequestParam(required = false) String signature,
+                                           @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
@@ -50,7 +51,7 @@ public class SecretController {
             }
         }
 
-        Optional<OnChainSecret> secret = onChainSecretService.getSecret(secretAddress);
+        Optional<OnChainSecret> secret = onChainSecretService.getSecret(secretAddress, shouldDecryptSecretValue);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -62,7 +63,8 @@ public class SecretController {
     public ResponseEntity getOffChainSecret(@RequestParam String ownerAddress,
                                             @RequestParam String secretAddress,
                                             @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                            @RequestParam(required = false) String signature) {
+                                            @RequestParam(required = false) String signature,
+                                            @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
@@ -74,7 +76,7 @@ public class SecretController {
             }
         }
 
-        Optional<Secret> secret = offChainSecretsService.getSecret(ownerAddress, secretAddress);
+        Optional<Secret> secret = offChainSecretsService.getSecret(ownerAddress, secretAddress, shouldDecryptSecretValue);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -83,8 +85,9 @@ public class SecretController {
      * Dev endpoint for seeing all secrets of an ownerAddress
      * */
     @GetMapping("/secrets/offchain/all")
-    public ResponseEntity getOffChainSecrets(@RequestParam String address) {
-        Optional<OffChainSecrets> secret = offChainSecretsService.getOffChainSecrets(address);
+    public ResponseEntity getOffChainSecrets(@RequestParam String address,
+                                             @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
+        Optional<OffChainSecrets> secret = offChainSecretsService.getOffChainSecrets(address, shouldDecryptSecretValue);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 

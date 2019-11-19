@@ -20,6 +20,10 @@ spring:
       port: ${IEXEC_SMS_MONGO_PORT:37017}
       #ssl-enabled: true
 
+
+encryption:
+  aesKey: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY:tPOK0POhbjhYJhY1zSL3BA==} #TODO Get key previous key else create
+
 blockchain:
   id: ${IEXEC_CHAIN_ID:17}
   nodeAddress: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:http://localhost:8545}
