@@ -27,3 +27,7 @@
 
 /bin/
 .vscode/
+
+### iExec ###
+
+src/main/resources/iexec-sms-aes.key

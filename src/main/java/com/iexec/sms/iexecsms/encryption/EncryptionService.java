@@ -2,40 +2,68 @@ package com.iexec.sms.iexecsms.encryption;
 
 
 import com.iexec.common.security.CipherHelper;
+import com.iexec.common.utils.BytesUtils;
+import com.iexec.common.utils.FileHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.Hash;
+
+import static com.iexec.common.utils.FileHelper.createFileWithContent;
 
 @Slf4j
 @Service
 public class EncryptionService {
 
-    private EncryptionConfiguration configuration;
+    private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
+    private byte[] aesKey;
 
     public EncryptionService(EncryptionConfiguration configuration) {
-        this.configuration = configuration;
+        this.aesKey = getOrCreateAesKey(configuration.getAesKeyPath());
 
-        //TODO Get or create key here
-
-        if (configuration.getAesKey() == null || configuration.getAesKey().isEmpty()) {
-            throw new ExceptionInInitializerError("Aes key for storage encryption missing");
+        if (!decrypt(encrypt(DEFAULT_MESSAGE)).equals(DEFAULT_MESSAGE)) {
+            throw new ExceptionInInitializerError("AES key is corrupted");
         }
     }
 
-    private byte[] getAesKey() {
-        return configuration.getAesKey().getBytes();
+    private byte[] getOrCreateAesKey(String aesKeyPath) {
+        if (aesKeyPath == null || aesKeyPath.isEmpty()) {
+            throw new ExceptionInInitializerError("Failed to get aesKeyPath");
+        }
+
+        byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+
+        if (aesKey == null) {
+            byte[] newAesKey = CipherHelper.generateAesKey();
+
+            if (newAesKey == null) {
+                throw new ExceptionInInitializerError("Failed to create AES key");
+            }
+            if (createFileWithContent(aesKeyPath, newAesKey) == null) {
+                throw new ExceptionInInitializerError("Failed to write AES key");
+            }
+
+            aesKey = FileHelper.readFileBytes(aesKeyPath);
+            log.info("AES key created [aesKeyPath:{}, aesKeyHash:{}]",
+                    aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
+        } else {
+            log.info("AES key recovered [aesKeyPath:{}, aesKeyHash:{}]",
+                    aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
+        }
+
+        return aesKey;
     }
 
     public String encrypt(String data) {
-        byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), getAesKey());
-        if (encryptedData != null){
+        byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
+        if (encryptedData != null) {
             return new String(encryptedData);
         }
         return "";
     }
 
     public String decrypt(String encryptedData) {
-        byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), getAesKey());
-        if (decryptedData != null){
+        byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
+        if (decryptedData != null) {
             return new String(decryptedData);
         }
         return "";

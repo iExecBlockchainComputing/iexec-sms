@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EncryptionConfiguration {
-
-    @Value("${encryption.aesKey}")
-    private String aesKey;
+    
+    @Value("${encryption.aesKeyPath}")
+    private String aesKeyPath;
 
 }

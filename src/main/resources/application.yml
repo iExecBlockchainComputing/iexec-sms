@@ -22,7 +22,9 @@ spring:
 
 
 encryption:
-  aesKey: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY:tPOK0POhbjhYJhY1zSL3BA==} #TODO Get key previous key else create
+  # Will get previous key or else create one on this path
+  # this file shouldn't be clearly readable outside the enclave (but encrypted content could be copied outside)
+  aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:./src/main/resources/iexec-sms-aes.key} # /scone/iexec-sms-aes.key
 
 blockchain:
   id: ${IEXEC_CHAIN_ID:17}
