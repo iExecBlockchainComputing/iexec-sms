@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class TeeChallenge {
 
     private String taskId;
-    private EthereumCredentials credentials;
+    private EthereumCredentials credentials; //TODO encrypt tee challenge in DB
 }
