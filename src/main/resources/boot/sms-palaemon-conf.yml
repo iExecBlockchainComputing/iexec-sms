@@ -1,6 +1,4 @@
 ## Palaemon config ##
-# curl -k -s --cert conf/client.crt --key conf/client-key.key --data-binary @sms-palaemon-conf.yml -X POST https://localhost:18767/session
-
 name: s1
 digest: create
 
@@ -12,8 +10,8 @@ services:
      pwd: /
      command: java -jar /app/iexec-sms.jar
      fspf_path: /fspf.pb
-     fspf_key: 4950bffef9003ab70b068f2b49205441b72b4d8029eeff5b644d98d6fd7fb254
-     fspf_tag: 67244f0d3cd724dd3d10b26cf4beb6c9
+     fspf_key: 300ddb7abb27b509241070dd9f813b7b3012d4ac8b22a8ea87100f4ef57616ce
+     fspf_tag: 16ebc5365029d5b5861243b5873cfc72
      environment:
          LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
          JAVA_TOOL_OPTIONS: -Xmx256m
