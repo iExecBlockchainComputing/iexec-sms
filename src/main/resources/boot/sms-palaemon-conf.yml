@@ -1,0 +1,38 @@
+## Palaemon config ##
+# curl -k -s --cert conf/client.crt --key conf/client-key.key --data-binary @sms-palaemon-conf.yml -X POST https://localhost:18767/session
+
+name: s1
+digest: create
+
+services:
+   - name: iexec-sms
+     image_name: image3
+     mrenclaves: [a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e]
+     tags: [demo]
+     pwd: /
+     command: java -jar /app/iexec-sms.jar
+     fspf_path: /fspf.pb
+     fspf_key: 4950bffef9003ab70b068f2b49205441b72b4d8029eeff5b644d98d6fd7fb254
+     fspf_tag: 67244f0d3cd724dd3d10b26cf4beb6c9
+     environment:
+         LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
+         JAVA_TOOL_OPTIONS: -Xmx256m
+         IEXEC_SMS_MONGO_HOST: sms-mongo
+         IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS: http://chain:8545
+         IEXEC_SCONE_CAS_HOST: iexec-cas
+         IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET: palaemonConfTemplateWithDataset.vm
+         IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET: palaemonConfTemplateWithoutDataset.vm
+         IEXEC_SMS_SSL_KEYSTORE: /ssl-keystore-dev.p12
+         IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH: /scone/iexec-sms-aes.key
+
+
+images:
+   - name: image3
+     mrenclaves: [a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e]
+     tags: [demo]
+     volumes:
+        - name: scone
+          path: /scone
+
+volumes:
+   - name: scone

@@ -45,8 +45,8 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M		    \
 	&& scone fspf addf fspf.pb /sbin /sbin 			            \	    \
 	&& scone fspf addr fspf.pb /app --authenticated --kernel /app 	    \
 	&& scone fspf addf fspf.pb /app /app 				    \
-	&& scone fspf addr fspf.pb /scone --authenticated --kernel /scone 	    \
-	&& scone fspf addf fspf.pb /scone /scone 				    \
+#	&& scone fspf addr fspf.pb /scone --encrypted --kernel /scone 	    \
+#	&& scone fspf addf fspf.pb /scone /scone 				    \
 	&& scone fspf encrypt ./fspf.pb > /conf/keytag 			    \
         && MRENCLAVE="$(SCONE_HASH=1 SCONE_HEAP=3G java)"			            \
 	&& FSPF_TAG=$(cat conf/keytag | awk '{print $9}') 	            \

@@ -1,0 +1,27 @@
+version: '3.4'
+
+networks:
+  iexec-net:
+    external: true
+
+services:
+
+  iexec-sms:
+    image: nexus.iex.ec/iexec-sms:dev
+    container_name: iexec-sms
+    environment:
+      - SCONE_CAS_ADDR=iexec-cas:18765
+      - SCONE_LAS_ADDR=iexec-las:18766
+      - SCONE_CONFIG_ID=s1/iexec-sms
+      - SCONE_HEAP=3G
+      - SCONE_LOG=7
+      - SCONE_VERSION=1
+    ports:
+      - 15000:15000
+      - 15443:15443
+    networks:
+      - iexec-net
+    devices:
+      - /dev/isgx
+    volumes:  # share volumes for external backup (such as /scone)
+      - /tmp/scone:/scone #remind to mkdir /tmp/scone before compose up
