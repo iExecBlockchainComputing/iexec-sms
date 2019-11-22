@@ -18,6 +18,8 @@ ENV IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET palaemonConfTemplateWithoutDatase
 COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
 ENV IEXEC_SMS_SSL_KEYSTORE /ssl-keystore-dev.p12
 
+ENV IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH /scone/iexec-sms-aes.key
+
 ENTRYPOINT ["./entrypoint.sh"]
 
 # docker run -it -p 15000:15000 nexus.iex.ec/iexec-sms:0.0.1

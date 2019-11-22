@@ -7,8 +7,6 @@ import org.springframework.data.annotation.Id;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
 public class OnChainSecret extends Secret {
 
     @Id

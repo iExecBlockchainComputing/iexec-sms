@@ -2,6 +2,7 @@ package com.iexec.sms.iexecsms.secret.offchain;
 
 
 import com.iexec.sms.iexecsms.secret.Secret;
+import com.iexec.sms.iexecsms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,12 +13,15 @@ import java.util.Optional;
 public class OffChainSecretsService {
 
     private OffChainSecretsRepository offChainSecretsRepository;
+    private EncryptionService encryptionService;
 
-    public OffChainSecretsService(OffChainSecretsRepository offChainSecretsRepository) {
+    public OffChainSecretsService(OffChainSecretsRepository offChainSecretsRepository,
+                                  EncryptionService encryptionService) {
         this.offChainSecretsRepository = offChainSecretsRepository;
+        this.encryptionService = encryptionService;
     }
 
-    public Optional<OffChainSecrets> getOffChainSecrets(String address) {
+    public Optional<OffChainSecrets> getOffChainSecrets(String address, boolean shouldDecryptValues) {
         Optional<OffChainSecrets> oldOffChainSecrets = offChainSecretsRepository.findOffChainSecretsByOwnerAddress(address);
 
         if (!oldOffChainSecrets.isPresent()) {
@@ -25,11 +29,17 @@ public class OffChainSecretsService {
             return Optional.of(offChainSecretsRepository.save(newOffChainSecrets));
         }
 
+        if (shouldDecryptValues){
+            for (Secret secret: oldOffChainSecrets.get().getSecrets()){
+                secret.decryptValue(encryptionService);
+            }
+        }
+
         return oldOffChainSecrets;
     }
 
-    public Optional<Secret> getSecret(String ownerAddress, String secretAddress) {
-        Optional<OffChainSecrets> optionalOffChainSecrets = this.getOffChainSecrets(ownerAddress);
+    public Optional<Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
+        Optional<OffChainSecrets> optionalOffChainSecrets = this.getOffChainSecrets(ownerAddress, shouldDecryptValue);
 
         if (!optionalOffChainSecrets.isPresent()) {
             log.error("Failed to getSecret (secret folder missing) [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
@@ -41,6 +51,9 @@ public class OffChainSecretsService {
         Secret secret = offChainSecrets.getSecret(secretAddress);
 
         if (secret != null) {
+            if (shouldDecryptValue){
+                secret.decryptValue(encryptionService);
+            }
             return Optional.of(secret);
         }
 
@@ -49,7 +62,9 @@ public class OffChainSecretsService {
 
 
     public boolean updateSecret(String ownerAddress, Secret newSecret) {
-        Optional<OffChainSecrets> optionalSecretFolder = this.getOffChainSecrets(ownerAddress);
+        newSecret.encryptValue(encryptionService);
+
+        Optional<OffChainSecrets> optionalSecretFolder = this.getOffChainSecrets(ownerAddress, false);
 
         if (!optionalSecretFolder.isPresent()) {
             log.error("Failed to updateSecret (secret folder missing) [ownerAddress:{}, secret:{}]", ownerAddress, newSecret);
@@ -68,14 +83,14 @@ public class OffChainSecretsService {
         }
 
         if (!newSecret.getValue().equals(existingSecret.getValue())) {
-            log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValue:{}, newSecretValue:{}]",
+            log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHsh:{}]",
                     ownerAddress, newSecret.getAddress(), existingSecret.getValue(), newSecret.getValue());
-            existingSecret.setValue(newSecret.getValue());
+            existingSecret.setValue(newSecret.getValue(), true);
             offChainSecretsRepository.save(offChainSecrets);
             return true;
         }
 
-        log.info("No need to update secret [ownerAddress:{}, secretAddress:{},, oldSecretValue:{}, newSecretValue:{}]",
+        log.info("No need to update secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHash:{}]",
                 ownerAddress, newSecret.getAddress(), existingSecret.getValue(), newSecret.getValue());
         return true;
     }
