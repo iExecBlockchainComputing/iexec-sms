@@ -40,13 +40,6 @@ public class Secret {
         }
     }
 
-    public String getHash() {
-        return HashUtils.concatenateAndHash(
-                HashUtils.sha256(address),
-                HashUtils.sha256(value)
-        );
-    }
-
     /* private */
     private void setValue(String value) {
         this.value = value;
