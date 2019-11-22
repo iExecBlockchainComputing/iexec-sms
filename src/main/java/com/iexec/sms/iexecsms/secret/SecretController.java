@@ -31,10 +31,6 @@ public class SecretController {
         this.onChainSecretService = onChainSecretService;
     }
 
-
-    /*
-     * Non-required signatures for dev
-     * */
     @GetMapping("/secrets/onchain")
     public ResponseEntity getOnChainSecret(@RequestParam String secretAddress,
                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
@@ -55,10 +51,6 @@ public class SecretController {
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
-    /*
-     * Non-required signatures for dev
-     * */
     @GetMapping("/secrets/offchain")
     public ResponseEntity getOffChainSecret(@RequestParam String ownerAddress,
                                             @RequestParam String secretAddress,
@@ -80,7 +72,6 @@ public class SecretController {
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
     /*
      * Dev endpoint for seeing all secrets of an ownerAddress
      * */
@@ -91,10 +82,6 @@ public class SecretController {
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
-    /*
-     * Non-required signatures for dev
-     * */
     @PostMapping("/secrets/onchain")
     public ResponseEntity setOnChainSecret(@RequestParam String secretAddress,
                                            @RequestBody String secretValue,
@@ -115,27 +102,25 @@ public class SecretController {
         return ResponseEntity.ok().build();
     }
 
-
-    /*
-     * Non-required signatures for dev
-     * */
     @PostMapping("/secrets/offchain")
     public ResponseEntity setOffChainSecret(@RequestParam String ownerAddress,
-                                            @RequestBody Secret secret,
+                                            @RequestParam String secretKey,
+                                            @RequestBody String secretValue,
                                             @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
                                             @RequestParam(required = false) String signature) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
                     ownerAddress,
-                    secret.getHash());
+                    secretKey,
+                    secretValue);
 
             if (!authorizationService.isSignedByHimself(message, signature, ownerAddress)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
-        boolean isSecretSet = offChainSecretsService.updateSecret(ownerAddress, secret);
+        boolean isSecretSet = offChainSecretsService.updateSecret(ownerAddress, new Secret(secretKey, secretValue));
         if (isSecretSet) {
             return ResponseEntity.ok().build();
         }

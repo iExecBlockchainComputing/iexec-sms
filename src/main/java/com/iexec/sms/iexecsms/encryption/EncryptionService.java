@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
+import java.io.File;
+
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
 
 @Slf4j
@@ -30,25 +32,27 @@ public class EncryptionService {
             throw new ExceptionInInitializerError("Failed to get aesKeyPath");
         }
 
-        byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+        boolean shouldGenerateKey = !new File(aesKeyPath).exists();
 
-        if (aesKey == null) {
+        if (shouldGenerateKey) {
             byte[] newAesKey = CipherHelper.generateAesKey();
 
             if (newAesKey == null) {
-                throw new ExceptionInInitializerError("Failed to create AES key");
+                throw new ExceptionInInitializerError("Failed to generate AES key");
             }
             if (createFileWithContent(aesKeyPath, newAesKey) == null) {
-                throw new ExceptionInInitializerError("Failed to write AES key");
+                throw new ExceptionInInitializerError("Failed to write generated AES key");
             }
-
-            aesKey = FileHelper.readFileBytes(aesKeyPath);
-            log.info("AES key created [aesKeyPath:{}, aesKeyHash:{}]",
-                    aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
-        } else {
-            log.info("AES key recovered [aesKeyPath:{}, aesKeyHash:{}]",
-                    aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
         }
+
+        byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+
+        if (aesKey == null) {
+            throw new ExceptionInInitializerError("Failed to load AES key");
+        }
+
+        log.info("AES key loaded [isNewAesKey:{}, aesKeyPath:{}, aesKeyHash:{}]",
+                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
 
         return aesKey;
     }

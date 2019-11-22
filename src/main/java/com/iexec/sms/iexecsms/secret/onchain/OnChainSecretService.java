@@ -52,7 +52,7 @@ public class OnChainSecretService {
 
         if (!optionalExistingSecret.isPresent()) {
             onChainSecretRepository.save(onChainSecret);
-            log.info("Added newSecret [secretAddress:{}, secretValue:{}]",
+            log.info("Added newSecret [secretAddress:{}, secretValueHash:{}]",
                     secretAddress, onChainSecret.getValue());
             return;
         }
@@ -62,8 +62,8 @@ public class OnChainSecretService {
 
         onChainSecretRepository.save(existingSecret);
 
-        log.info("Updated secret [secretAddress:{}, secretValue:{}]",
-                secretAddress, onChainSecret.getValue());
+        log.info("Updated secret [secretAddress:{}, secretValueHash:{}]",
+                secretAddress, existingSecret.getValue());
     }
 
 }

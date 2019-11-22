@@ -83,14 +83,14 @@ public class OffChainSecretsService {
         }
 
         if (!newSecret.getValue().equals(existingSecret.getValue())) {
-            log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValue:{}, newSecretValue:{}]",
+            log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHsh:{}]",
                     ownerAddress, newSecret.getAddress(), existingSecret.getValue(), newSecret.getValue());
             existingSecret.setValue(newSecret.getValue(), true);
             offChainSecretsRepository.save(offChainSecrets);
             return true;
         }
 
-        log.info("No need to update secret [ownerAddress:{}, secretAddress:{},, oldSecretValue:{}, newSecretValue:{}]",
+        log.info("No need to update secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHash:{}]",
                 ownerAddress, newSecret.getAddress(), existingSecret.getValue(), newSecret.getValue());
         return true;
     }
