@@ -12,8 +12,7 @@ public class App {
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
-
-        log.info("DEBUG - env: " + System.getenv().toString());//TODO: remove this
+        log.info("DEBUG - env: " + System.getenv().toString());//TODO: remove this later
     }
 
 }

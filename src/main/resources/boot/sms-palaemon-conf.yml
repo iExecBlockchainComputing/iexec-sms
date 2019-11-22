@@ -10,8 +10,8 @@ services:
      pwd: /
      command: java -jar /app/iexec-sms.jar
      fspf_path: /fspf.pb
-     fspf_key: 300ddb7abb27b509241070dd9f813b7b3012d4ac8b22a8ea87100f4ef57616ce
-     fspf_tag: 16ebc5365029d5b5861243b5873cfc72
+     fspf_key: 64aef985433213b95a276b83996467129299a773b00a62d55ee70d4aa202bb7b
+     fspf_tag: 2c036e92a80b84444f6e7363d5e3de12
      environment:
          LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
          JAVA_TOOL_OPTIONS: -Xmx256m
