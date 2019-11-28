@@ -1,4 +1,5 @@
 #!/bin/sh
+### dev ###
 
 cd ~/iexecdev/iexec-sms/src/main/resources/boot
 docker rm -f iexec-sms

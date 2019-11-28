@@ -8,17 +8,14 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repos
     && apk update
 
 COPY build/resources/main/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
 COPY build/resources/main/palaemonConfTemplateWithDataset.vm palaemonConfTemplateWithDataset.vm
 COPY build/resources/main/palaemonConfTemplateWithoutDataset.vm palaemonConfTemplateWithoutDataset.vm
-
 COPY build/libs/iexec-sms-@projectversion@.jar /app/iexec-sms.jar
-
 COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
 
-# /!\ Docker ENV vars should be placed in palaemon conf for Scone
-# e.g.: ENV IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH /scone/iexec-sms-aes.key -> sms-palaemon-conf.yml
+RUN chmod +x /app/entrypoint.sh
+
+#### Docker ENV vars should be placed in palaemon conf for Scone ###
 
 # SCONE FS PROTECTION
 RUN SCONE_MODE=sim SCONE_HEAP=128M		    \
@@ -47,5 +44,3 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M		    \
 
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-
-# docker run -it -p 15000:15000 nexus.iex.ec/iexec-sms:0.0.1
