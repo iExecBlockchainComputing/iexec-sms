@@ -25,3 +25,6 @@ services:
       - /dev/isgx
     volumes:  # share volumes for external backup (such as /scone)
       - /tmp/scone:/scone #remind to mkdir /tmp/scone before compose up
+#    entrypoint: /bin/sh # required when manual enclave java boot
+#    stdin_open: true
+#    tty: true

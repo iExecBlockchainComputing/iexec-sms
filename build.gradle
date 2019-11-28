@@ -40,7 +40,6 @@ dependencies {
     // spring
     compile "org.springframework.boot:spring-boot-starter-web"
     compile "org.springframework.cloud:spring-cloud-starter-openfeign"
-    compile "org.springframework.boot:spring-boot-starter-data-mongodb"
     compile "org.springframework.retry:spring-retry"
 
     //ssl
@@ -61,8 +60,14 @@ dependencies {
     compileOnly "org.projectlombok:lombok:1.18.2"
     annotationProcessor "org.projectlombok:lombok:1.18.2"
 
-    implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // H2
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtime 'com.h2database:h2:1.4.200'
+
+    // MongoDB
+    //compile "org.springframework.boot:spring-boot-starter-data-mongodb"
+    //implementation 'org.springframework.boot:spring-boot-starter'
+    //testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()

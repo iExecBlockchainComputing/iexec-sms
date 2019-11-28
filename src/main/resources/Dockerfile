@@ -20,8 +20,6 @@ COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
 # /!\ Docker ENV vars should be placed in palaemon conf for Scone
 # e.g.: ENV IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH /scone/iexec-sms-aes.key -> sms-palaemon-conf.yml
 
-RUN mkdir /scone
-
 # SCONE FS PROTECTION
 RUN SCONE_MODE=sim SCONE_HEAP=128M		    \
 	&& mkdir conf							    \

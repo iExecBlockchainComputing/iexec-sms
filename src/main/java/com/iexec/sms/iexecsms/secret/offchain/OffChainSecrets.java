@@ -3,20 +3,28 @@ package com.iexec.sms.iexecsms.secret.offchain;
 import com.iexec.sms.iexecsms.secret.Secret;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.annotation.Id;
+import org.hibernate.annotations.GenericGenerator;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Data
 @Getter
-@Slf4j
+@Entity
+@NoArgsConstructor
 public class OffChainSecrets {
 
     @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
+
     private String ownerAddress;
+    @OneToMany(cascade = {CascadeType.ALL})
     private List<Secret> secrets;
 
     OffChainSecrets(String ownerAddress) {

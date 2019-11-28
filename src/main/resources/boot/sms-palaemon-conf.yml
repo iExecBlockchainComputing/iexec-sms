@@ -10,8 +10,8 @@ services:
      pwd: /
      command: java -jar /app/iexec-sms.jar
      fspf_path: /fspf.pb
-     fspf_key: 64aef985433213b95a276b83996467129299a773b00a62d55ee70d4aa202bb7b
-     fspf_tag: 2c036e92a80b84444f6e7363d5e3de12
+     fspf_key: 41d150615dee967f66ae6692c4caea15e5f34b9924198249cd88d946cfd13bf2
+     fspf_tag: 1be00a60bf4dc8a2d14fe8d6e635eed3
      environment:
          LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
          JAVA_TOOL_OPTIONS: -Xmx256m
@@ -22,7 +22,7 @@ services:
          IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET: palaemonConfTemplateWithoutDataset.vm
          IEXEC_SMS_SSL_KEYSTORE: /ssl-keystore-dev.p12
          IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH: /scone/iexec-sms-aes.key
-
+         IEXEC_SMS_H2_URL: jdbc:h2:file:/scone/sms-h2
 
 images:
    - name: image3
