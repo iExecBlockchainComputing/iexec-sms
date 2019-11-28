@@ -1,6 +1,10 @@
 package com.iexec.sms.iexecsms.utils;
 
-import lombok.*;
+import com.iexec.sms.iexecsms.encryption.EncryptionService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
@@ -12,11 +16,10 @@ import javax.persistence.Id;
 import java.math.BigInteger;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
+@AllArgsConstructor
 @Entity
+@NoArgsConstructor
 public class EthereumCredentials {
 
     @Id
@@ -27,16 +30,39 @@ public class EthereumCredentials {
     private String address;
     private String privateKey;
     private String publicKey;
+    private boolean areEncryptedKeys;
 
     public EthereumCredentials(ECKeyPair ecKeyPair) {
         this.address = Numeric.prependHexPrefix(Keys.getAddress(ecKeyPair));
-        this.privateKey = toHex(ecKeyPair.getPrivateKey());
-        this.publicKey = toHex(ecKeyPair.getPublicKey());
-
+        setKeys(toHex(ecKeyPair.getPrivateKey()),
+                toHex(ecKeyPair.getPublicKey()),
+                false);
     }
 
     private String toHex(BigInteger input) {
         return Numeric.prependHexPrefix(input.toString(16));
+    }
+
+    private void setKeys(String privateKey, String publicKey, boolean areEncryptedKeys) {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+        this.areEncryptedKeys = areEncryptedKeys;
+    }
+
+    public void encryptKeys(EncryptionService encryptionService) {
+        if (!areEncryptedKeys) {
+            this.setKeys(encryptionService.encrypt(privateKey),
+                    encryptionService.encrypt(publicKey),
+                    true);
+        }
+    }
+
+    public void decryptKeys(EncryptionService encryptionService) {
+        if (areEncryptedKeys) {
+            this.setKeys(encryptionService.decrypt(privateKey),
+                    encryptionService.decrypt(publicKey),
+                    false);
+        }
     }
 
 }

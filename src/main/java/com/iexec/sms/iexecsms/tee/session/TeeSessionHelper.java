@@ -121,7 +121,7 @@ public class TeeSessionHelper {
         }
 
         //encryption
-        Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId);
+        Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId, true);
         Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary(), true);
         String beneficiaryKey = "''";//empty value in yml
         if (!beneficiaryOffChainSecrets.isEmpty()) {

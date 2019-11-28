@@ -22,5 +22,5 @@ public class TeeChallenge {
     private String taskId;
 
     @OneToOne(cascade = {CascadeType.ALL})
-    private EthereumCredentials credentials; //TODO encrypt tee challenge in DB
+    private EthereumCredentials credentials;
 }
