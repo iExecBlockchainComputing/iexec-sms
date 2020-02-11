@@ -46,8 +46,8 @@ dependencies {
     compile 'org.apache.httpcomponents:httpclient:4.5.9'
 
     // iexec
-    compile "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //compile files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
+    //compile "com.iexec.common:iexec-common:$iexecCommonVersion"
+    compile files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
     // swagger
     compile "io.springfox:springfox-swagger2:2.9.2"
@@ -118,11 +118,64 @@ task prepareDockerFile(type: Copy) {
 
 task buildImage(type: Exec) {
     description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile-untrusted -t " + getDockerImageNameFull() + " . &&" + // untrusted
-    //commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile -t " + getDockerImageNameFull() + " . &&" +  // scone
+    //commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile-untrusted -t " + getDockerImageNameFull() + " . &&" + // untrusted
+    commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile -t " + getDockerImageNameFull() + " . &&" +  // scone
             "docker tag " + getDockerImageNameFull() + " " + imageName + ":dev")
+    standardOutput = new ByteArrayOutputStream()
+
+    ext.output = {
+        println standardOutput
+        return standardOutput.toString()
+    }
 }
 buildImage.dependsOn prepareDockerFile
+
+task templatePalaemon {
+    String smsMrEnclave
+    String smsFspfKey
+    String smsFspfTag
+
+    /*
+    * Docker build will produce such logs: "RUN .. <MRENCLAVE>$MRENCLAVE</MRENCLAVE> ... <MRENCLAVE>abcdef</MRENCLAVE>"
+    * We need to extract the 2nd occurence 'abcdef'
+    */
+    ext.extractValueBetweenTags = { s, tag ->
+        String beginTag = "<" + tag + ">"
+        String endTag = "</" + tag + ">"
+        return s.substring(s.indexOf(beginTag, s.indexOf(beginTag) + 2) + beginTag.length(), s.indexOf(endTag, s.indexOf(endTag) + 2))
+    }
+
+    doFirst {
+        String logs = buildImage.output()
+        smsMrEnclave = extractValueBetweenTags(logs, "MRENCLAVE")
+        smsFspfKey = extractValueBetweenTags(logs, "FSPF_KEY")
+        smsFspfTag = extractValueBetweenTags(logs, "FSPF_TAG")
+    }
+
+    doLast{
+        copy {
+            // delete old one
+            delete 'src/main/resources/boot/sms-palaemon-conf.yml'
+            // use and copy template to the new location
+            from 'src/main/resources/sms-palaemon-conf.yml.template'
+            into 'src/main/resources/boot/'
+
+            rename { String fileName ->
+                fileName.replace('.template', '')
+            }
+            // replace tokens in the template file
+            filter(ReplaceTokens, tokens: [
+                    IEXEC_SMS_PALAEMON_SERVICE_NAME: "${rootProject.name}".toString(),
+                    IEXEC_SMS_MRENCLAVE: smsMrEnclave,
+                    IEXEC_SMS_FSPF_KEY: smsFspfKey,
+                    IEXEC_SMS_FSPF_TAG: smsFspfTag,
+            ])
+
+        }
+    }
+}
+templatePalaemon.dependsOn buildImage
+buildImage.finalizedBy templatePalaemon
 
 task pushImage(type: Exec) {
     if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {

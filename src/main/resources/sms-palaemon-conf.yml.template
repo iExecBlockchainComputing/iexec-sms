@@ -3,19 +3,18 @@ name: s1
 digest: create
 
 services:
-   - name: iexec-sms
+   - name: @IEXEC_SMS_PALAEMON_SERVICE_NAME@
      image_name: image3
-     mrenclaves: [a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e]
+     mrenclaves: [@IEXEC_SMS_MRENCLAVE@]
      tags: [demo]
      pwd: /
      command: java -jar /app/iexec-sms.jar
      fspf_path: /fspf.pb
-     fspf_key: 4aab086d9fe729f922c718ee6af6754a261b8d96b9a8290e05dda2682a7bd779
-     fspf_tag: d4d654fecd848ee78cc35f8883e48643
+     fspf_key: @IEXEC_SMS_FSPF_KEY@
+     fspf_tag: @IEXEC_SMS_FSPF_TAG@
      environment:
          LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
          JAVA_TOOL_OPTIONS: -Xmx256m
-         IEXEC_SMS_MONGO_HOST: sms-mongo
          IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS: http://chain:8545
          IEXEC_SCONE_CAS_HOST: iexec-cas
          IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET: palaemonConfTemplateWithDataset.vm
@@ -26,7 +25,7 @@ services:
 
 images:
    - name: image3
-     mrenclaves: [a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e]
+     mrenclaves: [@IEXEC_SMS_MRENCLAVE@]
      tags: [demo]
      volumes:
         - name: scone
