@@ -5,10 +5,10 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.secret.Secret;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecrets;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
-import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
-import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
+import com.iexec.sms.iexecsms.secret.web2.Web2Secrets;
+import com.iexec.sms.iexecsms.secret.web2.Web2SecretsService;
+import com.iexec.sms.iexecsms.secret.web3.Web3Secret;
+import com.iexec.sms.iexecsms.secret.web3.Web3SecretService;
 import com.iexec.sms.iexecsms.tee.challenge.TeeChallenge;
 import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
 import org.apache.velocity.Template;
@@ -20,6 +20,9 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
+import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 
 @Service
 public class TeeSessionHelper {
@@ -55,20 +58,20 @@ public class TeeSessionHelper {
 
     private TeeSessionHelperConfiguration teeSessionHelperConfiguration;
     private IexecHubService iexecHubService;
-    private OnChainSecretService onChainSecretService;
-    private OffChainSecretsService offChainSecretsService;
+    private Web3SecretService web3SecretService;
+    private Web2SecretsService web2SecretsService;
     private TeeChallengeService teeChallengeService;
 
     public TeeSessionHelper(
             TeeSessionHelperConfiguration teeSessionHelperConfiguration,
             IexecHubService iexecHubService,
-            OnChainSecretService onChainSecretService,
-            OffChainSecretsService offChainSecretsService,
+            Web3SecretService web3SecretService,
+            Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService) {
         this.teeSessionHelperConfiguration = teeSessionHelperConfiguration;
         this.iexecHubService = iexecHubService;
-        this.onChainSecretService = onChainSecretService;
-        this.offChainSecretsService = offChainSecretsService;
+        this.web3SecretService = web3SecretService;
+        this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
     }
 
@@ -110,7 +113,7 @@ public class TeeSessionHelper {
         String datasetFspfTag = "";
         if (chainDeal.getChainDataset() != null){
             String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
-            Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId, true);
+            Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
 
             if (datasetSecret.isPresent()) {
                 String datasetSecretKey = datasetSecret.get().getValue();
@@ -122,27 +125,27 @@ public class TeeSessionHelper {
 
         //encryption
         Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId, true);
-        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary(), true);
-        String beneficiaryKey = "''";//empty value in yml
-        if (!beneficiaryOffChainSecrets.isEmpty()) {
-            Secret beneficiaryKeySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
-            if (beneficiaryKeySecret!= null){
-                beneficiaryKey = beneficiaryKeySecret.getValue();
+        Optional<Web2Secrets> beneficiarySecrets = web2SecretsService.getWeb2Secrets(chainDeal.getBeneficiary(), true);
+        String beneficiaryResultEncryptionKey = "''";//empty value in yml
+        if (!beneficiarySecrets.isEmpty()) {
+            Secret beneficiaryResultEncryptionKeySecret = beneficiarySecrets.get().getSecret(IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+            if (beneficiaryResultEncryptionKeySecret!= null){
+                beneficiaryResultEncryptionKey = beneficiaryResultEncryptionKeySecret.getValue();
             }
         }
 
         // storage
-        // we need a signature of the beneficiary to push to the beneficiary private storage space
-        // waiting for that feature we only allow to push to the requester private storage space
-        Optional<OffChainSecrets> requsterOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getRequester(), true);
+        // TODO: We need a signature of the beneficiary to push to the beneficiary private storage space
+        //  waiting for that feature we only allow to push to the requester private storage space
+        Optional<Web2Secrets> requesterSecrets = web2SecretsService.getWeb2Secrets(chainDeal.getRequester(), true);
         String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
         String resultEncryption = chainDeal.getParams().getIexecResultEncryption();
         //TODO: Generify beneficiary secret retrieval & templating
-        String requesterDropboxToken = "''";//empty value in yml
-        if (!requsterOffChainSecrets.isEmpty()) {
-            Secret requesterDropboxTokenSecret = requsterOffChainSecrets.get().getSecret("dropbox-token");
-            if (requesterDropboxTokenSecret!= null){
-                requesterDropboxToken = requesterDropboxTokenSecret.getValue();
+        String requesterResultDropboxToken = "''";//empty value in yml
+        if (!requesterSecrets.isEmpty()) {
+            Secret requesterResultDropboxTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_DROPBOX_TOKEN);
+            if (requesterResultDropboxTokenSecret!= null){
+                requesterResultDropboxToken = requesterResultDropboxTokenSecret.getValue();
             }
         }
 
@@ -174,12 +177,12 @@ public class TeeSessionHelper {
         }
         //encryption
         tokens.put(IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY, resultEncryption);//TODO read that onchain from enclave instead?
-        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryKey);//base64 encoded by client
+        tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryResultEncryptionKey);//base64 encoded by client
 
         //storage
         tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
-        if (requesterDropboxToken != null && !requesterDropboxToken.isEmpty()) {
-            tokens.put(REQUESTER_DROPBOX_TOKEN_PROPERTY, requesterDropboxToken);
+        if (requesterResultDropboxToken != null && !requesterResultDropboxToken.isEmpty()) {
+            tokens.put(REQUESTER_DROPBOX_TOKEN_PROPERTY, requesterResultDropboxToken);
         }
 
         return tokens;

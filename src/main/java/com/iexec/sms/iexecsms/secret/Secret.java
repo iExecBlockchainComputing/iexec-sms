@@ -25,10 +25,9 @@ public class Secret {
     private String id;
 
     private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
-    @Column(columnDefinition="LONGTEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String value;
     private boolean isEncryptedValue;
-
     /* Clear secrets at construction */
     public Secret(String address, String value) {
         this.address = address;

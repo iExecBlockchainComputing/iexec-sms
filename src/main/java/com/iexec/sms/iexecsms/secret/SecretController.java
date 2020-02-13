@@ -3,10 +3,10 @@ package com.iexec.sms.iexecsms.secret;
 
 import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.iexecsms.authorization.AuthorizationService;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecrets;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
-import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
-import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
+import com.iexec.sms.iexecsms.secret.web2.Web2Secrets;
+import com.iexec.sms.iexecsms.secret.web2.Web2SecretsService;
+import com.iexec.sms.iexecsms.secret.web3.Web3Secret;
+import com.iexec.sms.iexecsms.secret.web3.Web3SecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,22 +20,22 @@ public class SecretController {
 
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private AuthorizationService authorizationService;
-    private OnChainSecretService onChainSecretService;
-    private OffChainSecretsService offChainSecretsService;
+    private Web3SecretService web3SecretService;
+    private Web2SecretsService web2SecretsService;
 
     public SecretController(AuthorizationService authorizationService,
-                            OffChainSecretsService offChainSecretsService,
-                            OnChainSecretService onChainSecretService) {
-        this.offChainSecretsService = offChainSecretsService;
+                            Web2SecretsService web2SecretsService,
+                            Web3SecretService web3SecretService) {
+        this.web2SecretsService = web2SecretsService;
         this.authorizationService = authorizationService;
-        this.onChainSecretService = onChainSecretService;
+        this.web3SecretService = web3SecretService;
     }
 
-    @GetMapping("/secrets/onchain")
-    public ResponseEntity getOnChainSecret(@RequestParam String secretAddress,
-                                           @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                           @RequestParam(required = false) String signature,
-                                           @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
+    @GetMapping("/secrets/web3")
+    public ResponseEntity getWeb3Secret(@RequestParam String secretAddress,
+                                        @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                        @RequestParam(required = false) String signature,
+                                        @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
@@ -47,16 +47,16 @@ public class SecretController {
             }
         }
 
-        Optional<OnChainSecret> secret = onChainSecretService.getSecret(secretAddress, shouldDecryptSecretValue);
+        Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress, shouldDecryptSecretValue);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/secrets/offchain")
-    public ResponseEntity getOffChainSecret(@RequestParam String ownerAddress,
-                                            @RequestParam String secretAddress,
-                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                            @RequestParam(required = false) String signature,
-                                            @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
+    @GetMapping("/secrets/web2")
+    public ResponseEntity getWeb2Secret(@RequestParam String ownerAddress,
+                                        @RequestParam String secretAddress,
+                                        @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                        @RequestParam(required = false) String signature,
+                                        @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
@@ -68,25 +68,26 @@ public class SecretController {
             }
         }
 
-        Optional<Secret> secret = offChainSecretsService.getSecret(ownerAddress, secretAddress, shouldDecryptSecretValue);
+        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretAddress, shouldDecryptSecretValue);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /*
      * Dev endpoint for seeing all secrets of an ownerAddress
      * */
-    @GetMapping("/secrets/offchain/all")
-    public ResponseEntity getOffChainSecrets(@RequestParam String address,
-                                             @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
-        Optional<OffChainSecrets> secret = offChainSecretsService.getOffChainSecrets(address, shouldDecryptSecretValue);
+    @GetMapping("/secrets/web2/all")
+    public ResponseEntity getWeb2Secrets(@RequestParam String address,
+                                         @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecretValue) {
+        Optional<Web2Secrets> secret = web2SecretsService.getWeb2Secrets(address, shouldDecryptSecretValue);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/secrets/onchain")
-    public ResponseEntity setOnChainSecret(@RequestParam String secretAddress,
-                                           @RequestBody String secretValue,
-                                           @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                           @RequestParam(required = false) String signature) {
+    //TODO: Refuse web3 secret updates
+    @PostMapping("/secrets/web3")
+    public ResponseEntity setWeb3Secret(@RequestParam String secretAddress,
+                                        @RequestBody String secretValue,
+                                        @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                        @RequestParam(required = false) String signature) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
@@ -98,16 +99,16 @@ public class SecretController {
             }
         }
 
-        onChainSecretService.updateSecret(secretAddress, secretValue);
+        web3SecretService.updateSecret(secretAddress, secretValue);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/secrets/offchain")
-    public ResponseEntity setOffChainSecret(@RequestParam String ownerAddress,
-                                            @RequestParam String secretKey,
-                                            @RequestBody String secretValue,
-                                            @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
-                                            @RequestParam(required = false) String signature) {
+    @PostMapping("/secrets/web2")
+    public ResponseEntity setWeb2Secret(@RequestParam String ownerAddress,
+                                        @RequestParam String secretKey,
+                                        @RequestBody String secretValue,
+                                        @RequestParam(required = false, defaultValue = "false") boolean checkSignature, //dev only
+                                        @RequestParam(required = false) String signature) {
         if (checkSignature) {
             String message = HashUtils.concatenateAndHash(
                     DOMAIN,
@@ -120,7 +121,7 @@ public class SecretController {
             }
         }
 
-        boolean isSecretSet = offChainSecretsService.updateSecret(ownerAddress, new Secret(secretKey, secretValue));
+        boolean isSecretSet = web2SecretsService.updateSecret(ownerAddress, new Secret(secretKey, secretValue));
         if (isSecretSet) {
             return ResponseEntity.ok().build();
         }

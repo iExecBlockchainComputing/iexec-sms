@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.secret.onchain;
+package com.iexec.sms.iexecsms.secret.web3;
 
 import com.iexec.sms.iexecsms.secret.Secret;
 import lombok.Data;
@@ -16,14 +16,14 @@ import javax.persistence.Id;
 @Getter
 @Entity
 @NoArgsConstructor
-public class OnChainSecret extends Secret {
+public class Web3Secret extends Secret {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    OnChainSecret(String address, String value) {
+    Web3Secret(String address, String value) {
         super(address, value);
     }
 }

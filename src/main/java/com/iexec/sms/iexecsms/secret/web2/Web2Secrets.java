@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.secret.offchain;
+package com.iexec.sms.iexecsms.secret.web2;
 
 import com.iexec.sms.iexecsms.secret.Secret;
 import lombok.Data;
@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @Entity
 @NoArgsConstructor
-public class OffChainSecrets {
+public class Web2Secrets {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -27,7 +27,7 @@ public class OffChainSecrets {
     @OneToMany(cascade = {CascadeType.ALL})
     private List<Secret> secrets;
 
-    OffChainSecrets(String ownerAddress) {
+    Web2Secrets(String ownerAddress) {
         this.ownerAddress = ownerAddress;
         this.secrets = new ArrayList<>();
     }

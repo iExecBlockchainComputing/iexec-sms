@@ -1,4 +1,4 @@
-package com.iexec.sms.iexecsms.secret.offchain;
+package com.iexec.sms.iexecsms.secret.web2;
 
 
 import com.iexec.sms.iexecsms.secret.Secret;
@@ -10,45 +10,45 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class OffChainSecretsService {
+public class Web2SecretsService {
 
-    private OffChainSecretsRepository offChainSecretsRepository;
+    private Web2SecretsRepository web2SecretsRepository;
     private EncryptionService encryptionService;
 
-    public OffChainSecretsService(OffChainSecretsRepository offChainSecretsRepository,
-                                  EncryptionService encryptionService) {
-        this.offChainSecretsRepository = offChainSecretsRepository;
+    public Web2SecretsService(Web2SecretsRepository web2SecretsRepository,
+                              EncryptionService encryptionService) {
+        this.web2SecretsRepository = web2SecretsRepository;
         this.encryptionService = encryptionService;
     }
 
-    public Optional<OffChainSecrets> getOffChainSecrets(String address, boolean shouldDecryptValues) {
-        Optional<OffChainSecrets> oldOffChainSecrets = offChainSecretsRepository.findOffChainSecretsByOwnerAddress(address);
+    public Optional<Web2Secrets> getWeb2Secrets(String address, boolean shouldDecryptValues) {
+        Optional<Web2Secrets> oldWeb2Secrets = web2SecretsRepository.findWeb2SecretsByOwnerAddress(address);
 
-        if (!oldOffChainSecrets.isPresent()) {
-            OffChainSecrets newOffChainSecrets = new OffChainSecrets(address);
-            return Optional.of(offChainSecretsRepository.save(newOffChainSecrets));
+        if (!oldWeb2Secrets.isPresent()) {
+            Web2Secrets newWeb2Secrets = new Web2Secrets(address);
+            return Optional.of(web2SecretsRepository.save(newWeb2Secrets));
         }
 
         if (shouldDecryptValues){
-            for (Secret secret: oldOffChainSecrets.get().getSecrets()){
+            for (Secret secret: oldWeb2Secrets.get().getSecrets()){
                 secret.decryptValue(encryptionService);
             }
         }
 
-        return oldOffChainSecrets;
+        return oldWeb2Secrets;
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
-        Optional<OffChainSecrets> optionalOffChainSecrets = this.getOffChainSecrets(ownerAddress, shouldDecryptValue);
+        Optional<Web2Secrets> optionalWeb2Secrets = this.getWeb2Secrets(ownerAddress, shouldDecryptValue);
 
-        if (!optionalOffChainSecrets.isPresent()) {
+        if (!optionalWeb2Secrets.isPresent()) {
             log.error("Failed to getSecret (secret folder missing) [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
             return Optional.empty();
         }
 
-        OffChainSecrets offChainSecrets = optionalOffChainSecrets.get();
+        Web2Secrets web2Secrets = optionalWeb2Secrets.get();
 
-        Secret secret = offChainSecrets.getSecret(secretAddress);
+        Secret secret = web2Secrets.getSecret(secretAddress);
 
         if (secret != null) {
             if (shouldDecryptValue){
@@ -64,21 +64,21 @@ public class OffChainSecretsService {
     public boolean updateSecret(String ownerAddress, Secret newSecret) {
         newSecret.encryptValue(encryptionService);
 
-        Optional<OffChainSecrets> optionalSecretFolder = this.getOffChainSecrets(ownerAddress, false);
+        Optional<Web2Secrets> optionalSecretFolder = this.getWeb2Secrets(ownerAddress, false);
 
         if (!optionalSecretFolder.isPresent()) {
             log.error("Failed to updateSecret (secret folder missing) [ownerAddress:{}, secret:{}]", ownerAddress, newSecret);
             return false;
         }
 
-        OffChainSecrets offChainSecrets = optionalSecretFolder.get();
-        Secret existingSecret = offChainSecrets.getSecret(newSecret.getAddress());
+        Web2Secrets web2Secrets = optionalSecretFolder.get();
+        Secret existingSecret = web2Secrets.getSecret(newSecret.getAddress());
 
         if (existingSecret == null) {
             log.info("Adding newSecret [ownerAddress:{}, secretAddress:{}, secretValue:{}]",
                     ownerAddress, newSecret.getAddress(), newSecret.getValue());
-            offChainSecrets.getSecrets().add(newSecret);
-            offChainSecretsRepository.save(offChainSecrets);
+            web2Secrets.getSecrets().add(newSecret);
+            web2SecretsRepository.save(web2Secrets);
             return true;
         }
 
@@ -86,7 +86,7 @@ public class OffChainSecretsService {
             log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHsh:{}]",
                     ownerAddress, newSecret.getAddress(), existingSecret.getValue(), newSecret.getValue());
             existingSecret.setValue(newSecret.getValue(), true);
-            offChainSecretsRepository.save(offChainSecrets);
+            web2SecretsRepository.save(web2Secrets);
             return true;
         }
 

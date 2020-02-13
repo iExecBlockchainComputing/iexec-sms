@@ -5,15 +5,18 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.sms.secrets.SmsSecret;
 import com.iexec.common.sms.secrets.TaskSecrets;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
+import com.iexec.sms.iexecsms.secret.ReservedSecretKeyName;
 import com.iexec.sms.iexecsms.secret.Secret;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecrets;
-import com.iexec.sms.iexecsms.secret.offchain.OffChainSecretsService;
-import com.iexec.sms.iexecsms.secret.onchain.OnChainSecret;
-import com.iexec.sms.iexecsms.secret.onchain.OnChainSecretService;
+import com.iexec.sms.iexecsms.secret.web2.Web2Secrets;
+import com.iexec.sms.iexecsms.secret.web2.Web2SecretsService;
+import com.iexec.sms.iexecsms.secret.web3.Web3Secret;
+import com.iexec.sms.iexecsms.secret.web3.Web3SecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+
+import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 
 @Service
 @Slf4j
@@ -21,16 +24,16 @@ public class UnTeeSecretService {
 
 
     private IexecHubService iexecHubService;
-    private OnChainSecretService onChainSecretService;
-    private OffChainSecretsService offChainSecretsService;
+    private Web3SecretService web3SecretService;
+    private Web2SecretsService web2SecretsService;
 
     public UnTeeSecretService(IexecHubService iexecHubService,
-                              OnChainSecretService onChainSecretService,
-                              OffChainSecretsService offChainSecretsService
+                              Web3SecretService web3SecretService,
+                              Web2SecretsService web2SecretsService
     ) {
         this.iexecHubService = iexecHubService;
-        this.onChainSecretService = onChainSecretService;
-        this.offChainSecretsService = offChainSecretsService;
+        this.web3SecretService = web3SecretService;
+        this.web2SecretsService = web2SecretsService;
     }
 
     /*
@@ -55,7 +58,7 @@ public class UnTeeSecretService {
         ChainDeal chainDeal = oChainDeal.get();
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
 
-        Optional<OnChainSecret> datasetSecret = onChainSecretService.getSecret(chainDatasetId, true);
+        Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
         if (!datasetSecret.isPresent()) {
             log.error("getUnTeeTaskSecrets failed (datasetSecret failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
@@ -65,12 +68,12 @@ public class UnTeeSecretService {
                 .secret(datasetSecret.get().getValue())
                 .build());
 
-        Optional<OffChainSecrets> beneficiaryOffChainSecrets = offChainSecretsService.getOffChainSecrets(chainDeal.getBeneficiary(), true);
-        if (!beneficiaryOffChainSecrets.isPresent()) {
-            log.error("getUnTeeTaskSecrets failed (beneficiaryOffChainSecrets failed) [chainTaskId:{}]", chainTaskId);
+        Optional<Web2Secrets> beneficiarySecrets = web2SecretsService.getWeb2Secrets(chainDeal.getBeneficiary(), true);
+        if (!beneficiarySecrets.isPresent()) {
+            log.error("getUnTeeTaskSecrets failed (beneficiarySecrets failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
-        Secret beneficiarySecret = beneficiaryOffChainSecrets.get().getSecret("Kb");
+        Secret beneficiarySecret = beneficiarySecrets.get().getSecret(IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
         if (beneficiarySecret == null) {
             log.error("getUnTeeTaskSecrets failed (beneficiarySecret empty) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
