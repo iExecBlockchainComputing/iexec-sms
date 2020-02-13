@@ -76,8 +76,8 @@ public class TeeSessionHelper {
     }
 
     /*
-    * Nb: MREnclave from request param contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
-    * */
+     * Nb: MREnclave from request param contains 3 appFields separated by a '|': fspf_key, fspf_tag & MREnclave
+     * */
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
@@ -100,6 +100,7 @@ public class TeeSessionHelper {
         String appFspfKey = appFields[0];
         String appFspfTag = appFields[1];
         String appMrEnclave = appFields[2];
+        String appEntrypoint = appFields[3];
 
         // Post-compute
         String postComputeMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
@@ -111,7 +112,7 @@ public class TeeSessionHelper {
         // Dataset (optional)
         String datasetFspfKey = "";
         String datasetFspfTag = "";
-        if (chainDeal.getChainDataset() != null){
+        if (chainDeal.getChainDataset() != null) {
             String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
             Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
 
@@ -129,7 +130,7 @@ public class TeeSessionHelper {
         String beneficiaryResultEncryptionKey = "''";//empty value in yml
         if (!beneficiarySecrets.isEmpty()) {
             Secret beneficiaryResultEncryptionKeySecret = beneficiarySecrets.get().getSecret(IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
-            if (beneficiaryResultEncryptionKeySecret!= null){
+            if (beneficiaryResultEncryptionKeySecret != null) {
                 beneficiaryResultEncryptionKey = beneficiaryResultEncryptionKeySecret.getValue();
             }
         }
@@ -144,7 +145,7 @@ public class TeeSessionHelper {
         String requesterResultDropboxToken = "''";//empty value in yml
         if (!requesterSecrets.isEmpty()) {
             Secret requesterResultDropboxTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_DROPBOX_TOKEN);
-            if (requesterResultDropboxTokenSecret!= null){
+            if (requesterResultDropboxTokenSecret != null) {
                 requesterResultDropboxToken = requesterResultDropboxTokenSecret.getValue();
             }
         }
@@ -168,7 +169,11 @@ public class TeeSessionHelper {
             tokens.put(DATASET_FSPF_TAG_PROPERTY, datasetFspfTag);
         }
         //computing
-        tokens.put(COMMAND_PROPERTY, dealParams);
+        String command = appEntrypoint;
+        if (!dealParams.isEmpty()) {
+            command = appEntrypoint + " " + dealParams;
+        }
+        tokens.put(COMMAND_PROPERTY, command);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
         if (!attestingEnclave.isEmpty() && executionAttestor.isPresent()
