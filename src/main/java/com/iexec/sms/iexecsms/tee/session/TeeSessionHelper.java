@@ -11,6 +11,7 @@ import com.iexec.sms.iexecsms.secret.web3.Web3Secret;
 import com.iexec.sms.iexecsms.secret.web3.Web3SecretService;
 import com.iexec.sms.iexecsms.tee.challenge.TeeChallenge;
 import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -25,6 +26,7 @@ import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_D
 import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 
 @Service
+@Slf4j
 public class TeeSessionHelper {
 
     //TODO - prefix all envvars by IEXEC_*
@@ -112,7 +114,7 @@ public class TeeSessionHelper {
         // Dataset (optional)
         String datasetFspfKey = "";
         String datasetFspfTag = "";
-        if (chainDeal.getChainDataset() != null) {
+        if (chainDeal.getChainDataset() != null && !chainDeal.getChainDataset().getChainDatasetId().equals(BytesUtils.EMPTY_ADDRESS)) {
             String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
             Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
 

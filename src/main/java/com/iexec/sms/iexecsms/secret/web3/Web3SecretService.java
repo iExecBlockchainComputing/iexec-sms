@@ -21,6 +21,8 @@ public class Web3SecretService {
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
+        //TODO Lower case key in other services
+        secretAddress = secretAddress.toLowerCase();
         Optional<Web3Secret> optionalSecret = web3SecretRepository.findWeb3SecretByAddress(secretAddress);
 
         if (!optionalSecret.isEmpty()) {
@@ -45,6 +47,7 @@ public class Web3SecretService {
      * Stores encrypted secrets
      * */
     public void updateSecret(String secretAddress, String unencryptedSecretValue) {
+        secretAddress = secretAddress.toLowerCase();
         Web3Secret web3Secret = new Web3Secret(secretAddress, unencryptedSecretValue);
         web3Secret.encryptValue(encryptionService);
 
