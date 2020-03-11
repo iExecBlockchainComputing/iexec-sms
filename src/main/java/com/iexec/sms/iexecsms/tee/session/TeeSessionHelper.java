@@ -22,8 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
-import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
+import static com.iexec.sms.iexecsms.secret.ReservedSecretKeyName.*;
 
 @Service
 @Slf4j
@@ -53,7 +52,7 @@ public class TeeSessionHelper {
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
     //storage
     private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";
-    private static final String REQUESTER_DROPBOX_TOKEN_PROPERTY = "REQUESTER_DROPBOX_TOKEN";
+    private static final String REQUESTER_STORAGE_TOKEN_PROPERTY = "REQUESTER_STORAGE_TOKEN";
 
 
     private static final String FIELD_SPLITTER = "\\|";
@@ -144,11 +143,20 @@ public class TeeSessionHelper {
         String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
         String resultEncryption = chainDeal.getParams().getIexecResultEncryption();
         //TODO: Generify beneficiary secret retrieval & templating
-        String requesterResultDropboxToken = "''";//empty value in yml
+        Secret requesterStorageTokenSecret;
+        String requesterStorageToken = "''";//empty value in yml
         if (!requesterSecrets.isEmpty()) {
-            Secret requesterResultDropboxTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_DROPBOX_TOKEN);
-            if (requesterResultDropboxTokenSecret != null) {
-                requesterResultDropboxToken = requesterResultDropboxTokenSecret.getValue();
+            switch (storageLocation){
+                case "dropbox":
+                    requesterStorageTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_DROPBOX_TOKEN);
+                    break;
+                case "ipfs":
+                default:
+                    requesterStorageTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+                    break;
+            }
+            if (requesterStorageTokenSecret != null) {
+                requesterStorageToken = requesterStorageTokenSecret.getValue();
             }
         }
 
@@ -188,8 +196,8 @@ public class TeeSessionHelper {
 
         //storage
         tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
-        if (requesterResultDropboxToken != null && !requesterResultDropboxToken.isEmpty()) {
-            tokens.put(REQUESTER_DROPBOX_TOKEN_PROPERTY, requesterResultDropboxToken);
+        if (requesterStorageToken != null && !requesterStorageToken.isEmpty()) {
+            tokens.put(REQUESTER_STORAGE_TOKEN_PROPERTY, requesterStorageToken);
         }
 
         return tokens;
