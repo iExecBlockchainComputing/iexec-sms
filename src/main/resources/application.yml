@@ -59,6 +59,6 @@ scone:
         withoutDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET:./src/main/resources/palaemonConfTemplateWithoutDataset.vm}
   mrenclave: # TODO: Read that from requester params
     tee-post-compute: # nexus.iex.ec/tee-worker-post-compute:1.0.1-SNAPSHOT
-      "f5a463b41d0ade71f43663b8ae3c2ad066ea4fb84f3a29c10787434bd8440a68|d401ee8b6cf672ee75282c5df8ca0b4d|a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e"
+      "89230dce7f4e5ebfe5c96280f8c118abb40e7fdbcfbdc15ea8ef729dc396bcc9|7537d230ad7d1d4533ab4a02ec6018e2|a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e"
     #tee-post-compute: # nexus.iex.ec/tee-worker-post-compute:1.0.0
       #"734c1ea7089656d32071d03394761cc64e980257d5f0816c6709ccdc063ee56f|757e5b64ba76c92888f5bf6648f7edfd|a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e"
