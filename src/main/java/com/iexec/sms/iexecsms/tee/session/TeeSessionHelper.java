@@ -2,6 +2,7 @@ package com.iexec.sms.iexecsms.tee.session;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
+import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.secret.Secret;
@@ -51,7 +52,8 @@ public class TeeSessionHelper {
     private static final String IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY = "IEXEC_REQUESTER_RESULT_ENCRYPTION";
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
     //storage
-    private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";
+    private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";//TODO rename to storage_provider
+    private static final String IEXEC_REQUESTER_STORAGE_PROXY_PROPERTY = "IEXEC_REQUESTER_STORAGE_PROXY";
     private static final String REQUESTER_STORAGE_TOKEN_PROPERTY = "REQUESTER_STORAGE_TOKEN";
 
 
@@ -159,6 +161,11 @@ public class TeeSessionHelper {
                 requesterStorageToken = requesterStorageTokenSecret.getValue();
             }
         }
+        String storageProxy = "''";
+        Optional<TaskDescription> taskDescription = iexecHubService.getTaskDescriptionFromChain(taskId);
+        if (taskDescription.isPresent()){
+            storageProxy = taskDescription.get().getResultStorageProxy();
+        }
 
         Map<String, String> tokens = new HashMap<>();
         //palaemon
@@ -196,6 +203,7 @@ public class TeeSessionHelper {
 
         //storage
         tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
+        tokens.put(IEXEC_REQUESTER_STORAGE_PROXY_PROPERTY, storageProxy);
         if (requesterStorageToken != null && !requesterStorageToken.isEmpty()) {
             tokens.put(REQUESTER_STORAGE_TOKEN_PROPERTY, requesterStorageToken);
         }
