@@ -12,14 +12,28 @@ server:
 
 # Not sure it's a good idea but here is a link for an embedded mongodb
 # https://www.baeldung.com/spring-boot-embedded-mongodb
-spring:
-  data:
-    mongodb:
-      database: iexec-sms
-      host: ${IEXEC_SMS_MONGO_HOST:localhost}
-      port: ${IEXEC_SMS_MONGO_PORT:37017}
+#spring:
+#  data:
+#    mongodb:
+#      database: iexec-sms
+#      host: ${IEXEC_SMS_MONGO_HOST:localhost}
+#      port: ${IEXEC_SMS_MONGO_PORT:37017}
       #ssl-enabled: true
 
+# Embedded H2 inside JVM
+spring:
+  datasource:
+    url: ${IEXEC_SMS_H2_URL:jdbc:h2:file:/tmp/h2/sms-h2} # will get or create /tmp/h2/sms-h2.mv.db
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: ${IEXEC_SMS_H2_CONSOLE:true} # http://localhost:15000/h2-console/
+      #settings.web-allow-others: true # Get console if Docker run
 
 encryption:
   # Will get previous key or else create one on this path

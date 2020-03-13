@@ -40,7 +40,7 @@ public class TeeController {
      */
     @PostMapping("/tee/challenges/{chainTaskId}")
     public ResponseEntity<String> generateTeeChallenge(@PathVariable String chainTaskId) {
-        Optional<TeeChallenge> optionalExecutionChallenge = teeChallengeService.getOrCreate(chainTaskId);
+        Optional<TeeChallenge> optionalExecutionChallenge = teeChallengeService.getOrCreate(chainTaskId, false);
 
         return optionalExecutionChallenge.map(teeChallenge -> ResponseEntity.ok(teeChallenge.getCredentials().getAddress()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
