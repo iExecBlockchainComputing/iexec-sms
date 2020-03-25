@@ -1,0 +1,16 @@
+#!/bin/bash
+
+BASE_DIR=$(dirname $0)
+
+cd $BASE_DIR
+
+cd tee/cas-las
+
+docker-compose down -v -t 0 > /dev/null 2>&1
+echo "Starting cas-las ..."
+gnome-terminal --tab --title="CAS & LAS" -- bash -c "docker-compose up; read line" #https://stackoverflow.com/a/3512861
+
+sleep 10
+
+cd $BASE_DIR
+exit 0

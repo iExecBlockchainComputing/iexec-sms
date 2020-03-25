@@ -1,0 +1,39 @@
+version: '3.4'
+
+networks:
+  iexec-net:
+    external: true
+  iexec-worker-net:
+    external: true
+
+services:
+
+  iexec-cas:
+    #image: nexus.iex.ec/iexec-cas:0.0.3
+    image: sconecuratedimages/iexec:cas-v1.0.0
+    #image: sconecuratedimages/iexec:cas-master
+    #image: sconecuratedimages/iexec:cas.sealed.mmap
+    container_name: iexec-cas
+    #environment:
+      #- RUST_LOG=debug
+    ports:
+      - 18765:18765
+      - 18767:8081
+    networks:
+      - iexec-net
+      - iexec-worker-net
+    devices:
+      - /dev/isgx
+
+  iexec-las:
+    #image: sconecuratedimages/iexec:las-sdk2.5 #nexus.iex.ec/iexec-las:sdk2.5
+    image: sconecuratedimages/iexec:las-v1.0.0
+    #privileged: true
+    #image: sconecuratedimages/helloworld:LAS-scone1.01
+    container_name: iexec-las
+    ports:
+      - 18766:18766
+    networks:
+      - iexec-net
+    devices:
+      - /dev/isgx

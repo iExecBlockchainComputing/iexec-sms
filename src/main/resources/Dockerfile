@@ -1,4 +1,5 @@
 # SCONE BASE
+#FROM sconecuratedimages/iexec:openjdk11-alpine3.10-v1.0.0
 FROM nexus.iex.ec/sconecuratedimages-iexec:openjdk11-alpine3.10-test
 #FROM sconecuratedimages/iexec:openjdk11-alpine3.10-test
 COPY --from=sconecuratedimages/iexec:cli-alpine /opt/scone/scone-cli /opt/scone/scone-cli
