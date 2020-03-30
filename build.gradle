@@ -96,6 +96,8 @@ uploadArchives {
 uploadArchives.enabled = canUploadArchives
 
 def imageName = "nexus.iex.ec/iexec-sms"
+def trustedDockerfileName = "Dockerfile"
+def untrustedDockerfileName = "Dockerfile-untrusted"
 
 project.ext.getDockerImageNameFull = {
     def imageNameWithVersion = imageName + ":${version}"
@@ -118,8 +120,7 @@ task prepareDockerFile(type: Copy) {
 
 task buildImage(type: Exec) {
     description 'Building iexec-sms Docker image'
-    //commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile-untrusted -t " + getDockerImageNameFull() + " . &&" + // untrusted
-    commandLine("sh", "-c", "docker image build -f build/resources/main/Dockerfile -t " + getDockerImageNameFull() + " . &&" +  // scone
+    commandLine("sh", "-c", "docker image build -f build/resources/main/" + trustedDockerfileName + " -t " + getDockerImageNameFull() + " . &&" +  // scone
             "docker tag " + getDockerImageNameFull() + " " + imageName + ":dev")
     standardOutput = new ByteArrayOutputStream()
 

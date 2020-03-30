@@ -52,6 +52,7 @@ public class TeeSessionHelper {
     private static final String IEXEC_REQUESTER_RESULT_ENCRYPTION_PROPERTY = "IEXEC_REQUESTER_RESULT_ENCRYPTION";
     private static final String BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY = "BENEFICIARY_PUBLIC_KEY_BASE64";
     //storage
+    private static final String IEXEC_REQUESTER_SHOULD_CALLBACK_PROPERTY = "IEXEC_REQUESTER_SHOULD_CALLBACK";
     private static final String IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY = "IEXEC_REQUESTER_STORAGE_LOCATION";//TODO rename to storage_provider
     private static final String IEXEC_REQUESTER_STORAGE_PROXY_PROPERTY = "IEXEC_REQUESTER_STORAGE_PROXY";
     private static final String REQUESTER_STORAGE_TOKEN_PROPERTY = "REQUESTER_STORAGE_TOKEN";
@@ -142,29 +143,35 @@ public class TeeSessionHelper {
         // TODO: We need a signature of the beneficiary to push to the beneficiary private storage space
         //  waiting for that feature we only allow to push to the requester private storage space
         Optional<Web2Secrets> requesterSecrets = web2SecretsService.getWeb2Secrets(chainDeal.getRequester(), true);
+        String shouldCallback = "no"; //CAS does not accept boolean in yml (Failed to generateSecureSession)
+        if (chainDeal.getCallback() != null && !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS)){
+            shouldCallback = "yes";
+        }
         String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
         String resultEncryption = chainDeal.getParams().getIexecResultEncryption();
-        //TODO: Generify beneficiary secret retrieval & templating
-        Secret requesterStorageTokenSecret;
         String requesterStorageToken = "''";//empty value in yml
-        if (!requesterSecrets.isEmpty()) {
-            switch (storageLocation){
-                case "dropbox":
-                    requesterStorageTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_DROPBOX_TOKEN);
-                    break;
-                case "ipfs":
-                default:
-                    requesterStorageTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_IEXEC_IPFS_TOKEN);
-                    break;
-            }
-            if (requesterStorageTokenSecret != null) {
-                requesterStorageToken = requesterStorageTokenSecret.getValue();
-            }
-        }
         String storageProxy = "''";
-        Optional<TaskDescription> taskDescription = iexecHubService.getTaskDescriptionFromChain(taskId);
-        if (taskDescription.isPresent()){
-            storageProxy = taskDescription.get().getResultStorageProxy();
+        if (shouldCallback.equals("no")){
+            //TODO: Generify beneficiary secret retrieval & templating
+            Secret requesterStorageTokenSecret;
+            if (!requesterSecrets.isEmpty()) {
+                switch (storageLocation){
+                    case "dropbox":
+                        requesterStorageTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_DROPBOX_TOKEN);
+                        break;
+                    case "ipfs":
+                    default:
+                        requesterStorageTokenSecret = requesterSecrets.get().getSecret(IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+                        break;
+                }
+                if (requesterStorageTokenSecret != null) {
+                    requesterStorageToken = requesterStorageTokenSecret.getValue();
+                }
+            }
+            Optional<TaskDescription> taskDescription = iexecHubService.getTaskDescriptionFromChain(taskId);
+            if (taskDescription.isPresent()){
+                storageProxy = taskDescription.get().getResultStorageProxy();
+            }
         }
 
         Map<String, String> tokens = new HashMap<>();
@@ -202,6 +209,7 @@ public class TeeSessionHelper {
         tokens.put(BENEFICIARY_PUBLIC_KEY_BASE64_PROPERTY, beneficiaryResultEncryptionKey);//base64 encoded by client
 
         //storage
+        tokens.put(IEXEC_REQUESTER_SHOULD_CALLBACK_PROPERTY, shouldCallback);
         tokens.put(IEXEC_REQUESTER_STORAGE_LOCATION_PROPERTY, storageLocation);
         tokens.put(IEXEC_REQUESTER_STORAGE_PROXY_PROPERTY, storageProxy);
         if (requesterStorageToken != null && !requesterStorageToken.isEmpty()) {
