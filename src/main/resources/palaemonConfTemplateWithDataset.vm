@@ -7,7 +7,7 @@ services:
      mrenclaves: [$APP_MRENCLAVE]
      tags: [demo]
      pwd: /
-     command: $COMMAND
+     command: $APP_COMMAND
      fspf_path: /fspf.pb
      fspf_key: $APP_FSPF_KEY
      fspf_tag: $APP_FSPF_TAG

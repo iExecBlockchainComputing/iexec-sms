@@ -5,7 +5,6 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.sms.secrets.SmsSecret;
 import com.iexec.common.sms.secrets.TaskSecrets;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
-import com.iexec.sms.iexecsms.secret.ReservedSecretKeyName;
 import com.iexec.sms.iexecsms.secret.Secret;
 import com.iexec.sms.iexecsms.secret.web2.Web2Secrets;
 import com.iexec.sms.iexecsms.secret.web2.Web2SecretsService;
