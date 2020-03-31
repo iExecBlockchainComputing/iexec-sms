@@ -95,6 +95,23 @@ uploadArchives {
 }
 uploadArchives.enabled = canUploadArchives
 
+// create the version controller for the core
+task createVersion(type: Copy) {
+    // delete old one
+    delete 'src/main/java/com/iexec/sms/iexecsms/utils/version/Version.java'
+    // use and copy template to the new location
+    from 'src/main/resources/Version.java.template'
+    into 'src/main/java/com/iexec/sms/iexecsms/utils/version/'
+
+    rename { String fileName ->
+        fileName.replace('.template', '')
+    }
+    // replace tokens in the template file
+    filter(ReplaceTokens, tokens: [projectversion: "${version}".toString()])
+}
+// the createVersion task should be called before compileJava or the version service will not work
+compileJava.dependsOn createVersion
+
 def imageName = "nexus.iex.ec/iexec-sms"
 def trustedDockerfileName = "Dockerfile"
 def untrustedDockerfileName = "Dockerfile-untrusted"
@@ -120,7 +137,7 @@ task prepareDockerFile(type: Copy) {
 
 task buildImage(type: Exec) {
     description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c", "docker image build -f build/resources/main/" + trustedDockerfileName + " -t " + getDockerImageNameFull() + " . &&" +  // scone
+    commandLine("sh", "-c", "docker image build -f build/resources/main/" + untrustedDockerfileName + " -t " + getDockerImageNameFull() + " . &&" +  // scone
             "docker tag " + getDockerImageNameFull() + " " + imageName + ":dev")
     standardOutput = new ByteArrayOutputStream()
 
@@ -175,8 +192,8 @@ task templatePalaemon {
         }
     }
 }
-templatePalaemon.dependsOn buildImage
-buildImage.finalizedBy templatePalaemon
+//templatePalaemon.dependsOn buildImage
+//buildImage.finalizedBy templatePalaemon
 
 task pushImage(type: Exec) {
     if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {

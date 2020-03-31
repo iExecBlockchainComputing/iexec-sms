@@ -6,6 +6,7 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.ChainTaskStatus;
 import com.iexec.common.security.Signature;
 import com.iexec.common.utils.BytesUtils;
+import com.iexec.common.utils.HashUtils;
 import com.iexec.common.utils.SignatureUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static com.iexec.common.utils.BytesUtils.stringToBytes;
+import static com.iexec.sms.iexecsms.App.DOMAIN;
 
 @Slf4j
 @Service
@@ -105,5 +107,37 @@ public class AuthorizationService {
     public boolean isSignedByOwner(String message, String signature, String address) {
         String owner = iexecHubService.getOwner(address);
         return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
+    }
+
+    public String getChallengeForGetWeb3Secret(String secretAddress) {
+        return HashUtils.concatenateAndHash(
+                DOMAIN,
+                secretAddress);
+    }
+
+    public String getChallengeForGetWeb2Secret(String ownerAddress,
+                                               String secretAddress) {
+        return HashUtils.concatenateAndHash(
+                DOMAIN,
+                ownerAddress,
+                HashUtils.sha256(secretAddress));
+    }
+
+    public String getChallengeForSetWeb3Secret(String secretAddress,
+                                               String secretValue) {
+        return HashUtils.concatenateAndHash(
+                DOMAIN,
+                secretAddress,
+                secretValue);
+    }
+
+    public String getChallengeForSetWeb2Secret(String ownerAddress,
+                                               String secretKey,
+                                               String secretValue) {
+        return HashUtils.concatenateAndHash(
+                DOMAIN,
+                ownerAddress,
+                secretKey,
+                secretValue);
     }
 }

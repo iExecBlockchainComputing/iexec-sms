@@ -10,6 +10,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @Slf4j
 public class App {
 
+    public static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
+
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
         log.info("DEBUG - env: " + System.getenv().toString());//TODO: remove this later
