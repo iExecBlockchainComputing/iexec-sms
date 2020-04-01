@@ -53,7 +53,7 @@ public class TeeController {
      *
      * */
     @PostMapping("tee/sessions")
-    public ResponseEntity generateTeeSession(@RequestBody SmsRequest smsRequest) throws Exception {
+    public ResponseEntity generateTeeSession(@RequestBody SmsRequest smsRequest) {
         //TODO move workerSignature outside of smsRequest (Use an authorization)
         SmsRequestData data = smsRequest.getSmsSecretRequestData();
         Authorization authorization = Authorization.builder()

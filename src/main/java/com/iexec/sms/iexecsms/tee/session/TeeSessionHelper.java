@@ -85,12 +85,12 @@ public class TeeSessionHelper {
     public Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
-            return new HashMap<>();
+            throw new RuntimeException("No chain task retrieved");
         }
         ChainTask chainTask = oChainTask.get();
         Optional<ChainDeal> oChainDeal = iexecHubService.getChainDeal(chainTask.getDealid());
         if (!oChainDeal.isPresent()) {
-            return new HashMap<>();
+            throw new RuntimeException("No chain deal retrieved");
         }
         ChainDeal chainDeal = oChainDeal.get();
         String chainAppId = chainDeal.getChainApp().getChainAppId();
@@ -98,20 +98,10 @@ public class TeeSessionHelper {
         String dealParams = String.join(",", chainDeal.getParams().getIexecArgs());
 
         // App
-        byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
-        String appMrEnclaveFull = BytesUtils.hexStringToAscii(BytesUtils.bytesToString(appMrEnclaveBytes));
-        String[] appFields = appMrEnclaveFull.split(FIELD_SPLITTER);
-        String appFspfKey = appFields[0];
-        String appFspfTag = appFields[1];
-        String appMrEnclave = appFields[2];
-        String appEntrypoint = appFields[3];
+        TeeAppFingerprint appFingerprint = getAppFingerprint(chainAppId);
 
         // Post-compute
-        String postComputeMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
-        String[] postComputeFields = postComputeMrEnclaveFull.split(FIELD_SPLITTER);
-        String postComputeFspfKey = postComputeFields[0];
-        String postComputeFspfTag = postComputeFields[1];
-        String postComputeMrEnclave = postComputeFields[2];
+        TeeAppFingerprint postComputeFingerprint = getPostComputeFingerprint();
 
         // Dataset (optional)
         String datasetFspfKey = "";
@@ -178,13 +168,13 @@ public class TeeSessionHelper {
         //palaemon
         tokens.put(SESSION_ID_PROPERTY, sessionId);
         //app
-        tokens.put(APP_FSPF_KEY_PROPERTY, appFspfKey);
-        tokens.put(APP_FSPF_TAG_PROPERTY, appFspfTag);
-        tokens.put(APP_MRENCLAVE_PROPERTY, appMrEnclave);
+        tokens.put(APP_FSPF_KEY_PROPERTY, appFingerprint.getFspfKey());
+        tokens.put(APP_FSPF_TAG_PROPERTY, appFingerprint.getFspfTag());
+        tokens.put(APP_MRENCLAVE_PROPERTY, appFingerprint.getMrEnclave());
         //post-compute
-        tokens.put(POST_COMPUTE_FSPF_KEY_PROPERTY, postComputeFspfKey);
-        tokens.put(POST_COMPUTE_FSPF_TAG_PROPERTY, postComputeFspfTag);
-        tokens.put(POST_COMPUTE_MRENCLAVE_PROPERTY, postComputeMrEnclave);
+        tokens.put(POST_COMPUTE_FSPF_KEY_PROPERTY, postComputeFingerprint.getFspfKey());
+        tokens.put(POST_COMPUTE_FSPF_TAG_PROPERTY, postComputeFingerprint.getFspfTag());
+        tokens.put(POST_COMPUTE_MRENCLAVE_PROPERTY, postComputeFingerprint.getMrEnclave());
         //data
         if (!datasetFspfKey.isEmpty()) {
             tokens.put(DATASET_FSPF_KEY_PROPERTY, datasetFspfKey);
@@ -193,10 +183,7 @@ public class TeeSessionHelper {
             tokens.put(DATASET_FSPF_TAG_PROPERTY, datasetFspfTag);
         }
         //computing
-        String command = appEntrypoint;
-        if (!dealParams.isEmpty()) {
-            command = appEntrypoint + " " + dealParams;
-        }
+        String command = dealParams.isEmpty() ? appFingerprint.getEntrypoint() : appFingerprint.getEntrypoint() + " " + dealParams;
         tokens.put(COMMAND_PROPERTY, command);
         tokens.put(TASK_ID_PROPERTY, taskId);
         tokens.put(WORKER_ADDRESS_PROPERTY, workerAddress);
@@ -219,10 +206,26 @@ public class TeeSessionHelper {
         return tokens;
     }
 
+    TeeAppFingerprint getAppFingerprint(String chainId) throws Exception {
+        byte[] appFingerprintBytes = iexecHubService.getAppContract(chainId).m_appMREnclave().send();
+        String appFingerprintString = BytesUtils.hexStringToAscii(BytesUtils.bytesToString(appFingerprintBytes));
+        return new TeeAppFingerprint(appFingerprintString, FIELD_SPLITTER);
+    }
 
-    public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
+    TeeAppFingerprint getPostComputeFingerprint() {
+        String postComputeMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
+        return new TeeAppFingerprint(postComputeMrEnclaveFull, FIELD_SPLITTER);
+    }
+
+    public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) {
         // Palaemon file should be generated and a call to the CAS with this file should happen here.
-        Map<String, String> tokens = getTokenList(sessionId, taskId, workerAddress, attestingEnclave);
+        Map<String, String> tokens;
+
+        try {
+            tokens = getTokenList(sessionId, taskId, workerAddress, attestingEnclave);
+        } catch (Exception e) {
+            return "";
+        }
 
         VelocityEngine ve = new VelocityEngine();
         ve.init();
