@@ -18,7 +18,4 @@ public class TeeSessionHelperConfiguration {
     @Value("${scone.cas.palaemon.configFile.withoutDataset}")
     private String palaemonConfigFileWithoutDataset;
 
-    @Value("${scone.mrenclave.tee-post-compute}")
-    private String sconeTeePostComputeMrEnclave;
-
 }

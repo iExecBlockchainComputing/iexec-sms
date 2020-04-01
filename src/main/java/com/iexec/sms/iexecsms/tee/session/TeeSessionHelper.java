@@ -169,8 +169,8 @@ public class TeeSessionHelper {
      * Post-Compute (Result)
      * */
     private void templatePostCompute(Map<String, String> tokens, ChainDeal chainDeal, String taskId, String workerAddress, String attestingEnclave) {
-        String postComputeMrEnclaveFull = teeSessionHelperConfiguration.getSconeTeePostComputeMrEnclave();
-        String[] postComputeFields = postComputeMrEnclaveFull.split(FIELD_SPLITTER);
+        String postComputeFingerprintFull = chainDeal.getParams().getIexecTeePostComputeFingerprint();
+        String[] postComputeFields = postComputeFingerprintFull.split(FIELD_SPLITTER);
 
         tokens.put(POST_COMPUTE_FSPF_KEY, postComputeFields[0]);
         tokens.put(POST_COMPUTE_FSPF_TAG, postComputeFields[1]);
