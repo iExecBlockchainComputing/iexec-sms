@@ -20,13 +20,14 @@ public class TeeSessionService {
         String sessionId = String.format("%s0000%s", RandomStringUtils.randomAlphanumeric(10), taskId);
 
         String configFile = teeSessionHelper.getPalaemonConfigurationFile(sessionId, taskId, workerAddress, teeChallenge);
-        if (configFile.isEmpty()) {
-            return "";
-        }
 
         System.out.println("## Palaemon config ##"); //dev logs, lets keep them for now
         System.out.println(configFile);
         System.out.println("#####################");
+
+        if (configFile.isEmpty()) {
+            return "";
+        }
 
         boolean isSessionCreated = teeSessionClient.generateSecureSession(configFile.getBytes());
 
