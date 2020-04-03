@@ -33,6 +33,7 @@ public class TeeSessionClient {
                     HttpMethod.POST, httpEntity, String.class);
         } catch (Exception e) {
             log.error("Failed to generateSecureSession");
+            e.printStackTrace();
         }
 
         return response != null && response.getStatusCode().is2xxSuccessful();
