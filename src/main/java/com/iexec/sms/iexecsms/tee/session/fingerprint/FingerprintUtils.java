@@ -1,17 +1,16 @@
 package com.iexec.sms.iexecsms.tee.session.fingerprint;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class FingerprintUtils {
 
     public static DatasetFingerprint toDatasetFingerprint(String fingerprint) {
-        Optional<List<String>> oParts = getFingerprintParts(fingerprint, 2);
-        if (!oParts.isPresent()) {
+        List<String> parts = getFingerprintParts(fingerprint, 2);
+        if (parts.isEmpty()) {
             return null;
         }
-        List<String> parts = oParts.get();
 
         return DatasetFingerprint.builder()
                 .fspfKey(parts.get(0))
@@ -20,11 +19,10 @@ public class FingerprintUtils {
     }
 
     public static PostComputeFingerprint toPostComputeFingerprint(String fingerprint) {
-        Optional<List<String>> oParts = getFingerprintParts(fingerprint, 3);
-        if (oParts.isEmpty()) {
+        List<String> parts = getFingerprintParts(fingerprint, 3);
+        if (parts.isEmpty()) {
             return null;
         }
-        List<String> parts = oParts.get();
 
         return PostComputeFingerprint.builder()
                 .fspfKey(parts.get(0))
@@ -34,11 +32,10 @@ public class FingerprintUtils {
     }
 
     public static AppFingerprint toAppFingerprint(String fingerprint) {
-        Optional<List<String>> oParts = getFingerprintParts(fingerprint, 4);
-        if (oParts.isEmpty()) {
+        List<String> parts = getFingerprintParts(fingerprint, 4);
+        if (parts.isEmpty()) {
             return null;
         }
-        List<String> parts = oParts.get();
 
         return AppFingerprint.builder()
                 .fspfKey(parts.get(0))
@@ -48,14 +45,18 @@ public class FingerprintUtils {
                 .build();
     }
 
-    private static Optional<List<String>> getFingerprintParts(String fingerprint, int expectedParts) {
+    private static List<String> getFingerprintParts(String fingerprint, int expectedParts) {
+        if (fingerprint == null || fingerprint.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         String[] fingerprintParts = fingerprint.split("\\|");
 
         if (fingerprintParts.length < expectedParts) {
-            return Optional.empty();
+            return Collections.emptyList();
         }
 
-        return Optional.of(Arrays.asList(fingerprintParts));
+        return Arrays.asList(fingerprintParts);
     }
 
 

@@ -160,7 +160,7 @@ public class TeeSessionHelper {
         tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
 
         String appArgs = appFingerprint.getEntrypoint();
-        if (!appFingerprint.getEntrypoint().isEmpty()) {
+        if (chainDeal.getParams().getIexecArgs() != null && !chainDeal.getParams().getIexecArgs().isEmpty()) {
             appArgs = appFingerprint.getEntrypoint() + " " + chainDeal.getParams().getIexecArgs();
         }
         tokens.put(APP_ARGS, appArgs);
