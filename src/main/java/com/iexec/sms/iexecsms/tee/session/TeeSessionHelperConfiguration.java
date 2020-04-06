@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 public class TeeSessionHelperConfiguration {
 
     @Value("${scone.cas.palaemon.configFile.withDataset}")
-    private String palaemonConfigFileWithDataset;
+    private String palaemonTemplateWithAppAndDataset;
 
     @Value("${scone.cas.palaemon.configFile.withoutDataset}")
-    private String palaemonConfigFileWithoutDataset;
+    private String palaemonTemplateWithApp;
 
 }

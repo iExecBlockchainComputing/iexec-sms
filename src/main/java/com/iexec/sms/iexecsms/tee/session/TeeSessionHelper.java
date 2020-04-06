@@ -2,7 +2,6 @@ package com.iexec.sms.iexecsms.tee.session;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
-import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.iexecsms.blockchain.IexecHubService;
 import com.iexec.sms.iexecsms.secret.ReservedSecretKeyName;
@@ -13,6 +12,11 @@ import com.iexec.sms.iexecsms.secret.web3.Web3Secret;
 import com.iexec.sms.iexecsms.secret.web3.Web3SecretService;
 import com.iexec.sms.iexecsms.tee.challenge.TeeChallenge;
 import com.iexec.sms.iexecsms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.iexecsms.tee.session.fingerprint.AppFingerprint;
+import com.iexec.sms.iexecsms.tee.session.fingerprint.DatasetFingerprint;
+import com.iexec.sms.iexecsms.tee.session.fingerprint.FingerprintUtils;
+import com.iexec.sms.iexecsms.tee.session.fingerprint.PostComputeFingerprint;
+import com.iexec.sms.iexecsms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -20,10 +24,13 @@ import org.apache.velocity.app.VelocityEngine;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
+import static com.iexec.common.chain.DealParams.IPFS_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
 
@@ -31,6 +38,7 @@ import static com.iexec.common.worker.result.ResultUtils.*;
 @Slf4j
 public class TeeSessionHelper {
 
+    public static final String EMPTY_YML_VALUE = "''";
     /*
      * Internal values required for setting up a palaemon session
      * */
@@ -44,8 +52,6 @@ public class TeeSessionHelper {
     private static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
     private static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
     private static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
-
-    private static final String FIELD_SPLITTER = "\\|";
 
     private TeeSessionHelperConfiguration teeSessionHelperConfiguration;
     private IexecHubService iexecHubService;
@@ -66,192 +72,296 @@ public class TeeSessionHelper {
         this.teeChallengeService = teeChallengeService;
     }
 
-    public String getPalaemonConfigurationFile(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
-        // Palaemon file should be generated and a call to the CAS with this file should happen here.
-        Map<String, String> tokens = getTokenList(sessionId, taskId, workerAddress, attestingEnclave);
-
-        VelocityEngine ve = new VelocityEngine();
-        ve.init();
-
-        Template t;
-        if (tokens.containsKey(DATASET_FSPF_KEY) && tokens.containsKey(DATASET_FSPF_TAG)) {
-            t = ve.getTemplate(teeSessionHelperConfiguration.getPalaemonConfigFileWithDataset());
-        } else {
-            t = ve.getTemplate(teeSessionHelperConfiguration.getPalaemonConfigFileWithoutDataset());
-        }
-        VelocityContext context = new VelocityContext();
-        // copy all data from the tokens into context
-        tokens.forEach(context::put);
-
-        StringWriter writer = new StringWriter();
-        t.merge(context, writer);
-
-        return writer.toString();
-    }
-
-
-    // TODO Read onchain available infos from enclave instead of copying public vars to palaemon.yml
-    //  It needs ssl call from enclave to eth node (only ethereum node address required inside palaemon.yml)
-    private Map<String, String> getTokenList(String sessionId, String taskId, String workerAddress, String attestingEnclave) throws Exception {
+    public String getPalaemonSessionYmlAsString(String sessionId, String taskId, String workerAddress, String attestingEnclave) {
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(taskId);
         if (!oChainTask.isPresent()) {
-            return new HashMap<>();
+            log.error("Failed to getPalaemonSessionYmlAsString (getChainTask failed)[taskId:{}]", taskId);
+            return "";
         }
         ChainTask chainTask = oChainTask.get();
         Optional<ChainDeal> oChainDeal = iexecHubService.getChainDeal(chainTask.getDealid());
         if (!oChainDeal.isPresent()) {
-            return new HashMap<>();
+            log.error("Failed to getPalaemonSessionYmlAsString (getChainDeal failed)[taskId:{}]", taskId);
+            return "";
         }
         ChainDeal chainDeal = oChainDeal.get();
 
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put(SESSION_ID_PROPERTY, sessionId);
+        boolean isDatasetRequested = isDatasetRequested(chainDeal);
 
-        templateCompute(tokens, chainDeal);
-        templatePreCompute(tokens, chainDeal);
-        templatePostCompute(tokens, chainDeal, taskId, workerAddress, attestingEnclave);
+        String palaemonTemplatePath = getPalaemonTemplatePath(isDatasetRequested);
+        if (palaemonTemplatePath.isEmpty()) {
+            log.error("Failed to getPalaemonSessionYmlAsString (empty templatePath)[taskId:{}]", taskId);
+            return "";
+        }
 
-        return tokens;
+        Map<String, String> palaemonTokens = getPalaemonTokens(sessionId, taskId, workerAddress, attestingEnclave, chainDeal);
+        if (palaemonTokens.isEmpty()) {
+            log.error("Failed to getPalaemonSessionYmlAsString (empty palaemonTokens)[taskId:{}]", taskId);
+            return "";
+        }
+
+        return getDocumentFilledWithTokens(palaemonTemplatePath, palaemonTokens);
+    }
+
+    private String getPalaemonTemplatePath(boolean isDatasetRequested) {
+        if (isDatasetRequested) {
+            return teeSessionHelperConfiguration.getPalaemonTemplateWithAppAndDataset();
+        }
+        return teeSessionHelperConfiguration.getPalaemonTemplateWithApp();
+    }
+
+    // TODO Read onchain available infos from enclave instead of copying public vars to palaemon.yml
+    //  It needs ssl call from enclave to eth node (only ethereum node address required inside palaemon.yml)
+    private Map<String, String> getPalaemonTokens(String sessionId, String taskId, String workerAddress, String attestingEnclave, ChainDeal chainDeal) {
+        Map<String, String> palaemonTokens = new HashMap<>();
+        palaemonTokens.put(SESSION_ID_PROPERTY, sessionId);
+
+        Map<String, String> appTokens = getAppPalaemonTokens(taskId, chainDeal);
+        if (appTokens.isEmpty()) {
+            log.error("Failed to getPalaemonTokens (empty appTokens)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+        palaemonTokens.putAll(appTokens);
+
+
+        Map<String, String> postComputeTokens = getPostComputePalaemonTokens(taskId, chainDeal, workerAddress, attestingEnclave);
+        if (postComputeTokens.isEmpty()) {
+            log.error("Failed to getPalaemonTokens (empty postComputeTokens)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+        palaemonTokens.putAll(postComputeTokens);
+
+        if (isDatasetRequested(chainDeal)) {
+            Map<String, String> datasetTokens = getDatasetPalaemonTokens(taskId, chainDeal);
+            if (datasetTokens.isEmpty()) {
+                log.error("Failed to getPalaemonTokens (empty datasetTokens)[taskId:{}]", taskId);
+                return Collections.emptyMap();
+            }
+            palaemonTokens.putAll(datasetTokens);
+        }
+
+        return palaemonTokens;
     }
 
     /*
      * Compute (App)
      * */
-    private void templateCompute(Map<String, String> tokens, ChainDeal chainDeal) throws Exception {
-        String chainAppId = chainDeal.getChainApp().getChainAppId();
-        byte[] appMrEnclaveBytes = iexecHubService.getAppContract(chainAppId).m_appMREnclave().send();
-        String appMrEnclaveFull = BytesUtils.hexStringToAscii(BytesUtils.bytesToString(appMrEnclaveBytes));
-        //MREnclave contains 3 appFields separated by a '|': fspf_key, fspf_tag, MREnclave & entrypoint
-        String[] appFields = appMrEnclaveFull.split(FIELD_SPLITTER);
-        String appFspfKey = appFields[0];
-        String appFspfTag = appFields[1];
-        String appMrEnclave = appFields[2];
-        String appEntrypoint = appFields[3];
-        tokens.put(APP_FSPF_KEY, appFspfKey);
-        tokens.put(APP_FSPF_TAG, appFspfTag);
-        tokens.put(APP_MRENCLAVE, appMrEnclave);
+    private Map<String, String> getAppPalaemonTokens(String taskId, ChainDeal chainDeal) {
+        Map<String, String> tokens = new HashMap<>();
 
-        String dealParams = String.join(",", chainDeal.getParams().getIexecArgs());
-        String command = appEntrypoint;
-        if (!dealParams.isEmpty()) {
-            command = appEntrypoint + " " + dealParams;
+        AppFingerprint appFingerprint = FingerprintUtils.toAppFingerprint(chainDeal.getChainApp().getFingerprint());
+
+        if (appFingerprint == null) {
+            log.error("Failed to getAppPalaemonTokens (null appFingerprint)[taskId:{}]", taskId);
+            return Collections.emptyMap();
         }
-        tokens.put(APP_ARGS, command);
+        tokens.put(APP_FSPF_KEY, appFingerprint.getFspfKey());
+        tokens.put(APP_FSPF_TAG, appFingerprint.getFspfTag());
+        tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
+
+        String appArgs = appFingerprint.getEntrypoint();
+        if (chainDeal.getParams().getIexecArgs() != null && !chainDeal.getParams().getIexecArgs().isEmpty()) {
+            appArgs = appFingerprint.getEntrypoint() + " " + chainDeal.getParams().getIexecArgs();
+        }
+        tokens.put(APP_ARGS, appArgs);
+
+        return tokens;
     }
 
     /*
      * Pre-Compute (Optional Dataset)
      * */
-    private void templatePreCompute(Map<String, String> tokens, ChainDeal chainDeal) {
-        String datasetFspfKey = "";
-        String datasetFspfTag = "";
-        if (chainDeal.getChainDataset() != null && !chainDeal.getChainDataset().getChainDatasetId().equals(BytesUtils.EMPTY_ADDRESS)) {
-            String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
-            Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
+    private Map<String, String> getDatasetPalaemonTokens(String taskId, ChainDeal chainDeal) {
+        Map<String, String> tokens = new HashMap<>();
 
-            if (datasetSecret.isPresent()) {
-                String datasetSecretKey = datasetSecret.get().getValue();
-                String[] datasetFields = datasetSecretKey.split(FIELD_SPLITTER);
-                datasetFspfKey = datasetFields[0];
-                datasetFspfTag = datasetFields[1];
-            }
+        if (!isDatasetRequested(chainDeal)) {
+            log.error("Failed to getDatasetPalaemonTokens (no dataset requested)[taskId:{}]", taskId);
+            return Collections.emptyMap();
         }
 
-        if (!datasetFspfKey.isEmpty()) {
-            tokens.put(DATASET_FSPF_KEY, datasetFspfKey);
+        String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
+        Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
+
+        if (datasetSecret.isEmpty()) {
+            log.error("Failed to getDatasetPalaemonTokens (empty datasetSecret)[taskId:{}]", taskId);
+            return Collections.emptyMap();
         }
-        if (!datasetFspfTag.isEmpty()) {
-            tokens.put(DATASET_FSPF_TAG, datasetFspfTag);
+
+        DatasetFingerprint datasetFingerprint = FingerprintUtils
+                .toDatasetFingerprint(datasetSecret.get().getValue());
+
+        if (datasetFingerprint == null) {
+            log.error("Failed to getDatasetPalaemonTokens (null datasetFingerprint)[taskId:{}]", taskId);
+            return Collections.emptyMap();
         }
+        tokens.put(DATASET_FSPF_KEY, datasetFingerprint.getFspfKey());
+        tokens.put(DATASET_FSPF_TAG, datasetFingerprint.getFspfTag());
+
+        return tokens;
     }
 
     /*
      * Post-Compute (Result)
      * */
-    private void templatePostCompute(Map<String, String> tokens, ChainDeal chainDeal, String taskId, String workerAddress, String attestingEnclave) {
-        String postComputeFingerprintFull = chainDeal.getParams().getIexecTeePostComputeFingerprint();
-        String[] postComputeFields = postComputeFingerprintFull.split(FIELD_SPLITTER);
+    private Map<String, String> getPostComputePalaemonTokens(String taskId, ChainDeal chainDeal, String workerAddress, String attestingEnclave) {
+        Map<String, String> tokens = new HashMap<>();
 
-        tokens.put(POST_COMPUTE_FSPF_KEY, postComputeFields[0]);
-        tokens.put(POST_COMPUTE_FSPF_TAG, postComputeFields[1]);
-        tokens.put(POST_COMPUTE_MRENCLAVE, postComputeFields[2]);
+        PostComputeFingerprint postComputeFingerprint = FingerprintUtils
+                .toPostComputeFingerprint(chainDeal.getParams().getIexecTeePostComputeFingerprint());
 
-        templateResultEncryption(tokens, chainDeal);
-        templateResultStorage(tokens, chainDeal, taskId);
-        templateResultSign(tokens, taskId, workerAddress, attestingEnclave);
+        if (postComputeFingerprint == null) {
+            log.error("Failed to getAppPalaemonTokens (null postComputeFingerprint)");
+            return Collections.emptyMap();
+        }
+        tokens.put(POST_COMPUTE_FSPF_KEY, postComputeFingerprint.getFspfKey());
+        tokens.put(POST_COMPUTE_FSPF_TAG, postComputeFingerprint.getFspfTag());
+        tokens.put(POST_COMPUTE_MRENCLAVE, postComputeFingerprint.getMrEnclave());
+
+        Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(taskId, chainDeal);
+        if (encryptionTokens.isEmpty()) {
+            log.error("Failed to getPostComputePalaemonTokens (empty encryptionTokens)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+        tokens.putAll(encryptionTokens);
+
+        Map<String, String> storageTokens = getPostComputeStorageTokens(taskId, chainDeal);
+        if (storageTokens.isEmpty()) {
+            log.error("Failed to getPostComputePalaemonTokens (empty storageTokens)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+        tokens.putAll(storageTokens);
+
+        Map<String, String> signTokens = getPostComputeSignTokens(taskId, workerAddress, attestingEnclave);
+        if (signTokens.isEmpty()) {
+            log.error("Failed to getPostComputePalaemonTokens (empty signTokens)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+        tokens.putAll(signTokens);
+
+        return tokens;
     }
 
     // TODO: We need a signature of the beneficiary to push to the beneficiary private storage space
     //  waiting for that feature we only allow to push to the requester private storage space
-    private void templateResultStorage(Map<String, String> tokens, ChainDeal chainDeal, String taskId) {
-        Optional<Web2Secrets> requesterSecrets = web2SecretsService.getWeb2Secrets(chainDeal.getRequester(), true);
-        boolean shouldCallback = false;
-        if (chainDeal.getCallback() != null && !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS)) {
-            shouldCallback = true;
-        }
+    private Map<String, String> getPostComputeStorageTokens(String taskId, ChainDeal chainDeal) {
+        Map<String, String> tokens = new HashMap<>();
 
+        boolean isStorageCallback = isCallbackRequested(chainDeal);
+        String storageProvider = EMPTY_YML_VALUE;//TODO Move empty to templating
+        String requesterStorageToken = EMPTY_YML_VALUE;
+        String storageProxy = EMPTY_YML_VALUE;
 
-        String storageLocation = chainDeal.getParams().getIexecResultStorageProvider();
-        String requesterStorageToken = "''";//empty value in yml
-        String storageProxy = "''";
+        if (!isStorageCallback) {
+            storageProvider = chainDeal.getParams().getIexecResultStorageProvider();
+            storageProxy = chainDeal.getParams().getIexecResultStorageProxy();
 
-        if (!shouldCallback) {
-            //TODO: Generify beneficiary secret retrieval & templating
+            Optional<Web2Secrets> oRequesterSecrets = web2SecretsService.getWeb2Secrets(chainDeal.getRequester(), true);
+            if (oRequesterSecrets.isEmpty()) {
+                log.error("Failed to getPostComputeStorageTokens (empty requesterSecrets)[taskId:{}]", taskId);
+                return Collections.emptyMap();
+            }
+            Web2Secrets requesterSecrets = oRequesterSecrets.get();
+
             Secret requesterStorageTokenSecret;
-            if (!requesterSecrets.isEmpty()) {
-                switch (storageLocation) {
-                    case "dropbox":
-                        requesterStorageTokenSecret = requesterSecrets.get().getSecret(ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN);
-                        break;
-                    case "ipfs":
-                    default:
-                        requesterStorageTokenSecret = requesterSecrets.get().getSecret(ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN);
-                        break;
-                }
-                if (requesterStorageTokenSecret != null) {
-                    requesterStorageToken = requesterStorageTokenSecret.getValue();
-                }
+
+            switch (storageProvider) {
+                case DROPBOX_RESULT_STORAGE_PROVIDER:
+                    requesterStorageTokenSecret = requesterSecrets.getSecret(ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN);
+                    break;
+                case IPFS_RESULT_STORAGE_PROVIDER:
+                default:
+                    requesterStorageTokenSecret = requesterSecrets.getSecret(ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+                    break;
             }
-            Optional<TaskDescription> taskDescription = iexecHubService.getTaskDescriptionFromChain(taskId);
-            if (taskDescription.isPresent()) {
-                storageProxy = taskDescription.get().getResultStorageProxy();
+
+            if (requesterStorageTokenSecret == null) {
+                log.error("Failed to getPostComputeStorageTokens (empty requesterStorageTokenSecret)[taskId:{}]", taskId);
+                return Collections.emptyMap();
             }
+
+            requesterStorageToken = requesterStorageTokenSecret.getValue();
+
         }
 
-        tokens.put(RESULT_STORAGE_CALLBACK, booleanToYesNo(shouldCallback));
-        tokens.put(RESULT_STORAGE_PROVIDER, storageLocation);
+        tokens.put(RESULT_STORAGE_CALLBACK, booleanToYesNo(isStorageCallback));
+        tokens.put(RESULT_STORAGE_PROVIDER, storageProvider);
         tokens.put(RESULT_STORAGE_PROXY, storageProxy);
-        if (requesterStorageToken != null && !requesterStorageToken.isEmpty()) {
-            tokens.put(RESULT_STORAGE_TOKEN, requesterStorageToken);
-        }
+        tokens.put(RESULT_STORAGE_TOKEN, requesterStorageToken);
+
+        return tokens;
     }
 
-    private void templateResultEncryption(Map<String, String> tokens, ChainDeal chainDeal) {
-        boolean isResultEncryption = chainDeal.getParams().isIexecResultEncryption();
-        Optional<Web2Secrets> beneficiarySecrets = web2SecretsService.getWeb2Secrets(chainDeal.getBeneficiary(), true);
-        String beneficiaryResultEncryptionKey = "''";//empty value in yml
 
-        if (!beneficiarySecrets.isEmpty()) {
-            Secret beneficiaryResultEncryptionKeySecret = beneficiarySecrets.get().getSecret(ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
-            if (beneficiaryResultEncryptionKeySecret != null) {
-                beneficiaryResultEncryptionKey = beneficiaryResultEncryptionKeySecret.getValue();
+    private Map<String, String> getPostComputeEncryptionTokens(String taskId, ChainDeal chainDeal) {
+        Map<String, String> tokens = new HashMap<>();
+
+        boolean shouldEncrypt = chainDeal.getParams().isIexecResultEncryption();
+        String beneficiaryResultEncryptionKey = EMPTY_YML_VALUE;
+
+        if (shouldEncrypt) {
+            Optional<Web2Secrets> beneficiarySecrets = web2SecretsService.getWeb2Secrets(chainDeal.getBeneficiary(), true);
+            if (beneficiarySecrets.isEmpty()) {
+                log.error("Failed to getPostComputeEncryptionTokens (empty beneficiarySecrets)[taskId:{}]", taskId);
+                return Collections.emptyMap();
             }
+
+            Secret beneficiaryResultEncryptionKeySecret = beneficiarySecrets.get().getSecret(ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+            if (beneficiaryResultEncryptionKeySecret == null) {
+                log.error("Failed to getPostComputeEncryptionTokens (empty beneficiaryResultEncryptionKeySecret)[taskId:{}]", taskId);
+                return Collections.emptyMap();
+            }
+            beneficiaryResultEncryptionKey = beneficiaryResultEncryptionKeySecret.getValue();
         }
 
-        tokens.put(RESULT_ENCRYPTION, booleanToYesNo(isResultEncryption));
+        tokens.put(RESULT_ENCRYPTION, booleanToYesNo(shouldEncrypt));
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, beneficiaryResultEncryptionKey);//base64 encoded by client
+
+        return tokens;
     }
 
-    private void templateResultSign(Map<String, String> tokens, String taskId, String workerAddress, String attestingEnclave) {
+    private Map<String, String> getPostComputeSignTokens(String taskId, String workerAddress, String attestingEnclave) {
+        Map<String, String> tokens = new HashMap<>();
+        if (workerAddress.isEmpty()) {
+            log.error("Failed to getPostComputeSignTokens (empty workerAddress)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+
+        //TODO See if we could avoid passing attestingEnclave since already in task descryption
         Optional<TeeChallenge> executionAttestor = teeChallengeService.getOrCreate(taskId, true);
+        if (attestingEnclave.isEmpty() || executionAttestor.isEmpty()) {
+            log.error("Failed to getPostComputeSignTokens (empty attestingEnclave or executionAttestor)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
+        EthereumCredentials enclaveCredentials = executionAttestor.get().getCredentials();
+        if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
+            log.error("Failed to getPostComputeSignTokens (empty enclaveCredentials)[taskId:{}]", taskId);
+            return Collections.emptyMap();
+        }
 
         tokens.put(RESULT_TASK_ID, taskId);
         tokens.put(RESULT_SIGN_WORKER_ADDRESS, workerAddress);
-        if (!attestingEnclave.isEmpty()
-                && executionAttestor.isPresent()
-                && executionAttestor.get().getCredentials().getPrivateKey() != null) {
-            tokens.put(RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, executionAttestor.get().getCredentials().getPrivateKey());
-        }
+        tokens.put(RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, enclaveCredentials.getPrivateKey());
+
+        return tokens;
+    }
+
+    private String getDocumentFilledWithTokens(String templatePath, Map<String, String> tokens) {
+        VelocityEngine ve = new VelocityEngine();
+        ve.init();
+        Template template = ve.getTemplate(templatePath);
+        VelocityContext context = new VelocityContext();
+        tokens.forEach(context::put);// copy all data from the tokens into context
+        StringWriter writer = new StringWriter();
+        template.merge(context, writer);
+        return writer.toString();
+    }
+
+    private boolean isDatasetRequested(ChainDeal chainDeal) {
+        return chainDeal.getChainDataset() != null && !chainDeal.getChainDataset().getChainDatasetId().equals(BytesUtils.EMPTY_ADDRESS);
+    }
+
+    private boolean isCallbackRequested(ChainDeal chainDeal) {
+        return chainDeal.getCallback() != null && !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS);
     }
 
 }
