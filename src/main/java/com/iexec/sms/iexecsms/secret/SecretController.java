@@ -18,6 +18,7 @@ import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignatu
 
 @Slf4j
 @RestController
+@RequestMapping("/secrets")
 public class SecretController {
 
     private AuthorizationService authorizationService;
@@ -35,38 +36,17 @@ public class SecretController {
         this.web3SecretService = web3SecretService;
     }
 
-    /*
-     * Get challenges for accessing GET and POST on /secrets
-     * */
-    @GetMapping("/secrets/web3/challenge")
-    public ResponseEntity getChallengeForGetWeb3Secret(@RequestParam String secretAddress) {
-        return ResponseEntity.ok(authorizationService.getChallengeForGetWeb3Secret(secretAddress));
+    @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
+    public ResponseEntity isWeb3SecretSet(@RequestParam String secretAddress) {
+        Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress, false);
+        return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/secrets/web2/challenge")
-    public ResponseEntity getChallengeForGetWeb2Secret(@RequestParam String ownerAddress,
-                                                       @RequestParam String secretAddress) {
-        return ResponseEntity.ok(authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretAddress));
-    }
-
-    @PostMapping("/secrets/web3/challenge")
-    public ResponseEntity getChallengeForSetWeb3Secret(@RequestParam String secretAddress,
-                                                       @RequestBody String secretValue) {
-        return ResponseEntity.ok(authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue));
-    }
-
-    @PostMapping("/secrets/web2/challenge")
-    public ResponseEntity getChallengeForSetWeb2Secret(@RequestParam String ownerAddress,
-                                                       @RequestParam String secretKey,
-                                                       @RequestBody String secretValue) {
-        return ResponseEntity.ok(authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretKey, secretValue));
-    }
-
-    @GetMapping("/secrets/web3")
+    @GetMapping("/web3")
     public ResponseEntity getWeb3Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String secretAddress,
                                         @RequestParam(required = false, defaultValue = "false") boolean shouldDisplaySecret) {
-        if (isInProduction(authorization)){
+        if (isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForGetWeb3Secret(secretAddress);
 
             //TODO: also isAuthorizedOnExecution(..)
@@ -79,12 +59,19 @@ public class SecretController {
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/secrets/web2")
+    @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
+    public ResponseEntity isWeb2SecretSet(@RequestParam String ownerAddress,
+                                          @RequestParam String secretAddress) {
+        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretAddress, false);
+        return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/web2")
     public ResponseEntity getWeb2Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String ownerAddress,
                                         @RequestParam String secretAddress,
                                         @RequestParam(required = false, defaultValue = "false") boolean shouldDisplaySecret) {
-        if (isInProduction(authorization)){
+        if (isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretAddress);
 
             if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
@@ -96,11 +83,11 @@ public class SecretController {
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/secrets/web3")
+    @PostMapping("/web3")
     public ResponseEntity setWeb3Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String secretAddress,
                                         @RequestBody String secretValue) {
-        if (isInProduction(authorization)){
+        if (isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
 
             if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
@@ -116,12 +103,12 @@ public class SecretController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/secrets/web2")
+    @PostMapping("/web2")
     public ResponseEntity setWeb2Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String ownerAddress,
                                         @RequestParam String secretKey,
                                         @RequestBody String secretValue) {
-        if (isInProduction(authorization)){
+        if (isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretKey, secretValue);
 
             if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
