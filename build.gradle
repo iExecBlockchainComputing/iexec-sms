@@ -1,7 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'org.springframework.boot' version '2.1.6.RELEASE'
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
 }
 
 apply plugin: 'java'
@@ -26,8 +26,7 @@ configurations {
 }
 
 ext {
-    //Greenwich.SR2 is a patch for Greenwich.RELEASE
-    springCloudVersion = 'Greenwich.SR2'
+    springCloudVersion = 'Hoxton.SR3'
 }
 
 dependencyManagement {
@@ -42,12 +41,19 @@ dependencies {
     compile "org.springframework.cloud:spring-cloud-starter-openfeign"
     compile "org.springframework.retry:spring-retry"
 
+    // test
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test'
+    // testImplementation 'org.mockito:mockito-inline:2.13.0' // activates mocking final classes/methods
+
     //ssl
     compile 'org.apache.httpcomponents:httpclient:4.5.9'
 
     // iexec
-    compile "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //compile files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
+    // compile "com.iexec.common:iexec-common:$iexecCommonVersion"
+    compile files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
     // swagger
     compile "io.springfox:springfox-swagger2:2.9.2"
