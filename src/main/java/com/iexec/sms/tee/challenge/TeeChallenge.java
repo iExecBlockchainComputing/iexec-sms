@@ -23,4 +23,9 @@ public class TeeChallenge {
 
     @OneToOne(cascade = {CascadeType.ALL})
     private EthereumCredentials credentials;
+
+    public TeeChallenge(String taskId) throws Exception {
+        this.taskId = taskId;
+        this.credentials = new EthereumCredentials();
+    }
 }

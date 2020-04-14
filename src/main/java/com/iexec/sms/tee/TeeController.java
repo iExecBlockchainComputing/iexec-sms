@@ -21,7 +21,6 @@ import java.util.Optional;
 @RestController
 public class TeeController {
 
-    private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private AuthorizationService authorizationService;
     private TeeChallengeService teeChallengeService;
     private TeeSessionService teeSessionService;

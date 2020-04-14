@@ -1,25 +1,24 @@
 package com.iexec.sms.utils;
 
-import com.iexec.sms.encryption.EncryptionService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.math.BigInteger;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import java.math.BigInteger;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
 
 @Data
 @Getter
 @AllArgsConstructor
 @Entity
-@NoArgsConstructor
 public class EthereumCredentials {
 
     @Id
@@ -30,41 +29,30 @@ public class EthereumCredentials {
     private String address;
     private String privateKey;
     private String publicKey;
-    private boolean areEncryptedKeys;
+    private boolean isEncrypted; // private & public keys
 
-    public EthereumCredentials(ECKeyPair ecKeyPair) {
+    public EthereumCredentials() throws Exception {
+        ECKeyPair ecKeyPair = Keys.createEcKeyPair();
         this.address = Numeric.prependHexPrefix(Keys.getAddress(ecKeyPair));
-        setKeys(toHex(ecKeyPair.getPrivateKey()),
-                toHex(ecKeyPair.getPublicKey()),
-                false);
+        setPlainKeys(toHex(ecKeyPair.getPrivateKey()),
+                toHex(ecKeyPair.getPublicKey()));
+    }
+
+    public void setPlainKeys(String privateKey, String publicKey) {
+        this.setKeys(privateKey, publicKey, false);
+    }
+
+    public void setEncryptedKeys(String privateKey, String publicKey) {
+        this.setKeys(privateKey, publicKey, true);
+    }
+
+    private void setKeys(String privateKey, String publicKey, boolean isEncrypted) {
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+        this.isEncrypted = isEncrypted;
     }
 
     private String toHex(BigInteger input) {
         return Numeric.prependHexPrefix(input.toString(16));
     }
-
-    private void setKeys(String privateKey, String publicKey, boolean areEncryptedKeys) {
-        this.privateKey = privateKey;
-        this.publicKey = publicKey;
-        this.areEncryptedKeys = areEncryptedKeys;
-    }
-
-    public void encryptKeys(EncryptionService encryptionService) {
-        if (!areEncryptedKeys) {
-            this.setKeys(encryptionService.encrypt(privateKey),
-                    encryptionService.encrypt(publicKey),
-                    true);
-        }
-    }
-
-    public void decryptKeys(EncryptionService encryptionService) {
-        if (areEncryptedKeys) {
-            this.setKeys(encryptionService.decrypt(privateKey),
-                    encryptionService.decrypt(publicKey),
-                    false);
-        }
-    }
-
 }
-
-
