@@ -1,12 +1,13 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'org.springframework.boot' version '2.1.6.RELEASE'
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
 }
 
 apply plugin: 'java'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'maven'
+apply plugin: 'jacoco'
 
 group = 'com.iexec.sms'
 sourceCompatibility = 11
@@ -26,8 +27,7 @@ configurations {
 }
 
 ext {
-    //Greenwich.SR2 is a patch for Greenwich.RELEASE
-    springCloudVersion = 'Greenwich.SR2'
+    springCloudVersion = 'Hoxton.SR3'
 }
 
 dependencyManagement {
@@ -41,6 +41,13 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-web"
     compile "org.springframework.cloud:spring-cloud-starter-openfeign"
     compile "org.springframework.retry:spring-retry"
+
+    // test
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test'
+    // testImplementation 'org.mockito:mockito-inline:2.13.0' // activates mocking final classes/methods
 
     //ssl
     compile 'org.apache.httpcomponents:httpclient:4.5.9'
@@ -69,6 +76,12 @@ dependencies {
     //implementation 'org.springframework.boot:spring-boot-starter'
     //testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
+
+test {
+    useJUnitPlatform()
+}
+
+build.dependsOn jacocoTestReport
 
 def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
 def isMasterBranch = gitBranch == "master"
