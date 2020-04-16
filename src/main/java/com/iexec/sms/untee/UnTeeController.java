@@ -1,27 +1,25 @@
 package com.iexec.sms.untee;
 
 
-import com.iexec.common.security.Signature;
-import com.iexec.common.sms.SmsRequest;
-import com.iexec.common.sms.SmsRequestData;
+import java.util.Optional;
+
+import com.iexec.common.chain.ContributionAuthorization;
 import com.iexec.common.sms.secrets.SmsSecretResponse;
 import com.iexec.common.sms.secrets.SmsSecretResponseData;
 import com.iexec.common.sms.secrets.TaskSecrets;
-import com.iexec.sms.authorization.Authorization;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.untee.secret.UnTeeSecretService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
-
-@Slf4j
 @RestController
 public class UnTeeController {
 
-    private static final String DOMAIN = "IEXEC_SMS_DOMAIN";//TODO: Add session salt after domain
     private UnTeeSecretService unTeeSecretService;
     private AuthorizationService authorizationService;
 
@@ -36,24 +34,21 @@ public class UnTeeController {
      * Retrieve secrets when non-tee execution : We shouldn't do this..
      * */
     @PostMapping("/untee/secrets")
-    public ResponseEntity getUnTeeSecrets(@RequestBody SmsRequest smsRequest) {
-        // Check that the demand is legitimate -> move workerSignature outside of authorization
-        // see secret controller for auth
-        SmsRequestData data = smsRequest.getSmsSecretRequestData();
-        Authorization authorization = Authorization.builder()
-                .chainTaskId(data.getChainTaskId())
-                .enclaveAddress(data.getEnclaveChallenge())
-                .workerAddress(data.getWorkerAddress())
-                .workerSignature(new Signature(data.getWorkerSignature()))//move this
-                .workerpoolSignature(new Signature(data.getCoreSignature())).build();
-
-        if (!authorizationService.isAuthorizedOnExecution(authorization, false)) {
-            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity getUnTeeSecrets(@RequestHeader("Authorization") String workerSignature,
+                                                  @RequestBody ContributionAuthorization contributionAuth) {
+        String workerAddress = contributionAuth.getWorkerWallet();
+        String challenge = authorizationService.getChallengeForWorker(contributionAuth);
+        if (!authorizationService.isSignedByHimself(challenge, workerSignature, workerAddress)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Optional<TaskSecrets> unTeeTaskSecrets = unTeeSecretService.getUnTeeTaskSecrets(data.getChainTaskId());
+        if (!authorizationService.isAuthorizedOnExecution(contributionAuth, true)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Optional<TaskSecrets> unTeeTaskSecrets = unTeeSecretService.getUnTeeTaskSecrets(contributionAuth.getChainTaskId());
         if (unTeeTaskSecrets.isEmpty()) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         SmsSecretResponseData smsSecretResponseData = SmsSecretResponseData.builder()

@@ -2,7 +2,10 @@ package com.iexec.sms.tee.session;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import feign.FeignException;
 
 @Slf4j
 @Service
@@ -18,12 +21,11 @@ public class TeeSessionService {
         this.teeSessionClient = teeSessionClient;
     }
 
-    public String generateTeeSession(String taskId, String workerAddress, String teeChallenge) throws Exception {
+    public String generateTeeSession(String taskId, String workerAddress, String teeChallenge) throws FeignException {
         String sessionId = String.format("%s0000%s", RandomStringUtils.randomAlphanumeric(10), taskId);
-
         String sessionYmlAsString = teeSessionHelper.getPalaemonSessionYmlAsString(sessionId, taskId, workerAddress, teeChallenge);
         if (sessionYmlAsString.isEmpty()) {
-            log.error("Failed to generateTeeSession (empty sessionYml)[taskId:{}]", taskId);
+            log.error("Failed to get session yml [taskId:{}, workerAddress:{}]", taskId, workerAddress);
             return "";
         }
 
@@ -31,13 +33,7 @@ public class TeeSessionService {
         System.out.println(sessionYmlAsString);
         System.out.println("#####################");
 
-        boolean isSessionCreated = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes());
-
-        if (!isSessionCreated) {
-            log.error("Failed to generateTeeSession (cant generateSecureSession)[taskId:{}]", taskId);
-            return "";
-        }
-
-        return sessionId;
+        ResponseEntity<String> response = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes(), null, null);
+        return (response != null && response.getStatusCode().is2xxSuccessful()) ? sessionId : "";
     }
 }

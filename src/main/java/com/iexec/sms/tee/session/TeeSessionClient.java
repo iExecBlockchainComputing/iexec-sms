@@ -1,42 +1,18 @@
 package com.iexec.sms.tee.session;
 
-import com.iexec.sms.ssl.SslRestClient;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
-@Service
-@Slf4j
-public class TeeSessionClient {
+import feign.FeignException;
 
-    private SslRestClient sslRestClient;
-    private TeeCasConfiguration teeCasConfiguration;
+@FeignClient(url = "#{teeCasConfiguration.getCasUrl()}")
+public interface TeeSessionClient {
 
-    public TeeSessionClient(
-            TeeCasConfiguration teeCasConfiguration,
-            SslRestClient sslRestClient) {
-        this.teeCasConfiguration = teeCasConfiguration;
-        this.sslRestClient = sslRestClient;
-    }
-
-    boolean generateSecureSession(byte[] palaemonFile) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Content-Type", "application/x-www-form-urlencoded");
-        headers.set("Expect", "100-continue");
-        HttpEntity<byte[]> httpEntity = new HttpEntity<>(palaemonFile, headers);
-        ResponseEntity<String> response = null;
-        try {
-            response = sslRestClient.getRestTemplate().exchange(teeCasConfiguration.getCasUrl() + "/session",
-                    HttpMethod.POST, httpEntity, String.class);
-        } catch (Exception e) {
-            log.error("Failed to generateSecureSession");
-            e.printStackTrace();
-        }
-
-        return response != null && response.getStatusCode().is2xxSuccessful();
-    }
-
+    @PostMapping("/session")
+    public ResponseEntity<String> generateSecureSession(@RequestBody byte[] palaemonFile,
+            @RequestHeader(name = "Content-Type", required = false, defaultValue = "application/x-www-form-urlencoded") String contentType,
+            @RequestHeader(name = "Expect", required = false, defaultValue = "100-continue") String expect) throws FeignException;
 }
