@@ -25,7 +25,7 @@ public class TeeSessionService {
         String sessionId = String.format("%s0000%s", RandomStringUtils.randomAlphanumeric(10), taskId);
         String sessionYmlAsString = teeSessionHelper.getPalaemonSessionYmlAsString(sessionId, taskId, workerAddress, teeChallenge);
         if (sessionYmlAsString.isEmpty()) {
-            log.error("Failed to get session yml [taskId:{}, workerAddress:{}]", taskId, workerAddress);
+            log.error("Failed to generate session yml [taskId:{}, workerAddress:{}]", taskId, workerAddress);
             return "";
         }
 
