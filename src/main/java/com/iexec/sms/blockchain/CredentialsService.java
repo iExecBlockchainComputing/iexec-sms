@@ -1,33 +1,13 @@
 package com.iexec.sms.blockchain;
 
-import lombok.extern.slf4j.Slf4j;
+import com.iexec.common.chain.CredentialsAbstractService;
+
 import org.springframework.stereotype.Service;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
-import org.web3j.crypto.Keys;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-
-@Slf4j
 @Service
-public class CredentialsService {
+public class CredentialsService extends CredentialsAbstractService {
 
-    private Credentials credentials;
-
-    public CredentialsService() {
-        try {
-            ECKeyPair ecKeyPair = Keys.createEcKeyPair();
-            credentials = Credentials.create(ecKeyPair);
-            log.info("Load wallet beneficiaryCredentials (new) [ownerAddress:{}] ", credentials.getAddress());
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
-            log.error("Credentials cannot be loaded [exception:{}] ", e);
-        }
+    public CredentialsService() throws Exception {
+        super();
     }
-
-    public Credentials getCredentials() {
-        return credentials;
-    }
-
 }
