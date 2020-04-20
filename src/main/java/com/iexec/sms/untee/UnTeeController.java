@@ -34,11 +34,11 @@ public class UnTeeController {
      * Retrieve secrets when non-tee execution : We shouldn't do this..
      * */
     @PostMapping("/untee/secrets")
-    public ResponseEntity<?> getUnTeeSecrets(@RequestHeader("Authorization") String workerSignature,
+    public ResponseEntity<?> getUnTeeSecrets(@RequestHeader("Authorization") String authorization,
                                                   @RequestBody ContributionAuthorization contributionAuth) {
         String workerAddress = contributionAuth.getWorkerWallet();
         String challenge = authorizationService.getChallengeForWorker(contributionAuth);
-        if (!authorizationService.isSignedByHimself(challenge, workerSignature, workerAddress)) {
+        if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
