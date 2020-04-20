@@ -58,11 +58,11 @@ public class TeeController {
      *
      * */
     @PostMapping("/sessions")
-    public ResponseEntity<String> generateTeeSession(@RequestHeader("Authorization") String workerSignature,
+    public ResponseEntity<String> generateTeeSession(@RequestHeader("Authorization") String authorization,
                                                      @RequestBody ContributionAuthorization contributionAuth) {
         String workerAddress = contributionAuth.getWorkerWallet();
         String challenge = authorizationService.getChallengeForWorker(contributionAuth);
-        if (!authorizationService.isSignedByHimself(challenge, workerSignature, workerAddress)) {
+        if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
