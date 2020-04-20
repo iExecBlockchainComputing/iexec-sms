@@ -41,6 +41,7 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-web"
     compile "org.springframework.cloud:spring-cloud-starter-openfeign"
     compile "org.springframework.retry:spring-retry"
+    compile "org.springframework.cloud:spring-cloud-starter-openfeign"
 
     // test
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
