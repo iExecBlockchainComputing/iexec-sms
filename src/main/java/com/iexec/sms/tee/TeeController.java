@@ -1,24 +1,30 @@
 package com.iexec.sms.tee;
 
 
-import com.iexec.common.security.Signature;
-import com.iexec.common.sms.SmsRequest;
-import com.iexec.common.sms.SmsRequestData;
-import com.iexec.sms.authorization.Authorization;
+import java.util.Optional;
+
+import com.iexec.common.chain.ContributionAuthorization;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.web3j.crypto.Keys;
 
-import java.util.Optional;
+import feign.FeignException;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
+@RequestMapping("/tee")
 public class TeeController {
 
     private AuthorizationService authorizationService;
@@ -37,7 +43,7 @@ public class TeeController {
     /**
      * Called by the core, not the worker
      */
-    @PostMapping("/tee/challenges/{chainTaskId}")
+    @PostMapping("/challenges/{chainTaskId}")
     public ResponseEntity<String> generateTeeChallenge(@PathVariable String chainTaskId) {
         Optional<TeeChallenge> optionalExecutionChallenge = teeChallengeService.getOrCreate(chainTaskId, false);
 
@@ -51,34 +57,30 @@ public class TeeController {
      * The worker will connect to the CAS with the sessionId to retrieve all secrets
      *
      * */
-    @PostMapping("tee/sessions")
-    public ResponseEntity generateTeeSession(@RequestBody SmsRequest smsRequest) throws Exception {
-        //TODO move workerSignature outside of smsRequest (Use an authorization)
-        SmsRequestData data = smsRequest.getSmsSecretRequestData();
-        Authorization authorization = Authorization.builder()
-                .chainTaskId(data.getChainTaskId())
-                .enclaveAddress(data.getEnclaveChallenge())
-                .workerAddress(data.getWorkerAddress())
-                .workerSignature(new Signature(data.getWorkerSignature()))//move this
-                .workerpoolSignature(new Signature(data.getCoreSignature())).build();
-
-        if (!authorizationService.isAuthorizedOnExecution(authorization, true)) {
-            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+    @PostMapping("/sessions")
+    public ResponseEntity<String> generateTeeSession(@RequestHeader("Authorization") String authorization,
+                                                     @RequestBody ContributionAuthorization contributionAuth) {
+        String workerAddress = contributionAuth.getWorkerWallet();
+        String challenge = authorizationService.getChallengeForWorker(contributionAuth);
+        if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String taskId = smsRequest.getSmsSecretRequestData().getChainTaskId();
-        String workerAddress = Keys.toChecksumAddress(smsRequest.getSmsSecretRequestData().getWorkerAddress());
-        String attestingEnclave = smsRequest.getSmsSecretRequestData().getEnclaveChallenge();
-
-        String sessionId = teeSessionService.generateTeeSession(taskId, workerAddress, attestingEnclave);
-
-        if (!sessionId.isEmpty()) {
-            return ResponseEntity.ok(sessionId);
+        if (!authorizationService.isAuthorizedOnExecution(contributionAuth, true)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.notFound().build();
+        String taskId = contributionAuth.getChainTaskId();
+        workerAddress = Keys.toChecksumAddress(workerAddress);
+        String attestingEnclave = contributionAuth.getEnclaveChallenge();
+
+        try {
+            String sessionId = teeSessionService.generateTeeSession(taskId, workerAddress, attestingEnclave);
+            return !sessionId.isEmpty() ? ResponseEntity.ok(sessionId) : ResponseEntity.notFound().build();
+        } catch (FeignException e) {
+            log.error("Failed to generate secure session for worker [taskId:{}, workerAddress:{}, exception:{}]",
+                    taskId, workerAddress, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
-
-
 }
-

@@ -1,4 +1,4 @@
-package com.iexec.sms;
+package com.iexec.sms.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

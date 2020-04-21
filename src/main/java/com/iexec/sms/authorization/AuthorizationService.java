@@ -1,21 +1,23 @@
 package com.iexec.sms.authorization;
 
 
+import static com.iexec.sms.App.DOMAIN;
+
+import java.util.Optional;
+
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.ChainTaskStatus;
+import com.iexec.common.chain.ContributionAuthorization;
 import com.iexec.common.security.Signature;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.common.utils.SignatureUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
-import static com.iexec.common.utils.BytesUtils.stringToBytes;
-import static com.iexec.sms.App.DOMAIN;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -28,12 +30,12 @@ public class AuthorizationService {
         this.iexecHubService = iexecHubService;
     }
 
-    public boolean isAuthorizedOnExecution(Authorization authorization, boolean isTeeEndpoint) {
-        if (authorization == null || authorization.getChainTaskId().isEmpty()) {
+    public boolean isAuthorizedOnExecution(ContributionAuthorization contributionAuth, boolean isTeeEndpoint) {
+        if (contributionAuth == null || contributionAuth.getChainTaskId().isEmpty()) {
             log.error("isAuthorizedOnExecution failed (empty params)");
             return false;
         }
-        String chainTaskId = authorization.getChainTaskId();
+        String chainTaskId = contributionAuth.getChainTaskId();
 
         boolean isAllowedToAccessEndpoint = isTeeEndpoint == iexecHubService.isTeeTask(chainTaskId);
         if (!isAllowedToAccessEndpoint) {
@@ -62,42 +64,16 @@ public class AuthorizationService {
         }
         ChainDeal chainDeal = optionalChainDeal.get();
         String workerpoolAddress = chainDeal.getPoolOwner();
+        boolean isSignerByWorkerpool = isSignedByHimself(contributionAuth.getHash(),
+                contributionAuth.getSignature().getValue(), workerpoolAddress);
 
-        boolean isWorkerSignatureValid = isWorkerSignatureOfAuthorizationValid(authorization);
-
-        boolean isWorkerpoolSignatureValid = isWorkerpoolSignatureOfAuthorizationValid(authorization, workerpoolAddress);
-
-        if (isWorkerSignatureValid && isWorkerpoolSignatureValid) {
-            return true;
-        }
-
-        log.error("isAuthorizedOnExecution failed (invalid signature) [chainTaskId:{}, isWorkerSignatureValid:{}, " +
-                "isWorkerpoolSignatureValid:{}]", chainTaskId, isWorkerSignatureValid, isWorkerpoolSignatureValid);
-        return false;
-    }
-
-    private boolean isWorkerSignatureOfAuthorizationValid(Authorization authorization) {
-        if (authorization.getAuthorizationHash().isEmpty() || authorization.getWorkerSignature() == null ||
-                authorization.getWorkerAddress().isEmpty()) {
-            log.error("isWorkerSignatureOfAuthorizationValid failed (empty params) [chainTaskId:{}", authorization.getChainTaskId());
+        if (!isSignerByWorkerpool) {
+            log.error("isAuthorizedOnExecution failed (invalid signature) [chainTaskId:{}, isWorkerpoolSignatureValid:{}]",
+                    chainTaskId, isSignerByWorkerpool);
             return false;
         }
-        return SignatureUtils.isSignatureValid(
-                stringToBytes(authorization.getAuthorizationHash()),
-                authorization.getWorkerSignature(),
-                authorization.getWorkerAddress());
-    }
 
-    private boolean isWorkerpoolSignatureOfAuthorizationValid(Authorization authorization, String workerpoolAddress) {
-        if (authorization.getAuthorizationHash().isEmpty() || authorization.getWorkerpoolSignature() == null ||
-                workerpoolAddress.isEmpty()) {
-            log.error("isWorkerpoolSignatureOfAuthorizationValid failed (empty params) [chainTaskId:{}", authorization.getChainTaskId());
-            return false;
-        }
-        return SignatureUtils.isSignatureValid(
-                stringToBytes(authorization.getAuthorizationHash()),
-                authorization.getWorkerpoolSignature(),
-                workerpoolAddress);
+        return true;
     }
 
     public boolean isSignedByHimself(String message, String signature, String address) {
@@ -140,4 +116,11 @@ public class AuthorizationService {
                 secretKey,
                 secretValue);
     }
+
+    public String getChallengeForWorker(ContributionAuthorization contributionAuthorization) {
+        return HashUtils.concatenateAndHash(
+                contributionAuthorization.getWorkerWallet(),
+                contributionAuthorization.getChainTaskId(),
+                contributionAuthorization.getEnclaveChallenge());
+        }
 }

@@ -1,4 +1,4 @@
-package com.iexec.sms;
+package com.iexec.sms.config;
 
 import org.apache.catalina.connector.Connector;
 import org.springframework.beans.factory.annotation.Value;
