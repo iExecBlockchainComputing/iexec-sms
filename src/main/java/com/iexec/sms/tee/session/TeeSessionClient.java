@@ -10,12 +10,9 @@ import feign.FeignException;
 @FeignClient(name = "teeSessionClient", url = "#{teeCasConfiguration.getCasUrl()}")
 public interface TeeSessionClient {
 
-    @PostMapping(
-        value = "/session",
-        headers = {
-            "Expect=100-continue",
-            "Content-Type=application/x-www-form-urlencoded"
-        })
+    @PostMapping(value = "/session",
+            headers = {
+                "Expect=100-continue",
+                "Content-Type=application/x-www-form-urlencoded"})
     public ResponseEntity<String> generateSecureSession(@RequestBody byte[] palaemonFile) throws FeignException;
 }
-// consumes = "application/x-www-form-urlencoded",
