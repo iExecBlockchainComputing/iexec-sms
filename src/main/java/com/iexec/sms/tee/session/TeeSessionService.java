@@ -33,7 +33,7 @@ public class TeeSessionService {
         System.out.println(sessionYmlAsString);
         System.out.println("#####################");
 
-        ResponseEntity<String> response = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes(), null, null);
+        ResponseEntity<String> response = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes());
         return (response != null && response.getStatusCode().is2xxSuccessful()) ? sessionId : "";
     }
 }
