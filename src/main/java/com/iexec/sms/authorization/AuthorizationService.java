@@ -30,22 +30,24 @@ public class AuthorizationService {
         this.iexecHubService = iexecHubService;
     }
 
-    public boolean isAuthorizedOnExecution(ContributionAuthorization contributionAuth, boolean isTeeEndpoint) {
+    public boolean isAuthorizedOnExecution(ContributionAuthorization contributionAuth, boolean isTeeTask) {
         if (contributionAuth == null || contributionAuth.getChainTaskId().isEmpty()) {
-            log.error("isAuthorizedOnExecution failed (empty params)");
+            log.error("Not authorized with empty params");
             return false;
         }
-        String chainTaskId = contributionAuth.getChainTaskId();
 
-        boolean isAllowedToAccessEndpoint = isTeeEndpoint == iexecHubService.isTeeTask(chainTaskId);
-        if (!isAllowedToAccessEndpoint) {
-            log.error("isAuthorizedOnExecution failed (unauthorized endpoint) [chainTaskId:{}]", chainTaskId);
+        String chainTaskId = contributionAuth.getChainTaskId();
+        boolean isTeeTaskOnchain = iexecHubService.isTeeTask(chainTaskId);
+        if (isTeeTask != isTeeTaskOnchain) {
+            log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{},"
+                    + "chainTaskId:{}, walletAddress:{}]",isTeeTask, isTeeTaskOnchain,
+                    chainTaskId, contributionAuth.getWorkerWallet());
             return false;
         }
 
         Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
         if (!optionalChainTask.isPresent()) {
-            log.error("isAuthorizedOnExecution failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
+            log.error("Could not get chainTask [chainTaskId:{}]", chainTaskId);
             return false;
         }
         ChainTask chainTask = optionalChainTask.get();
@@ -53,7 +55,8 @@ public class AuthorizationService {
         String chainDealId = chainTask.getDealid();
 
         if (!taskStatus.equals(ChainTaskStatus.ACTIVE)) {
-            log.error("isAuthorizedOnExecution failed (task not active) [chainTaskId:{}, status:{}]", chainTaskId, taskStatus);
+            log.error("Task not active onchain [chainTaskId:{}, status:{}]",
+                    chainTaskId, taskStatus);
             return false;
         }
 
