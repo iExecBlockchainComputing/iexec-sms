@@ -42,6 +42,26 @@ public class SecretController {
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PostMapping("/web3")
+    public ResponseEntity setWeb3Secret(@RequestHeader("Authorization") String authorization,
+                                        @RequestParam String secretAddress,
+                                        @RequestBody String secretValue) {
+        if (isInProduction(authorization)) {
+            String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
+
+            if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        }
+
+        if (web3SecretService.getSecret(secretAddress, false).isPresent()) {
+            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();//refuse web3 secret updates
+        }
+
+        web3SecretService.updateSecret(secretAddress, secretValue);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/web3")
     public ResponseEntity getWeb3Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String secretAddress,
@@ -70,7 +90,7 @@ public class SecretController {
     public ResponseEntity getWeb2Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String ownerAddress,
                                         @RequestParam String secretAddress,
-                                        @RequestParam(required = false, defaultValue = "false") boolean shouldDisplaySecret) {
+                                        @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
         if (isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretAddress);
 
@@ -79,32 +99,12 @@ public class SecretController {
             }
         }
 
-        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretAddress, shouldDisplaySecret);
+        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretAddress, shouldDecryptSecret);
         return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/web3")
-    public ResponseEntity setWeb3Secret(@RequestHeader("Authorization") String authorization,
-                                        @RequestParam String secretAddress,
-                                        @RequestBody String secretValue) {
-        if (isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
-
-            if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-        }
-
-        if (web3SecretService.getSecret(secretAddress, false).isPresent()) {
-            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();//refuse web3 secret updates
-        }
-
-        web3SecretService.updateSecret(secretAddress, secretValue);
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/web2")
-    public ResponseEntity setWeb2Secret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<String> addWeb2Secret(@RequestHeader("Authorization") String authorization,
                                         @RequestParam String ownerAddress,
                                         @RequestParam String secretKey,
                                         @RequestBody String secretValue) {
@@ -116,11 +116,25 @@ public class SecretController {
             }
         }
 
-        boolean isSecretSet = web2SecretsService.updateSecret(ownerAddress, new Secret(secretKey, secretValue));
-        if (isSecretSet) {
-            return ResponseEntity.ok().build();
+        boolean isAdded = web2SecretsService.addSecret(ownerAddress, new Secret(secretKey, secretValue));
+        return isAdded ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    @PutMapping("/web2")
+    public ResponseEntity<String> updateWeb2Secret(@RequestHeader("Authorization") String authorization,
+                                        @RequestParam String ownerAddress,
+                                        @RequestParam String secretKey,
+                                        @RequestBody String newSecretValue) {
+        if (isInProduction(authorization)) {
+            String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretKey, newSecretValue);
+
+            if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
         }
-        return ResponseEntity.notFound().build();
+
+        boolean isAdded = web2SecretsService.updateSecret(ownerAddress, new Secret(secretKey, newSecretValue));
+        return isAdded ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     /*
