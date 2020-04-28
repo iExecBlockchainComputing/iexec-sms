@@ -21,8 +21,8 @@ public abstract class AbstractSecretService {
 
     public Secret decryptSecret(Secret secret) {
         if (secret.isEncryptedValue()) {
-            String encrypted = encryptionService.decrypt(secret.getValue());
-            secret.setValue(encrypted, false);
+            String decrypted = encryptionService.decrypt(secret.getValue());
+            secret.setValue(decrypted, false);
         }
         return secret;
     }
