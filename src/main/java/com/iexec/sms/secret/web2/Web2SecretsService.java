@@ -46,6 +46,11 @@ public class Web2SecretsService extends AbstractSecretService {
 
     public void addSecret(String ownerAddress, String secretAddress, String secretValue) {
         Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
+        Optional<Web2Secrets> existingWeb2Secrets = getWeb2Secrets(ownerAddress);
+        if (existingWeb2Secrets.isPresent()) {
+            web2Secrets = existingWeb2Secrets.get();
+        }
+
         Secret secret = new Secret(secretAddress, secretValue);
         encryptSecret(secret);
         log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, secretValueHash:{}]",
