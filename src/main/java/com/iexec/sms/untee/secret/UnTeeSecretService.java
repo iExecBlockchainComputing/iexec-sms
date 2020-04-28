@@ -6,7 +6,6 @@ import com.iexec.common.sms.secrets.SmsSecret;
 import com.iexec.common.sms.secrets.TaskSecrets;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.web2.Web2Secrets;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -67,19 +66,15 @@ public class UnTeeSecretService {
                 .secret(datasetSecret.get().getValue())
                 .build());
 
-        Optional<Web2Secrets> beneficiarySecrets = web2SecretsService.getWeb2Secrets(chainDeal.getBeneficiary(), true);
-        if (!beneficiarySecrets.isPresent()) {
-            log.error("getUnTeeTaskSecrets failed (beneficiarySecrets failed) [chainTaskId:{}]", chainTaskId);
-            return Optional.empty();
-        }
-        Secret beneficiarySecret = beneficiarySecrets.get().getSecret(IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
-        if (beneficiarySecret == null) {
+        Optional<Secret> beneficiarySecret = web2SecretsService.getSecret(chainDeal.getBeneficiary(),
+                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, true);
+        if (beneficiarySecret.isEmpty()) {
             log.error("getUnTeeTaskSecrets failed (beneficiarySecret empty) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         taskSecretsBuilder.beneficiarySecret(SmsSecret.builder()
-                .address(beneficiarySecret.getAddress())
-                .secret(beneficiarySecret.getValue())
+                .address(beneficiarySecret.get().getAddress())
+                .secret(beneficiarySecret.get().getValue())
                 .build());
 
         return Optional.of(taskSecretsBuilder.build());
