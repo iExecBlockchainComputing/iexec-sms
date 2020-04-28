@@ -38,28 +38,5 @@ public class Secret {
         this.value = value;
         this.isEncryptedValue = isEncryptedValue;
     }
-
-    public void encryptValue(EncryptionService encryptionService) {
-        if (!isEncryptedValue) {
-            this.setValue(encryptionService.encrypt(value), true);
-        }
-    }
-
-    public void decryptValue(EncryptionService encryptionService) {
-        if (isEncryptedValue) {
-            this.setValue(encryptionService.decrypt(value), false);
-        }
-    }
-
-    /* private */
-    private void setValue(String value) {
-        this.value = value;
-    }
-
-    /* private */
-    private void setEncryptedValue(boolean encryptedValue) {
-        isEncryptedValue = encryptedValue;
-    }
-
 }
 
