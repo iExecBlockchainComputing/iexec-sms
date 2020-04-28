@@ -6,7 +6,6 @@ import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.ReservedSecretKeyName;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.web2.Web2Secrets;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -255,31 +254,26 @@ public class TeeSessionHelper {
             storageProvider = chainDeal.getParams().getIexecResultStorageProvider();
             storageProxy = chainDeal.getParams().getIexecResultStorageProxy();
 
-            Optional<Web2Secrets> oRequesterSecrets = web2SecretsService.getWeb2Secrets(chainDeal.getRequester(), true);
-            if (oRequesterSecrets.isEmpty()) {
-                log.error("Failed to getPostComputeStorageTokens (empty requesterSecrets)[taskId:{}]", taskId);
-                return Collections.emptyMap();
-            }
-            Web2Secrets requesterSecrets = oRequesterSecrets.get();
-
-            Secret requesterStorageTokenSecret;
+            Optional<Secret> requesterStorageTokenSecret;
 
             switch (storageProvider) {
                 case DROPBOX_RESULT_STORAGE_PROVIDER:
-                    requesterStorageTokenSecret = requesterSecrets.getSecret(ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN);
+                    requesterStorageTokenSecret = web2SecretsService.getSecret(chainDeal.getRequester(),
+                            ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN, true);
                     break;
                 case IPFS_RESULT_STORAGE_PROVIDER:
                 default:
-                    requesterStorageTokenSecret = requesterSecrets.getSecret(ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+                    requesterStorageTokenSecret = web2SecretsService.getSecret(chainDeal.getRequester(),
+                            ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true);
                     break;
             }
 
-            if (requesterStorageTokenSecret == null) {
+            if (requesterStorageTokenSecret.isEmpty()) {
                 log.error("Failed to getPostComputeStorageTokens (empty requesterStorageTokenSecret)[taskId:{}]", taskId);
                 return Collections.emptyMap();
             }
 
-            requesterStorageToken = requesterStorageTokenSecret.getValue();
+            requesterStorageToken = requesterStorageTokenSecret.get().getValue();
 
         }
 
@@ -299,18 +293,13 @@ public class TeeSessionHelper {
         String beneficiaryResultEncryptionKey = EMPTY_YML_VALUE;
 
         if (shouldEncrypt) {
-            Optional<Web2Secrets> beneficiarySecrets = web2SecretsService.getWeb2Secrets(chainDeal.getBeneficiary(), true);
-            if (beneficiarySecrets.isEmpty()) {
-                log.error("Failed to getPostComputeEncryptionTokens (empty beneficiarySecrets)[taskId:{}]", taskId);
-                return Collections.emptyMap();
-            }
-
-            Secret beneficiaryResultEncryptionKeySecret = beneficiarySecrets.get().getSecret(ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
-            if (beneficiaryResultEncryptionKeySecret == null) {
+            Optional<Secret> beneficiaryResultEncryptionKeySecret = web2SecretsService.getSecret(chainDeal.getBeneficiary(),
+                    ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, true);
+            if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
                 log.error("Failed to getPostComputeEncryptionTokens (empty beneficiaryResultEncryptionKeySecret)[taskId:{}]", taskId);
                 return Collections.emptyMap();
             }
-            beneficiaryResultEncryptionKey = beneficiaryResultEncryptionKeySecret.getValue();
+            beneficiaryResultEncryptionKey = beneficiaryResultEncryptionKeySecret.get().getValue();
         }
 
         tokens.put(RESULT_ENCRYPTION, booleanToYesNo(shouldEncrypt));

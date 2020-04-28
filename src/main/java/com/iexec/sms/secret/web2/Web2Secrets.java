@@ -4,14 +4,12 @@ import com.iexec.sms.secret.Secret;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @Data
 @Getter
 @Entity

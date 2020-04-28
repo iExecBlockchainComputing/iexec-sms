@@ -1,6 +1,5 @@
 package com.iexec.sms.secret;
 
-import com.iexec.sms.encryption.EncryptionService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -28,6 +27,7 @@ public class Secret {
     @Column(columnDefinition = "LONGTEXT")
     private String value;
     private boolean isEncryptedValue;
+
     /* Clear secrets at construction */
     public Secret(String address, String value) {
         this.address = address;

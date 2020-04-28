@@ -21,24 +21,16 @@ public class Web2SecretsService extends AbstractSecretService {
         this.web2SecretsRepository = web2SecretsRepository;
     }
 
-    private Web2Secrets getWeb2Secrets(String ownerAddress, boolean shouldDecryptValues) {
-        Optional<Web2Secrets> oldWeb2Secrets = web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress);
-        if (!oldWeb2Secrets.isPresent()) {
-            return web2SecretsRepository.save(new Web2Secrets(ownerAddress));
-        }
-
-        if (shouldDecryptValues){
-            for (Secret secret: oldWeb2Secrets.get().getSecrets()){
-                encryptSecret(secret);
-            }
-        }
-
-        return oldWeb2Secrets.get();
+    public Optional<Web2Secrets> getWeb2Secrets(String ownerAddress) {
+        return web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress);
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
-        Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress, shouldDecryptValue);
-        Secret secret = web2Secrets.getSecret(secretAddress);
+        Optional<Web2Secrets> web2Secrets = getWeb2Secrets(ownerAddress);
+        if (!web2Secrets.isPresent()) {
+            return Optional.empty();
+        }
+        Secret secret = web2Secrets.get().getSecret(secretAddress);
         if (secret == null) {
             return Optional.empty();
         }
@@ -47,7 +39,7 @@ public class Web2SecretsService extends AbstractSecretService {
 
     public boolean addSecret(String ownerAddress, Secret secret) {
         Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
-        Optional<Web2Secrets> existingWeb2Secrets = web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress);
+        Optional<Web2Secrets> existingWeb2Secrets = getWeb2Secrets(ownerAddress);
         if (existingWeb2Secrets.isPresent()) {
             web2Secrets = existingWeb2Secrets.get();
         }
@@ -67,7 +59,7 @@ public class Web2SecretsService extends AbstractSecretService {
     }
 
     public boolean updateSecret(String ownerAddress, Secret newSecret) {
-        Optional<Web2Secrets> web2Secrets = web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress);
+        Optional<Web2Secrets> web2Secrets = getWeb2Secrets(ownerAddress);
         if (web2Secrets.isEmpty() || web2Secrets.get().getSecret(newSecret.getAddress()) == null) {
             log.error("Secret not found [ownerAddress:{}, secretAddress:{}]",
                     ownerAddress, newSecret.getAddress());
