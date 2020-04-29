@@ -4,7 +4,7 @@ import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.secret.ReservedSecretKeyName;
+import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;

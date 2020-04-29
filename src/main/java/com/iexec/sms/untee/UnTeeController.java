@@ -4,9 +4,9 @@ package com.iexec.sms.untee;
 import java.util.Optional;
 
 import com.iexec.common.chain.ContributionAuthorization;
-import com.iexec.common.sms.secrets.SmsSecretResponse;
-import com.iexec.common.sms.secrets.SmsSecretResponseData;
-import com.iexec.common.sms.secrets.TaskSecrets;
+import com.iexec.common.sms.secret.SmsSecretResponse;
+import com.iexec.common.sms.secret.SmsSecretResponseData;
+import com.iexec.common.sms.secret.TaskSecrets;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.untee.secret.UnTeeSecretService;
 

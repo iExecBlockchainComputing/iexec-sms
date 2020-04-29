@@ -2,8 +2,8 @@ package com.iexec.sms.untee.secret;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
-import com.iexec.common.sms.secrets.SmsSecret;
-import com.iexec.common.sms.secrets.TaskSecrets;
+import com.iexec.common.sms.secret.SmsSecret;
+import com.iexec.common.sms.secret.TaskSecrets;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.iexec.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
+import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 
 @Service
 @Slf4j
