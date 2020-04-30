@@ -1,7 +1,7 @@
 package com.iexec.sms.authorization;
 
 
-import static com.iexec.sms.App.DOMAIN;
+import static com.iexec.common.sms.SmsConfig.DOMAIN;
 
 import java.util.Optional;
 
