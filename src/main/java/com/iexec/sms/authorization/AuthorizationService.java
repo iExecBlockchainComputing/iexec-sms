@@ -18,6 +18,7 @@ import com.iexec.sms.blockchain.IexecHubService;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.web3j.crypto.Hash;
 
 @Slf4j
 @Service
@@ -94,30 +95,36 @@ public class AuthorizationService {
                 secretAddress);
     }
 
+    /*
+    *  Note - These are equals:
+    *  BytesUtils.bytesToString(Hash.sha3(DOMAIN.getBytes())
+    *  Hash.sha3String(DOMAIN)
+    * */
     public String getChallengeForGetWeb2Secret(String ownerAddress,
-                                               String secretAddress) {
+                                               String secretKey) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3String(DOMAIN),
                 ownerAddress,
-                HashUtils.sha256(secretAddress));
+                Hash.sha3String(secretKey));
     }
 
     public String getChallengeForSetWeb3Secret(String secretAddress,
                                                String secretValue) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3String(DOMAIN),
                 secretAddress,
-                secretValue);
+                Hash.sha3String(secretValue));
     }
+
 
     public String getChallengeForSetWeb2Secret(String ownerAddress,
                                                String secretKey,
                                                String secretValue) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3String(DOMAIN),
                 ownerAddress,
-                secretKey,
-                secretValue);
+                Hash.sha3String(secretKey),
+                Hash.sha3String(secretValue));
     }
 
     public String getChallengeForWorker(ContributionAuthorization contributionAuthorization) {
