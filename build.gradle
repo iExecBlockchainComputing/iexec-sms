@@ -86,7 +86,8 @@ build.dependsOn jacocoTestReport
 
 def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
 def isMasterBranch = gitBranch == "master"
-def canUploadArchives = isMasterBranch && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
+def isDevelopBranch = gitBranch == "develop"
+def canUploadArchives = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
 def gitShortCommit = 'git rev-parse --short HEAD'.execute().text.trim()
 def isSnapshotVersion = project.version.contains("SNAPSHOT")
 
@@ -221,4 +222,4 @@ task pushImage(type: Exec) {
     }
 }
 pushImage.dependsOn buildImage
-pushImage.enabled = isMasterBranch && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
+pushImage.enabled = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
