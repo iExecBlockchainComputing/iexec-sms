@@ -222,4 +222,4 @@ task pushImage(type: Exec) {
     }
 }
 pushImage.dependsOn buildImage
-pushImage.enabled = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
+pushImage.enabled = canUploadArchives
