@@ -3,7 +3,7 @@ package com.iexec.sms.untee;
 
 import java.util.Optional;
 
-import com.iexec.common.chain.ContributionAuthorization;
+import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
 import com.iexec.common.sms.secret.SmsSecretResponseData;
 import com.iexec.common.sms.secret.TaskSecrets;
@@ -35,18 +35,18 @@ public class UnTeeController {
      * */
     @PostMapping("/untee/secrets")
     public ResponseEntity<?> getUnTeeSecrets(@RequestHeader("Authorization") String authorization,
-                                                  @RequestBody ContributionAuthorization contributionAuth) {
-        String workerAddress = contributionAuth.getWorkerWallet();
-        String challenge = authorizationService.getChallengeForWorker(contributionAuth);
+                                                  @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
+        String workerAddress = workerpoolAuthorization.getWorkerWallet();
+        String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!authorizationService.isAuthorizedOnExecution(contributionAuth, false)) {
+        if (!authorizationService.isAuthorizedOnExecution(workerpoolAuthorization, false)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Optional<TaskSecrets> unTeeTaskSecrets = unTeeSecretService.getUnTeeTaskSecrets(contributionAuth.getChainTaskId());
+        Optional<TaskSecrets> unTeeTaskSecrets = unTeeSecretService.getUnTeeTaskSecrets(workerpoolAuthorization.getChainTaskId());
         if (unTeeTaskSecrets.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
