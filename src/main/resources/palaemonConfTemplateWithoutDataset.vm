@@ -45,8 +45,11 @@ images:
      mrenclaves: [$POST_COMPUTE_MRENCLAVE]
      tags: [demo]
      volumes:
+        - name: iexec_out
+          path: /iexec_out
         - name: scone
           path: /scone
 
 volumes:
+   - name: iexec_out
    - name: scone

@@ -41,12 +41,14 @@ images:
      volumes:
         - name: iexec_in
           path: /iexec_in
-        - name: scone
-          path: /scone
+        - name: iexec_out
+          path: /iexec_out
    - name: image3
      mrenclaves: [$POST_COMPUTE_MRENCLAVE]
      tags: [demo]
      volumes:
+        - name: iexec_out
+          path: /iexec_out
         - name: scone
           path: /scone
 
@@ -54,4 +56,5 @@ volumes:
    - name: iexec_in
      fspf_tag: $DATA_FSPF_TAG
      fspf_key: $DATA_FSPF_KEY
+   - name: iexec_out
    - name: scone
