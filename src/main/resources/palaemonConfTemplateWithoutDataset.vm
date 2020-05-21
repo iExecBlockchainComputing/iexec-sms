@@ -11,6 +11,8 @@ services:
      fspf_path: /fspf.pb
      fspf_key: $APP_FSPF_KEY
      fspf_tag: $APP_FSPF_TAG
+     environment:
+        IEXEC_OUT: /iexec_out
 
    - name: post-compute
      image_name: image3
@@ -39,8 +41,8 @@ images:
      mrenclaves: [$APP_MRENCLAVE]
      tags: [demo]
      volumes:
-        - name: scone
-          path: /scone
+        - name: iexec_out
+          path: /iexec_out
    - name: image3
      mrenclaves: [$POST_COMPUTE_MRENCLAVE]
      tags: [demo]
