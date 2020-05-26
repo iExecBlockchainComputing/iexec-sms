@@ -125,7 +125,7 @@ public class TeeSessionHelper {
         palaemonTokens.putAll(postComputeTokens);
         // dataset
         boolean isDatasetRequested = isDatasetRequested(chainDeal);
-        palaemonTokens.put(IS_DATASET_REQUESTED, String.valueOf(isDatasetRequested));
+        palaemonTokens.put(IS_DATASET_REQUESTED, isDatasetRequested);
         if (isDatasetRequested) {
             Map<String, String> datasetTokens = getDatasetPalaemonTokens(taskId, chainDeal);
             if (datasetTokens.isEmpty()) {
