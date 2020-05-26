@@ -33,7 +33,7 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M		                                    \
 	&& scone fspf addr fspf.pb /etc/ssl --authenticated --kernel /etc/ssl   \
 	&& scone fspf addf fspf.pb /etc/ssl /etc/ssl 			                \
 	&& scone fspf addr fspf.pb /sbin --authenticated --kernel /sbin         \
-	&& scone fspf addf fspf.pb /sbin /sbin 			            \	        \
+	&& scone fspf addf fspf.pb /sbin /sbin 			            	        \
 	&& scone fspf addr fspf.pb /app --authenticated --kernel /app 	        \
 	&& scone fspf addf fspf.pb /app /app 				                    \
 	&& scone fspf encrypt ./fspf.pb > /conf/keytag 			                \
