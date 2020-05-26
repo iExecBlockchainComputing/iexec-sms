@@ -1,0 +1,28 @@
+environment:
+#foreach($key in $env.keySet())
+  $key: $env.get($key)
+#end
+
+images:
+  volumes1:
+#if ($IS_DATASET_REQUESTED == true)
+    - name: iexec_in
+      path: $env.get("IEXEC_IN")
+#end
+    - name: iexec_out
+      path: $env.get("IEXEC_IN")
+  volumes2:
+      - name: iexec_out
+        path: $env.get("IEXEC_OUT")
+      - name: scone
+        path: /scone
+
+volumes:
+#if ($IS_DATASET_REQUESTED == true)
+  - name: iexec_in
+    fspf_tag: $DATA_FSPF_TAG
+    fspf_key: $DATA_FSPF_KEY
+#end
+  - name: iexec_out
+  - name: scone
+

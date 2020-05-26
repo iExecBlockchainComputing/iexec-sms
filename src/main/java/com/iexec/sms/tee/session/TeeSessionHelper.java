@@ -3,8 +3,10 @@ package com.iexec.sms.tee.session;
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.utils.BytesUtils;
+import com.iexec.common.utils.EnvUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
+import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -38,6 +40,7 @@ import static com.iexec.common.worker.result.ResultUtils.*;
 public class TeeSessionHelper {
 
     public static final String EMPTY_YML_VALUE = "''";
+
     /*
      * Internal values required for setting up a palaemon session
      * */
@@ -51,6 +54,7 @@ public class TeeSessionHelper {
     private static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
     private static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
     private static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
+    private static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
 
     private TeeSessionHelperConfiguration teeSessionHelperConfiguration;
     private IexecHubService iexecHubService;
@@ -85,15 +89,13 @@ public class TeeSessionHelper {
         }
         ChainDeal chainDeal = oChainDeal.get();
 
-        boolean isDatasetRequested = isDatasetRequested(chainDeal);
-
-        String palaemonTemplatePath = getPalaemonTemplatePath(isDatasetRequested);
+        String palaemonTemplatePath = teeSessionHelperConfiguration.getPalaemonTemplate();
         if (palaemonTemplatePath.isEmpty()) {
             log.error("Failed to getPalaemonSessionYmlAsString (empty templatePath)[taskId:{}]", taskId);
             return "";
         }
 
-        Map<String, String> palaemonTokens = getPalaemonTokens(sessionId, taskId, workerAddress, attestingEnclave, chainDeal);
+        Map<String, Object> palaemonTokens = getPalaemonTokens(sessionId, taskId, workerAddress, attestingEnclave, chainDeal);
         if (palaemonTokens.isEmpty()) {
             log.error("Failed to getPalaemonSessionYmlAsString (empty palaemonTokens)[taskId:{}]", taskId);
             return "";
@@ -102,35 +104,29 @@ public class TeeSessionHelper {
         return getDocumentFilledWithTokens(palaemonTemplatePath, palaemonTokens);
     }
 
-    private String getPalaemonTemplatePath(boolean isDatasetRequested) {
-        if (isDatasetRequested) {
-            return teeSessionHelperConfiguration.getPalaemonTemplateWithAppAndDataset();
-        }
-        return teeSessionHelperConfiguration.getPalaemonTemplateWithApp();
-    }
-
     // TODO Read onchain available infos from enclave instead of copying public vars to palaemon.yml
     //  It needs ssl call from enclave to eth node (only ethereum node address required inside palaemon.yml)
-    private Map<String, String> getPalaemonTokens(String sessionId, String taskId, String workerAddress, String attestingEnclave, ChainDeal chainDeal) {
-        Map<String, String> palaemonTokens = new HashMap<>();
+    private Map<String, Object> getPalaemonTokens(String sessionId, String taskId, String workerAddress, String attestingEnclave, ChainDeal chainDeal) {
+        Map<String, Object> palaemonTokens = new HashMap<>();
         palaemonTokens.put(SESSION_ID_PROPERTY, sessionId);
-
+        // app
         Map<String, String> appTokens = getAppPalaemonTokens(taskId, chainDeal);
         if (appTokens.isEmpty()) {
             log.error("Failed to getPalaemonTokens (empty appTokens)[taskId:{}]", taskId);
             return Collections.emptyMap();
         }
         palaemonTokens.putAll(appTokens);
-
-
+        // post compute
         Map<String, String> postComputeTokens = getPostComputePalaemonTokens(taskId, chainDeal, workerAddress, attestingEnclave);
         if (postComputeTokens.isEmpty()) {
             log.error("Failed to getPalaemonTokens (empty postComputeTokens)[taskId:{}]", taskId);
             return Collections.emptyMap();
         }
         palaemonTokens.putAll(postComputeTokens);
-
-        if (isDatasetRequested(chainDeal)) {
+        // dataset
+        boolean isDatasetRequested = isDatasetRequested(chainDeal);
+        palaemonTokens.put(IS_DATASET_REQUESTED, String.valueOf(isDatasetRequested));
+        if (isDatasetRequested) {
             Map<String, String> datasetTokens = getDatasetPalaemonTokens(taskId, chainDeal);
             if (datasetTokens.isEmpty()) {
                 log.error("Failed to getPalaemonTokens (empty datasetTokens)[taskId:{}]", taskId);
@@ -138,7 +134,10 @@ public class TeeSessionHelper {
             }
             palaemonTokens.putAll(datasetTokens);
         }
-
+        // env variables
+        TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
+        Map<String, String> env = EnvUtils.getContainerEnvVariables(taskDescription);
+        palaemonTokens.put("env", env);
         return palaemonTokens;
     }
 
@@ -334,7 +333,7 @@ public class TeeSessionHelper {
         return tokens;
     }
 
-    private String getDocumentFilledWithTokens(String templatePath, Map<String, String> tokens) {
+    private String getDocumentFilledWithTokens(String templatePath, Map<String, Object> tokens) {
         VelocityEngine ve = new VelocityEngine();
         ve.init();
         Template template = ve.getTemplate(templatePath);
@@ -353,4 +352,30 @@ public class TeeSessionHelper {
         return chainDeal.getCallback() != null && !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS);
     }
 
+    public static void main(String[] args) {
+        VelocityEngine velocityEngine = new VelocityEngine();
+        velocityEngine.init();
+
+        // Template t = velocityEngine.getTemplate("./src/main/resources/index.vm");
+        Template t = velocityEngine.getTemplate("./src/main/resources/palaemonTemplate.vm");
+        VelocityContext context = new VelocityContext();
+
+        Map<String, String> env = new HashMap<>();
+        env.put("IEXEC_NB_INPUT_FILES", "0");
+        env.put("IEXEC_INPUT_FILE_NAME_1", "-----------");
+        env.put("IEXEC_INPUT_FILE_NAME_2", "-----------");
+        env.put("IEXEC_IN", "-----------");
+        env.put("IEXEC_OUT", "-----------");
+
+        
+        context.put(IS_DATASET_REQUESTED, String.valueOf(false));
+        context.put("DATA_FSPF_TAG", "-----------");
+        context.put("DATA_FSPF_KEY", "-----------");
+        context.put("env", env);
+        
+        StringWriter writer = new StringWriter();
+        t.merge(context, writer);
+        System.out.println();
+        System.out.println(writer.toString());
+    }
 }
