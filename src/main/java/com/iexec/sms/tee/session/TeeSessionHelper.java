@@ -136,7 +136,16 @@ public class TeeSessionHelper {
         }
         // env variables
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
-        Map<String, String> env = EnvUtils.getContainerEnvVariables(taskDescription);
+        Map<String, String> env = EnvUtils.getContainerEnvMap(taskDescription);
+        /* 
+         * All values should be quoted (even integers) otherwise
+         * the CAS fails to parse the session's yaml with the
+         * message ("invalid type: integer `0`, expected a string")
+         * that's why we add single quotes in palaemonTemplate.vm
+         * in the for loop.
+         * Null value should be replaced by empty string.
+         */
+        env.forEach((key, value) -> env.replace(key, null, ""));
         palaemonTokens.put("env", env);
         return palaemonTokens;
     }
@@ -350,32 +359,5 @@ public class TeeSessionHelper {
 
     private boolean isCallbackRequested(ChainDeal chainDeal) {
         return chainDeal.getCallback() != null && !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS);
-    }
-
-    public static void main(String[] args) {
-        VelocityEngine velocityEngine = new VelocityEngine();
-        velocityEngine.init();
-
-        // Template t = velocityEngine.getTemplate("./src/main/resources/index.vm");
-        Template t = velocityEngine.getTemplate("./src/main/resources/palaemonTemplate.vm");
-        VelocityContext context = new VelocityContext();
-
-        Map<String, String> env = new HashMap<>();
-        env.put("IEXEC_NB_INPUT_FILES", "0");
-        env.put("IEXEC_INPUT_FILE_NAME_1", "-----------");
-        env.put("IEXEC_INPUT_FILE_NAME_2", "-----------");
-        env.put("IEXEC_IN", "-----------");
-        env.put("IEXEC_OUT", "-----------");
-
-        
-        context.put(IS_DATASET_REQUESTED, String.valueOf(false));
-        context.put("DATA_FSPF_TAG", "-----------");
-        context.put("DATA_FSPF_KEY", "-----------");
-        context.put("env", env);
-        
-        StringWriter writer = new StringWriter();
-        t.merge(context, writer);
-        System.out.println();
-        System.out.println(writer.toString());
     }
 }
