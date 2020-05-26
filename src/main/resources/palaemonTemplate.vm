@@ -3,7 +3,7 @@ digest: create
 
 services:
   - name: app
-    image_name: image
+    image_name: app-image
     mrenclaves: [$APP_MRENCLAVE]
     tags: [demo]
     pwd: /
@@ -12,20 +12,12 @@ services:
     fspf_key: $APP_FSPF_KEY
     fspf_tag: $APP_FSPF_TAG
     environment:
-      IEXEC_IN: $IEXEC_IN
-      IEXEC_OUT: $IEXEC_OUT
-      IEXEC_DATASET_FILENAME: $IEXEC_DATASET_FILENAME
-      IEXEC_BOT_TASK_INDEX: $IEXEC_BOT_TASK_INDEX
-      IEXEC_BOT_SIZE: $IEXEC_BOT_SIZE
-      IEXEC_BOT_FIRST_INDEX: $IEXEC_BOT_FIRST_INDEX
-      IEXEC_NB_INPUT_FILES: $IEXEC_NB_INPUT_FILES
-      IEXEC_INPUT_FILE_NAME_: $IEXEC_INPUT_FILE_NAME_
 #foreach($key in $env.keySet())
       $key: $env.get($key)
 #end
 
   - name: post-compute
-    image_name: image3
+    image_name: post-compute-image
     mrenclaves: [$POST_COMPUTE_MRENCLAVE]
     tags: [demo]
     pwd: /
@@ -47,7 +39,7 @@ services:
       RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY: $RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY
 
 images:
-  - name: image
+  - name: app-image
     mrenclaves: [$APP_MRENCLAVE]
     tags: [demo]
     volumes:
@@ -57,7 +49,7 @@ images:
 #end
       - name: iexec_out
         path: $env.get("IEXEC_OUT")
-  - name: image3
+  - name: post-compute-image
     mrenclaves: [$POST_COMPUTE_MRENCLAVE]
     tags: [demo]
     volumes:
