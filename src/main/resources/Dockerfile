@@ -10,8 +10,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repos
     && apk update
 
 COPY build/resources/main/entrypoint.sh /app/entrypoint.sh
-COPY build/resources/main/palaemonConfTemplateWithDataset.vm palaemonConfTemplateWithDataset.vm
-COPY build/resources/main/palaemonConfTemplateWithoutDataset.vm palaemonConfTemplateWithoutDataset.vm
+COPY build/resources/main/palaemonTemplate.vm /palaemonTemplate.vm
 COPY build/libs/iexec-sms-@projectversion@.jar /app/iexec-sms.jar
 COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
 

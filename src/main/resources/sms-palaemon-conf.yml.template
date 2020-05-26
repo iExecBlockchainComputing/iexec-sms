@@ -13,12 +13,11 @@ services:
      fspf_key: @IEXEC_SMS_FSPF_KEY@
      fspf_tag: @IEXEC_SMS_FSPF_TAG@
      environment:
-         LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
+         LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
          JAVA_TOOL_OPTIONS: -Xmx256m
          IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS: http://chain:8545
          IEXEC_SCONE_CAS_HOST: iexec-cas
-         IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET: palaemonConfTemplateWithDataset.vm
-         IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET: palaemonConfTemplateWithoutDataset.vm
+         IEXEC_PALAEMON_TEMPLATE: /palaemonTemplate.vm
          IEXEC_SMS_SSL_KEYSTORE: /ssl-keystore-dev.p12
          IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH: /scone/iexec-sms-aes.key
          IEXEC_SMS_H2_URL: jdbc:h2:file:/scone/sms-h2
