@@ -3,7 +3,6 @@ package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.AbstractSecretService;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +21,6 @@ public class Web3SecretService extends AbstractSecretService {
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
-        //TODO Lower case key in other services
         secretAddress = secretAddress.toLowerCase();
         Optional<Web3Secret> secret = web3SecretRepository.findWeb3SecretByAddress(secretAddress);
         if (secret.isEmpty()) {
@@ -35,6 +33,7 @@ public class Web3SecretService extends AbstractSecretService {
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress) {
+        secretAddress = secretAddress.toLowerCase();
         return getSecret(secretAddress, false);
     }
 

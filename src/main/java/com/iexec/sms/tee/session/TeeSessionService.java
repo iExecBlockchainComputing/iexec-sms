@@ -1,11 +1,10 @@
 package com.iexec.sms.tee.session;
 
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import feign.FeignException;
 
 @Slf4j
 @Service
@@ -29,11 +28,14 @@ public class TeeSessionService {
             return "";
         }
 
-        System.out.println("## Palaemon session YML ##"); //dev logs, lets keep them for now
-        System.out.println(sessionYmlAsString);
-        System.out.println("#####################");
+        log.info("## Palaemon session YML ##"); //dev logs, lets keep them for now
+        log.info(sessionYmlAsString);
+        log.info("#####################");
 
         ResponseEntity<String> response = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes());
+
+        log.info("Response of generateSecureSession [taskId:{}, getStatusCode:{}, httpBody:{}]",
+                taskId, response.getStatusCode(), response.getBody());
         return (response != null && response.getStatusCode().is2xxSuccessful()) ? sessionId : "";
     }
 }

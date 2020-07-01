@@ -34,7 +34,7 @@ spring:
   h2:
     console:
       enabled: ${IEXEC_SMS_H2_CONSOLE:true} # http://localhost:15000/h2-console/
-      #settings.web-allow-others: true # Get console if Docker run
+      settings.web-allow-others: ${IEXEC_SMS_H2_CONSOLE:true} # Get console if Docker run
 
 encryption:
   # Will get previous key or else create one on this path
