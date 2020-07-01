@@ -2,11 +2,11 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
+import com.iexec.common.sms.secret.ReservedSecretKeyName;
+import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.EnvUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.common.sms.secret.ReservedSecretKeyName;
-import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -137,7 +137,7 @@ public class TeeSessionHelper {
         // env variables
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
         Map<String, String> env = EnvUtils.getContainerEnvMap(taskDescription);
-        /* 
+        /*
          * All values should be quoted (even integers) otherwise
          * the CAS fails to parse the session's yaml with the
          * message ("invalid type: integer `0`, expected a string")
@@ -277,7 +277,8 @@ public class TeeSessionHelper {
             }
 
             if (requesterStorageTokenSecret.isEmpty()) {
-                log.error("Failed to getPostComputeStorageTokens (empty requesterStorageTokenSecret)[taskId:{}]", taskId);
+                log.error("Failed to getPostComputeStorageTokens (empty requesterStorageTokenSecret) [taskId:{}, " +
+                        "storageProvider:{}, requester:{}]", taskId, storageProvider, chainDeal.getRequester());
                 return Collections.emptyMap();
             }
 
