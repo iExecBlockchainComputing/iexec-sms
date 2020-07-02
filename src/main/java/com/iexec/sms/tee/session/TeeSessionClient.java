@@ -1,18 +1,35 @@
 package com.iexec.sms.tee.session;
 
-import org.springframework.cloud.openfeign.FeignClient;
+import com.iexec.sms.ssl.TwoWaySslClient;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.stereotype.Service;
 
-import feign.FeignException;
+@Slf4j
+@Service
+public class TeeSessionClient {
 
-@FeignClient(name = "teeSessionClient", url = "#{teeCasConfiguration.getCasUrl()}")
-public interface TeeSessionClient {
+    private final TeeCasConfiguration teeCasConfiguration;
+    private final TwoWaySslClient twoWaySslClient;
 
-    @PostMapping(value = "/session",
-            headers = {
-                "Expect=100-continue",
-                "Content-Type=application/x-www-form-urlencoded"})
-    public ResponseEntity<String> generateSecureSession(@RequestBody byte[] palaemonFile) throws FeignException;
+    public TeeSessionClient(TeeCasConfiguration teeCasConfiguration,
+                            TwoWaySslClient twoWaySslClient) {
+        this.teeCasConfiguration = teeCasConfiguration;
+        this.twoWaySslClient = twoWaySslClient;
+    }
+
+    /*
+     * POST /session of CAS requires 2-way SSL authentication
+     * */
+    public ResponseEntity<String> generateSecureSession(byte[] palaemonFile) {
+        try {
+            return twoWaySslClient.getRestTemplate().postForEntity(teeCasConfiguration.getCasUrl() + "/session",
+                    new HttpEntity<>(palaemonFile), String.class);
+        } catch (Exception e) {
+            log.error("Failed to generateSecureSession [exceptionMessage:{}]", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

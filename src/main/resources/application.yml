@@ -54,3 +54,8 @@ scone:
     host: ${IEXEC_SCONE_CAS_HOST:localhost}
     port: ${IEXEC_SCONE_CAS_PORT:8081}
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
+
+#logging:
+#  level:
+#    org.springframework: DEBUG
+#    org.apache.http: DEBUG
