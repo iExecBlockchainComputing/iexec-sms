@@ -56,7 +56,7 @@ scone:
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
 
 logging:
-  tee.display-session: ${IEXEC_SMS_DISPLAY_SESSION:true}
+  tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:true}
 #  level:
 #    org.springframework: DEBUG
 #    org.apache.http: DEBUG

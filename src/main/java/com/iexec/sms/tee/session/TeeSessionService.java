@@ -11,15 +11,15 @@ public class TeeSessionService {
 
     private final TeeSessionClient teeSessionClient;
     private final TeeSessionHelper teeSessionHelper;
-    private final boolean shouldDisplaySession;
+    private final boolean shouldDisplayDebugSession;
 
     public TeeSessionService(
             TeeSessionHelper teeSessionHelper,
             TeeSessionClient teeSessionClient,
-            @Value("${logging.tee.display-session}") boolean shouldDisplaySession) {
+            @Value("${logging.tee.display-debug-session}") boolean shouldDisplayDebugSession) {
         this.teeSessionHelper = teeSessionHelper;
         this.teeSessionClient = teeSessionClient;
-        this.shouldDisplaySession = shouldDisplaySession;
+        this.shouldDisplayDebugSession = shouldDisplayDebugSession;
     }
 
     public String generateTeeSession(String taskId, String workerAddress, String teeChallenge) {
@@ -30,10 +30,10 @@ public class TeeSessionService {
             return "";
         }
 
-        if (shouldDisplaySession){
+        if (shouldDisplayDebugSession){
             log.info("Session yml is ready [taskId:{}, sessionYml:\n{}]", taskId, sessionYmlAsString);
         } else {
-            log.info("Session yml is ready [taskId:{}, shouldDisplaySession:{}]", taskId, false);
+            log.info("Session yml is ready [taskId:{}, shouldDisplayDebugSession:{}]", taskId, false);
         }
 
         boolean isSessionGenerated = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes())
