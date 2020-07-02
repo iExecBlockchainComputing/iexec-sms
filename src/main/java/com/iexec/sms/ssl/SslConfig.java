@@ -25,7 +25,7 @@ public class SslConfig {
             @Value("${server.ssl.key-store}") String sslKeystore,
             @Value("${server.ssl.key-store-type}") String sslKeystoreType,
             @Value("${server.ssl.key-alias}") String sslKeyAlias,
-            @Value("${server.ssl.key-store-password}") String sslKeystorePassword){
+            @Value("${server.ssl.key-store-password}") String sslKeystorePassword) {
         this.sslKeystore = sslKeystore;
         this.sslKeystoreType = sslKeystoreType;
         this.sslKeyAlias = sslKeyAlias;
@@ -33,7 +33,7 @@ public class SslConfig {
     }
 
     /*
-
+     * Generates new SSLContext on each call
      */
     public SSLContext getFreshSslContext() {
         try {
