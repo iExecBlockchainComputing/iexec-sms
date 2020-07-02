@@ -2,6 +2,7 @@ package com.iexec.sms.tee.session;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -10,12 +11,15 @@ public class TeeSessionService {
 
     private final TeeSessionClient teeSessionClient;
     private final TeeSessionHelper teeSessionHelper;
+    private final boolean shouldDisplaySession;
 
     public TeeSessionService(
             TeeSessionHelper teeSessionHelper,
-            TeeSessionClient teeSessionClient) {
+            TeeSessionClient teeSessionClient,
+            @Value("${logging.tee.display-session}") boolean shouldDisplaySession) {
         this.teeSessionHelper = teeSessionHelper;
         this.teeSessionClient = teeSessionClient;
+        this.shouldDisplaySession = shouldDisplaySession;
     }
 
     public String generateTeeSession(String taskId, String workerAddress, String teeChallenge) {
@@ -26,9 +30,11 @@ public class TeeSessionService {
             return "";
         }
 
-        log.info("## Palaemon session YML ##"); //dev logs, lets keep them for now
-        log.info(sessionYmlAsString);
-        log.info("#####################");
+        if (shouldDisplaySession){
+            log.info("Session yml is ready [taskId:{}, sessionYml:\n{}]", taskId, sessionYmlAsString);
+        } else {
+            log.info("Session yml is ready [taskId:{}, shouldDisplaySession:{}]", taskId, false);
+        }
 
         boolean isSessionGenerated = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes())
                 .getStatusCode().is2xxSuccessful();

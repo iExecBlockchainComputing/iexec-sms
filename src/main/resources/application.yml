@@ -55,7 +55,8 @@ scone:
     port: ${IEXEC_SCONE_CAS_PORT:8081}
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
 
-#logging:
+logging:
+  tee.display-session: ${IEXEC_SMS_DISPLAY_SESSION:true}
 #  level:
 #    org.springframework: DEBUG
 #    org.apache.http: DEBUG
