@@ -17,6 +17,7 @@ import java.util.Optional;
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 
 @Slf4j
+@CrossOrigin
 @RestController
 @RequestMapping("/secrets")
 public class SecretController {
@@ -64,8 +65,8 @@ public class SecretController {
 
     @PostMapping("/web3")
     public ResponseEntity<String> addWeb3Secret(@RequestHeader("Authorization") String authorization,
-                                        @RequestParam String secretAddress,
-                                        @RequestBody String secretValue) {
+                                                @RequestParam String secretAddress,
+                                                @RequestBody String secretValue) {
         if (isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
 
