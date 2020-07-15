@@ -2,9 +2,11 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
-import com.iexec.common.utils.BytesUtils;
-import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
+import com.iexec.common.task.TaskDescription;
+import com.iexec.common.utils.BytesUtils;
+import com.iexec.common.utils.EnvUtils;
+import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -38,6 +40,7 @@ import static com.iexec.common.worker.result.ResultUtils.*;
 public class TeeSessionHelper {
 
     public static final String EMPTY_YML_VALUE = "''";
+
     /*
      * Internal values required for setting up a palaemon session
      * */
@@ -51,6 +54,7 @@ public class TeeSessionHelper {
     private static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
     private static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
     private static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
+    private static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
 
     private TeeSessionHelperConfiguration teeSessionHelperConfiguration;
     private IexecHubService iexecHubService;
@@ -85,15 +89,13 @@ public class TeeSessionHelper {
         }
         ChainDeal chainDeal = oChainDeal.get();
 
-        boolean isDatasetRequested = isDatasetRequested(chainDeal);
-
-        String palaemonTemplatePath = getPalaemonTemplatePath(isDatasetRequested);
+        String palaemonTemplatePath = teeSessionHelperConfiguration.getPalaemonTemplate();
         if (palaemonTemplatePath.isEmpty()) {
             log.error("Failed to getPalaemonSessionYmlAsString (empty templatePath)[taskId:{}]", taskId);
             return "";
         }
 
-        Map<String, String> palaemonTokens = getPalaemonTokens(sessionId, taskId, workerAddress, attestingEnclave, chainDeal);
+        Map<String, Object> palaemonTokens = getPalaemonTokens(sessionId, taskId, workerAddress, attestingEnclave, chainDeal);
         if (palaemonTokens.isEmpty()) {
             log.error("Failed to getPalaemonSessionYmlAsString (empty palaemonTokens)[taskId:{}]", taskId);
             return "";
@@ -102,35 +104,29 @@ public class TeeSessionHelper {
         return getDocumentFilledWithTokens(palaemonTemplatePath, palaemonTokens);
     }
 
-    private String getPalaemonTemplatePath(boolean isDatasetRequested) {
-        if (isDatasetRequested) {
-            return teeSessionHelperConfiguration.getPalaemonTemplateWithAppAndDataset();
-        }
-        return teeSessionHelperConfiguration.getPalaemonTemplateWithApp();
-    }
-
     // TODO Read onchain available infos from enclave instead of copying public vars to palaemon.yml
     //  It needs ssl call from enclave to eth node (only ethereum node address required inside palaemon.yml)
-    private Map<String, String> getPalaemonTokens(String sessionId, String taskId, String workerAddress, String attestingEnclave, ChainDeal chainDeal) {
-        Map<String, String> palaemonTokens = new HashMap<>();
+    private Map<String, Object> getPalaemonTokens(String sessionId, String taskId, String workerAddress, String attestingEnclave, ChainDeal chainDeal) {
+        Map<String, Object> palaemonTokens = new HashMap<>();
         palaemonTokens.put(SESSION_ID_PROPERTY, sessionId);
-
+        // app
         Map<String, String> appTokens = getAppPalaemonTokens(taskId, chainDeal);
         if (appTokens.isEmpty()) {
             log.error("Failed to getPalaemonTokens (empty appTokens)[taskId:{}]", taskId);
             return Collections.emptyMap();
         }
         palaemonTokens.putAll(appTokens);
-
-
+        // post compute
         Map<String, String> postComputeTokens = getPostComputePalaemonTokens(taskId, chainDeal, workerAddress, attestingEnclave);
         if (postComputeTokens.isEmpty()) {
             log.error("Failed to getPalaemonTokens (empty postComputeTokens)[taskId:{}]", taskId);
             return Collections.emptyMap();
         }
         palaemonTokens.putAll(postComputeTokens);
-
-        if (isDatasetRequested(chainDeal)) {
+        // dataset
+        boolean isDatasetRequested = isDatasetRequested(chainDeal);
+        palaemonTokens.put(IS_DATASET_REQUESTED, isDatasetRequested);
+        if (isDatasetRequested) {
             Map<String, String> datasetTokens = getDatasetPalaemonTokens(taskId, chainDeal);
             if (datasetTokens.isEmpty()) {
                 log.error("Failed to getPalaemonTokens (empty datasetTokens)[taskId:{}]", taskId);
@@ -138,7 +134,19 @@ public class TeeSessionHelper {
             }
             palaemonTokens.putAll(datasetTokens);
         }
-
+        // env variables
+        TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
+        Map<String, String> env = EnvUtils.getContainerEnvMap(taskDescription);
+        /*
+         * All values should be quoted (even integers) otherwise
+         * the CAS fails to parse the session's yaml with the
+         * message ("invalid type: integer `0`, expected a string")
+         * that's why we add single quotes in palaemonTemplate.vm
+         * in the for loop.
+         * Null value should be replaced by empty string.
+         */
+        env.forEach((key, value) -> env.replace(key, null, ""));
+        palaemonTokens.put("env", env);
         return palaemonTokens;
     }
 
@@ -269,7 +277,8 @@ public class TeeSessionHelper {
             }
 
             if (requesterStorageTokenSecret.isEmpty()) {
-                log.error("Failed to getPostComputeStorageTokens (empty requesterStorageTokenSecret)[taskId:{}]", taskId);
+                log.error("Failed to getPostComputeStorageTokens (empty requesterStorageTokenSecret) [taskId:{}, " +
+                        "storageProvider:{}, requester:{}]", taskId, storageProvider, chainDeal.getRequester());
                 return Collections.emptyMap();
             }
 
@@ -334,7 +343,7 @@ public class TeeSessionHelper {
         return tokens;
     }
 
-    private String getDocumentFilledWithTokens(String templatePath, Map<String, String> tokens) {
+    private String getDocumentFilledWithTokens(String templatePath, Map<String, Object> tokens) {
         VelocityEngine ve = new VelocityEngine();
         ve.init();
         Template template = ve.getTemplate(templatePath);
@@ -352,5 +361,4 @@ public class TeeSessionHelper {
     private boolean isCallbackRequested(ChainDeal chainDeal) {
         return chainDeal.getCallback() != null && !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS);
     }
-
 }

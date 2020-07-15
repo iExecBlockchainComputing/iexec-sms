@@ -1,8 +1,7 @@
-FROM azul/zulu-openjdk-alpine:11.0.3-jre
+FROM openjdk:11.0.7-jre-slim
 
 COPY build/resources/main/entrypoint.sh /app/entrypoint.sh
-COPY build/resources/main/palaemonConfTemplateWithDataset.vm palaemonConfTemplateWithDataset.vm
-COPY build/resources/main/palaemonConfTemplateWithoutDataset.vm palaemonConfTemplateWithoutDataset.vm
+COPY build/resources/main/palaemonTemplate.vm /palaemonTemplate.vm
 COPY build/libs/iexec-sms-@projectversion@.jar /app/iexec-sms.jar
 COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
 
@@ -10,8 +9,7 @@ RUN chmod +x /app/entrypoint.sh
 
 ENV IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS http://chain:8545
 ENV IEXEC_SCONE_CAS_HOST iexec-cas
-ENV IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET palaemonConfTemplateWithDataset.vm
-ENV IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET palaemonConfTemplateWithoutDataset.vm
+ENV IEXEC_PALAEMON_TEMPLATE /palaemonTemplate.vm
 ENV IEXEC_SMS_SSL_KEYSTORE /ssl-keystore-dev.p12
 ENV IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH /scone/iexec-sms-aes.key
 ENV IEXEC_SMS_H2_URL jdbc:h2:file:/scone/sms-h2

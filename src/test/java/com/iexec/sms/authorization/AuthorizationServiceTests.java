@@ -9,11 +9,12 @@ import java.util.Optional;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
-import com.iexec.common.chain.ContributionAuthorization;
+import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.security.Signature;
 import com.iexec.common.utils.TestUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -37,7 +38,7 @@ public class AuthorizationServiceTests {
     public void shouldBeAuthorizedOnExecutionOfTeeTask() {
         ChainDeal chainDeal = TestUtils.getChainDeal();
         ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        ContributionAuthorization auth = TestUtils.getTeeContributionAuth();
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
@@ -54,7 +55,7 @@ public class AuthorizationServiceTests {
 
     @Test
     public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskTypeNotMatchedOnchain() {
-        ContributionAuthorization auth = TestUtils.getTeeContributionAuth();
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
 
@@ -64,7 +65,7 @@ public class AuthorizationServiceTests {
 
     @Test
     public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActive() {
-        ContributionAuthorization auth = TestUtils.getTeeContributionAuth();
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         ChainTask chainTask = TestUtils.getChainTask(UNSET);
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
@@ -77,7 +78,7 @@ public class AuthorizationServiceTests {
     public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValid() {
         ChainDeal chainDeal = TestUtils.getChainDeal();
         ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        ContributionAuthorization auth = TestUtils.getTeeContributionAuth();
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
 
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
@@ -86,5 +87,15 @@ public class AuthorizationServiceTests {
 
         boolean isAuth = authorizationService.isAuthorizedOnExecution(auth, true);
         assertThat(isAuth).isFalse();
+    }
+
+    @Test
+    void getChallengeForSetWeb3Secret() {
+        String secretAddress = "0x123";
+        String secretValue = "ghijk";
+
+        String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
+        Assertions.assertEquals("0x8d0b92aaf96f66f172d7615b81f257ebdece2278b7da6c60127cad45852eaaf6",
+                challenge);
     }
 }

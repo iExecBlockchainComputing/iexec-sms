@@ -3,7 +3,7 @@ package com.iexec.sms.tee;
 
 import java.util.Optional;
 
-import com.iexec.common.chain.ContributionAuthorization;
+import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -59,20 +59,20 @@ public class TeeController {
      * */
     @PostMapping("/sessions")
     public ResponseEntity<String> generateTeeSession(@RequestHeader("Authorization") String authorization,
-                                                     @RequestBody ContributionAuthorization contributionAuth) {
-        String workerAddress = contributionAuth.getWorkerWallet();
-        String challenge = authorizationService.getChallengeForWorker(contributionAuth);
+                                                     @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
+        String workerAddress = workerpoolAuthorization.getWorkerWallet();
+        String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!authorizationService.isAuthorizedOnExecution(contributionAuth, true)) {
+        if (!authorizationService.isAuthorizedOnExecution(workerpoolAuthorization, true)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String taskId = contributionAuth.getChainTaskId();
+        String taskId = workerpoolAuthorization.getChainTaskId();
         workerAddress = Keys.toChecksumAddress(workerAddress);
-        String attestingEnclave = contributionAuth.getEnclaveChallenge();
+        String attestingEnclave = workerpoolAuthorization.getEnclaveChallenge();
 
         try {
             String sessionId = teeSessionService.generateTeeSession(taskId, workerAddress, attestingEnclave);

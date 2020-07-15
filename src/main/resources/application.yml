@@ -33,8 +33,8 @@ spring:
       database-platform: org.hibernate.dialect.H2Dialect
   h2:
     console:
-      enabled: ${IEXEC_SMS_H2_CONSOLE:true} # http://localhost:15000/h2-console/
-      #settings.web-allow-others: true # Get console if Docker run
+      enabled: ${IEXEC_SMS_H2_CONSOLE:false} # http://localhost:15000/h2-console/
+      settings.web-allow-others: ${IEXEC_SMS_H2_CONSOLE:false} # Get console if Docker run
 
 encryption:
   # Will get previous key or else create one on this path
@@ -53,7 +53,10 @@ scone:
   cas:
     host: ${IEXEC_SCONE_CAS_HOST:localhost}
     port: ${IEXEC_SCONE_CAS_PORT:8081}
-    palaemon:
-      configFile:
-        withDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITH_DATASET:./src/main/resources/palaemonConfTemplateWithDataset.vm}
-        withoutDataset: ${IEXEC_PALAEMON_CONFIG_FILE_WITHOUT_DATASET:./src/main/resources/palaemonConfTemplateWithoutDataset.vm}
+    palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
+
+logging:
+  tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
+#  level:
+#    org.springframework: DEBUG
+#    org.apache.http: DEBUG

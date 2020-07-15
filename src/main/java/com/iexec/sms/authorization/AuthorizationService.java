@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.ChainTaskStatus;
-import com.iexec.common.chain.ContributionAuthorization;
+import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.security.Signature;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.HashUtils;
@@ -18,6 +18,7 @@ import com.iexec.sms.blockchain.IexecHubService;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.web3j.crypto.Hash;
 
 @Slf4j
 @Service
@@ -30,18 +31,18 @@ public class AuthorizationService {
         this.iexecHubService = iexecHubService;
     }
 
-    public boolean isAuthorizedOnExecution(ContributionAuthorization contributionAuth, boolean isTeeTask) {
-        if (contributionAuth == null || contributionAuth.getChainTaskId().isEmpty()) {
+    public boolean isAuthorizedOnExecution(WorkerpoolAuthorization workerpoolAuthorization, boolean isTeeTask) {
+        if (workerpoolAuthorization == null || workerpoolAuthorization.getChainTaskId().isEmpty()) {
             log.error("Not authorized with empty params");
             return false;
         }
 
-        String chainTaskId = contributionAuth.getChainTaskId();
+        String chainTaskId = workerpoolAuthorization.getChainTaskId();
         boolean isTeeTaskOnchain = iexecHubService.isTeeTask(chainTaskId);
         if (isTeeTask != isTeeTaskOnchain) {
             log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{},"
                     + "chainTaskId:{}, walletAddress:{}]",isTeeTask, isTeeTaskOnchain,
-                    chainTaskId, contributionAuth.getWorkerWallet());
+                    chainTaskId, workerpoolAuthorization.getWorkerWallet());
             return false;
         }
 
@@ -67,8 +68,8 @@ public class AuthorizationService {
         }
         ChainDeal chainDeal = optionalChainDeal.get();
         String workerpoolAddress = chainDeal.getPoolOwner();
-        boolean isSignerByWorkerpool = isSignedByHimself(contributionAuth.getHash(),
-                contributionAuth.getSignature().getValue(), workerpoolAddress);
+        boolean isSignerByWorkerpool = isSignedByHimself(workerpoolAuthorization.getHash(),
+                workerpoolAuthorization.getSignature().getValue(), workerpoolAddress);
 
         if (!isSignerByWorkerpool) {
             log.error("isAuthorizedOnExecution failed (invalid signature) [chainTaskId:{}, isWorkerpoolSignatureValid:{}]",
@@ -94,36 +95,42 @@ public class AuthorizationService {
                 secretAddress);
     }
 
+    /*
+    *  Note - These are equals:
+    *  BytesUtils.bytesToString(Hash.sha3(DOMAIN.getBytes())
+    *  Hash.sha3String(DOMAIN)
+    * */
     public String getChallengeForGetWeb2Secret(String ownerAddress,
-                                               String secretAddress) {
+                                               String secretKey) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3String(DOMAIN),
                 ownerAddress,
-                HashUtils.sha256(secretAddress));
+                Hash.sha3String(secretKey));
     }
 
     public String getChallengeForSetWeb3Secret(String secretAddress,
                                                String secretValue) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3String(DOMAIN),
                 secretAddress,
-                secretValue);
+                Hash.sha3String(secretValue));
     }
+
 
     public String getChallengeForSetWeb2Secret(String ownerAddress,
                                                String secretKey,
                                                String secretValue) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3String(DOMAIN),
                 ownerAddress,
-                secretKey,
-                secretValue);
+                Hash.sha3String(secretKey),
+                Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForWorker(ContributionAuthorization contributionAuthorization) {
+    public String getChallengeForWorker(WorkerpoolAuthorization workerpoolAuthorization) {
         return HashUtils.concatenateAndHash(
-                contributionAuthorization.getWorkerWallet(),
-                contributionAuthorization.getChainTaskId(),
-                contributionAuthorization.getEnclaveChallenge());
+                workerpoolAuthorization.getWorkerWallet(),
+                workerpoolAuthorization.getChainTaskId(),
+                workerpoolAuthorization.getEnclaveChallenge());
         }
 }

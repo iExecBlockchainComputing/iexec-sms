@@ -1,22 +1,19 @@
 package com.iexec.sms.secret.web2;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.Optional;
-
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.Secret;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class Web2SecretsServiceTests {
 
@@ -41,6 +38,7 @@ public class Web2SecretsServiceTests {
 
     @Test
     public void shouldGetAndDecryptWeb2Secrets() {
+        ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
         List<Secret> secretList = List.of(encryptedSecret);
@@ -58,12 +56,14 @@ public class Web2SecretsServiceTests {
 
     @Test
     public void shouldAddSecret() {
+        ownerAddress = ownerAddress.toLowerCase();
         web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue);
         verify(web2SecretsRepository, times(1)).save(any());
     }
 
     @Test
     public void shouldUpdateSecret() {
+        ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
         String newSecretValue = "newSecretValue";

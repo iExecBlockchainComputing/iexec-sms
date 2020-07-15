@@ -1,0 +1,68 @@
+name: $SESSION_ID
+digest: create
+
+services:
+  - name: app
+    image_name: app-image
+    mrenclaves: [$APP_MRENCLAVE]
+    tags: [demo]
+    pwd: /
+    command: $APP_ARGS
+    fspf_path: /fspf.pb
+    fspf_key: $APP_FSPF_KEY
+    fspf_tag: $APP_FSPF_TAG
+    environment:
+#foreach($key in $env.keySet())
+      $key: '$env.get($key)'
+#end
+
+  - name: post-compute
+    image_name: post-compute-image
+    mrenclaves: [$POST_COMPUTE_MRENCLAVE]
+    tags: [demo]
+    pwd: /
+    command: java -jar /app/tee-worker-post-compute.jar
+    fspf_path: /fspf.pb
+    fspf_key: $POST_COMPUTE_FSPF_KEY
+    fspf_tag: $POST_COMPUTE_FSPF_TAG
+    environment:
+      LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      RESULT_TASK_ID: $RESULT_TASK_ID
+      RESULT_ENCRYPTION: $RESULT_ENCRYPTION
+      RESULT_ENCRYPTION_PUBLIC_KEY: $RESULT_ENCRYPTION_PUBLIC_KEY
+      RESULT_STORAGE_PROVIDER: $RESULT_STORAGE_PROVIDER
+      RESULT_STORAGE_PROXY: $RESULT_STORAGE_PROXY
+      RESULT_STORAGE_TOKEN: $RESULT_STORAGE_TOKEN
+      RESULT_STORAGE_CALLBACK: $RESULT_STORAGE_CALLBACK
+      RESULT_SIGN_WORKER_ADDRESS: $RESULT_SIGN_WORKER_ADDRESS
+      RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY: $RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY
+
+images:
+  - name: app-image
+    mrenclaves: [$APP_MRENCLAVE]
+    tags: [demo]
+    volumes:
+#if ($IS_DATASET_REQUESTED)
+      - name: iexec_in
+        path: $env.get("IEXEC_IN")
+#end
+      - name: iexec_out
+        path: $env.get("IEXEC_OUT")
+  - name: post-compute-image
+    mrenclaves: [$POST_COMPUTE_MRENCLAVE]
+    tags: [demo]
+    volumes:
+      - name: iexec_out
+        path: $env.get("IEXEC_OUT")
+      - name: scone
+        path: /scone
+
+volumes:
+#if ($IS_DATASET_REQUESTED)
+  - name: iexec_in
+    fspf_tag: $DATA_FSPF_TAG
+    fspf_key: $DATA_FSPF_KEY
+#end
+  - name: iexec_out
+  - name: scone
