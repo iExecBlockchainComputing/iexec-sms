@@ -16,17 +16,32 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+
+import java.util.List;
 
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Builder
-public class AppFingerprint {
+@NoArgsConstructor
+@AllArgsConstructor
+public class AppFingerprint extends SconeFingerprint {
 
     private String fspfKey;
     private String fspfTag;
     private String mrEnclave;
     private String entrypoint;
 
+    public AppFingerprint(String fingerprint) {
+        List<String> parts = getFingerprintParts(fingerprint, 4);
+        if (parts.isEmpty()) {
+            throw new IllegalStateException("Invalid app fingerprint: " +
+                    fingerprint);
+        }
+        this.fspfKey = parts.get(0);
+        this.fspfTag = parts.get(1);
+        this.mrEnclave = parts.get(2);
+        this.entrypoint = parts.get(3);
+    }
 }

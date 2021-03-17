@@ -16,15 +16,17 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import lombok.Builder;
-import lombok.Data;
+import java.util.List;
 
+public abstract class SconeFingerprint {
 
-@Data
-@Builder
-public class DatasetFingerprint {
-
-    String fspfKey;
-    String fspfTag;
-
+    List<String> getFingerprintParts(String fingerprint, int expectedParts) {
+        if (fingerprint == null || fingerprint.isEmpty()) {
+            return List.of();
+        }
+        String[] fingerprintParts = fingerprint.split("\\|");
+        return fingerprintParts.length < expectedParts
+                ? List.of()
+                : List.of(fingerprintParts);
+    }
 }
