@@ -16,24 +16,14 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import lombok.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+@Component
+public class PreComputeFingerprint extends SconeFingerprint {
 
-
-@Getter
-@Builder
-public class AppFingerprint extends SconeFingerprint {
-
-    private String entrypoint;
-
-    public AppFingerprint(String fingerprint) {
+    public PreComputeFingerprint(
+            @Value("${pre-compute.fingerprint}") String fingerprint) {
         super(fingerprint);
-        List<String> parts = getFingerprintParts(fingerprint, 4);
-        if (parts.isEmpty()) {
-            throw new IllegalStateException("No entrypoint in app fingerprint: " +
-                    fingerprint);
-        }
-        this.entrypoint = parts.get(3);
     }
 }

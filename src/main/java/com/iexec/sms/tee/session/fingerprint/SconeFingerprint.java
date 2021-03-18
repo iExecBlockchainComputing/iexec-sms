@@ -16,9 +16,27 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
+import lombok.Getter;
+
 import java.util.List;
 
+@Getter
 public abstract class SconeFingerprint {
+
+    String fspfKey;
+    String fspfTag;
+    String mrEnclave;
+
+    public SconeFingerprint(String fingerprint) {
+        List<String> parts = getFingerprintParts(fingerprint, 3);
+        if (parts.isEmpty()) {
+            throw new IllegalArgumentException("Invalid SCONE fingerprint: " +
+                    fingerprint);
+        }
+        this.fspfKey = parts.get(0);
+        this.fspfTag = parts.get(1);
+        this.mrEnclave = parts.get(2);
+    }
 
     List<String> getFingerprintParts(String fingerprint, int expectedParts) {
         if (fingerprint == null || fingerprint.isEmpty()) {

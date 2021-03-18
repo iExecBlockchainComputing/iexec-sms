@@ -16,29 +16,9 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import lombok.*;
-
-import java.util.List;
-
-@Data
-@EqualsAndHashCode(callSuper = false)
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class PostComputeFingerprint extends SconeFingerprint {
 
-    private String fspfKey;
-    private String fspfTag;
-    private String mrEnclave;
-
     public PostComputeFingerprint(String fingerprint) {
-        List<String> parts = getFingerprintParts(fingerprint, 3);
-        if (parts.isEmpty()) {
-            throw new IllegalStateException("Invalid post-compute fingerprint: " +
-                    fingerprint);
-        }
-        this.fspfKey = parts.get(0);
-        this.fspfTag = parts.get(1);
-        this.mrEnclave = parts.get(2);
+        super(fingerprint);
     }
 }

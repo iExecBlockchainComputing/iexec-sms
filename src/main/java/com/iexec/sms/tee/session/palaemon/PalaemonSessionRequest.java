@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.fingerprint;
+package com.iexec.sms.tee.session.palaemon;
 
-import lombok.*;
+import com.iexec.common.chain.ChainDeal;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-
-@Getter
+@Data
 @Builder
-public class AppFingerprint extends SconeFingerprint {
+@NoArgsConstructor
+@AllArgsConstructor
+public class PalaemonSessionRequest {
 
-    private String entrypoint;
-
-    public AppFingerprint(String fingerprint) {
-        super(fingerprint);
-        List<String> parts = getFingerprintParts(fingerprint, 4);
-        if (parts.isEmpty()) {
-            throw new IllegalStateException("No entrypoint in app fingerprint: " +
-                    fingerprint);
-        }
-        this.entrypoint = parts.get(3);
-    }
+    private String sessionId;
+    private String taskId;
+    private String workerAddress;
+    private String enclaveChallenge;
+    private ChainDeal chainDeal;
 }
