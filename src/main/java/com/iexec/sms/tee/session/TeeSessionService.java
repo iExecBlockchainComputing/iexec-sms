@@ -16,44 +16,79 @@
 
 package com.iexec.sms.tee.session;
 
+import com.iexec.common.chain.ChainDeal;
+import com.iexec.common.chain.ChainTask;
+import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.tee.session.palaemon.PalaemonSessionRequest;
+import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 public class TeeSessionService {
 
+    private final IexecHubService iexecHubService;
     private final TeeSessionClient teeSessionClient;
-    private final TeeSessionHelper teeSessionHelper;
+    private final PalaemonSessionService palaemonSessionService;
     private final boolean shouldDisplayDebugSession;
 
     public TeeSessionService(
-            TeeSessionHelper teeSessionHelper,
+            IexecHubService iexecService,
+            PalaemonSessionService palaemonSessionService,
             TeeSessionClient teeSessionClient,
             @Value("${logging.tee.display-debug-session}") boolean shouldDisplayDebugSession) {
-        this.teeSessionHelper = teeSessionHelper;
+        this.iexecHubService = iexecService;
+        this.palaemonSessionService = palaemonSessionService;
         this.teeSessionClient = teeSessionClient;
         this.shouldDisplayDebugSession = shouldDisplayDebugSession;
     }
 
-    public String generateTeeSession(String taskId, String workerAddress, String teeChallenge) {
-        String sessionId = String.format("%s0000%s", RandomStringUtils.randomAlphanumeric(10), taskId);
-        String sessionYmlAsString = teeSessionHelper.getPalaemonSessionYmlAsString(sessionId, taskId, workerAddress, teeChallenge);
-        if (sessionYmlAsString.isEmpty()) {
-            log.error("Failed to get session yml [taskId:{}, workerAddress:{}]", taskId, workerAddress);
+    public String generateTeeSession(
+            String taskId,
+            String workerAddress,
+            String teeChallenge) throws Exception {
+
+        Optional<ChainTask> chainTask = iexecHubService.getChainTask(taskId);
+        if (chainTask.isEmpty()) {
+            log.error("Failed to get chain task [taskId:{}, workerAddress:{}]",
+                    taskId, workerAddress);
             return "";
         }
-
-        if (shouldDisplayDebugSession){
-            log.info("Session yml is ready [taskId:{}, sessionYml:\n{}]", taskId, sessionYmlAsString);
-        } else {
-            log.info("Session yml is ready [taskId:{}, shouldDisplayDebugSession:{}]", taskId, false);
+        Optional<ChainDeal> chainDeal = iexecHubService.getChainDeal(chainTask.get().getDealid());
+        if (chainDeal.isEmpty()) {
+            throw new Exception("Failed to get chain deal - taskId: " + taskId);
         }
-
-        boolean isSessionGenerated = teeSessionClient.generateSecureSession(sessionYmlAsString.getBytes())
-                .getStatusCode().is2xxSuccessful();
+        String sessionId = createSessionId(taskId);
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .sessionId(sessionId)
+                .taskId(taskId)
+                .workerAddress(workerAddress)
+                .enclaveChallenge(teeChallenge)
+                .chainDeal(chainDeal.get())
+                .build();
+        String sessionYmlAsString = palaemonSessionService.getSessionYml(request);
+        if (sessionYmlAsString.isEmpty()) {
+            throw new Exception("Failed to get session yml [taskId:" + taskId + "," +
+                    " workerAddress:" + workerAddress);
+        }
+        log.info("Session yml is ready [taskId:{}]", taskId);
+        if (shouldDisplayDebugSession){
+            log.info("Session content [taskId:{}]\n{}", taskId, sessionYmlAsString);
+        }
+        boolean isSessionGenerated = teeSessionClient
+                .generateSecureSession(sessionYmlAsString.getBytes())
+                .getStatusCode()
+                .is2xxSuccessful();
         return isSessionGenerated ? sessionId : "";
+    }
+
+    private String createSessionId(String taskId) {
+        String randomString = RandomStringUtils.randomAlphanumeric(10);
+        return String.format("%s0000%s", randomString, taskId);
     }
 }

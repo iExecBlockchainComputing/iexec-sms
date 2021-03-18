@@ -17,12 +17,10 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.sms.ssl.TwoWaySslClient;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 public class TeeSessionClient {
 
@@ -39,13 +37,11 @@ public class TeeSessionClient {
      * POST /session of CAS requires 2-way SSL authentication
      * */
     public ResponseEntity<String> generateSecureSession(byte[] palaemonFile) {
-        try {
-            return twoWaySslClient.getRestTemplate().postForEntity(teeCasConfiguration.getCasUrl() + "/session",
-                    new HttpEntity<>(palaemonFile), String.class);
-        } catch (Exception e) {
-            log.error("Failed to generateSecureSession [exceptionMessage:{}]", e.getMessage());
-            return ResponseEntity.notFound().build();
-        }
+        String url = teeCasConfiguration.getCasUrl() + "/session";
+        HttpEntity<byte[]> request = new HttpEntity<>(palaemonFile);
+        return twoWaySslClient
+                .getRestTemplate()
+                .postForEntity(url, request, String.class);
     }
 
 }
