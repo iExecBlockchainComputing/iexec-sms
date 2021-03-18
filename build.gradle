@@ -1,13 +1,12 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'java'
+    id 'maven'
+    id 'jacoco'
+    id 'org.springframework.boot' version '2.4.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 }
-
-apply plugin: 'java'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'maven'
-apply plugin: 'jacoco'
 
 group = 'com.iexec.sms'
 sourceCompatibility = 11
@@ -19,7 +18,6 @@ repositories {
     maven {
         url "https://nexus.iex.ec/repository/maven-public/"
     }
-    maven { url "https://jitpack.io" }
 }
 
 configurations {
@@ -27,7 +25,7 @@ configurations {
 }
 
 ext {
-    springCloudVersion = 'Hoxton.SR3'
+    springCloudVersion = '2020.0.1'
 }
 
 dependencyManagement {
@@ -86,6 +84,9 @@ test {
     useJUnitPlatform()
 }
 
+jacoco {
+    toolVersion = "0.8.3"
+}
 build.dependsOn jacocoTestReport
 
 def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
