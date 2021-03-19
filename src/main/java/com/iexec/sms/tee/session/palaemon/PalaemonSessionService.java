@@ -17,6 +17,7 @@
 package com.iexec.sms.tee.session.palaemon;
 
 import com.iexec.common.chain.ChainDeal;
+import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.BytesUtils;
@@ -30,6 +31,8 @@ import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.fingerprint.AppFingerprint;
 import com.iexec.sms.tee.session.fingerprint.PostComputeFingerprint;
+import com.iexec.sms.tee.session.fingerprint.PreComputeFingerprint;
+import com.iexec.sms.tee.session.precompute.PreComputeConfig;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -57,35 +60,45 @@ public class PalaemonSessionService {
     public static final String EMPTY_YML_VALUE = "''";
 
     // Internal values required for setting up a palaemon session
+    // Generic
     private static final String SESSION_ID_PROPERTY = "SESSION_ID";
+    private static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
+    // PreCompute
+    private static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
+    private static final String PRE_COMPUTE_FSPF_KEY = "PRE_COMPUTE_FSPF_KEY";
+    private static final String PRE_COMPUTE_FSPF_TAG = "PRE_COMPUTE_FSPF_TAG";
+    // Compute
     private static final String APP_FSPF_KEY = "APP_FSPF_KEY";
     private static final String APP_FSPF_TAG = "APP_FSPF_TAG";
     private static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     private static final String APP_ARGS = "APP_ARGS";
-    private static final String DATASET_DECRYPTION_KEY = "DATASET_DECRYPTION_KEY";
+    // PostCompute
     private static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
     private static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
     private static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
-    private static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
-    private static final String ENV_PROPERTY = "ENV";
+    // Env
+    private static final String ENV_PROPERTY = "env";
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
 
-    private IexecHubService iexecHubService;
-    private Web3SecretService web3SecretService;
-    private Web2SecretsService web2SecretsService;
-    private TeeChallengeService teeChallengeService;
+    private final IexecHubService iexecHubService;
+    private final Web3SecretService web3SecretService;
+    private final Web2SecretsService web2SecretsService;
+    private final TeeChallengeService teeChallengeService;
+    private final PreComputeConfig preComputeConfig;
 
     public PalaemonSessionService(
             IexecHubService iexecHubService,
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
-            TeeChallengeService teeChallengeService) {
+            TeeChallengeService teeChallengeService,
+            PreComputeConfig preComputeConfig) {
         this.iexecHubService = iexecHubService;
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
+        this.preComputeConfig = preComputeConfig;
     }
 
     // TODO: Read onchain available infos from enclave instead
@@ -100,8 +113,7 @@ public class PalaemonSessionService {
         }
         Map<String, Object> palaemonTokens = new HashMap<>();
         palaemonTokens.put(SESSION_ID_PROPERTY, request.getSessionId());
-        boolean isDatasetRequested = isDatasetRequested(chainDeal);
-        palaemonTokens.put(IS_DATASET_REQUESTED, isDatasetRequested);
+        palaemonTokens.put(IS_DATASET_REQUESTED, isDatasetRequested(chainDeal));
         // pre-compute
         palaemonTokens.putAll(getPreComputePalaemonTokens(request));
         // app
@@ -125,28 +137,33 @@ public class PalaemonSessionService {
     /*
      * Pre-Compute
      */
-    private Map<String, String> getPreComputePalaemonTokens(PalaemonSessionRequest request)
+    Map<String, String> getPreComputePalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
         String taskId = request.getTaskId();
         ChainDeal chainDeal = request.getChainDeal();
-        Map<String, String> tokens = new HashMap<>();
         if (!isDatasetRequested(chainDeal)) {
             log.info("No dataset is requested [taskId:{}]", taskId);
             return Collections.emptyMap();
         }
+        Map<String, String> tokens = new HashMap<>();
+        String fingerprint = preComputeConfig.getFingerprint();
+        PreComputeFingerprint preComputeFingerprint = new PreComputeFingerprint(fingerprint);
+        tokens.put(PRE_COMPUTE_MRENCLAVE, preComputeFingerprint.getMrEnclave());
+        tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
+        tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
         Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
         if (datasetSecret.isEmpty()) {
             throw new Exception("Empty dataset secret - taskId: " + taskId);
         }
-        tokens.put(DATASET_DECRYPTION_KEY, datasetSecret.get().getValue());
+        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY, datasetSecret.get().getValue());
         return tokens;
     }
 
     /*
      * Compute (App)
      */
-    private Map<String, String> getAppPalaemonTokens(PalaemonSessionRequest request)
+    Map<String, String> getAppPalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
         Map<String, String> tokens = new HashMap<>();
         ChainDeal chainDeal = request.getChainDeal();
@@ -168,7 +185,7 @@ public class PalaemonSessionService {
     /*
      * Post-Compute (Result)
      */
-    private Map<String, String> getPostComputePalaemonTokens(PalaemonSessionRequest request)
+    Map<String, String> getPostComputePalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
         String taskId = request.getTaskId();
         ChainDeal chainDeal = request.getChainDeal();
@@ -202,7 +219,7 @@ public class PalaemonSessionService {
         return tokens;
     }
 
-    private Map<String, String> getPostComputeEncryptionTokens(PalaemonSessionRequest request)
+    Map<String, String> getPostComputeEncryptionTokens(PalaemonSessionRequest request)
             throws Exception {
         String taskId = request.getTaskId();
         ChainDeal chainDeal = request.getChainDeal();
@@ -229,7 +246,7 @@ public class PalaemonSessionService {
     // to the beneficiary private storage space waiting for
     // that feature we only allow to push to the requester
     // private storage space
-    private Map<String, String> getPostComputeStorageTokens(PalaemonSessionRequest request)
+    Map<String, String> getPostComputeStorageTokens(PalaemonSessionRequest request)
             throws Exception {
         String taskId = request.getTaskId();
         ChainDeal chainDeal = request.getChainDeal();
@@ -261,7 +278,7 @@ public class PalaemonSessionService {
         return tokens;
     }
 
-    private Map<String, String> getPostComputeSignTokens(PalaemonSessionRequest request)
+    Map<String, String> getPostComputeSignTokens(PalaemonSessionRequest request)
             throws Exception {
         String taskId = request.getTaskId();
         String workerAddress = request.getWorkerAddress();

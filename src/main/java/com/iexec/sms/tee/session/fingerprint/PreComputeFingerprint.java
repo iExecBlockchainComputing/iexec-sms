@@ -16,14 +16,9 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-@Component
 public class PreComputeFingerprint extends SconeFingerprint {
 
-    public PreComputeFingerprint(
-            @Value("${pre-compute.fingerprint}") String fingerprint) {
+    public PreComputeFingerprint(String fingerprint) {
         super(fingerprint);
     }
 }

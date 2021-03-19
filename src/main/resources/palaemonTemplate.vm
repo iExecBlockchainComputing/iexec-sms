@@ -20,11 +20,10 @@ services:
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: -Xmx256m
-      CHAIN_TASK_ID: $CHAIN_TASK_ID
-      DATASET_DECRYPTION_KEY: $DATASET_DECRYPTION_KEY
-      $IEXEC_IN_ENV_PROPERTY: $env.get($IEXEC_IN_ENV_PROPERTY)
-      $IEXEC_OUT_ENV_PROPERTY: $env.get($IEXEC_OUT_ENV_PROPERTY)
-      $IEXEC_DATASET_FILENAME_ENV_PROPERTY: $env.get($IEXEC_DATASET_FILENAME_ENV_PROPERTY)
+      IEXEC_TASK_ID: $env.get("IEXEC_TASK_ID")
+      IEXEC_IN: $env.get("IEXEC_IN")
+      IEXEC_DATASET_FILENAME: $env.get("IEXEC_DATASET_FILENAME")
+      IEXEC_DATASET_KEY: $IEXEC_DATASET_KEY
 #end
 
   #*
@@ -80,7 +79,6 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_in
-        path: $env.get($IEXEC_IN_ENV_PROPERTY)
 #end
 
   #* application *#
@@ -89,9 +87,7 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_in
-        path: $env.get($IEXEC_IN_ENV_PROPERTY)
       - name: iexec_out
-        path: $env.get($IEXEC_OUT_ENV_PROPERTY)
 
   #* post-compute *#
   - name: post-compute-image
@@ -99,9 +95,7 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_out
-        path: $env.get($IEXEC_OUT_ENV_PROPERTY)
       - name: scone
-        path: /scone
 
 #**
   Volumes that will be protected
@@ -109,7 +103,8 @@ images:
 *#
 volumes:
   - name: iexec_in
-  #* TODO define the path once here *#
-  #* path: $env.get($IEXEC_IN_ENV_PROPERTY) *#
+    path: $env.get("IEXEC_IN")
   - name: iexec_out
+    path: $env.get("IEXEC_OUT")
   - name: scone
+    path: /scone

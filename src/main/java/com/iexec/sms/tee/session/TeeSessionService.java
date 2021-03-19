@@ -78,7 +78,7 @@ public class TeeSessionService {
         }
         log.info("Session yml is ready [taskId:{}]", taskId);
         if (shouldDisplayDebugSession){
-            log.info("Session content [taskId:{}]\n{}", taskId, sessionYmlAsString);
+            log.info("Session yml content [taskId:{}]\n{}", taskId, sessionYmlAsString);
         }
         boolean isSessionGenerated = teeSessionClient
                 .generateSecureSession(sessionYmlAsString.getBytes())

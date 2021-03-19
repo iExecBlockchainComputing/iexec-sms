@@ -60,18 +60,19 @@ public class TeeController {
      */
     @PostMapping("/challenges/{chainTaskId}")
     public ResponseEntity<String> generateTeeChallenge(@PathVariable String chainTaskId) {
-        Optional<TeeChallenge> optionalExecutionChallenge = teeChallengeService.getOrCreate(chainTaskId, false);
-
-        return optionalExecutionChallenge.map(teeChallenge -> ResponseEntity.ok(teeChallenge.getCredentials().getAddress()))
+        Optional<TeeChallenge> executionChallenge =
+                teeChallengeService.getOrCreate(chainTaskId, false);
+        return executionChallenge
+                .map(teeChallenge -> ResponseEntity
+                        .ok(teeChallenge.getCredentials().getAddress()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     /**
-     * The worker calls this endpoint to ask for
-     * a TEE session. If the session is created
-     * the worker passes on the sessionId to the
-     * enclave so the latter can talk to the CAS
-     * and get the needed secrets.
+     * The worker calls this endpoint to ask for a TEE session.
+     * If the session is created the worker passes on the sessionId
+     * to the enclave so the latter can talk to the CAS and get
+     * the needed secrets.
      *
      * @return
      *      200 OK with the session id if success,
@@ -79,34 +80,32 @@ public class TeeController {
      *      500 INTERNAL_SERVER_ERROR otherwise.
      */
     @PostMapping("/sessions")
-    public ResponseEntity<String> generateTeeSession(@RequestHeader("Authorization") String authorization,
-                                                     @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
+    public ResponseEntity<String> generateTeeSession(
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
         String workerAddress = workerpoolAuthorization.getWorkerWallet();
         String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
         if (!authorizationService.isAuthorizedOnExecution(workerpoolAuthorization, true)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
         String taskId = workerpoolAuthorization.getChainTaskId();
         workerAddress = Keys.toChecksumAddress(workerAddress);
         String attestingEnclave = workerpoolAuthorization.getEnclaveChallenge();
-
-        ResponseEntity<String> response;
+        log.info("TEE session request [taskId:{}, workerAddress:{}]",
+                taskId, workerAddress);
         try {
             String sessionId = teeSessionService
                     .generateTeeSession(taskId, workerAddress, attestingEnclave);
-            response = sessionId.isEmpty()
+            return sessionId.isEmpty()
                     ? ResponseEntity.notFound().build()
                     : ResponseEntity.ok(sessionId);
         } catch(Exception e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
-            response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return response;
     }
 }
