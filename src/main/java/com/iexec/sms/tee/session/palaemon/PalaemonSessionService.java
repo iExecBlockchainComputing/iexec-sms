@@ -61,21 +61,21 @@ public class PalaemonSessionService {
 
     // Internal values required for setting up a palaemon session
     // Generic
-    private static final String SESSION_ID_PROPERTY = "SESSION_ID";
-    private static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
+    static final String SESSION_ID_PROPERTY = "SESSION_ID";
+    static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
     // PreCompute
-    private static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
-    private static final String PRE_COMPUTE_FSPF_KEY = "PRE_COMPUTE_FSPF_KEY";
-    private static final String PRE_COMPUTE_FSPF_TAG = "PRE_COMPUTE_FSPF_TAG";
+    static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
+    static final String PRE_COMPUTE_FSPF_KEY = "PRE_COMPUTE_FSPF_KEY";
+    static final String PRE_COMPUTE_FSPF_TAG = "PRE_COMPUTE_FSPF_TAG";
     // Compute
-    private static final String APP_FSPF_KEY = "APP_FSPF_KEY";
-    private static final String APP_FSPF_TAG = "APP_FSPF_TAG";
-    private static final String APP_MRENCLAVE = "APP_MRENCLAVE";
-    private static final String APP_ARGS = "APP_ARGS";
+    static final String APP_FSPF_KEY = "APP_FSPF_KEY";
+    static final String APP_FSPF_TAG = "APP_FSPF_TAG";
+    static final String APP_MRENCLAVE = "APP_MRENCLAVE";
+    static final String APP_ARGS = "APP_ARGS";
     // PostCompute
-    private static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
-    private static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
-    private static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
+    static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
+    static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
+    static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     // Env
     private static final String ENV_PROPERTY = "env";
 
@@ -107,10 +107,10 @@ public class PalaemonSessionService {
     // required inside palaemon.yml)
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
         String taskId = request.getTaskId();
-        ChainDeal chainDeal = request.getChainDeal();
         if (this.palaemonTemplateFilePath.isEmpty()) {
             throw new Exception("Empty Palaemon template filepath - taskId: " + taskId);
         }
+        ChainDeal chainDeal = request.getChainDeal();
         Map<String, Object> palaemonTokens = new HashMap<>();
         palaemonTokens.put(SESSION_ID_PROPERTY, request.getSessionId());
         palaemonTokens.put(IS_DATASET_REQUESTED, isDatasetRequested(chainDeal));
@@ -122,7 +122,7 @@ public class PalaemonSessionService {
         palaemonTokens.putAll(getPostComputePalaemonTokens(request));
         // env variables
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
-        Map<String, String> env = IexecEnvUtils.getContainerEnvMap(taskDescription);
+        Map<String, String> env = IexecEnvUtils.getComputeStageEnvMap(taskDescription);
         // All env values should be quoted (even integers) otherwise
         // the CAS fails to parse the session's yaml with the
         // message ("invalid type: integer `0`, expected a string")
@@ -151,6 +151,13 @@ public class PalaemonSessionService {
         tokens.put(PRE_COMPUTE_MRENCLAVE, preComputeFingerprint.getMrEnclave());
         tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
         tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
+        // set dataset checksum
+        if (StringUtils.isBlank(chainDeal.getChainDataset().getChecksum())) {
+            throw new Exception("Empty dataset checksum - taskId: " + taskId);
+        }
+        tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY,
+                chainDeal.getChainDataset().getChecksum());
+        // set dataset secret
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
         Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
         if (datasetSecret.isEmpty()) {
