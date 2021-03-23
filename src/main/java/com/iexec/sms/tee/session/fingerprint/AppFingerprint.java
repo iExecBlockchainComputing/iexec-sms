@@ -31,7 +31,7 @@ public class AppFingerprint extends SconeFingerprint {
         super(fingerprint);
         List<String> parts = getFingerprintParts(fingerprint, 4);
         if (parts.isEmpty()) {
-            throw new IllegalStateException("No entrypoint in app fingerprint: " +
+            throw new IllegalArgumentException("No entrypoint in app fingerprint: " +
                     fingerprint);
         }
         this.entrypoint = parts.get(3);
