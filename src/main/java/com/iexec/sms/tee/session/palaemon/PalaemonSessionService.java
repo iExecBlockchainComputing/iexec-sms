@@ -20,8 +20,8 @@ import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.BytesUtils;
-import com.iexec.common.utils.EnvUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
@@ -53,8 +53,8 @@ import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENC
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
 
-@Service
 @Slf4j
+@Service
 public class PalaemonSessionService {
 
     public static final String EMPTY_YML_VALUE = "''";
@@ -122,7 +122,7 @@ public class PalaemonSessionService {
         palaemonTokens.putAll(getPostComputePalaemonTokens(request));
         // env variables
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
-        Map<String, String> env = EnvUtils.getContainerEnvMap(taskDescription);
+        Map<String, String> env = IexecEnvUtils.getContainerEnvMap(taskDescription);
         // All env values should be quoted (even integers) otherwise
         // the CAS fails to parse the session's yaml with the
         // message ("invalid type: integer `0`, expected a string")
