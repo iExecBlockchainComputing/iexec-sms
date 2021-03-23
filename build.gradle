@@ -18,6 +18,9 @@ repositories {
     maven {
         url "https://nexus.iex.ec/repository/maven-public/"
     }
+    maven {
+        url "https://jitpack.io"
+    }
 }
 
 configurations {
@@ -38,6 +41,9 @@ dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
     //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
+
+    // lombok
+    annotationProcessor "org.projectlombok:lombok:1.18.2"
 
     // spring
     implementation "org.springframework.boot:spring-boot-starter-web"
