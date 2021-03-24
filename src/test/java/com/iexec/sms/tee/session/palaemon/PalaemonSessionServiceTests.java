@@ -30,7 +30,7 @@ import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.precompute.PreComputeConfig;
+import com.iexec.sms.precompute.PreComputeConfig;
 import com.iexec.sms.utils.EthereumCredentials;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

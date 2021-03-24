@@ -56,7 +56,7 @@ scone:
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
 
 pre-compute:
-  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:todo}
+  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:nexus.iex.ec/tee-worker-pre-compute:dev}
   fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:todo}
 
 logging:

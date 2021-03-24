@@ -1,4 +1,4 @@
-package com.iexec.sms.tee.session.precompute;
+package com.iexec.sms.precompute;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,7 +7,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class PreComputeConfig {
 
-    @Value("${pre-compute.fingerprint}")
     @Getter
+    @Value("${pre-compute.image}")
+    String image;
+
+    @Getter
+    @Value("${pre-compute.fingerprint}")
     String fingerprint;
 }
