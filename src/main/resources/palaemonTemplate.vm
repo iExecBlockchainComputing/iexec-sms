@@ -80,6 +80,7 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_in
+        path: $env.get("IEXEC_IN")
 #end
 
   #* application *#
@@ -88,7 +89,9 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_in
+        path: $env.get("IEXEC_IN")
       - name: iexec_out
+        path: $env.get("IEXEC_OUT")
 
   #* post-compute *#
   - name: post-compute-image
@@ -96,7 +99,9 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_out
+        path: $env.get("IEXEC_OUT")
       - name: scone
+        path: /scone
 
 #**
   Volumes that will be protected
@@ -104,8 +109,5 @@ images:
 *#
 volumes:
   - name: iexec_in
-    path: $env.get("IEXEC_IN")
   - name: iexec_out
-    path: $env.get("IEXEC_OUT")
   - name: scone
-    path: /scone
