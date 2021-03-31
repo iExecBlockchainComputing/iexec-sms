@@ -21,7 +21,7 @@ import com.iexec.common.chain.ChainTask;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.BytesUtils;
-import com.iexec.common.utils.EnvUtils;
+import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
@@ -152,7 +152,7 @@ public class TeeSessionHelper {
         }
         // env variables
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
-        Map<String, String> env = EnvUtils.getContainerEnvMap(taskDescription);
+        Map<String, String> env = IexecEnvUtils.getComputeStageEnvMap(taskDescription);
         /*
          * All values should be quoted (even integers) otherwise
          * the CAS fails to parse the session's yaml with the
