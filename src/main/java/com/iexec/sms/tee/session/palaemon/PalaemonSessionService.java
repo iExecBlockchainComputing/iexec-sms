@@ -106,7 +106,7 @@ public class PalaemonSessionService {
     // call from enclave to eth node (only ethereum node address
     // required inside palaemon.yml)
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
-        String taskId = request.getTaskId();
+        String taskId = request.getChainTaskId();
         if (this.palaemonTemplateFilePath.isEmpty()) {
             throw new Exception("Empty Palaemon template filepath - taskId: " + taskId);
         }
@@ -139,7 +139,7 @@ public class PalaemonSessionService {
      */
     Map<String, String> getPreComputePalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getTaskId();
+        String taskId = request.getChainTaskId();
         ChainDeal chainDeal = request.getChainDeal();
         if (!isDatasetRequested(chainDeal)) {
             log.info("No dataset is requested [taskId:{}]", taskId);
@@ -175,7 +175,7 @@ public class PalaemonSessionService {
         Map<String, String> tokens = new HashMap<>();
         ChainDeal chainDeal = request.getChainDeal();
         if (chainDeal.getChainApp() == null) {
-            throw new Exception("Null chain app in deal - taskId: " + request.getTaskId());
+            throw new Exception("Null chain app in deal - taskId: " + request.getChainTaskId());
         }
         AppFingerprint appFingerprint = new AppFingerprint(chainDeal.getChainApp().getFingerprint());
         tokens.put(APP_FSPF_KEY, appFingerprint.getFspfKey());
@@ -194,7 +194,7 @@ public class PalaemonSessionService {
      */
     Map<String, String> getPostComputePalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getTaskId();
+        String taskId = request.getChainTaskId();
         ChainDeal chainDeal = request.getChainDeal();
         Map<String, String> tokens = new HashMap<>();
         if (chainDeal.getParams() == null) {
@@ -228,7 +228,7 @@ public class PalaemonSessionService {
 
     Map<String, String> getPostComputeEncryptionTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getTaskId();
+        String taskId = request.getChainTaskId();
         ChainDeal chainDeal = request.getChainDeal();
         Map<String, String> tokens = new HashMap<>();
         boolean shouldEncrypt = chainDeal.getParams().isIexecResultEncryption();
@@ -255,7 +255,7 @@ public class PalaemonSessionService {
     // private storage space
     Map<String, String> getPostComputeStorageTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getTaskId();
+        String taskId = request.getChainTaskId();
         ChainDeal chainDeal = request.getChainDeal();
         Map<String, String> tokens = new HashMap<>();
         boolean isCallbackRequested = isCallbackRequested(chainDeal);
@@ -287,7 +287,7 @@ public class PalaemonSessionService {
 
     Map<String, String> getPostComputeSignTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getTaskId();
+        String taskId = request.getChainTaskId();
         String workerAddress = request.getWorkerAddress();
         Map<String, String> tokens = new HashMap<>();
         if (workerAddress.isEmpty()) {

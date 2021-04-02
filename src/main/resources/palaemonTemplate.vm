@@ -21,7 +21,8 @@ services:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: -Xmx256m
       IEXEC_TASK_ID: $env.get("IEXEC_TASK_ID")
-      IEXEC_IN: $env.get("IEXEC_IN")
+      IEXEC_PRE_COMPUTE_IN: /pre-compute-in
+      IEXEC_PRE_COMPUTE_OUT: /iexec_in
       IEXEC_DATASET_FILENAME: $env.get("IEXEC_DATASET_FILENAME")
       IEXEC_DATASET_KEY: $IEXEC_DATASET_KEY
       IEXEC_DATASET_CHECKSUM: $IEXEC_DATASET_CHECKSUM
@@ -80,7 +81,7 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_in
-        path: $env.get("IEXEC_IN")
+        path: /iexec_in
 #end
 
   #* application *#
@@ -89,9 +90,9 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_in
-        path: $env.get("IEXEC_IN")
+        path: /iexec_in
       - name: iexec_out
-        path: $env.get("IEXEC_OUT")
+        path: /iexec_out
 
   #* post-compute *#
   - name: post-compute-image
@@ -99,8 +100,8 @@ images:
     tags: [demo]
     volumes:
       - name: iexec_out
-        path: $env.get("IEXEC_OUT")
-      - name: scone
+        path: /iexec_out
+      - name: post-compute-tmp
         path: /scone
 
 #**
@@ -110,4 +111,4 @@ images:
 volumes:
   - name: iexec_in
   - name: iexec_out
-  - name: scone
+  - name: post-compute-tmp

@@ -193,7 +193,7 @@ public class PalaemonSessionServiceTests {
 
     private PalaemonSessionRequest createSessionRequest() {
         return PalaemonSessionRequest.builder()
-                .taskId(TASK_ID)
+                .chainTaskId(TASK_ID)
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
                 .chainDeal(createChainDeal())

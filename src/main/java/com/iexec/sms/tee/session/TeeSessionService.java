@@ -66,7 +66,7 @@ public class TeeSessionService {
         String sessionId = createSessionId(taskId);
         PalaemonSessionRequest request = PalaemonSessionRequest.builder()
                 .sessionId(sessionId)
-                .taskId(taskId)
+                .chainTaskId(taskId)
                 .workerAddress(workerAddress)
                 .enclaveChallenge(teeChallenge)
                 .chainDeal(chainDeal.get())

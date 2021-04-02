@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class PalaemonSessionRequest {
 
     private String sessionId;
-    private String taskId;
+    private String chainTaskId;
     private String workerAddress;
     private String enclaveChallenge;
     private ChainDeal chainDeal;
