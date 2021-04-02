@@ -1,46 +1,53 @@
-# SCONE BASE
-#FROM sconecuratedimages/iexec:openjdk11-alpine3.10-v1.0.0
-FROM nexus.iex.ec/sconecuratedimages-iexec:openjdk11-alpine3.10-test
-#FROM sconecuratedimages/iexec:openjdk11-alpine3.10-test
-COPY --from=sconecuratedimages/iexec:cli-alpine /opt/scone/scone-cli /opt/scone/scone-cli
-COPY --from=sconecuratedimages/iexec:cli-alpine /usr/local/bin/scone /usr/local/bin/scone
-COPY --from=sconecuratedimages/iexec:cli-alpine /opt/scone/bin /opt/scone/bin
-RUN apk add bash --no-cache
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repositories \
-    && apk update
+FROM nexus.iex.ec/sconecuratedimages-apps-java:jdk-alpine-scone3.0
 
-COPY build/resources/main/entrypoint.sh /app/entrypoint.sh
-COPY build/resources/main/palaemonTemplate.vm /palaemonTemplate.vm
-COPY build/libs/iexec-sms-@projectversion@.jar /app/iexec-sms.jar
-COPY src/main/resources/ssl-keystore-dev.p12 /ssl-keystore-dev.p12
+ARG JAR_NAME
 
-RUN chmod +x /app/entrypoint.sh
+COPY build/libs/$JAR_NAME /app/iexec-sms.jar
+COPY build/resources/main/palaemonTemplate.vm /app/palaemonTemplate.vm
+COPY src/main/resources/ssl-keystore-dev.p12 /app/ssl-keystore-dev.p12
 
-#### Docker ENV vars should be placed in palaemon conf for Scone ###
+# #### Docker ENV vars should be placed in palaemon conf for Scone ###
 
-# SCONE FS PROTECTION
-RUN SCONE_MODE=sim SCONE_HEAP=128M		                                    \
-	&& mkdir conf							                                \
-	&& scone fspf create fspf.pb 					                        \
-	&& scone fspf addr fspf.pb /  --not-protected --kernel /                \
-	&& scone fspf addr fspf.pb /usr --authenticated --kernel /usr           \
-	&& scone fspf addf fspf.pb /usr /usr 			                        \
-	&& scone fspf addr fspf.pb /bin --authenticated --kernel /bin           \
-	&& scone fspf addf fspf.pb /bin /bin 			                        \
-	&& scone fspf addr fspf.pb /lib --authenticated --kernel /lib           \
-	&& scone fspf addf fspf.pb /lib /lib 			                        \
-	&& scone fspf addr fspf.pb /etc/ssl --authenticated --kernel /etc/ssl   \
-	&& scone fspf addf fspf.pb /etc/ssl /etc/ssl 			                \
-	&& scone fspf addr fspf.pb /sbin --authenticated --kernel /sbin         \
-	&& scone fspf addf fspf.pb /sbin /sbin 			            	        \
-	&& scone fspf addr fspf.pb /app --authenticated --kernel /app 	        \
-	&& scone fspf addf fspf.pb /app /app 				                    \
-	&& scone fspf encrypt ./fspf.pb > /conf/keytag 			                \
-    && MRENCLAVE="$(SCONE_HASH=1 SCONE_HEAP=3G java)"			            \
-	&& FSPF_TAG=$(cat conf/keytag | awk '{print $9}') 	                    \
-	&& FSPF_KEY=$(cat conf/keytag | awk '{print $11}')		                \
-	&& echo "<MRENCLAVE>$MRENCLAVE</MRENCLAVE>"			                    \
-	&& echo "<FSPF_KEY>$FSPF_KEY</FSPF_KEY>"			                    \
-	&& echo "<FSPF_TAG>$FSPF_TAG</FSPF_TAG>"
+RUN SCONE_MODE=sim SCONE_HEAP=128M && \
+    # This path must match the one in palaemon session.
+    FSPF_PB_FILE=/fspf.pb && \
+    # This path can be changed safely.
+    FSPF_PB_FILE_KEYTAG=/fspf.keytag && \
+    # This path can be change safely.
+    FINGERPRINT_FILE=/fingerprint.txt && \
+    # This value must match the heap size value
+    # provided at runtime.
+    RUNTIME_HEAP_SIZE=3G && \
+    # Save the current file system state in fspf.pb file.
+    scone fspf create ${FSPF_PB_FILE}                                           && \
+    scone fspf addr ${FSPF_PB_FILE} /  --not-protected --kernel /               && \
+    scone fspf addr ${FSPF_PB_FILE} /usr --authenticated --kernel /usr          && \
+    scone fspf addf ${FSPF_PB_FILE} /usr /usr                                   && \
+    scone fspf addr ${FSPF_PB_FILE} /bin --authenticated --kernel /bin          && \
+    scone fspf addf ${FSPF_PB_FILE} /bin /bin                                   && \
+    scone fspf addr ${FSPF_PB_FILE} /lib --authenticated --kernel /lib          && \
+    scone fspf addf ${FSPF_PB_FILE} /lib /lib                                   && \
+    scone fspf addr ${FSPF_PB_FILE} /etc/ssl --authenticated --kernel /etc/ssl  && \
+    scone fspf addf ${FSPF_PB_FILE} /etc/ssl /etc/ssl                           && \
+    scone fspf addr ${FSPF_PB_FILE} /sbin --authenticated --kernel /sbin        && \
+    scone fspf addf ${FSPF_PB_FILE} /sbin /sbin                                 && \
+    scone fspf addr ${FSPF_PB_FILE} /app --authenticated --kernel /app          && \
+    scone fspf addf ${FSPF_PB_FILE} /app /app                                   && \
+    # Encrypt fspf.pb file with a randomly generated key
+    scone fspf encrypt ${FSPF_PB_FILE} > ${FSPF_PB_FILE_KEYTAG} && \
+    # Get the runtime mrenclave
+    MRENCLAVE="$(SCONE_HASH=1 SCONE_HEAP=${RUNTIME_HEAP_SIZE} java)" && \
+    # Get fspf.pb file tag
+    FSPF_TAG=$(awk '{print $9}' ${FSPF_PB_FILE_KEYTAG}) && \
+    # Get fspf.pb file key
+    FSPF_KEY=$(awk '{print $11}' ${FSPF_PB_FILE_KEYTAG}) && \
+    # The complete fingerprint is composed of 3 parts
+    FINGERPRINT="${FSPF_KEY}|${FSPF_TAG}|${MRENCLAVE}" && \
+    echo ${FINGERPRINT} > ${FINGERPRINT_FILE} && \
+    echo "<MRENCLAVE>${MRENCLAVE}</MRENCLAVE>" && \
+    echo "<FSPF_KEY>${FSPF_KEY}</FSPF_KEY>" && \
+    echo "<FSPF_TAG>${FSPF_TAG}</FSPF_TAG>" && \
+    echo "<FINGERPRINT>${FINGERPRINT}</FINGERPRINT>"
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+# /!\ This should match the "command" entry in the palaemon config
+ENTRYPOINT [ "/bin/sh", "-c", "java -jar /app/iexec-sms.jar" ]

@@ -133,7 +133,8 @@ compileJava.dependsOn createVersion
 
 def imageName = "nexus.iex.ec/iexec-sms"
 def trustedDockerfileName = "Dockerfile"
-def untrustedDockerfileName = "Dockerfile-untrusted"
+def untrustedDockerfileName = "Dockerfile.untrusted"
+def jarName = "iexec-sms-${version}.jar"
 
 project.ext.getDockerImageNameFull = {
     def imageNameWithVersion = imageName + ":${version}"
@@ -148,16 +149,12 @@ project.ext.getDockerImageNameShortCommit = {
     return imageName + ":" + gitShortCommit
 }
 
-task prepareDockerFile(type: Copy) {
-    from 'src/main/resources/'
-    into 'build/resources/main/'
-    filter(ReplaceTokens, tokens: [projectversion: "${version}".toString()])
-}
-
 task buildImage(type: Exec) {
     description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c", "docker image build -f build/resources/main/" + untrustedDockerfileName + " -t " + getDockerImageNameFull() + " . &&" +  // scone
-            "docker tag " + getDockerImageNameFull() + " " + imageName + ":dev")
+    commandLine("sh", "-c",
+            "docker image build -f build/resources/main/${untrustedDockerfileName}" + 
+            " -t ${getDockerImageNameFull()} --build-arg JAR_NAME=${jarName} . &&" +
+            "docker tag ${getDockerImageNameFull()} ${imageName}:dev")
     standardOutput = new ByteArrayOutputStream()
 
     ext.output = {
@@ -165,7 +162,15 @@ task buildImage(type: Exec) {
         return standardOutput.toString()
     }
 }
-buildImage.dependsOn prepareDockerFile
+
+task buildTrustedImage(type: Exec) {
+    def trustedImageName = getDockerImageNameFull() + "-trusted"
+    description 'Building iexec-sms Docker image'
+    commandLine("sh", "-c",
+            "docker image build -f build/resources/main/${trustedDockerfileName} " + 
+            "-t ${trustedImageName} --build-arg JAR_NAME=${jarName} --no-cache . && " +
+            "docker tag ${trustedImageName} ${imageName}:dev-trusted")
+}
 
 task templatePalaemon {
     String smsMrEnclave

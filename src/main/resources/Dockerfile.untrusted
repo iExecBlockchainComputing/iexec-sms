@@ -1,0 +1,16 @@
+FROM openjdk:11.0.7-jre-slim
+
+ARG JAR_NAME
+
+COPY build/libs/$JAR_NAME                       /app/iexec-sms.jar
+COPY build/resources/main/palaemonTemplate.vm   /app/palaemonTemplate.vm
+COPY src/main/resources/ssl-keystore-dev.p12    /app/ssl-keystore-dev.p12
+
+ENV IEXEC_PALAEMON_TEMPLATE=/app/palaemonTemplate.vm
+ENV IEXEC_SMS_SSL_KEYSTORE=/app/ssl-keystore-dev.p12
+ENV IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH=/scone/iexec-sms-aes.key
+ENV IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS=http://chain:8545
+ENV IEXEC_SCONE_CAS_HOST=iexec-cas
+ENV IEXEC_SMS_H2_URL=jdbc:h2:file:/scone/sms-h2
+
+ENTRYPOINT [ "/bin/sh", "-c", "java -jar /app/iexec-sms.jar" ]
