@@ -39,7 +39,7 @@ public class Web3Secret extends Secret {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    Web3Secret(String address, String value) {
+    public Web3Secret(String address, String value) {
         super(address, value);
     }
 }

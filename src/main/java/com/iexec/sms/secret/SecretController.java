@@ -56,7 +56,7 @@ public class SecretController {
     // Web3
 
     @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
-    public ResponseEntity isWeb3SecretSet(@RequestParam String secretAddress) {
+    public ResponseEntity<?> isWeb3SecretSet(@RequestParam String secretAddress) {
         Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -103,7 +103,7 @@ public class SecretController {
     // Web2
 
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
-    public ResponseEntity isWeb2SecretSet(@RequestParam String ownerAddress,
+    public ResponseEntity<?> isWeb2SecretSet(@RequestParam String ownerAddress,
                                           @RequestParam String secretName) {
         Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, false);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
@@ -175,7 +175,7 @@ public class SecretController {
      * Server-side signature of a messageHash
      * */
     @PostMapping("/delegate/signature")
-    private ResponseEntity signMessageHashOnServerSide(@RequestParam String messageHash,
+    private ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
                                                        @RequestBody String privateKey) {
         Signature signature = signMessageHashAndGetSignature(messageHash, privateKey);
 

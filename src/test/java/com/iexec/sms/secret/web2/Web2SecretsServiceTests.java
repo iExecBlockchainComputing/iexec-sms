@@ -49,7 +49,7 @@ public class Web2SecretsServiceTests {
 
     @BeforeEach
     public void beforeEach() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test

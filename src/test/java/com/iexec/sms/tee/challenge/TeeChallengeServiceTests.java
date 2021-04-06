@@ -53,7 +53,7 @@ public class TeeChallengeServiceTests {
 
     @BeforeEach
     public void beforeEach() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
     }
 
     private TeeChallenge getEncryptedTeeChallengeStub() throws Exception {

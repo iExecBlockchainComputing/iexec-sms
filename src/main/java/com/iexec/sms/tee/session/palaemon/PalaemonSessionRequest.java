@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.palaemon;
 
+import com.iexec.common.chain.ChainDeal;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-@Component
-@Getter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TeeSessionHelperConfiguration {
+public class PalaemonSessionRequest {
 
-    @Value("${scone.cas.palaemon}")
-    private String palaemonTemplate;
+    private String sessionId;
+    private String chainTaskId;
+    private String workerAddress;
+    private String enclaveChallenge;
+    private ChainDeal chainDeal;
 }

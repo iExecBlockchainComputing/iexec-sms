@@ -2,6 +2,35 @@ name: $SESSION_ID
 digest: create
 
 services:
+
+  #*
+    Pre-compute enclave.
+    Only when dataset is requested.
+  *#
+#if ($IS_DATASET_REQUESTED)
+  - name: pre-compute
+    image_name: pre-compute-image
+    mrenclaves: [$PRE_COMPUTE_MRENCLAVE]
+    tags: [demo]
+    pwd: /
+    command: java -jar /app/tee-worker-pre-compute.jar
+    fspf_path: /fspf.pb
+    fspf_key: $PRE_COMPUTE_FSPF_KEY
+    fspf_tag: $PRE_COMPUTE_FSPF_TAG
+    environment:
+      LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
+      JAVA_TOOL_OPTIONS: -Xmx256m
+      IEXEC_TASK_ID: $env.get("IEXEC_TASK_ID")
+      IEXEC_PRE_COMPUTE_IN: /pre-compute-in
+      IEXEC_PRE_COMPUTE_OUT: /iexec_in
+      IEXEC_DATASET_FILENAME: $env.get("IEXEC_DATASET_FILENAME")
+      IEXEC_DATASET_KEY: $IEXEC_DATASET_KEY
+      IEXEC_DATASET_CHECKSUM: $IEXEC_DATASET_CHECKSUM
+#end
+
+  #*
+    Application enclave
+  *#
   - name: app
     image_name: app-image
     mrenclaves: [$APP_MRENCLAVE]
@@ -16,6 +45,9 @@ services:
       $key: '$env.get($key)'
 #end
 
+  #* 
+    Post-compute enclave
+  *#
   - name: post-compute
     image_name: post-compute-image
     mrenclaves: [$POST_COMPUTE_MRENCLAVE]
@@ -38,31 +70,45 @@ services:
       RESULT_SIGN_WORKER_ADDRESS: $RESULT_SIGN_WORKER_ADDRESS
       RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY: $RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY
 
+#**
+  Images used by each service
+*#
 images:
+  #* pre-compute. Only when dataset is requested *#
+#if ($IS_DATASET_REQUESTED)
+  - name: pre-compute-image
+    mrenclaves: [$PRE_COMPUTE_MRENCLAVE]
+    tags: [demo]
+    volumes:
+      - name: iexec_in
+        path: /iexec_in
+#end
+
+  #* application *#
   - name: app-image
     mrenclaves: [$APP_MRENCLAVE]
     tags: [demo]
     volumes:
-#if ($IS_DATASET_REQUESTED)
       - name: iexec_in
-        path: $env.get("IEXEC_IN")
-#end
+        path: /iexec_in
       - name: iexec_out
-        path: $env.get("IEXEC_OUT")
+        path: /iexec_out
+
+  #* post-compute *#
   - name: post-compute-image
     mrenclaves: [$POST_COMPUTE_MRENCLAVE]
     tags: [demo]
     volumes:
       - name: iexec_out
-        path: $env.get("IEXEC_OUT")
-      - name: scone
+        path: /iexec_out
+      - name: post-compute-tmp
         path: /scone
 
+#**
+  Volumes that will be protected
+  for each service.
+*#
 volumes:
-#if ($IS_DATASET_REQUESTED)
   - name: iexec_in
-    fspf_tag: $DATA_FSPF_TAG
-    fspf_key: $DATA_FSPF_KEY
-#end
   - name: iexec_out
-  - name: scone
+  - name: post-compute-tmp

@@ -16,15 +16,9 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import lombok.Builder;
-import lombok.Data;
+public class PreComputeFingerprint extends SconeFingerprint {
 
-
-@Data
-@Builder
-public class DatasetFingerprint {
-
-    String fspfKey;
-    String fspfTag;
-
+    public PreComputeFingerprint(String fingerprint) {
+        super(fingerprint);
+    }
 }

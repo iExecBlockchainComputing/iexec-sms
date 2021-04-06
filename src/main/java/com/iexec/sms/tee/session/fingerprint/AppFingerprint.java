@@ -16,17 +16,24 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
+
+import java.util.List;
 
 
-@Data
+@Getter
 @Builder
-public class AppFingerprint {
+public class AppFingerprint extends SconeFingerprint {
 
-    private String fspfKey;
-    private String fspfTag;
-    private String mrEnclave;
     private String entrypoint;
 
+    public AppFingerprint(String fingerprint) {
+        super(fingerprint);
+        List<String> parts = getFingerprintParts(fingerprint, 4);
+        if (parts.isEmpty()) {
+            throw new IllegalArgumentException("No entrypoint in app fingerprint: " +
+                    fingerprint);
+        }
+        this.entrypoint = parts.get(3);
+    }
 }
