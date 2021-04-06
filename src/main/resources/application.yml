@@ -55,10 +55,10 @@ scone:
     port: ${IEXEC_SCONE_CAS_PORT:8081}
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
 
-# TODO /!\ remove the option of env variable.
+# TODO /!\ remove the option of env variable for releases.
 pre-compute:
-  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:nexus.iex.ec/tee-worker-pre-compute:dev}
-  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:41ebee046284b815265babf52b7779587d1dc6a180f7c1194cfac170d3a52299|b9009b686e7660d765588144d5aaa52c|13076027fc67accba753a3ed2edf03227dfd013b450d68833a5589ec44132100|a5681b7b4c77f284880c95f194c8db17929512cacae021e23cd698fe1100784e}
+  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:nexus.iex.ec/tee-worker-pre-compute:0aed4dc}
+  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:11c162ac65380da1fc8713495f7dae71cba3726d90908854be53dde3367bb19a|1d99a3637aabf0aeedeced36fa36205f|13076027fc67accba753a3ed2edf03227dfd013b450d68833a5589ec44132100}
 
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
