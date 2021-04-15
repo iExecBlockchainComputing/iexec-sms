@@ -27,6 +27,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import java.util.Objects;
+
 @Data
 @Getter
 @AllArgsConstructor
@@ -53,6 +55,22 @@ public class Secret {
     public void setValue(String value, boolean isEncryptedValue) {
         this.value = value;
         this.isEncryptedValue = isEncryptedValue;
+    }
+
+    /**
+     * Get the secret value without possible leading or trailing
+     * newline characters. This should be used when putting
+     * the secret in the palaemon session. We decided to handle
+     * this specific case because it has a good probability to occur
+     * (when reading the secret from a file and uploading it to the
+     * SMS without any trimming) and it can break the workflow even
+     * though everything is correctly setup.
+     * 
+     * @return trimmed secret value
+     */
+    public String getTrimmedValue() {
+        Objects.requireNonNull(this.value, "Secret value must not be null");
+        return this.value.trim();
     }
 }
 

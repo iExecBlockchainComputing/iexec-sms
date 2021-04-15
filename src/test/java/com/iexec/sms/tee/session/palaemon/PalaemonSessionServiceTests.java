@@ -58,7 +58,10 @@ public class PalaemonSessionServiceTests {
     private static final String[] PRE_COMPUTE_FINGERPRINT_PARTS =
     PRE_COMPUTE_FINGERPRINT.split("\\|");
     private static final String DATASET_ID = "datasetId";
+    private static final String DATASET_ADDRESS = "0xDatasetAddress";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
+    // keys with leading/trailing \n should not break the workflow
+    private static final String DATASET_KEY = "\nkey\n";
     // app
     private static final String APP_ID = "appId";
     private static final String APP_FINGERPRINT = "fspfKey1|fspfTag1|mrEnclave1|entryPoint";
@@ -100,7 +103,7 @@ public class PalaemonSessionServiceTests {
     public void shouldGetPreComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         when(preComputeConfig.getFingerprint()).thenReturn(PRE_COMPUTE_FINGERPRINT);
-        Web3Secret secret = new Web3Secret("address", "value");
+        Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ID, true))
                 .thenReturn(Optional.of(secret));
 
@@ -116,7 +119,7 @@ public class PalaemonSessionServiceTests {
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY))
                 .isEqualTo(DATASET_CHECKSUM);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY))
-                .isEqualTo(secret.getValue());
+                .isEqualTo(secret.getTrimmedValue());
     }
 
     // app
