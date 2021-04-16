@@ -163,7 +163,7 @@ public class PalaemonSessionService {
         if (datasetSecret.isEmpty()) {
             throw new Exception("Empty dataset secret - taskId: " + taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY, datasetSecret.get().getValue());
+        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY, datasetSecret.get().getTrimmedValue());
         return tokens;
     }
 
@@ -244,7 +244,7 @@ public class PalaemonSessionService {
         if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
             throw new Exception("Empty beneficiary encryption key - taskId: " + taskId);
         }
-        String publicKeyValue = beneficiaryResultEncryptionKeySecret.get().getValue();
+        String publicKeyValue = beneficiaryResultEncryptionKeySecret.get().getTrimmedValue();
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, publicKeyValue); // base64 encoded by client
         return tokens;
     }
@@ -278,7 +278,7 @@ public class PalaemonSessionService {
                     taskId, storageProvider, chainDeal.getRequester());
             throw new Exception("Empty requester storage token - taskId: " + taskId);
         }
-        String requesterStorageToken = requesterStorageTokenSecret.get().getValue();
+        String requesterStorageToken = requesterStorageTokenSecret.get().getTrimmedValue();
         tokens.put(RESULT_STORAGE_PROVIDER, storageProvider);
         tokens.put(RESULT_STORAGE_PROXY, storageProxy);
         tokens.put(RESULT_STORAGE_TOKEN, requesterStorageToken);
