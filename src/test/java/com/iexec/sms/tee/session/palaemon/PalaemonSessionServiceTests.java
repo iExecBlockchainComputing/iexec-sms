@@ -38,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.web3j.utils.Numeric;
 
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public class PalaemonSessionServiceTests {
     private static final String DATASET_ID = "datasetId";
     private static final String DATASET_ADDRESS = "0xDatasetAddress";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
-    private static final String DATASET_URL = "datasetUrl";
+    private static final String DATASET_URL = "http://datasetUrl"; // 0x687474703a2f2f646174617365742d75726c
     // keys with leading/trailing \n should not break the workflow
     private static final String DATASET_KEY = "\nkey\n";
     // app
@@ -215,7 +216,7 @@ public class PalaemonSessionServiceTests {
         ChainDataset chainDataset = ChainDataset.builder()
                 .chainDatasetId(DATASET_ID)
                 .checksum(DATASET_CHECKSUM)
-                .uri(DATASET_URL)
+                .uri(Numeric.toHexString(DATASET_URL.getBytes()))
                 .build();
         return ChainDeal.builder()
                 .chainDealId(DEAL_ID)

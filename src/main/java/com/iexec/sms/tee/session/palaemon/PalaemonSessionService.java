@@ -21,6 +21,7 @@ import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.IexecEnvUtils;
+import com.iexec.common.utils.MultiAddressHelper;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.precompute.PreComputeConfig;
@@ -158,11 +159,12 @@ public class PalaemonSessionService {
         }
         tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM, checksum);
         // set dataset url
-        String datasetUri = chainDeal.getChainDataset().getUri();
-        if (StringUtils.isEmpty(datasetUri)) {
-            throw new Exception("Empty dataset URI - taskId: " + taskId);
+        String datasetUrl = chainDeal.getChainDataset().getUri();
+        if (StringUtils.isEmpty(datasetUrl)) {
+            throw new Exception("Empty dataset URL - taskId: " + taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_URL, datasetUri);
+        tokens.put(PreComputeUtils.IEXEC_DATASET_URL,
+                MultiAddressHelper.convertToURI(datasetUrl));
         // set dataset secret
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
         Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
