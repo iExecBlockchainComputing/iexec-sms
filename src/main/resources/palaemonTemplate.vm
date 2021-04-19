@@ -1,5 +1,11 @@
 name: $SESSION_ID
-digest: create
+version: "0.3"
+
+access_policy:
+  read:
+   - CREATOR
+  update:
+   - CREATOR
 
 services:
 
@@ -11,15 +17,12 @@ services:
   - name: pre-compute
     image_name: pre-compute-image
     mrenclaves: [$PRE_COMPUTE_MRENCLAVE]
-    tags: [demo]
     pwd: /
-    command: java -jar /app/tee-worker-pre-compute.jar
-    fspf_path: /fspf.pb
-    fspf_key: $PRE_COMPUTE_FSPF_KEY
-    fspf_tag: $PRE_COMPUTE_FSPF_TAG
+    command: java -jar /app/app.jar
     environment:
-      LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
-      JAVA_TOOL_OPTIONS: -Xmx256m
+      SCONE_MODE: hw
+      LD_LIBRARY_PATH: "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib"
+      JAVA_TOOL_OPTIONS: "-Xmx256m"
       IEXEC_TASK_ID: $env.get("IEXEC_TASK_ID")
       IEXEC_PRE_COMPUTE_IN: /pre-compute-in
       IEXEC_PRE_COMPUTE_OUT: /iexec_in
@@ -34,7 +37,6 @@ services:
   - name: app
     image_name: app-image
     mrenclaves: [$APP_MRENCLAVE]
-    tags: [demo]
     pwd: /
     command: $APP_ARGS
     fspf_path: /fspf.pb
@@ -51,7 +53,6 @@ services:
   - name: post-compute
     image_name: post-compute-image
     mrenclaves: [$POST_COMPUTE_MRENCLAVE]
-    tags: [demo]
     pwd: /
     command: java -jar /app/tee-worker-post-compute.jar
     fspf_path: /fspf.pb
@@ -77,8 +78,6 @@ images:
   #* pre-compute. Only when dataset is requested *#
 #if ($IS_DATASET_REQUESTED)
   - name: pre-compute-image
-    mrenclaves: [$PRE_COMPUTE_MRENCLAVE]
-    tags: [demo]
     volumes:
       - name: iexec_in
         path: /iexec_in
@@ -86,8 +85,6 @@ images:
 
   #* application *#
   - name: app-image
-    mrenclaves: [$APP_MRENCLAVE]
-    tags: [demo]
     volumes:
       - name: iexec_in
         path: /iexec_in
@@ -96,8 +93,6 @@ images:
 
   #* post-compute *#
   - name: post-compute-image
-    mrenclaves: [$POST_COMPUTE_MRENCLAVE]
-    tags: [demo]
     volumes:
       - name: iexec_out
         path: /iexec_out
@@ -112,3 +107,8 @@ volumes:
   - name: iexec_in
   - name: iexec_out
   - name: post-compute-tmp
+
+security:
+  attestation:
+    tolerate: [hyperthreading, software-hardening-needed, insecure-igpu, outdated-tcb, debug-mode]
+    ignore_advisories: ["INTEL-SA-00161", "INTEL-SA-00289", "INTEL-SA-00381", "INTEL-SA-00389"]
