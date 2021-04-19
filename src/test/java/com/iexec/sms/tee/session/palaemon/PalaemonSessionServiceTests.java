@@ -60,6 +60,7 @@ public class PalaemonSessionServiceTests {
     private static final String DATASET_ID = "datasetId";
     private static final String DATASET_ADDRESS = "0xDatasetAddress";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
+    private static final String DATASET_URL = "datasetUrl";
     // keys with leading/trailing \n should not break the workflow
     private static final String DATASET_KEY = "\nkey\n";
     // app
@@ -116,9 +117,11 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
                 .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[2]);
-        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY))
+        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_CHECKSUM))
                 .isEqualTo(DATASET_CHECKSUM);
-        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY))
+        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_URL))
+                .isEqualTo(DATASET_URL);
+        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY))
                 .isEqualTo(secret.getTrimmedValue());
     }
 
@@ -212,6 +215,7 @@ public class PalaemonSessionServiceTests {
         ChainDataset chainDataset = ChainDataset.builder()
                 .chainDatasetId(DATASET_ID)
                 .checksum(DATASET_CHECKSUM)
+                .uri(DATASET_URL)
                 .build();
         return ChainDeal.builder()
                 .chainDealId(DEAL_ID)

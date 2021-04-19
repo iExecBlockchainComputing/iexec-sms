@@ -152,18 +152,24 @@ public class PalaemonSessionService {
         tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
         tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
         // set dataset checksum
-        if (StringUtils.isBlank(chainDeal.getChainDataset().getChecksum())) {
+        String checksum = chainDeal.getChainDataset().getChecksum();
+        if (StringUtils.isEmpty(checksum)) {
             throw new Exception("Empty dataset checksum - taskId: " + taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY,
-                chainDeal.getChainDataset().getChecksum());
+        tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM, checksum);
+        // set dataset url
+        String datasetUri = chainDeal.getChainDataset().getUri();
+        if (StringUtils.isEmpty(datasetUri)) {
+            throw new Exception("Empty dataset URI - taskId: " + taskId);
+        }
+        tokens.put(PreComputeUtils.IEXEC_DATASET_URL, datasetUri);
         // set dataset secret
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
         Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
         if (datasetSecret.isEmpty()) {
             throw new Exception("Empty dataset secret - taskId: " + taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY, datasetSecret.get().getTrimmedValue());
+        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY, datasetSecret.get().getTrimmedValue());
         return tokens;
     }
 
@@ -293,7 +299,7 @@ public class PalaemonSessionService {
         if (workerAddress.isEmpty()) {
             throw new Exception("Empty worker address - taskId: " + taskId);
         }
-        if (StringUtils.isBlank(request.getEnclaveChallenge())) {
+        if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
             throw new Exception("Empty public enclave challenge - taskId: " + taskId);
         }
         Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
