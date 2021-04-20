@@ -26,9 +26,9 @@ services:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
       IEXEC_TASK_ID: '$env.get("IEXEC_TASK_ID")'
-      IEXEC_PRE_COMPUTE_IN: '/pre-compute-in'
       IEXEC_PRE_COMPUTE_OUT: '/iexec_in'
       IEXEC_DATASET_FILENAME: '$env.get("IEXEC_DATASET_FILENAME")'
+      IEXEC_DATASET_URL: '$IEXEC_DATASET_URL'
       IEXEC_DATASET_KEY: '$IEXEC_DATASET_KEY'
       IEXEC_DATASET_CHECKSUM: '$IEXEC_DATASET_CHECKSUM'
 #end

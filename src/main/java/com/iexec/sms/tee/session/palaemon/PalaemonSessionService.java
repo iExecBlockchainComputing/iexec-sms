@@ -21,6 +21,7 @@ import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.IexecEnvUtils;
+import com.iexec.common.utils.MultiAddressHelper;
 import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.precompute.PreComputeConfig;
@@ -107,7 +108,7 @@ public class PalaemonSessionService {
     // required inside palaemon.yml)
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
         String taskId = request.getChainTaskId();
-        if (this.palaemonTemplateFilePath.isEmpty()) {
+        if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
             throw new Exception("Empty Palaemon template filepath - taskId: " + taskId);
         }
         ChainDeal chainDeal = request.getChainDeal();
@@ -152,18 +153,25 @@ public class PalaemonSessionService {
         //tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
         //tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
         // set dataset checksum
-        if (StringUtils.isBlank(chainDeal.getChainDataset().getChecksum())) {
+        String checksum = chainDeal.getChainDataset().getChecksum();
+        if (StringUtils.isEmpty(checksum)) {
             throw new Exception("Empty dataset checksum - taskId: " + taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY,
-                chainDeal.getChainDataset().getChecksum());
+        tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM, checksum);
+        // set dataset url
+        String datasetUrl = chainDeal.getChainDataset().getUri();
+        if (StringUtils.isEmpty(datasetUrl)) {
+            throw new Exception("Empty dataset URL - taskId: " + taskId);
+        }
+        tokens.put(PreComputeUtils.IEXEC_DATASET_URL,
+                MultiAddressHelper.convertToURI(datasetUrl));
         // set dataset secret
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
         Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
         if (datasetSecret.isEmpty()) {
             throw new Exception("Empty dataset secret - taskId: " + taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY, datasetSecret.get().getTrimmedValue());
+        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY, datasetSecret.get().getTrimmedValue());
         return tokens;
     }
 
@@ -182,7 +190,7 @@ public class PalaemonSessionService {
         tokens.put(APP_FSPF_TAG, appFingerprint.getFspfTag());
         tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
         String appArgs = appFingerprint.getEntrypoint();
-        if (chainDeal.getParams().getIexecArgs() != null && !chainDeal.getParams().getIexecArgs().isEmpty()) {
+        if (!StringUtils.isEmpty(chainDeal.getParams().getIexecArgs())) {
             appArgs = appFingerprint.getEntrypoint() + " " + chainDeal.getParams().getIexecArgs();
         }
         tokens.put(APP_ARGS, appArgs);
@@ -290,10 +298,10 @@ public class PalaemonSessionService {
         String taskId = request.getChainTaskId();
         String workerAddress = request.getWorkerAddress();
         Map<String, String> tokens = new HashMap<>();
-        if (workerAddress.isEmpty()) {
+        if (StringUtils.isEmpty(workerAddress)) {
             throw new Exception("Empty worker address - taskId: " + taskId);
         }
-        if (StringUtils.isBlank(request.getEnclaveChallenge())) {
+        if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
             throw new Exception("Empty public enclave challenge - taskId: " + taskId);
         }
         Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
