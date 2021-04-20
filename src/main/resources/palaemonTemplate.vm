@@ -96,7 +96,7 @@ images:
       - name: 'iexec_out'
         path: '/iexec_out'
       - name: 'post-compute-tmp'
-        path: '/scone'
+        path: '/post-compute-tmp'
 
 #**
   Volumes that will be protected
