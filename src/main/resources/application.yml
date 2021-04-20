@@ -57,8 +57,8 @@ scone:
 
 # TODO /!\ remove the option of env variable for releases.
 pre-compute:
-  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:nexus.iex.ec/tee-worker-pre-compute:0aed4dc}
-  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:11c162ac65380da1fc8713495f7dae71cba3726d90908854be53dde3367bb19a|1d99a3637aabf0aeedeced36fa36205f|13076027fc67accba753a3ed2edf03227dfd013b450d68833a5589ec44132100}
+  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:iexechub/tee-worker-pre-compute:0.1.0-SNAPSHOT-6fc5253} # should accessible in testing pool
+  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:39272d644e356773db69e780087be0a820284bc74e139c02ba70683818aa16a0|10b3682afdc726f284403ec78195a590|13076027fc67accba753a3ed2edf03227dfd013b450d68833a5589ec44132100}
 
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
