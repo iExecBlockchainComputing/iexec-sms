@@ -108,7 +108,7 @@ public class PalaemonSessionService {
     // required inside palaemon.yml)
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
         String taskId = request.getChainTaskId();
-        if (this.palaemonTemplateFilePath.isEmpty()) {
+        if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
             throw new Exception("Empty Palaemon template filepath - taskId: " + taskId);
         }
         ChainDeal chainDeal = request.getChainDeal();
@@ -190,7 +190,7 @@ public class PalaemonSessionService {
         tokens.put(APP_FSPF_TAG, appFingerprint.getFspfTag());
         tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
         String appArgs = appFingerprint.getEntrypoint();
-        if (chainDeal.getParams().getIexecArgs() != null && !chainDeal.getParams().getIexecArgs().isEmpty()) {
+        if (!StringUtils.isEmpty(chainDeal.getParams().getIexecArgs())) {
             appArgs = appFingerprint.getEntrypoint() + " " + chainDeal.getParams().getIexecArgs();
         }
         tokens.put(APP_ARGS, appArgs);
@@ -298,7 +298,7 @@ public class PalaemonSessionService {
         String taskId = request.getChainTaskId();
         String workerAddress = request.getWorkerAddress();
         Map<String, String> tokens = new HashMap<>();
-        if (workerAddress.isEmpty()) {
+        if (StringUtils.isEmpty(workerAddress)) {
             throw new Exception("Empty worker address - taskId: " + taskId);
         }
         if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
