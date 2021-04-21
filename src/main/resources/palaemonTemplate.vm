@@ -18,10 +18,7 @@ services:
     image_name: 'pre-compute-image'
     mrenclaves: ['$PRE_COMPUTE_MRENCLAVE']
     pwd: '/'
-    command: 'java -jar /app/tee-worker-pre-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: '$PRE_COMPUTE_FSPF_KEY'
-    fspf_tag: '$PRE_COMPUTE_FSPF_TAG'
+    command: 'java -jar /app/app.jar'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
