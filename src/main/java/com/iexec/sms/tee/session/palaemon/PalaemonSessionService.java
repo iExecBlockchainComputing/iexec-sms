@@ -148,10 +148,7 @@ public class PalaemonSessionService {
         }
         Map<String, String> tokens = new HashMap<>();
         String fingerprint = preComputeConfig.getFingerprint();
-        //PreComputeFingerprint preComputeFingerprint = new PreComputeFingerprint(fingerprint);
         tokens.put(PRE_COMPUTE_MRENCLAVE, fingerprint);
-        //tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
-        //tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
         // set dataset checksum
         String checksum = chainDeal.getChainDataset().getChecksum();
         if (StringUtils.isEmpty(checksum)) {
