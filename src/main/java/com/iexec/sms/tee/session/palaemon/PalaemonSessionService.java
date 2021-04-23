@@ -16,18 +16,13 @@
 
 package com.iexec.sms.tee.session.palaemon;
 
-import com.iexec.common.chain.ChainDeal;
-import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
-import com.iexec.common.utils.MultiAddressHelper;
-import com.iexec.common.utils.BytesUtils;
-import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.precompute.PreComputeConfig;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
-import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -43,28 +38,33 @@ import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
+import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
 @Service
 public class PalaemonSessionService {
 
-    public static final String EMPTY_YML_VALUE = "''";
+    public static final String EMPTY_YML_VALUE = "";
 
     // Internal values required for setting up a palaemon session
     // Generic
     static final String SESSION_ID_PROPERTY = "SESSION_ID";
-    static final String IS_DATASET_REQUESTED = "IS_DATASET_REQUESTED";
+    static final String INPUT_FILE_URLS = "INPUT_FILE_URLS";
+    static final String INPUT_FILE_NAMES = "INPUT_FILE_NAMES";
     // PreCompute
+    static final String IS_PRE_COMPUTE_REQUIRED = "IS_PRE_COMPUTE_REQUIRED";
     static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
     static final String PRE_COMPUTE_FSPF_KEY = "PRE_COMPUTE_FSPF_KEY";
     static final String PRE_COMPUTE_FSPF_TAG = "PRE_COMPUTE_FSPF_TAG";
@@ -80,22 +80,27 @@ public class PalaemonSessionService {
     // Env
     private static final String ENV_PROPERTY = "env";
 
-    @Value("${scone.cas.palaemon}")
-    private String palaemonTemplateFilePath;
-
-    private final IexecHubService iexecHubService;
+    private final String palaemonTemplateFilePath;
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
     private final PreComputeConfig preComputeConfig;
 
+
     public PalaemonSessionService(
-            IexecHubService iexecHubService,
+            @Value("${scone.cas.palaemon}")
+            String templateFilePath,
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            PreComputeConfig preComputeConfig) {
-        this.iexecHubService = iexecHubService;
+            PreComputeConfig preComputeConfig) throws Exception {
+        if (StringUtils.isEmpty(templateFilePath)) {
+            throw new IllegalArgumentException("Missing palaemon template filepath");
+        }
+        if (!FileHelper.exists(templateFilePath)) {
+            throw new FileNotFoundException("Missing palaemon template file");
+        }
+        this.palaemonTemplateFilePath = templateFilePath;
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
@@ -107,93 +112,93 @@ public class PalaemonSessionService {
     // call from enclave to eth node (only ethereum node address
     // required inside palaemon.yml)
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
-        String taskId = request.getChainTaskId();
-        if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
-            throw new Exception("Empty Palaemon template filepath - taskId: " + taskId);
-        }
-        ChainDeal chainDeal = request.getChainDeal();
+        requireNonNull(request, "Session request must not be null");
+        requireNonNull(request.getTaskDescription(), "Task description must not be null");
+        TaskDescription taskDescription = request.getTaskDescription();
         Map<String, Object> palaemonTokens = new HashMap<>();
         palaemonTokens.put(SESSION_ID_PROPERTY, request.getSessionId());
-        palaemonTokens.put(IS_DATASET_REQUESTED, isDatasetRequested(chainDeal));
         // pre-compute
-        palaemonTokens.putAll(getPreComputePalaemonTokens(request));
+        boolean isPreComputeRequired = taskDescription.containsDataset() ||
+                !taskDescription.getInputFiles().isEmpty();
+        palaemonTokens.put(IS_PRE_COMPUTE_REQUIRED, isPreComputeRequired);
+        if (isPreComputeRequired) {
+            palaemonTokens.putAll(getPreComputePalaemonTokens(request));
+        }
         // app
         palaemonTokens.putAll(getAppPalaemonTokens(request));
         // post compute
         palaemonTokens.putAll(getPostComputePalaemonTokens(request));
         // env variables
-        TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
         Map<String, String> env = IexecEnvUtils.getComputeStageEnvMap(taskDescription);
-        // All env values should be quoted (even integers) otherwise
-        // the CAS fails to parse the session's yaml with the
-        // message ("invalid type: integer `0`, expected a string")
-        // that's why we add single quotes in palaemonTemplate.vm
-        // in the for loop.
         // Null value should be replaced by empty string.
-        env.forEach((key, value) -> env.replace(key, null, ""));
+        env.forEach((key, value) -> env.replace(key, null, EMPTY_YML_VALUE));
         palaemonTokens.put(ENV_PROPERTY, env);
         return getFilledPalaemonTemplate(this.palaemonTemplateFilePath, palaemonTokens);
     }
 
-    /*
-     * Pre-Compute
+    /**
+     * Get tokens to be injected in the pre-compute enclave.
+     * 
+     * @param request
+     * @return map of pre-compute tokens
+     * @throws Exception if dataset secret is not found.
      */
-    Map<String, String> getPreComputePalaemonTokens(PalaemonSessionRequest request)
+    Map<String, Object> getPreComputePalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getChainTaskId();
-        ChainDeal chainDeal = request.getChainDeal();
-        if (!isDatasetRequested(chainDeal)) {
-            log.info("No dataset is requested [taskId:{}]", taskId);
-            return Collections.emptyMap();
-        }
-        Map<String, String> tokens = new HashMap<>();
+        TaskDescription taskDescription = request.getTaskDescription();
+        String taskId = taskDescription.getChainTaskId();
+        Map<String, Object> tokens = new HashMap<>();
         String fingerprint = preComputeConfig.getFingerprint();
         PreComputeFingerprint preComputeFingerprint = new PreComputeFingerprint(fingerprint);
         tokens.put(PRE_COMPUTE_MRENCLAVE, preComputeFingerprint.getMrEnclave());
         tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
         tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
-        // set dataset checksum
-        String checksum = chainDeal.getChainDataset().getChecksum();
-        if (StringUtils.isEmpty(checksum)) {
-            throw new Exception("Empty dataset checksum - taskId: " + taskId);
+        tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
+        if (taskDescription.containsDataset()) {
+            String datasetKey = web3SecretService
+                    .getSecret(taskDescription.getDatasetAddress(), true)
+                    .orElseThrow(() -> new Exception("Empty dataset secret - taskId: " + taskId))
+                    .getTrimmedValue();
+            tokens.put(IEXEC_DATASET_KEY, datasetKey);
+        } else {
+            log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_CHECKSUM, checksum);
-        // set dataset url
-        String datasetUrl = chainDeal.getChainDataset().getUri();
-        if (StringUtils.isEmpty(datasetUrl)) {
-            throw new Exception("Empty dataset URL - taskId: " + taskId);
-        }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_URL,
-                MultiAddressHelper.convertToURI(datasetUrl));
-        // set dataset secret
-        String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
-        Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
-        if (datasetSecret.isEmpty()) {
-            throw new Exception("Empty dataset secret - taskId: " + taskId);
-        }
-        tokens.put(PreComputeUtils.IEXEC_DATASET_KEY, datasetSecret.get().getTrimmedValue());
+        // extract <IEXEC_INPUT_FILE_URL_N, url>
+        // this map will be empty (not null) if no input file is found
+        Map<String, String> inputFileUrls = IexecEnvUtils.getAllIexecEnv(taskDescription)
+                .entrySet()
+                .stream()
+                .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        tokens.put(INPUT_FILE_URLS, inputFileUrls);
         return tokens;
     }
 
     /*
      * Compute (App)
      */
-    Map<String, String> getAppPalaemonTokens(PalaemonSessionRequest request)
+    Map<String, Object> getAppPalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
-        Map<String, String> tokens = new HashMap<>();
-        ChainDeal chainDeal = request.getChainDeal();
-        if (chainDeal.getChainApp() == null) {
-            throw new Exception("Null chain app in deal - taskId: " + request.getChainTaskId());
-        }
-        AppFingerprint appFingerprint = new AppFingerprint(chainDeal.getChainApp().getFingerprint());
+        TaskDescription taskDescription = request.getTaskDescription();
+        requireNonNull(taskDescription, "Task description must no be null");
+        Map<String, Object> tokens = new HashMap<>();
+        AppFingerprint appFingerprint = new AppFingerprint(taskDescription.getAppFingerprint());
         tokens.put(APP_FSPF_KEY, appFingerprint.getFspfKey());
         tokens.put(APP_FSPF_TAG, appFingerprint.getFspfTag());
         tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
         String appArgs = appFingerprint.getEntrypoint();
-        if (!StringUtils.isEmpty(chainDeal.getParams().getIexecArgs())) {
-            appArgs = appFingerprint.getEntrypoint() + " " + chainDeal.getParams().getIexecArgs();
+        if (!StringUtils.isEmpty(taskDescription.getCmd())) {
+            appArgs = appFingerprint.getEntrypoint() + " " + taskDescription.getCmd();
         }
         tokens.put(APP_ARGS, appArgs);
+        // extract <IEXEC_INPUT_FILE_NAME_N, name>
+        // this map will be empty (not null) if no input file is found
+        Map<String, String> inputFileNames = IexecEnvUtils.getComputeStageEnvMap(taskDescription)
+                .entrySet()
+                .stream()
+                .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        tokens.put(INPUT_FILE_NAMES, inputFileNames);
         return tokens;
     }
 
@@ -202,14 +207,12 @@ public class PalaemonSessionService {
      */
     Map<String, String> getPostComputePalaemonTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getChainTaskId();
-        ChainDeal chainDeal = request.getChainDeal();
+        TaskDescription taskDescription = request.getTaskDescription();
+        requireNonNull(taskDescription, "Task description must no be null");
+        String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
-        if (chainDeal.getParams() == null) {
-            throw new Exception("Empty deal params - taskId: " + taskId);
-        }
         PostComputeFingerprint postComputeFingerprint = new PostComputeFingerprint(
-                chainDeal.getParams().getIexecTeePostComputeFingerprint());
+                taskDescription.getTeePostComputeFingerprint());
         tokens.put(POST_COMPUTE_FSPF_KEY, postComputeFingerprint.getFspfKey());
         tokens.put(POST_COMPUTE_FSPF_TAG, postComputeFingerprint.getFspfTag());
         tokens.put(POST_COMPUTE_MRENCLAVE, postComputeFingerprint.getMrEnclave());
@@ -236,17 +239,17 @@ public class PalaemonSessionService {
 
     Map<String, String> getPostComputeEncryptionTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getChainTaskId();
-        ChainDeal chainDeal = request.getChainDeal();
+        TaskDescription taskDescription = request.getTaskDescription();
+        String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
-        boolean shouldEncrypt = chainDeal.getParams().isIexecResultEncryption();
+        boolean shouldEncrypt = taskDescription.isResultEncryption();
         tokens.put(RESULT_ENCRYPTION, booleanToYesNo(shouldEncrypt));
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, EMPTY_YML_VALUE);
         if (!shouldEncrypt) {
             return tokens;
         }
         Optional<Secret> beneficiaryResultEncryptionKeySecret = web2SecretsService.getSecret(
-                chainDeal.getBeneficiary(),
+                taskDescription.getBeneficiary(),
                 IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true);
         if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
@@ -263,10 +266,10 @@ public class PalaemonSessionService {
     // private storage space
     Map<String, String> getPostComputeStorageTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getChainTaskId();
-        ChainDeal chainDeal = request.getChainDeal();
+        TaskDescription taskDescription = request.getTaskDescription();
+        String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
-        boolean isCallbackRequested = isCallbackRequested(chainDeal);
+        boolean isCallbackRequested = taskDescription.containsCallback();
         tokens.put(RESULT_STORAGE_CALLBACK, booleanToYesNo(isCallbackRequested));
         tokens.put(RESULT_STORAGE_PROVIDER, EMPTY_YML_VALUE);
         tokens.put(RESULT_STORAGE_PROXY, EMPTY_YML_VALUE);
@@ -274,16 +277,16 @@ public class PalaemonSessionService {
         if (isCallbackRequested) {
             return tokens;
         }
-        String storageProvider = chainDeal.getParams().getIexecResultStorageProvider();
-        String storageProxy = chainDeal.getParams().getIexecResultStorageProxy();
+        String storageProvider = taskDescription.getResultStorageProvider();
+        String storageProxy = taskDescription.getResultStorageProxy();
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN
                 : ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN;
         Optional<Secret> requesterStorageTokenSecret = 
-                web2SecretsService.getSecret(chainDeal.getRequester(), keyName, true);
+                web2SecretsService.getSecret(taskDescription.getRequester(), keyName, true);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
-                    taskId, storageProvider, chainDeal.getRequester());
+                    taskId, storageProvider, taskDescription.getRequester());
             throw new Exception("Empty requester storage token - taskId: " + taskId);
         }
         String requesterStorageToken = requesterStorageTokenSecret.get().getTrimmedValue();
@@ -295,7 +298,7 @@ public class PalaemonSessionService {
 
     Map<String, String> getPostComputeSignTokens(PalaemonSessionRequest request)
             throws Exception {
-        String taskId = request.getChainTaskId();
+        String taskId = request.getTaskDescription().getChainTaskId();
         String workerAddress = request.getWorkerAddress();
         Map<String, String> tokens = new HashMap<>();
         if (StringUtils.isEmpty(workerAddress)) {
@@ -327,18 +330,5 @@ public class PalaemonSessionService {
         StringWriter writer = new StringWriter();
         template.merge(context, writer);
         return writer.toString();
-    }
-
-    private boolean isDatasetRequested(ChainDeal chainDeal) {
-        return chainDeal.getChainDataset() != null &&
-                chainDeal.getChainDataset().getChainDatasetId() != null &&
-                !chainDeal.getChainDataset()
-                    .getChainDatasetId()
-                    .equals(BytesUtils.EMPTY_ADDRESS);
-    }
-
-    private boolean isCallbackRequested(ChainDeal chainDeal) {
-        return chainDeal.getCallback() != null &&
-                !chainDeal.getCallback().equals(BytesUtils.EMPTY_ADDRESS);
     }
 }

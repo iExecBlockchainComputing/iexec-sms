@@ -16,30 +16,29 @@
 
 package com.iexec.sms.tee.session.palaemon;
 
-import com.iexec.common.chain.ChainApp;
-import com.iexec.common.chain.ChainDataset;
-import com.iexec.common.chain.ChainDeal;
-import com.iexec.common.chain.DealParams;
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
+import com.iexec.common.task.TaskDescription;
+import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.precompute.PreComputeConfig;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.precompute.PreComputeConfig;
 import com.iexec.sms.utils.EthereumCredentials;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.web3j.utils.Numeric;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,7 +47,6 @@ import static org.mockito.Mockito.when;
 
 public class PalaemonSessionServiceTests {
 
-    private static final String DEAL_ID = "dealId";
     private static final String TASK_ID = "taskId";
     private static final String SESSION_ID = "sessionId";
     private static final String WORKER_ADDRESS = "workerAddress";
@@ -58,14 +56,14 @@ public class PalaemonSessionServiceTests {
     private static final String PRE_COMPUTE_FINGERPRINT = "fspfKey2|fspfTag2|mrEnclave2";
     private static final String[] PRE_COMPUTE_FINGERPRINT_PARTS =
     PRE_COMPUTE_FINGERPRINT.split("\\|");
-    private static final String DATASET_ID = "datasetId";
     private static final String DATASET_ADDRESS = "0xDatasetAddress";
+    private static final String DATASET_NAME = "datasetName";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
     private static final String DATASET_URL = "http://datasetUrl"; // 0x687474703a2f2f646174617365742d75726c
     // keys with leading/trailing \n should not break the workflow
     private static final String DATASET_KEY = "\nkey\n";
     // app
-    private static final String APP_ID = "appId";
+    private static final String APP_URI = "appUri";
     private static final String APP_FINGERPRINT = "fspfKey1|fspfTag1|mrEnclave1|entryPoint";
     private static final String[] APP_FINGERPRINT_PARTS = APP_FINGERPRINT.split("\\|");
     private static final String ARGS = "args";
@@ -78,6 +76,10 @@ public class PalaemonSessionServiceTests {
     private static final String STORAGE_PROXY = "storageProxy";
     private static final String STORAGE_TOKEN = "storageToken";
     private static final String PUBLIC_KEY = "publicKey";
+    private static final List<String> INPUT_FILES = List.of("http://file1", "http://file2");
+
+    @TempDir
+    Path tempDir;
 
     @Mock
     private IexecHubService iexecHubService;
@@ -90,13 +92,19 @@ public class PalaemonSessionServiceTests {
     @Mock
     private PreComputeConfig preComputeConfig;
 
-    @Spy
-    @InjectMocks
     private PalaemonSessionService palaemonSessionService;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws Exception {
         MockitoAnnotations.openMocks(this);
+        String template = Files.createFile(tempDir.resolve("template.vm"))
+                .toFile().getAbsolutePath();
+        palaemonSessionService = new PalaemonSessionService(
+                template,
+                web3SecretService,
+                web2SecretsService,
+                teeChallengeService,
+                preComputeConfig);
     }
 
     // pre-compute
@@ -106,10 +114,10 @@ public class PalaemonSessionServiceTests {
         PalaemonSessionRequest request = createSessionRequest();
         when(preComputeConfig.getFingerprint()).thenReturn(PRE_COMPUTE_FINGERPRINT);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
-        when(web3SecretService.getSecret(DATASET_ID, true))
+        when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
 
-        Map<String, String> tokens =
+        Map<String, Object> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_FSPF_KEY))
@@ -118,12 +126,12 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
                 .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[2]);
-        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_CHECKSUM))
-                .isEqualTo(DATASET_CHECKSUM);
-        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_URL))
-                .isEqualTo(DATASET_URL);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY))
                 .isEqualTo(secret.getTrimmedValue());
+        assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_URLS))
+                .isEqualTo(Map.of(
+                    IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILES.get(0),
+                    IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILES.get(1)));
     }
 
     // app
@@ -131,7 +139,7 @@ public class PalaemonSessionServiceTests {
     @Test
     public void shouldGetAppPalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
-        Map<String, String> tokens =
+        Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.APP_FSPF_KEY))
@@ -142,6 +150,10 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(APP_FINGERPRINT_PARTS[2]);
         assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
                 .isEqualTo(APP_FINGERPRINT_PARTS[3] + " " + ARGS);
+        assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
+                .isEqualTo(Map.of(
+                    IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                    IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
     }
 
     // post-compute
@@ -151,7 +163,7 @@ public class PalaemonSessionServiceTests {
         PalaemonSessionRequest request = createSessionRequest();
         Secret publicKeySecret = new Secret("address", PUBLIC_KEY);
         when(web2SecretsService.getSecret(
-                request.getChainDeal().getBeneficiary(),
+                request.getTaskDescription().getBeneficiary(),
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true))
                 .thenReturn(Optional.of(publicKeySecret));
@@ -200,37 +212,30 @@ public class PalaemonSessionServiceTests {
 
     private PalaemonSessionRequest createSessionRequest() {
         return PalaemonSessionRequest.builder()
-                .chainTaskId(TASK_ID)
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
-                .chainDeal(createChainDeal())
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
+                .taskDescription(createTaskDescription())
                 .build();
     }
 
-    private ChainDeal createChainDeal() {
-        ChainApp chainApp = ChainApp.builder()
-                .chainAppId(APP_ID)
-                .fingerprint(APP_FINGERPRINT)
-                .build();
-        ChainDataset chainDataset = ChainDataset.builder()
-                .chainDatasetId(DATASET_ID)
-                .checksum(DATASET_CHECKSUM)
-                .uri(Numeric.toHexString(DATASET_URL.getBytes()))
-                .build();
-        return ChainDeal.builder()
-                .chainDealId(DEAL_ID)
-                .chainApp(chainApp)
-                .chainDataset(chainDataset)
+    private TaskDescription createTaskDescription() {
+        return TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .appUri(APP_URI)
+                .appFingerprint(APP_FINGERPRINT)
+                .datasetAddress(DATASET_ADDRESS)
+                .datasetUri(DATASET_URL)
+                .datasetName(DATASET_NAME)
+                .datasetChecksum(DATASET_CHECKSUM)
                 .requester(REQUESTER)
-                .params(DealParams.builder()
-                        .iexecResultEncryption(true)
-                        .iexecArgs(ARGS)
-                        .iexecResultStorageProvider(STORAGE_PROVIDER)
-                        .iexecResultStorageProxy(STORAGE_PROXY)
-                        .iexecTeePostComputeFingerprint(POST_COMPUTE_FINGERPRINT)
-                        .iexecTeePostComputeImage(POST_COMPUTE_IMAGE)
-                        .build())
+                .cmd(ARGS)
+                .inputFiles(INPUT_FILES)
+                .isResultEncryption(true)
+                .resultStorageProvider(STORAGE_PROVIDER)
+                .resultStorageProxy(STORAGE_PROXY)
+                .teePostComputeFingerprint(POST_COMPUTE_FINGERPRINT)
+                .teePostComputeImage(POST_COMPUTE_IMAGE)
                 .build();
     }
 }
