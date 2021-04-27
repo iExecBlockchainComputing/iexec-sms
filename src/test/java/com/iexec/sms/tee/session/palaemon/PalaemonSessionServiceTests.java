@@ -56,6 +56,9 @@ import static org.mockito.Mockito.*;
 @Slf4j
 public class PalaemonSessionServiceTests {
 
+    private static final String TEMPLATE_SESSION_FILE = "src/main/resources/palaemonTemplate.vm";
+    private static final String EXPECTED_SESSION_FILE = "src/test/resources/tee-session.yml";
+
     private static final String TASK_ID = "taskId";
     private static final String SESSION_ID = "sessionId";
     private static final String WORKER_ADDRESS = "workerAddress";
@@ -109,7 +112,7 @@ public class PalaemonSessionServiceTests {
         // spy is needed to mock some internal calls of the tested
         // class when relevant
         palaemonSessionService = spy(new PalaemonSessionService(
-                "src/main/resources/palaemonTemplate.vm",
+                TEMPLATE_SESSION_FILE,
                 web3SecretService,
                 web2SecretsService,
                 teeChallengeService,
@@ -128,9 +131,9 @@ public class PalaemonSessionServiceTests {
 
         String actualYmlString = palaemonSessionService.getSessionYml(request);
         Map<String, Object> actualYmlMap = new Yaml().load(actualYmlString);
-        String expectedYamlString = FileHelper.readFile("src/test/resources/session.yml");
+        String expectedYamlString = FileHelper.readFile(EXPECTED_SESSION_FILE);
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
-        assertRecursively(actualYmlMap, expectedYmlMap);
+        assertRecursively(expectedYmlMap, actualYmlMap);
     }
 
     // pre-compute
@@ -275,7 +278,9 @@ public class PalaemonSessionServiceTests {
                 PRE_COMPUTE_FSPF_TAG, PRE_COMPUTE_FINGERPRINT_PARTS[1],
                 IS_DATASET_REQUIRED, true,
                 IEXEC_DATASET_KEY, DATASET_KEY.trim(),
-                INPUT_FILE_URLS, List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2));
+                INPUT_FILE_URLS, Map.of(
+                    IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                    IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2));
     }
 
     private Map<String, Object> getAppTokens() {
@@ -284,7 +289,9 @@ public class PalaemonSessionServiceTests {
                 APP_FSPF_KEY, APP_FINGERPRINT_PARTS[0],
                 APP_FSPF_TAG, APP_FINGERPRINT_PARTS[1],
                 APP_ARGS, APP_FINGERPRINT_PARTS[3] + " " + ARGS,
-                INPUT_FILE_NAMES, List.of(INPUT_FILE_NAME_1, INPUT_FILE_NAME_2));
+                INPUT_FILE_NAMES, Map.of(
+                    IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
+                    IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));
     }
 
     private Map<String, Object> getPostComputeTokens() {
@@ -304,27 +311,27 @@ public class PalaemonSessionServiceTests {
         return map;
     }
 
-    private void assertRecursively(Object actual, Object expected) {
-        if ( actual == null ||
-                actual instanceof String ||
-                ClassUtils.isPrimitiveOrWrapper(actual.getClass())) {
-            log.info("Comparing [actual:{}, expected:{}]", actual, expected);
-            assertThat(actual).isEqualTo(expected);
+    private void assertRecursively(Object expected, Object actual) {
+        if (expected == null ||
+                expected instanceof String ||
+                ClassUtils.isPrimitiveOrWrapper(expected.getClass())) {
+            log.info("Comparing [actual:{}, expected:{}]", expected, actual);
+            assertThat(expected).isEqualTo(actual);
             return;
         }
-        if (actual instanceof List) {
-            List<?> actualList = (List<?>) actual;
-            List<?> expectedList = (List<?>) expected;
+        if (expected instanceof List) {
+            List<?> actualList = (List<?>) expected;
+            List<?> expectedList = (List<?>) actual;
             for (int i = 0; i < actualList.size(); i++) {
                 assertRecursively(actualList.get(i), expectedList.get(i));
             }
             return;
         }
-        if (actual instanceof Map) {
-            Map<?, ?> actualMap = (Map<?, ?>) actual;
-            Map<?, ?> expectedMap = (Map<?, ?>) expected;
+        if (expected instanceof Map) {
+            Map<?, ?> actualMap = (Map<?, ?>) expected;
+            Map<?, ?> expectedMap = (Map<?, ?>) actual;
             actualMap.keySet().forEach((key) -> {
-                log.info("Checking {}", key);
+                log.info("Checking '{}'", key);
                 assertRecursively(actualMap.get(key), expectedMap.get(key));
             });
         }

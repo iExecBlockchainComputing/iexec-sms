@@ -27,6 +27,8 @@ services:
       
       IEXEC_INPUT_FILES_FOLDER: '/iexec_in'
       IEXEC_INPUT_FILES_NUMBER: '2'
+      IEXEC_INPUT_FILE_URL_1: 'http://host/file1'
+      IEXEC_INPUT_FILE_URL_2: 'http://host/file2'
     
   
   - name: 'app'
@@ -51,6 +53,9 @@ services:
       
       IEXEC_INPUT_FILES_FOLDER: '/iexec_in'
       IEXEC_INPUT_FILES_NUMBER: '2'
+      IEXEC_INPUT_FILE_NAME_1: 'file1'
+      IEXEC_INPUT_FILE_NAME_2: 'file2'
+
     
   
   - name: 'post-compute'

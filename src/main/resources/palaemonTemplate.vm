@@ -17,7 +17,7 @@ services:
     Pre-compute enclave.
     Only when dataset is requested.
   *#
-#if ($IS_PRE_COMPUTE_REQUIRED)
+  #if ($IS_PRE_COMPUTE_REQUIRED)
   - name: 'pre-compute'
     image_name: 'pre-compute-image'
     mrenclaves: ['$PRE_COMPUTE_MRENCLAVE']
@@ -40,10 +40,10 @@ services:
       #* input files *#
       IEXEC_INPUT_FILES_FOLDER: '$env.get("IEXEC_INPUT_FILES_FOLDER")'
       IEXEC_INPUT_FILES_NUMBER: '$env.get("IEXEC_INPUT_FILES_NUMBER")'
-    #foreach($key in $INPUT_FILE_URLS.keySet())
-      $key: '$$INPUT_FILE_URLS.get($key)'
-    #end
-#end
+      #foreach($key in $INPUT_FILE_URLS.keySet())
+      $key: '$INPUT_FILE_URLS.get($key)'
+      #end
+  #end
 
   #*
     Application enclave
@@ -70,9 +70,9 @@ services:
       #* input files *#
       IEXEC_INPUT_FILES_FOLDER: '$env.get("IEXEC_INPUT_FILES_FOLDER")'
       IEXEC_INPUT_FILES_NUMBER: '$env.get("IEXEC_INPUT_FILES_NUMBER")'
-    #foreach($key in $INPUT_FILE_NAMES.keySet())
-      $key: '$$INPUT_FILE_NAMES.get($key)'
-    #end
+      #foreach($key in $INPUT_FILE_NAMES.keySet())
+      $key: '$INPUT_FILE_NAMES.get($key)'
+      #end
 
   #* 
     Post-compute enclave
@@ -103,13 +103,13 @@ services:
 *#
 images:
   #* pre-compute. Only when dataset is requested *#
-#if ($IS_PRE_COMPUTE_REQUIRED)
+  #if ($IS_PRE_COMPUTE_REQUIRED)
   - name: 'pre-compute-image'
     mrenclaves: ['$PRE_COMPUTE_MRENCLAVE']
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
-#end
+  #end
 
   #* application *#
   - name: app-image
