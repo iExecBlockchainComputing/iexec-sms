@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
+import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
@@ -129,7 +130,7 @@ public class PalaemonSessionService {
         // post compute
         palaemonTokens.putAll(getPostComputePalaemonTokens(request));
         // env variables
-        Map<String, String> env = IexecEnvUtils.getComputeStageEnvMap(taskDescription);
+        Map<String, String> env = IexecEnvUtils.getAllIexecEnv(taskDescription);
         // Null value should be replaced by empty string.
         env.forEach((key, value) -> env.replace(key, null, EMPTY_YML_VALUE));
         palaemonTokens.put(ENV_PROPERTY, env);
@@ -153,6 +154,7 @@ public class PalaemonSessionService {
         tokens.put(PRE_COMPUTE_MRENCLAVE, preComputeFingerprint.getMrEnclave());
         tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
         tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
+        tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
         tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
         if (taskDescription.containsDataset()) {
             String datasetKey = web3SecretService
@@ -243,6 +245,7 @@ public class PalaemonSessionService {
         String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
         boolean shouldEncrypt = taskDescription.isResultEncryption();
+        // TODO use boolean with quotes instead of yes/no
         tokens.put(RESULT_ENCRYPTION, booleanToYesNo(shouldEncrypt));
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, EMPTY_YML_VALUE);
         if (!shouldEncrypt) {
