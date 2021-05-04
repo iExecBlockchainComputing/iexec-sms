@@ -58,6 +58,7 @@ public class UnTeeSecretService {
     public Optional<TaskSecrets> getUnTeeTaskSecrets(String chainTaskId) {
         TaskSecrets.TaskSecretsBuilder taskSecretsBuilder = TaskSecrets.builder();
 
+        // TODO use taskDescription instead of chainDeal
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(chainTaskId);
         if (!oChainTask.isPresent()) {
             log.error("getUnTeeTaskSecrets failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);

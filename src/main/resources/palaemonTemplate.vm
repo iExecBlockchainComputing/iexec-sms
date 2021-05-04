@@ -1,3 +1,13 @@
+#* 
+    It is safer to keep all values single-quoted to escape yaml
+    special characters (in dataset names for example). We also
+    ran into some parsing issues on the CAS's side when integers
+    were not quoted ("invalid type: integer `0`, expected a string").
+
+    Null values should be replaced by an empty string in the code
+    otherwise we end up with 'null' instead of ''.
+*#
+
 name: '$SESSION_ID'
 version: '0.3'
 
@@ -13,25 +23,30 @@ services:
     Pre-compute enclave.
     Only when dataset is requested.
   *#
-#if ($IS_DATASET_REQUESTED)
+  #if ($IS_PRE_COMPUTE_REQUIRED)
   - name: 'pre-compute'
     image_name: 'pre-compute-image'
     mrenclaves: ['$PRE_COMPUTE_MRENCLAVE']
     pwd: '/'
-    command: 'java -jar /app/tee-worker-pre-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: '$PRE_COMPUTE_FSPF_KEY'
-    fspf_tag: '$PRE_COMPUTE_FSPF_TAG'
+    command: 'java -jar /app/app.jar'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
       IEXEC_TASK_ID: '$env.get("IEXEC_TASK_ID")'
-      IEXEC_PRE_COMPUTE_IN: '/pre-compute-in'
       IEXEC_PRE_COMPUTE_OUT: '/iexec_in'
-      IEXEC_DATASET_FILENAME: '$env.get("IEXEC_DATASET_FILENAME")'
+      #* dataset *#
+      IS_DATASET_REQUIRED: '$IS_DATASET_REQUIRED'
       IEXEC_DATASET_KEY: '$IEXEC_DATASET_KEY'
-      IEXEC_DATASET_CHECKSUM: '$IEXEC_DATASET_CHECKSUM'
-#end
+      IEXEC_DATASET_URL: '$env.get("IEXEC_DATASET_URL")'
+      IEXEC_DATASET_FILENAME: '$env.get("IEXEC_DATASET_FILENAME")'
+      IEXEC_DATASET_CHECKSUM: '$env.get("IEXEC_DATASET_CHECKSUM")'
+      #* input files *#
+      IEXEC_INPUT_FILES_FOLDER: '$env.get("IEXEC_INPUT_FILES_FOLDER")'
+      IEXEC_INPUT_FILES_NUMBER: '$env.get("IEXEC_INPUT_FILES_NUMBER")'
+      #foreach($key in $INPUT_FILE_URLS.keySet())
+      $key: '$INPUT_FILE_URLS.get($key)'
+      #end
+  #end
 
   #*
     Application enclave
@@ -45,9 +60,22 @@ services:
     fspf_key: '$APP_FSPF_KEY'
     fspf_tag: '$APP_FSPF_TAG'
     environment:
-#foreach($key in $env.keySet())
-      $key: '$env.get($key)'
-#end
+      IEXEC_TASK_ID: '$env.get("IEXEC_TASK_ID")'
+      IEXEC_IN: '$env.get("IEXEC_IN")'
+      IEXEC_OUT: '$env.get("IEXEC_OUT")'
+      #* dataset *#
+      IEXEC_DATASET_ADDRESS: '$env.get("IEXEC_DATASET_ADDRESS")'
+      IEXEC_DATASET_FILENAME: '$env.get("IEXEC_DATASET_FILENAME")'
+      #* BoT *#
+      IEXEC_BOT_SIZE: '$env.get("IEXEC_BOT_SIZE")'
+      IEXEC_BOT_FIRST_INDEX: '$env.get("IEXEC_BOT_FIRST_INDEX")'
+      IEXEC_BOT_TASK_INDEX: '$env.get("IEXEC_BOT_TASK_INDEX")'
+      #* input files *#
+      IEXEC_INPUT_FILES_FOLDER: '$env.get("IEXEC_INPUT_FILES_FOLDER")'
+      IEXEC_INPUT_FILES_NUMBER: '$env.get("IEXEC_INPUT_FILES_NUMBER")'
+      #foreach($key in $INPUT_FILE_NAMES.keySet())
+      $key: '$INPUT_FILE_NAMES.get($key)'
+      #end
 
   #* 
     Post-compute enclave
@@ -78,12 +106,12 @@ services:
 *#
 images:
   #* pre-compute. Only when dataset is requested *#
-#if ($IS_DATASET_REQUESTED)
+  #if ($IS_PRE_COMPUTE_REQUIRED)
   - name: pre-compute-image
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
-#end
+  #end
 
   #* application *#
   - name: app-image
