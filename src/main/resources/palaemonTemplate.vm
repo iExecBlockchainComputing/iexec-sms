@@ -141,4 +141,4 @@ volumes:
 security:
   attestation:
     tolerate: [hyperthreading, software-hardening-needed, insecure-igpu, outdated-tcb, debug-mode]
-    ignore_advisories: ["INTEL-SA-00161", "INTEL-SA-00289", "INTEL-SA-00381", "INTEL-SA-00389"]
+    ignore_advisories: ["INTEL-SA-00161", "INTEL-SA-00289", "INTEL-SA-00334", "INTEL-SA-00381", "INTEL-SA-00389"]
