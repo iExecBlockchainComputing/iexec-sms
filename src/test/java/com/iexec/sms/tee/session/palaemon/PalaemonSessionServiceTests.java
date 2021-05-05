@@ -78,8 +78,7 @@ public class PalaemonSessionServiceTests {
     private static final String[] APP_FINGERPRINT_PARTS = APP_FINGERPRINT.split("\\|");
     private static final String ARGS = "args";
     // post-compute
-    private static final String POST_COMPUTE_FINGERPRINT = "fspfKey3|fspfTag3|mrEnclave3";
-    private static final String[] POST_COMPUTE_FINGERPRINT_PARTS = POST_COMPUTE_FINGERPRINT.split("\\|");
+    private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String STORAGE_PROVIDER = "ipfs";
     private static final String STORAGE_PROXY = "storageProxy";
@@ -208,12 +207,8 @@ public class PalaemonSessionServiceTests {
         Map<String, String> tokens =
                 palaemonSessionService.getPostComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_FSPF_KEY))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT_PARTS[0]);
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_FSPF_TAG))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_MRENCLAVE))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT_PARTS[2]);
+                .isEqualTo(POST_COMPUTE_FINGERPRINT);
         // encryption tokens
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION)).isEqualTo("yes") ;
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY))
@@ -289,9 +284,7 @@ public class PalaemonSessionServiceTests {
 
     private Map<String, Object> getPostComputeTokens() {
         Map<String, Object> map = new HashMap<>();
-        map.put(POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT_PARTS[2]);
-        map.put(POST_COMPUTE_FSPF_KEY, POST_COMPUTE_FINGERPRINT_PARTS[0]);
-        map.put(POST_COMPUTE_FSPF_TAG, POST_COMPUTE_FINGERPRINT_PARTS[1]);
+        map.put(POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT);
         map.put(RESULT_TASK_ID, TASK_ID);
         map.put(RESULT_ENCRYPTION, "yes");
         map.put(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);

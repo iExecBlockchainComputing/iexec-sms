@@ -16,6 +16,7 @@
 
 package com.iexec.sms.tee.session.fingerprint;
 
+@Deprecated(forRemoval = true)
 public class PostComputeFingerprint extends SconeFingerprint {
 
     public PostComputeFingerprint(String fingerprint) {

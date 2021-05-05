@@ -65,9 +65,6 @@ services:
     mrenclaves: ['mrEnclave3']
     pwd: '/'
     command: 'java -jar /app/tee-worker-post-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: 'fspfKey3'
-    fspf_tag: 'fspfTag3'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'

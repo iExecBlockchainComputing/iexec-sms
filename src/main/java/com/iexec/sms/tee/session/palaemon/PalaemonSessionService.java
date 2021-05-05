@@ -27,8 +27,6 @@ import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.fingerprint.AppFingerprint;
-import com.iexec.sms.tee.session.fingerprint.PostComputeFingerprint;
-import com.iexec.sms.tee.session.fingerprint.PreComputeFingerprint;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -75,8 +73,6 @@ public class PalaemonSessionService {
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
     // PostCompute
-    static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
-    static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     // Env
     private static final String ENV_PROPERTY = "env";
@@ -210,11 +206,7 @@ public class PalaemonSessionService {
         requireNonNull(taskDescription, "Task description must no be null");
         String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
-        PostComputeFingerprint postComputeFingerprint = new PostComputeFingerprint(
-                taskDescription.getTeePostComputeFingerprint());
-        tokens.put(POST_COMPUTE_FSPF_KEY, postComputeFingerprint.getFspfKey());
-        tokens.put(POST_COMPUTE_FSPF_TAG, postComputeFingerprint.getFspfTag());
-        tokens.put(POST_COMPUTE_MRENCLAVE, postComputeFingerprint.getMrEnclave());
+        tokens.put(POST_COMPUTE_MRENCLAVE, taskDescription.getTeePostComputeFingerprint());
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         if (encryptionTokens.isEmpty()) {

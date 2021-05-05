@@ -85,9 +85,6 @@ services:
     mrenclaves: ['$POST_COMPUTE_MRENCLAVE']
     pwd: '/'
     command: 'java -jar /app/tee-worker-post-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: '$POST_COMPUTE_FSPF_KEY'
-    fspf_tag: '$POST_COMPUTE_FSPF_TAG'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
