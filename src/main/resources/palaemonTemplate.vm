@@ -56,9 +56,6 @@ services:
     mrenclaves: ['$APP_MRENCLAVE']
     pwd: '/'
     command: '$APP_ARGS'
-    fspf_path: '/fspf.pb'
-    fspf_key: '$APP_FSPF_KEY'
-    fspf_tag: '$APP_FSPF_TAG'
     environment:
       IEXEC_TASK_ID: '$env.get("IEXEC_TASK_ID")'
       IEXEC_IN: '$env.get("IEXEC_IN")'
@@ -84,7 +81,7 @@ services:
     image_name: 'post-compute-image'
     mrenclaves: ['$POST_COMPUTE_MRENCLAVE']
     pwd: '/'
-    command: 'java -jar /app/tee-worker-post-compute.jar'
+    command: 'java -jar /app/app.jar'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'

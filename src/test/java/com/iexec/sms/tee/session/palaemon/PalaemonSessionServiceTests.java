@@ -74,7 +74,7 @@ public class PalaemonSessionServiceTests {
     private static final String DATASET_KEY = "\ndatasetKey\n";
     // app
     private static final String APP_URI = "appUri";
-    private static final String APP_FINGERPRINT = "fspfKey2|fspfTag2|mrEnclave2|entryPoint";
+    private static final String APP_FINGERPRINT = "mrEnclave2|entryPoint";
     private static final String[] APP_FINGERPRINT_PARTS = APP_FINGERPRINT.split("\\|");
     private static final String ARGS = "args";
     // post-compute
@@ -165,14 +165,10 @@ public class PalaemonSessionServiceTests {
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.APP_FSPF_KEY))
-                .isEqualTo(APP_FINGERPRINT_PARTS[0]);
-        assertThat(tokens.get(PalaemonSessionService.APP_FSPF_TAG))
-                .isEqualTo(APP_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.APP_MRENCLAVE))
-                .isEqualTo(APP_FINGERPRINT_PARTS[2]);
+                .isEqualTo(APP_FINGERPRINT_PARTS[0]);
         assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
-                .isEqualTo(APP_FINGERPRINT_PARTS[3] + " " + ARGS);
+                .isEqualTo(APP_FINGERPRINT_PARTS[1] + " " + ARGS);
         assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
                 .isEqualTo(Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
@@ -273,10 +269,8 @@ public class PalaemonSessionServiceTests {
 
     private Map<String, Object> getAppTokens() {
         return Map.of(
-                APP_MRENCLAVE, APP_FINGERPRINT_PARTS[2],
-                APP_FSPF_KEY, APP_FINGERPRINT_PARTS[0],
-                APP_FSPF_TAG, APP_FINGERPRINT_PARTS[1],
-                APP_ARGS, APP_FINGERPRINT_PARTS[3] + " " + ARGS,
+                APP_MRENCLAVE, APP_FINGERPRINT_PARTS[0],
+                APP_ARGS, APP_FINGERPRINT_PARTS[1] + " " + ARGS,
                 INPUT_FILE_NAMES, Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));

@@ -26,7 +26,6 @@ import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.fingerprint.AppFingerprint;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -177,13 +176,19 @@ public class PalaemonSessionService {
         TaskDescription taskDescription = request.getTaskDescription();
         requireNonNull(taskDescription, "Task description must no be null");
         Map<String, Object> tokens = new HashMap<>();
-        AppFingerprint appFingerprint = new AppFingerprint(taskDescription.getAppFingerprint());
-        tokens.put(APP_FSPF_KEY, appFingerprint.getFspfKey());
-        tokens.put(APP_FSPF_TAG, appFingerprint.getFspfTag());
-        tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
-        String appArgs = appFingerprint.getEntrypoint();
+        // /!\ TODO replace with new fingerprint format
+        String fingerprint = taskDescription.getAppFingerprint();
+        if (StringUtils.isEmpty(fingerprint)) {
+            throw new IllegalArgumentException("Empty app fingerprint: " + fingerprint);
+        }
+        String[] fingerprintParts = fingerprint.split("\\|");
+        if (fingerprintParts.length < 2) {
+            throw new IllegalArgumentException("Invalid app fingerprint: " + fingerprint);
+        }
+        tokens.put(APP_MRENCLAVE, fingerprintParts[0]);
+        String appArgs = fingerprintParts[1];
         if (!StringUtils.isEmpty(taskDescription.getCmd())) {
-            appArgs = appFingerprint.getEntrypoint() + " " + taskDescription.getCmd();
+            appArgs = appArgs + " " + taskDescription.getCmd();
         }
         tokens.put(APP_ARGS, appArgs);
         // extract <IEXEC_INPUT_FILE_NAME_N, name>
