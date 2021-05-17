@@ -55,9 +55,7 @@ public class PalaemonSessionServiceTests {
     private static final String ENCLAVE_CHALLENGE = "enclaveChallenge";
     private static final String REQUESTER = "requester";
     // pre-compute
-    private static final String PRE_COMPUTE_FINGERPRINT = "fspfKey2|fspfTag2|mrEnclave2";
-    private static final String[] PRE_COMPUTE_FINGERPRINT_PARTS =
-    PRE_COMPUTE_FINGERPRINT.split("\\|");
+    private static final String PRE_COMPUTE_FINGERPRINT = "mrEnclave2";
     private static final String DATASET_ID = "datasetId";
     private static final String DATASET_ADDRESS = "0xDatasetAddress";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
@@ -112,12 +110,8 @@ public class PalaemonSessionServiceTests {
         Map<String, String> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_FSPF_KEY))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[0]);
-        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_FSPF_TAG))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[2]);
+                .isEqualTo(PRE_COMPUTE_FINGERPRINT);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_CHECKSUM))
                 .isEqualTo(DATASET_CHECKSUM);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_URL))

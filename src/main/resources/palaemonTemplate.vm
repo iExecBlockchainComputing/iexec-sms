@@ -1,5 +1,11 @@
 name: '$SESSION_ID'
-digest: 'create'
+version: '0.3'
+
+access_policy:
+  read:
+   - CREATOR
+  update:
+   - CREATOR
 
 services:
 
@@ -12,10 +18,7 @@ services:
     image_name: 'pre-compute-image'
     mrenclaves: ['$PRE_COMPUTE_MRENCLAVE']
     pwd: '/'
-    command: 'java -jar /app/tee-worker-pre-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: '$PRE_COMPUTE_FSPF_KEY'
-    fspf_tag: '$PRE_COMPUTE_FSPF_TAG'
+    command: 'java -jar /app/app.jar'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
@@ -73,8 +76,7 @@ services:
 images:
   #* pre-compute. Only when dataset is requested *#
 #if ($IS_DATASET_REQUESTED)
-  - name: 'pre-compute-image'
-    mrenclaves: ['$PRE_COMPUTE_MRENCLAVE']
+  - name: pre-compute-image
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
@@ -82,7 +84,6 @@ images:
 
   #* application *#
   - name: app-image
-    mrenclaves: ['$APP_MRENCLAVE']
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
@@ -90,8 +91,7 @@ images:
         path: '/iexec_out'
 
   #* post-compute *#
-  - name: 'post-compute-image'
-    mrenclaves: ['$POST_COMPUTE_MRENCLAVE']
+  - name: post-compute-image
     volumes:
       - name: 'iexec_out'
         path: '/iexec_out'
@@ -103,6 +103,11 @@ images:
   for each service.
 *#
 volumes:
-  - name: 'iexec_in'
-  - name: 'iexec_out'
-  - name: 'post-compute-tmp'
+  - name: iexec_in
+  - name: iexec_out
+  - name: post-compute-tmp
+
+security:
+  attestation:
+    tolerate: [hyperthreading, software-hardening-needed, insecure-igpu, outdated-tcb, debug-mode]
+    ignore_advisories: ["INTEL-SA-00161", "INTEL-SA-00289", "INTEL-SA-00381", "INTEL-SA-00389"]
