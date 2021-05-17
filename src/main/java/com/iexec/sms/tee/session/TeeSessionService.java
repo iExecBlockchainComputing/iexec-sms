@@ -21,7 +21,7 @@ import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.palaemon.PalaemonSessionRequest;
 import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
