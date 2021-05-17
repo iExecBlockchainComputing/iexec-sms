@@ -149,10 +149,6 @@ public class PalaemonSessionServiceTests {
         Map<String, Object> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_FSPF_KEY))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[0]);
-        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_FSPF_TAG))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
                 .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[2]);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY))
