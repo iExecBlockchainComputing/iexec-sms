@@ -16,7 +16,7 @@
 
 package com.iexec.sms.tee.session.palaemon;
 
-import com.iexec.common.chain.ChainDeal;
+import com.iexec.common.task.TaskDescription;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,8 +29,7 @@ import lombok.NoArgsConstructor;
 public class PalaemonSessionRequest {
 
     private String sessionId;
-    private String chainTaskId;
+    private TaskDescription taskDescription;
     private String workerAddress;
     private String enclaveChallenge;
-    private ChainDeal chainDeal;
 }

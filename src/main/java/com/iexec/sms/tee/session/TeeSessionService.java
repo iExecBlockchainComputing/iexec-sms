@@ -16,17 +16,16 @@
 
 package com.iexec.sms.tee.session;
 
-import com.iexec.common.chain.ChainDeal;
-import com.iexec.common.chain.ChainTask;
+import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.palaemon.PalaemonSessionRequest;
 import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import static java.util.Objects.requireNonNull;
 
 @Slf4j
 @Service
@@ -41,7 +40,8 @@ public class TeeSessionService {
             IexecHubService iexecService,
             PalaemonSessionService palaemonSessionService,
             TeeSessionClient teeSessionClient,
-            @Value("${logging.tee.display-debug-session}") boolean shouldDisplayDebugSession) {
+            @Value("${logging.tee.display-debug-session}")
+            boolean shouldDisplayDebugSession) {
         this.iexecHubService = iexecService;
         this.palaemonSessionService = palaemonSessionService;
         this.teeSessionClient = teeSessionClient;
@@ -53,23 +53,15 @@ public class TeeSessionService {
             String workerAddress,
             String teeChallenge) throws Exception {
 
-        Optional<ChainTask> chainTask = iexecHubService.getChainTask(taskId);
-        if (chainTask.isEmpty()) {
-            log.error("Failed to get chain task [taskId:{}, workerAddress:{}]",
-                    taskId, workerAddress);
-            return "";
-        }
-        Optional<ChainDeal> chainDeal = iexecHubService.getChainDeal(chainTask.get().getDealid());
-        if (chainDeal.isEmpty()) {
-            throw new Exception("Failed to get chain deal - taskId: " + taskId);
-        }
         String sessionId = createSessionId(taskId);
+        TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
+        requireNonNull(taskDescription,
+                "Failed to get task description - taskId: " + taskId);
         PalaemonSessionRequest request = PalaemonSessionRequest.builder()
                 .sessionId(sessionId)
-                .chainTaskId(taskId)
+                .taskDescription(taskDescription)
                 .workerAddress(workerAddress)
                 .enclaveChallenge(teeChallenge)
-                .chainDeal(chainDeal.get())
                 .build();
         String sessionYmlAsString = palaemonSessionService.getSessionYml(request);
         if (sessionYmlAsString.isEmpty()) {
@@ -80,6 +72,7 @@ public class TeeSessionService {
         if (shouldDisplayDebugSession){
             log.info("Session yml content [taskId:{}]\n{}", taskId, sessionYmlAsString);
         }
+        // /!\ TODO clean expired tasks sessions
         boolean isSessionGenerated = teeSessionClient
                 .generateSecureSession(sessionYmlAsString.getBytes())
                 .getStatusCode()
