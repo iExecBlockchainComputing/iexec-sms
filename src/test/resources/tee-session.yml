@@ -1,18 +1,20 @@
 
 name: 'sessionId'
-digest: 'create'
+version: '0.3'
+
+access_policy:
+  read:
+   - CREATOR
+  update:
+   - CREATOR
 
 services:
 
-  
   - name: 'pre-compute'
     image_name: 'pre-compute-image'
     mrenclaves: ['mrEnclave1']
     pwd: '/'
-    command: 'java -jar /app/tee-worker-pre-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: 'fspfKey1'
-    fspf_tag: 'fspfTag1'
+    command: 'java -jar /app/app.jar'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
@@ -36,9 +38,6 @@ services:
     mrenclaves: ['mrEnclave2']
     pwd: '/'
     command: 'entryPoint args'
-    fspf_path: '/fspf.pb'
-    fspf_key: 'fspfKey2'
-    fspf_tag: 'fspfTag2'
     environment:
       IEXEC_TASK_ID: 'taskId'
       IEXEC_IN: '/iexec_in'
@@ -62,10 +61,7 @@ services:
     image_name: 'post-compute-image'
     mrenclaves: ['mrEnclave3']
     pwd: '/'
-    command: 'java -jar /app/tee-worker-post-compute.jar'
-    fspf_path: '/fspf.pb'
-    fspf_key: 'fspfKey3'
-    fspf_tag: 'fspfTag3'
+    command: 'java -jar /app/app.jar'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
@@ -83,14 +79,12 @@ services:
 images:
   
   - name: 'pre-compute-image'
-    mrenclaves: ['mrEnclave1']
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
 
   
   - name: app-image
-    mrenclaves: ['mrEnclave2']
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
@@ -99,7 +93,6 @@ images:
 
   
   - name: 'post-compute-image'
-    mrenclaves: ['mrEnclave3']
     volumes:
       - name: 'iexec_out'
         path: '/iexec_out'
@@ -112,3 +105,7 @@ volumes:
   - name: 'iexec_out'
   - name: 'post-compute-tmp'
 
+security:
+  attestation:
+    tolerate: [hyperthreading, software-hardening-needed, insecure-igpu, outdated-tcb, debug-mode]
+    ignore_advisories: ["INTEL-SA-00161", "INTEL-SA-00289", "INTEL-SA-00334", "INTEL-SA-00381", "INTEL-SA-00389"]

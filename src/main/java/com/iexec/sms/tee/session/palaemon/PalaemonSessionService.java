@@ -26,9 +26,6 @@ import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.fingerprint.AppFingerprint;
-import com.iexec.sms.tee.session.fingerprint.PostComputeFingerprint;
-import com.iexec.sms.tee.session.fingerprint.PreComputeFingerprint;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -75,8 +72,6 @@ public class PalaemonSessionService {
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
     // PostCompute
-    static final String POST_COMPUTE_FSPF_KEY = "POST_COMPUTE_FSPF_KEY";
-    static final String POST_COMPUTE_FSPF_TAG = "POST_COMPUTE_FSPF_TAG";
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     // Env
     private static final String ENV_PROPERTY = "env";
@@ -150,10 +145,7 @@ public class PalaemonSessionService {
         String taskId = taskDescription.getChainTaskId();
         Map<String, Object> tokens = new HashMap<>();
         String fingerprint = preComputeConfig.getFingerprint();
-        PreComputeFingerprint preComputeFingerprint = new PreComputeFingerprint(fingerprint);
-        tokens.put(PRE_COMPUTE_MRENCLAVE, preComputeFingerprint.getMrEnclave());
-        tokens.put(PRE_COMPUTE_FSPF_KEY, preComputeFingerprint.getFspfKey());
-        tokens.put(PRE_COMPUTE_FSPF_TAG, preComputeFingerprint.getFspfTag());
+        tokens.put(PRE_COMPUTE_MRENCLAVE, fingerprint);
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
         tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
         if (taskDescription.containsDataset()) {
@@ -184,13 +176,19 @@ public class PalaemonSessionService {
         TaskDescription taskDescription = request.getTaskDescription();
         requireNonNull(taskDescription, "Task description must no be null");
         Map<String, Object> tokens = new HashMap<>();
-        AppFingerprint appFingerprint = new AppFingerprint(taskDescription.getAppFingerprint());
-        tokens.put(APP_FSPF_KEY, appFingerprint.getFspfKey());
-        tokens.put(APP_FSPF_TAG, appFingerprint.getFspfTag());
-        tokens.put(APP_MRENCLAVE, appFingerprint.getMrEnclave());
-        String appArgs = appFingerprint.getEntrypoint();
+        // /!\ TODO replace with new fingerprint format
+        String fingerprint = taskDescription.getAppFingerprint();
+        if (StringUtils.isEmpty(fingerprint)) {
+            throw new IllegalArgumentException("Empty app fingerprint: " + fingerprint);
+        }
+        String[] fingerprintParts = fingerprint.split("\\|");
+        if (fingerprintParts.length < 2) {
+            throw new IllegalArgumentException("Invalid app fingerprint: " + fingerprint);
+        }
+        tokens.put(APP_MRENCLAVE, fingerprintParts[0]);
+        String appArgs = fingerprintParts[1];
         if (!StringUtils.isEmpty(taskDescription.getCmd())) {
-            appArgs = appFingerprint.getEntrypoint() + " " + taskDescription.getCmd();
+            appArgs = appArgs + " " + taskDescription.getCmd();
         }
         tokens.put(APP_ARGS, appArgs);
         // extract <IEXEC_INPUT_FILE_NAME_N, name>
@@ -213,11 +211,7 @@ public class PalaemonSessionService {
         requireNonNull(taskDescription, "Task description must no be null");
         String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
-        PostComputeFingerprint postComputeFingerprint = new PostComputeFingerprint(
-                taskDescription.getTeePostComputeFingerprint());
-        tokens.put(POST_COMPUTE_FSPF_KEY, postComputeFingerprint.getFspfKey());
-        tokens.put(POST_COMPUTE_FSPF_TAG, postComputeFingerprint.getFspfTag());
-        tokens.put(POST_COMPUTE_MRENCLAVE, postComputeFingerprint.getMrEnclave());
+        tokens.put(POST_COMPUTE_MRENCLAVE, taskDescription.getTeePostComputeFingerprint());
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         if (encryptionTokens.isEmpty()) {

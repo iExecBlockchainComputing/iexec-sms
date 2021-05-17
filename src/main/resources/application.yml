@@ -57,8 +57,8 @@ scone:
 
 # TODO /!\ remove the option of env variable for releases.
 pre-compute:
-  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:docker.io/iexechub/tee-worker-pre-compute:7d6bf7e-dev}
-  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:0330099545478c4199cc0da6ff7513775e1244bc5c44b1de431df3be43263ff7}
+  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:}
+  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
 
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}

@@ -65,8 +65,7 @@ public class PalaemonSessionServiceTests {
     private static final String ENCLAVE_CHALLENGE = "enclaveChallenge";
     private static final String REQUESTER = "requester";
     // pre-compute
-    private static final String PRE_COMPUTE_FINGERPRINT = "fspfKey1|fspfTag1|mrEnclave1";
-    private static final String[] PRE_COMPUTE_FINGERPRINT_PARTS = PRE_COMPUTE_FINGERPRINT.split("\\|");
+    private static final String PRE_COMPUTE_FINGERPRINT = "mrEnclave1";
     private static final String DATASET_ADDRESS = "0xDatasetAddress";
     private static final String DATASET_NAME = "datasetName";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
@@ -75,12 +74,11 @@ public class PalaemonSessionServiceTests {
     private static final String DATASET_KEY = "\ndatasetKey\n";
     // app
     private static final String APP_URI = "appUri";
-    private static final String APP_FINGERPRINT = "fspfKey2|fspfTag2|mrEnclave2|entryPoint";
+    private static final String APP_FINGERPRINT = "mrEnclave2|entryPoint";
     private static final String[] APP_FINGERPRINT_PARTS = APP_FINGERPRINT.split("\\|");
     private static final String ARGS = "args";
     // post-compute
-    private static final String POST_COMPUTE_FINGERPRINT = "fspfKey3|fspfTag3|mrEnclave3";
-    private static final String[] POST_COMPUTE_FINGERPRINT_PARTS = POST_COMPUTE_FINGERPRINT.split("\\|");
+    private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String STORAGE_PROVIDER = "ipfs";
     private static final String STORAGE_PROXY = "storageProxy";
@@ -150,7 +148,7 @@ public class PalaemonSessionServiceTests {
                 palaemonSessionService.getPreComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT_PARTS[2]);
+                .isEqualTo(PRE_COMPUTE_FINGERPRINT);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY))
                 .isEqualTo(secret.getTrimmedValue());
         assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_URLS))
@@ -167,14 +165,10 @@ public class PalaemonSessionServiceTests {
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.APP_FSPF_KEY))
-                .isEqualTo(APP_FINGERPRINT_PARTS[0]);
-        assertThat(tokens.get(PalaemonSessionService.APP_FSPF_TAG))
-                .isEqualTo(APP_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.APP_MRENCLAVE))
-                .isEqualTo(APP_FINGERPRINT_PARTS[2]);
+                .isEqualTo(APP_FINGERPRINT_PARTS[0]);
         assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
-                .isEqualTo(APP_FINGERPRINT_PARTS[3] + " " + ARGS);
+                .isEqualTo(APP_FINGERPRINT_PARTS[1] + " " + ARGS);
         assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
                 .isEqualTo(Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
@@ -209,12 +203,8 @@ public class PalaemonSessionServiceTests {
         Map<String, String> tokens =
                 palaemonSessionService.getPostComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_FSPF_KEY))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT_PARTS[0]);
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_FSPF_TAG))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT_PARTS[1]);
         assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_MRENCLAVE))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT_PARTS[2]);
+                .isEqualTo(POST_COMPUTE_FINGERPRINT);
         // encryption tokens
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION)).isEqualTo("yes") ;
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY))
@@ -269,9 +259,7 @@ public class PalaemonSessionServiceTests {
 
     private Map<String, Object> getPreComputeTokens() {
         return Map.of(
-                PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT_PARTS[2],
-                PRE_COMPUTE_FSPF_KEY, PRE_COMPUTE_FINGERPRINT_PARTS[0],
-                PRE_COMPUTE_FSPF_TAG, PRE_COMPUTE_FINGERPRINT_PARTS[1],
+                PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
                 IS_DATASET_REQUIRED, true,
                 IEXEC_DATASET_KEY, DATASET_KEY.trim(),
                 INPUT_FILE_URLS, Map.of(
@@ -281,10 +269,8 @@ public class PalaemonSessionServiceTests {
 
     private Map<String, Object> getAppTokens() {
         return Map.of(
-                APP_MRENCLAVE, APP_FINGERPRINT_PARTS[2],
-                APP_FSPF_KEY, APP_FINGERPRINT_PARTS[0],
-                APP_FSPF_TAG, APP_FINGERPRINT_PARTS[1],
-                APP_ARGS, APP_FINGERPRINT_PARTS[3] + " " + ARGS,
+                APP_MRENCLAVE, APP_FINGERPRINT_PARTS[0],
+                APP_ARGS, APP_FINGERPRINT_PARTS[1] + " " + ARGS,
                 INPUT_FILE_NAMES, Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));
@@ -292,9 +278,7 @@ public class PalaemonSessionServiceTests {
 
     private Map<String, Object> getPostComputeTokens() {
         Map<String, Object> map = new HashMap<>();
-        map.put(POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT_PARTS[2]);
-        map.put(POST_COMPUTE_FSPF_KEY, POST_COMPUTE_FINGERPRINT_PARTS[0]);
-        map.put(POST_COMPUTE_FSPF_TAG, POST_COMPUTE_FINGERPRINT_PARTS[1]);
+        map.put(POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT);
         map.put(RESULT_TASK_ID, TASK_ID);
         map.put(RESULT_ENCRYPTION, "yes");
         map.put(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
