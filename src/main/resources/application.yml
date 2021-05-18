@@ -59,6 +59,7 @@ scone:
 pre-compute:
   image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:}
   fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
+  heap-size: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE:4G}
 
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}

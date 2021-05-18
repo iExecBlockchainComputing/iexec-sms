@@ -20,7 +20,7 @@ import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
-import com.iexec.sms.precompute.PreComputeConfig;
+import com.iexec.sms.precompute.PreComputeConfigService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -80,7 +80,7 @@ public class PalaemonSessionService {
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
-    private final PreComputeConfig preComputeConfig;
+    private final PreComputeConfigService preComputeConfigService;
 
 
     public PalaemonSessionService(
@@ -89,7 +89,7 @@ public class PalaemonSessionService {
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            PreComputeConfig preComputeConfig) throws Exception {
+            PreComputeConfigService preComputeConfigService) throws Exception {
         if (StringUtils.isEmpty(templateFilePath)) {
             throw new IllegalArgumentException("Missing palaemon template filepath");
         }
@@ -100,7 +100,7 @@ public class PalaemonSessionService {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
-        this.preComputeConfig = preComputeConfig;
+        this.preComputeConfigService = preComputeConfigService;
     }
 
     // TODO: Read onchain available infos from enclave instead
@@ -144,7 +144,8 @@ public class PalaemonSessionService {
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
         Map<String, Object> tokens = new HashMap<>();
-        String fingerprint = preComputeConfig.getFingerprint();
+        String fingerprint =
+                preComputeConfigService.getConfiguration().getFingerprint();
         tokens.put(PRE_COMPUTE_MRENCLAVE, fingerprint);
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
         tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
