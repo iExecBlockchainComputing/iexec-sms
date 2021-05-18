@@ -16,6 +16,7 @@
 
 package com.iexec.sms.tee.session.palaemon;
 
+import com.iexec.common.precompute.PreComputeConfig;
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
@@ -23,7 +24,7 @@ import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.precompute.PreComputeConfig;
+import com.iexec.sms.precompute.PreComputeConfigService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -100,7 +101,7 @@ public class PalaemonSessionServiceTests {
     @Mock
     private TeeChallengeService teeChallengeService;
     @Mock
-    private PreComputeConfig preComputeConfig;
+    private PreComputeConfigService preComputeConfigService;
 
     private PalaemonSessionService palaemonSessionService;
 
@@ -114,7 +115,7 @@ public class PalaemonSessionServiceTests {
                 web3SecretService,
                 web2SecretsService,
                 teeChallengeService,
-                preComputeConfig));
+                preComputeConfigService));
     }
 
     @Test
@@ -139,7 +140,10 @@ public class PalaemonSessionServiceTests {
     @Test
     public void shouldGetPreComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
-        when(preComputeConfig.getFingerprint()).thenReturn(PRE_COMPUTE_FINGERPRINT);
+        when(preComputeConfigService.getConfiguration()).thenReturn(
+                        new PreComputeConfig("image",
+                                PRE_COMPUTE_FINGERPRINT,
+                                "heap"));
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
