@@ -18,6 +18,8 @@ package com.iexec.sms.tee.session.palaemon;
 
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.tee.TeeEnclaveConfiguration;
+import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.precompute.PreComputeConfigService;
@@ -177,17 +179,20 @@ public class PalaemonSessionService {
         TaskDescription taskDescription = request.getTaskDescription();
         requireNonNull(taskDescription, "Task description must no be null");
         Map<String, Object> tokens = new HashMap<>();
-        // /!\ TODO replace with new fingerprint format
-        String fingerprint = taskDescription.getAppFingerprint();
+        TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
+        requireNonNull(enclaveConfig, "Enclave configuration must no be null");
+        String fingerprint = enclaveConfig.getFingerprint();
         if (StringUtils.isEmpty(fingerprint)) {
             throw new IllegalArgumentException("Empty app fingerprint: " + fingerprint);
         }
-        String[] fingerprintParts = fingerprint.split("\\|");
-        if (fingerprintParts.length < 2) {
+        if (BytesUtils.stringToBytes(fingerprint).length != 32) {
             throw new IllegalArgumentException("Invalid app fingerprint: " + fingerprint);
         }
-        tokens.put(APP_MRENCLAVE, fingerprintParts[0]);
-        String appArgs = fingerprintParts[1];
+        tokens.put(APP_MRENCLAVE, fingerprint);
+        if (StringUtils.isEmpty(enclaveConfig.getEntrypoint())){
+            throw new IllegalArgumentException("Empty app entrypoint: " + fingerprint);
+        }
+        String appArgs = enclaveConfig.getEntrypoint();
         if (!StringUtils.isEmpty(taskDescription.getCmd())) {
             appArgs = appArgs + " " + taskDescription.getCmd();
         }

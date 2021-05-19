@@ -35,9 +35,9 @@ services:
   
   - name: 'app'
     image_name: 'app-image'
-    mrenclaves: ['mrEnclave2']
+    mrenclaves: ['01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b']
     pwd: '/'
-    command: 'entryPoint args'
+    command: 'appEntrypoint args'
     environment:
       IEXEC_TASK_ID: 'taskId'
       IEXEC_IN: '/iexec_in'
