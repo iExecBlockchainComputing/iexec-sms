@@ -21,6 +21,7 @@ import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
+import com.iexec.common.tee.TeeEnclaveConfigurationValidator;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
@@ -42,10 +43,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.yaml.snakeyaml.Yaml;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
@@ -173,6 +171,9 @@ public class PalaemonSessionServiceTests {
     @Test
     public void shouldGetAppPalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
+        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        when(enclaveConfig.getValidator()).thenReturn(validator);
+        when(validator.isValid()).thenReturn(true);
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
@@ -187,31 +188,15 @@ public class PalaemonSessionServiceTests {
     }
 
     @Test
-    public void shouldFailToGetAppPalaemonTokensSinceEmptyFingerprint(){
+    public void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
         PalaemonSessionRequest request = createSessionRequest();
-        when(enclaveConfig.getFingerprint()).thenReturn("");
+        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        when(enclaveConfig.getValidator()).thenReturn(validator);
+        String validationError = "validation error";
+        when(validator.validate()).thenReturn(Collections.singletonList(validationError));
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> palaemonSessionService.getAppPalaemonTokens(request));
-        Assertions.assertTrue(exception.getMessage().contains("Empty app fingerprint"));
-    }
-
-    @Test
-    public void shouldFailToGetAppPalaemonTokensSinceInvalidFingerprint(){
-        PalaemonSessionRequest request = createSessionRequest();
-        when(enclaveConfig.getFingerprint()).thenReturn("badFingerprint");
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> palaemonSessionService.getAppPalaemonTokens(request));
-        Assertions.assertTrue(exception.getMessage().contains("Invalid app fingerprint"));
-    }
-
-    @Test
-    public void shouldFailToGetAppPalaemonTokensSinceEmptyEntrypoint(){
-        PalaemonSessionRequest request = createSessionRequest();
-        when(enclaveConfig.getEntrypoint()).thenReturn("");
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> palaemonSessionService.getAppPalaemonTokens(request));
-        System.out.println(exception.getMessage());
-        Assertions.assertTrue(exception.getMessage().contains("Empty app entrypoint"));
+        Assertions.assertTrue(exception.getMessage().contains(validationError));
     }
 
     // post-compute

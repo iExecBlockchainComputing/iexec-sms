@@ -181,17 +181,11 @@ public class PalaemonSessionService {
         Map<String, Object> tokens = new HashMap<>();
         TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
         requireNonNull(enclaveConfig, "Enclave configuration must no be null");
-        String fingerprint = enclaveConfig.getFingerprint();
-        if (StringUtils.isEmpty(fingerprint)) {
-            throw new IllegalArgumentException("Empty app fingerprint: " + fingerprint);
+        if (!enclaveConfig.getValidator().isValid()){
+            throw new IllegalArgumentException("Invalid enclave configuration: " +
+                    enclaveConfig.getValidator().validate().toString());
         }
-        if (BytesUtils.stringToBytes(fingerprint).length != 32) {
-            throw new IllegalArgumentException("Invalid app fingerprint: " + fingerprint);
-        }
-        tokens.put(APP_MRENCLAVE, fingerprint);
-        if (StringUtils.isEmpty(enclaveConfig.getEntrypoint())){
-            throw new IllegalArgumentException("Empty app entrypoint: " + fingerprint);
-        }
+        tokens.put(APP_MRENCLAVE, enclaveConfig.getFingerprint());
         String appArgs = enclaveConfig.getEntrypoint();
         if (!StringUtils.isEmpty(taskDescription.getCmd())) {
             appArgs = appArgs + " " + taskDescription.getCmd();
