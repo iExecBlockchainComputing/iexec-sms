@@ -20,6 +20,8 @@ import com.iexec.common.precompute.PreComputeConfig;
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.tee.TeeEnclaveConfiguration;
+import com.iexec.common.tee.TeeEnclaveConfigurationValidator;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
@@ -34,16 +36,14 @@ import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.yaml.snakeyaml.Yaml;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
@@ -52,6 +52,7 @@ import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.INPUT_FILE_NAMES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @Slf4j
@@ -75,8 +76,10 @@ public class PalaemonSessionServiceTests {
     private static final String DATASET_KEY = "\ndatasetKey\n";
     // app
     private static final String APP_URI = "appUri";
-    private static final String APP_FINGERPRINT = "mrEnclave2|entryPoint";
-    private static final String[] APP_FINGERPRINT_PARTS = APP_FINGERPRINT.split("\\|");
+    private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
+    private static final String APP_ENTRYPOINT = "appEntrypoint";
+    private static final TeeEnclaveConfiguration enclaveConfig =
+            mock(TeeEnclaveConfiguration.class);
     private static final String ARGS = "args";
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
@@ -116,6 +119,8 @@ public class PalaemonSessionServiceTests {
                 web2SecretsService,
                 teeChallengeService,
                 preComputeConfigService));
+        when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
+        when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
     }
 
     @Test
@@ -166,17 +171,32 @@ public class PalaemonSessionServiceTests {
     @Test
     public void shouldGetAppPalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
+        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        when(enclaveConfig.getValidator()).thenReturn(validator);
+        when(validator.isValid()).thenReturn(true);
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.APP_MRENCLAVE))
-                .isEqualTo(APP_FINGERPRINT_PARTS[0]);
+                .isEqualTo(APP_FINGERPRINT);
         assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
-                .isEqualTo(APP_FINGERPRINT_PARTS[1] + " " + ARGS);
+                .isEqualTo(APP_ENTRYPOINT + " " + ARGS);
         assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
                 .isEqualTo(Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
+    }
+
+    @Test
+    public void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
+        PalaemonSessionRequest request = createSessionRequest();
+        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        when(enclaveConfig.getValidator()).thenReturn(validator);
+        String validationError = "validation error";
+        when(validator.validate()).thenReturn(Collections.singletonList(validationError));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> palaemonSessionService.getAppPalaemonTokens(request));
+        Assertions.assertTrue(exception.getMessage().contains(validationError));
     }
 
     // post-compute
@@ -242,7 +262,7 @@ public class PalaemonSessionServiceTests {
         return TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
-                .appFingerprint(APP_FINGERPRINT)
+                .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
                 .datasetName(DATASET_NAME)
@@ -273,8 +293,8 @@ public class PalaemonSessionServiceTests {
 
     private Map<String, Object> getAppTokens() {
         return Map.of(
-                APP_MRENCLAVE, APP_FINGERPRINT_PARTS[0],
-                APP_ARGS, APP_FINGERPRINT_PARTS[1] + " " + ARGS,
+                APP_MRENCLAVE, APP_FINGERPRINT,
+                APP_ARGS, APP_ENTRYPOINT + " " + ARGS,
                 INPUT_FILE_NAMES, Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));
