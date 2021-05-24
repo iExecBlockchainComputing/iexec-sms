@@ -24,7 +24,7 @@ server:
 spring:
   datasource:
     url: ${IEXEC_SMS_H2_URL:jdbc:h2:file:/tmp/h2/sms-h2} # will get or create /tmp/h2/sms-h2.mv.db
-    driverClassName: org.h2.Driver
+    driver-class-name: org.h2.Driver
     username: sa
     password:
   jpa:
@@ -43,17 +43,21 @@ encryption:
 
 blockchain:
   id: ${IEXEC_CHAIN_ID:17}
-  nodeAddress: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:http://localhost:8545}
-  hubAddress: ${IEXEC_HUB_ADDRESS:0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002}
-  gasPriceMultiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be send with networkGasPrice*gasPriceMultiplier, 4.0 means super fast
-  gasPriceCap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
-  isSidechain: ${IEXEC_IS_SIDECHAIN:false}
+  node-address: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:http://localhost:8545}
+  hub-address: ${IEXEC_HUB_ADDRESS:0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002}
+  gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be send with networkGasPrice*gasPriceMultiplier, 4.0 means super fast
+  gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
+  is-sidechain: ${IEXEC_IS_SIDECHAIN:false}
 
 scone:
   cas:
     host: ${IEXEC_SCONE_CAS_HOST:localhost}
     port: ${IEXEC_SCONE_CAS_PORT:8081}
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
+  attestation:
+    tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode}
+    ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:INTEL-SA-00161,INTEL-SA-00289,INTEL-SA-00334,INTEL-SA-00381,INTEL-SA-00389}
+        # INTEL-SA-00220,INTEL-SA-00270,INTEL-SA-00293,INTEL-SA-00320,INTEL-SA-00329 // for sgx-server machine
 
 # TODO /!\ remove the option of env variable for releases.
 pre-compute:

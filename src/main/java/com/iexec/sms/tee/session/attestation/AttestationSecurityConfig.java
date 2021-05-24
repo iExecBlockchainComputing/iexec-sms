@@ -14,36 +14,22 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.blockchain;
+package com.iexec.sms.tee.session.attestation;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
-@Component
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-public class BlockchainConfig {
+import java.util.List;
 
-    @Value("${blockchain.id}")
-    private Integer chainId;
+@Configuration
+public class AttestationSecurityConfig {
 
-    @Value("${blockchain.node-address}")
-    private String nodeAddress;
+    @Value("${scone.attestation.tolerated-insecure-options}")
+    @Getter
+    private List<String> toleratedInsecureOptions;
 
-    @Value("${blockchain.hub-address}")
-    private String hubAddress;
-
-    @Value("${blockchain.gas-price-multiplier}")
-    private float gasPriceMultiplier;
-
-    @Value("${blockchain.gas-price-cap}")
-    private long gasPriceCap;
-
-    @Value("${blockchain.is-sidechain}")
-    private boolean isSidechain;
-
+    @Value("${scone.attestation.ignored-sgx-advisories}")
+    @Getter
+    private List<String> ignoredSgxAdvisories;
 }

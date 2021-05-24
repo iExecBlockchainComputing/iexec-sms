@@ -19,7 +19,6 @@ package com.iexec.sms.tee.session.palaemon;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
-import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.precompute.PreComputeConfigService;
@@ -28,6 +27,7 @@ import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +36,8 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
@@ -60,9 +62,11 @@ public class PalaemonSessionService {
 
     // Internal values required for setting up a palaemon session
     // Generic
-    static final String SESSION_ID_PROPERTY = "SESSION_ID";
+    static final String SESSION_ID = "SESSION_ID";
     static final String INPUT_FILE_URLS = "INPUT_FILE_URLS";
     static final String INPUT_FILE_NAMES = "INPUT_FILE_NAMES";
+    static final String TOLERATED_INSECURE_OPTIONS = "TOLERATED_INSECURE_OPTIONS";
+    static final String IGNORED_SGX_ADVISORIES = "IGNORED_SGX_ADVISORIES";
     // PreCompute
     static final String IS_PRE_COMPUTE_REQUIRED = "IS_PRE_COMPUTE_REQUIRED";
     static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
@@ -78,43 +82,56 @@ public class PalaemonSessionService {
     // Env
     private static final String ENV_PROPERTY = "env";
 
-    private final String palaemonTemplateFilePath;
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
     private final PreComputeConfigService preComputeConfigService;
+    private final AttestationSecurityConfig attestationSecurityConfig;
 
+    @Value("${scone.cas.palaemon}")
+    private String palaemonTemplateFilePath;
 
     public PalaemonSessionService(
-            @Value("${scone.cas.palaemon}")
-            String templateFilePath,
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            PreComputeConfigService preComputeConfigService) throws Exception {
-        if (StringUtils.isEmpty(templateFilePath)) {
-            throw new IllegalArgumentException("Missing palaemon template filepath");
-        }
-        if (!FileHelper.exists(templateFilePath)) {
-            throw new FileNotFoundException("Missing palaemon template file");
-        }
-        this.palaemonTemplateFilePath = templateFilePath;
+            PreComputeConfigService preComputeConfigService,
+            AttestationSecurityConfig attestationSecurityConfig) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.preComputeConfigService = preComputeConfigService;
+        this.attestationSecurityConfig = attestationSecurityConfig;
     }
 
-    // TODO: Read onchain available infos from enclave instead
-    // of copying public vars to palaemon.yml. It needs ssl
-    // call from enclave to eth node (only ethereum node address
-    // required inside palaemon.yml)
+    @PostConstruct
+    void postConstruct() throws Exception {
+        if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
+            throw new IllegalArgumentException("Missing palaemon template filepath");
+        }
+        if (!FileHelper.exists(palaemonTemplateFilePath)) {
+            throw new FileNotFoundException("Missing palaemon template file");
+        }
+    }
+
+    /**
+     * Collect tokens required for different compute stages (pre, in, post)
+     * and build the yaml config of the TEE session.
+     * <p>
+     * TODO: Read onchain available infos from enclave instead of copying
+     * public vars to palaemon.yml. It needs ssl call from enclave to eth
+     * node (only ethereum node address required inside palaemon.yml)
+     * 
+     * @param request session request details
+     * @return session config in yaml string format
+     * @throws Exception
+     */
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
         requireNonNull(request, "Session request must not be null");
         requireNonNull(request.getTaskDescription(), "Task description must not be null");
         TaskDescription taskDescription = request.getTaskDescription();
         Map<String, Object> palaemonTokens = new HashMap<>();
-        palaemonTokens.put(SESSION_ID_PROPERTY, request.getSessionId());
+        palaemonTokens.put(SESSION_ID, request.getSessionId());
         // pre-compute
         boolean isPreComputeRequired = taskDescription.containsDataset() ||
                 !taskDescription.getInputFiles().isEmpty();
@@ -128,9 +145,17 @@ public class PalaemonSessionService {
         palaemonTokens.putAll(getPostComputePalaemonTokens(request));
         // env variables
         Map<String, String> env = IexecEnvUtils.getAllIexecEnv(taskDescription);
-        // Null value should be replaced by empty string.
+        // Null value should be replaced by an empty string.
         env.forEach((key, value) -> env.replace(key, null, EMPTY_YML_VALUE));
         palaemonTokens.put(ENV_PROPERTY, env);
+        // Add attestation security config
+        String toleratedInsecureOptions =
+                String.join(",", attestationSecurityConfig.getToleratedInsecureOptions());
+        String ignoredSgxAdvisories =
+                String.join(",", attestationSecurityConfig.getIgnoredSgxAdvisories());
+        palaemonTokens.put(TOLERATED_INSECURE_OPTIONS, toleratedInsecureOptions);
+        palaemonTokens.put(IGNORED_SGX_ADVISORIES, ignoredSgxAdvisories);
+        // Merge template with tokens and return the result
         return getFilledPalaemonTemplate(this.palaemonTemplateFilePath, palaemonTokens);
     }
 
