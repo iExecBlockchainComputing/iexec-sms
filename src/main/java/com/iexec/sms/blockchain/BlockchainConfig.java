@@ -31,19 +31,19 @@ public class BlockchainConfig {
     @Value("${blockchain.id}")
     private Integer chainId;
 
-    @Value("${blockchain.nodeAddress}")
+    @Value("${blockchain.node-address}")
     private String nodeAddress;
 
-    @Value("${blockchain.hubAddress}")
+    @Value("${blockchain.hub-address}")
     private String hubAddress;
 
-    @Value("${blockchain.gasPriceMultiplier}")
+    @Value("${blockchain.gas-price-multiplier}")
     private float gasPriceMultiplier;
 
-    @Value("${blockchain.gasPriceCap}")
+    @Value("${blockchain.gas-price-cap}")
     private long gasPriceCap;
 
-    @Value("${blockchain.isSidechain}")
+    @Value("${blockchain.is-sidechain}")
     private boolean isSidechain;
 
 }
