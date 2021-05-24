@@ -138,9 +138,9 @@ public class PalaemonSessionServiceTests {
         doReturn(getPostComputeTokens()).when(palaemonSessionService)
                 .getPostComputePalaemonTokens(request);
         when(attestationSecurityConfig.getToleratedInsecureOptions())
-                .thenReturn("hyperthreading, debug-mode");
+                .thenReturn(List.of("hyperthreading", "debug-mode"));
         when(attestationSecurityConfig.getIgnoredSgxAdvisories())
-                .thenReturn("INTEL-SA-00161, INTEL-SA-00289");
+                .thenReturn(List.of("INTEL-SA-00161", "INTEL-SA-00289"));
 
         String actualYmlString = palaemonSessionService.getSessionYml(request);
         Map<String, Object> actualYmlMap = new Yaml().load(actualYmlString);

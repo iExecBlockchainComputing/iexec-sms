@@ -20,14 +20,16 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 public class AttestationSecurityConfig {
 
     @Value("${scone.attestation.tolerated-insecure-options}")
     @Getter
-    private String toleratedInsecureOptions;
+    private List<String> toleratedInsecureOptions;
 
     @Value("${scone.attestation.ignored-sgx-advisories}")
     @Getter
-    private String ignoredSgxAdvisories;
+    private List<String> ignoredSgxAdvisories;
 }

@@ -149,10 +149,12 @@ public class PalaemonSessionService {
         env.forEach((key, value) -> env.replace(key, null, EMPTY_YML_VALUE));
         palaemonTokens.put(ENV_PROPERTY, env);
         // Add attestation security config
-        palaemonTokens.put(TOLERATED_INSECURE_OPTIONS,
-                attestationSecurityConfig.getToleratedInsecureOptions());
-        palaemonTokens.put(IGNORED_SGX_ADVISORIES,
-                attestationSecurityConfig.getIgnoredSgxAdvisories());
+        String toleratedInsecureOptions =
+                String.join(",", attestationSecurityConfig.getToleratedInsecureOptions());
+        String ignoredSgxAdvisories =
+                String.join(",", attestationSecurityConfig.getIgnoredSgxAdvisories());
+        palaemonTokens.put(TOLERATED_INSECURE_OPTIONS, toleratedInsecureOptions);
+        palaemonTokens.put(IGNORED_SGX_ADVISORIES, ignoredSgxAdvisories);
         // Merge template with tokens and return the result
         return getFilledPalaemonTemplate(this.palaemonTemplateFilePath, palaemonTokens);
     }
