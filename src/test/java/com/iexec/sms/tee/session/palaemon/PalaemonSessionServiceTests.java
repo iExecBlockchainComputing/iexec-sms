@@ -33,6 +33,7 @@ import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.*;
@@ -105,6 +107,8 @@ public class PalaemonSessionServiceTests {
     private TeeChallengeService teeChallengeService;
     @Mock
     private PreComputeConfigService preComputeConfigService;
+    @Mock
+    private AttestationSecurityConfig attestationSecurityConfig;
 
     private PalaemonSessionService palaemonSessionService;
 
@@ -114,11 +118,12 @@ public class PalaemonSessionServiceTests {
         // spy is needed to mock some internal calls of the tested
         // class when relevant
         palaemonSessionService = spy(new PalaemonSessionService(
-                TEMPLATE_SESSION_FILE,
                 web3SecretService,
                 web2SecretsService,
                 teeChallengeService,
-                preComputeConfigService));
+                preComputeConfigService,
+                attestationSecurityConfig));
+        ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
     }
@@ -132,6 +137,10 @@ public class PalaemonSessionServiceTests {
                 .getAppPalaemonTokens(request);
         doReturn(getPostComputeTokens()).when(palaemonSessionService)
                 .getPostComputePalaemonTokens(request);
+        when(attestationSecurityConfig.getToleratedInsecureOptions())
+                .thenReturn("hyperthreading, debug-mode");
+        when(attestationSecurityConfig.getIgnoredSgxAdvisories())
+                .thenReturn("INTEL-SA-00161, INTEL-SA-00289");
 
         String actualYmlString = palaemonSessionService.getSessionYml(request);
         Map<String, Object> actualYmlMap = new Yaml().load(actualYmlString);
