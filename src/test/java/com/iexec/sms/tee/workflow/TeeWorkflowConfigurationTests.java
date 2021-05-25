@@ -1,6 +1,6 @@
 package com.iexec.sms.tee.workflow;
 
-import com.iexec.common.tee.TeeWorkflowPublicConfiguration;
+import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +26,7 @@ public class TeeWorkflowConfigurationTests {
     @Test
     public void shouldGetPublicConfiguration() {
         assertThat(teeWorkflowConfiguration.getPublicConfiguration())
-                .isEqualTo(TeeWorkflowPublicConfiguration.builder()
+                .isEqualTo(TeeWorkflowSharedConfiguration.builder()
                 .preComputeImage(PRE_COMPUTE_IMAGE)
                 .preComputeHeapSize(PRE_COMPUTE_HEAP)
                 .postComputeImage(POST_COMPUTE_IMAGE)

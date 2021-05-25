@@ -16,7 +16,7 @@
 
 package com.iexec.sms.tee.workflow;
 
-import com.iexec.common.tee.TeeWorkflowPublicConfiguration;
+import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,8 +57,8 @@ public class TeeWorkflowConfiguration {
     @NotBlank(message = "post-compute heap size must be provided")
     String postComputeHeapSize;
 
-    public TeeWorkflowPublicConfiguration getPublicConfiguration() {
-        return TeeWorkflowPublicConfiguration.builder()
+    public TeeWorkflowSharedConfiguration getPublicConfiguration() {
+        return TeeWorkflowSharedConfiguration.builder()
                     .preComputeImage(preComputeImage)
                     .preComputeHeapSize(preComputeHeapSize)
                     .postComputeImage(postComputeImage)

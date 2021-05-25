@@ -20,7 +20,7 @@ package com.iexec.sms.tee;
 import java.util.Optional;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeWorkflowPublicConfiguration;
+import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -66,7 +66,7 @@ public class TeeController {
      * pre-compute fingerprint, heap size, ...)
      */
     @GetMapping("/workflow/config")
-    public ResponseEntity<TeeWorkflowPublicConfiguration> getPreComputeConfig() {
+    public ResponseEntity<TeeWorkflowSharedConfiguration> getPreComputeConfig() {
         return ResponseEntity.ok(teeWorkflowConfig.getPublicConfiguration());
     }
 
