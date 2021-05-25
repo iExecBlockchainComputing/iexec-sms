@@ -21,13 +21,13 @@ import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
-import com.iexec.sms.precompute.PreComputeConfigService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.workflow.TeeWorkflowConfigurationProvider;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -85,7 +85,7 @@ public class PalaemonSessionService {
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
-    private final PreComputeConfigService preComputeConfigService;
+    private final TeeWorkflowConfigurationProvider teeWorkflowConfigProvider;
     private final AttestationSecurityConfig attestationSecurityConfig;
 
     @Value("${scone.cas.palaemon}")
@@ -95,12 +95,12 @@ public class PalaemonSessionService {
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            PreComputeConfigService preComputeConfigService,
+            TeeWorkflowConfigurationProvider teeWorkflowConfigProvider,
             AttestationSecurityConfig attestationSecurityConfig) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
-        this.preComputeConfigService = preComputeConfigService;
+        this.teeWorkflowConfigProvider = teeWorkflowConfigProvider;
         this.attestationSecurityConfig = attestationSecurityConfig;
     }
 
@@ -172,7 +172,7 @@ public class PalaemonSessionService {
         String taskId = taskDescription.getChainTaskId();
         Map<String, Object> tokens = new HashMap<>();
         String fingerprint =
-                preComputeConfigService.getConfiguration().getFingerprint();
+                teeWorkflowConfigProvider.getConfiguration().getPreComputeFingerprint();
         tokens.put(PRE_COMPUTE_MRENCLAVE, fingerprint);
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
         tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);

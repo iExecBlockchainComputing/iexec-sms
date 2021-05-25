@@ -16,17 +16,16 @@
 
 package com.iexec.sms.tee.session.palaemon;
 
-import com.iexec.common.precompute.PreComputeConfig;
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.tee.TeeEnclaveConfigurationValidator;
+import com.iexec.common.tee.TeeWorkflowConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.precompute.PreComputeConfigService;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -34,6 +33,7 @@ import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.workflow.TeeWorkflowConfigurationProvider;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
@@ -97,6 +97,16 @@ public class PalaemonSessionServiceTests {
     private static final String INPUT_FILE_URL_2 = "http://host/file2";
     private static final String INPUT_FILE_NAME_2 = "file2";
 
+    private static final TeeWorkflowConfiguration TEE_WORKFLOW_CONFIGURATION =
+            TeeWorkflowConfiguration.builder()
+                    .preComputeImage("preComputeImage")
+                    .preComputeFingerprint(PRE_COMPUTE_FINGERPRINT)
+                    .preComputeHeapSize("preComputeHeapSize")
+                    .postComputeImage("postComputeImage")
+                    .postComputeFingerprint(POST_COMPUTE_FINGERPRINT)
+                    .postComputeHeapSize("postComputeHeapSize")
+                    .build();
+
     @Mock
     private IexecHubService iexecHubService;
     @Mock
@@ -106,7 +116,7 @@ public class PalaemonSessionServiceTests {
     @Mock
     private TeeChallengeService teeChallengeService;
     @Mock
-    private PreComputeConfigService preComputeConfigService;
+    private TeeWorkflowConfigurationProvider preComputeConfigService;
     @Mock
     private AttestationSecurityConfig attestationSecurityConfig;
 
@@ -154,10 +164,8 @@ public class PalaemonSessionServiceTests {
     @Test
     public void shouldGetPreComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
-        when(preComputeConfigService.getConfiguration()).thenReturn(
-                        new PreComputeConfig("image",
-                                PRE_COMPUTE_FINGERPRINT,
-                                "heap"));
+        when(preComputeConfigService.getConfiguration())
+                .thenReturn(TEE_WORKFLOW_CONFIGURATION);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));

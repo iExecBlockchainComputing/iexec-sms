@@ -20,19 +20,15 @@ package com.iexec.sms.tee;
 import java.util.Optional;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
+import com.iexec.common.tee.TeeWorkflowConfiguration;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
-
+import com.iexec.sms.tee.workflow.TeeWorkflowConfigurationProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
 import lombok.extern.slf4j.Slf4j;
@@ -42,17 +38,36 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/tee")
 public class TeeController {
 
-    private AuthorizationService authorizationService;
-    private TeeChallengeService teeChallengeService;
-    private TeeSessionService teeSessionService;
+    private final AuthorizationService authorizationService;
+    private final TeeChallengeService teeChallengeService;
+    private final TeeSessionService teeSessionService;
+    private final TeeWorkflowConfigurationProvider teeWorkflowConfigProvider;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
-            TeeSessionService teeSessionService) {
+            TeeSessionService teeSessionService,
+            TeeWorkflowConfigurationProvider teeWorkflowConfigProvider) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
+        this.teeWorkflowConfigProvider = teeWorkflowConfigProvider;
+    }
+
+    /**
+     * Retrieve configuration for tee workflow. This includes configuration
+     * for pre-compute and post-compute stages.
+     * <p>
+     * Note: Being able to read the fingerprints on this endpoint is not required
+     * for the workflow but it might be convenient to keep it for
+     * transparency purposes.
+     *
+     * @return tee workflow config (pre-compute image uri, post-compute image uri,
+     * pre-compute fingerprint, heap size, ...)
+     */
+    @GetMapping("/workflow/config")
+    public ResponseEntity<TeeWorkflowConfiguration> getPreComputeConfig() {
+        return ResponseEntity.ok(teeWorkflowConfigProvider.getConfiguration());
     }
 
     /**

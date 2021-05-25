@@ -60,10 +60,15 @@ scone:
         # INTEL-SA-00220,INTEL-SA-00270,INTEL-SA-00293,INTEL-SA-00320,INTEL-SA-00329 // for sgx-server machine
 
 # TODO /!\ remove the option of env variable for releases.
-pre-compute:
-  image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:}
-  fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
-  heap-size: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE:4G}
+tee.workflow:
+  pre-compute:
+    image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:}
+    fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
+    heap-size: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE:4G}
+  post-compute:
+      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:}
+      fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
+      heap-size: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE:4G}
 
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
