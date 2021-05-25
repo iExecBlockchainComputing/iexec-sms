@@ -20,12 +20,12 @@ package com.iexec.sms.tee;
 import java.util.Optional;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeWorkflowConfiguration;
+import com.iexec.common.tee.TeeWorkflowPublicConfiguration;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfigurationProvider;
+import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,17 +41,17 @@ public class TeeController {
     private final AuthorizationService authorizationService;
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
-    private final TeeWorkflowConfigurationProvider teeWorkflowConfigProvider;
+    private final TeeWorkflowConfiguration teeWorkflowConfig;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeWorkflowConfigurationProvider teeWorkflowConfigProvider) {
+            TeeWorkflowConfiguration teeWorkflowConfig) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeWorkflowConfigProvider = teeWorkflowConfigProvider;
+        this.teeWorkflowConfig = teeWorkflowConfig;
     }
 
     /**
@@ -66,8 +66,8 @@ public class TeeController {
      * pre-compute fingerprint, heap size, ...)
      */
     @GetMapping("/workflow/config")
-    public ResponseEntity<TeeWorkflowConfiguration> getPreComputeConfig() {
-        return ResponseEntity.ok(teeWorkflowConfigProvider.getConfiguration());
+    public ResponseEntity<TeeWorkflowPublicConfiguration> getPreComputeConfig() {
+        return ResponseEntity.ok(teeWorkflowConfig.getPublicConfiguration());
     }
 
     /**
