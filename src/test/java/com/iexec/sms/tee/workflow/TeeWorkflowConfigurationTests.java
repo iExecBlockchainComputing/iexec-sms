@@ -1,7 +1,9 @@
 package com.iexec.sms.tee.workflow;
 
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,14 +16,17 @@ public class TeeWorkflowConfigurationTests {
     private static final String POST_COMPUTE_FINGERPRINT = "postComputeFingerprint";
     private static final String POST_COMPUTE_HEAP = "postComputeHeap";
 
-    TeeWorkflowConfiguration teeWorkflowConfiguration = new TeeWorkflowConfiguration(
-            PRE_COMPUTE_IMAGE,
-            PRE_COMPUTE_FINGERPRINT,
-            PRE_COMPUTE_HEAP,
-            POST_COMPUTE_IMAGE,
-            POST_COMPUTE_FINGERPRINT,
-            POST_COMPUTE_HEAP);
-
+    TeeWorkflowConfiguration teeWorkflowConfiguration = new TeeWorkflowConfiguration(null);
+    
+    @BeforeEach
+    void beforeEach() {
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeImage", PRE_COMPUTE_IMAGE);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeFingerprint", PRE_COMPUTE_FINGERPRINT);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeHeapSize", PRE_COMPUTE_HEAP);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeImage", POST_COMPUTE_IMAGE);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeFingerprint", POST_COMPUTE_FINGERPRINT);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeHeapSize", POST_COMPUTE_HEAP);
+    }
 
     @Test
     public void shouldGetPublicConfiguration() {

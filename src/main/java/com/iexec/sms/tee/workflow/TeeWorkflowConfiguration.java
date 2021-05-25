@@ -17,20 +17,18 @@
 package com.iexec.sms.tee.workflow;
 
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.validation.annotation.Validated;
 
+import javax.annotation.PostConstruct;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import javax.validation.constraints.NotBlank;
 
 @Configuration
-@Validated
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
 public class TeeWorkflowConfiguration {
 
     @Value("${tee.workflow.pre-compute.image}")
@@ -56,6 +54,20 @@ public class TeeWorkflowConfiguration {
     @Value("${tee.workflow.post-compute.heap-size}")
     @NotBlank(message = "post-compute heap size must be provided")
     String postComputeHeapSize;
+
+    @Getter(AccessLevel.NONE) // no getter
+    private Validator validator;
+
+    public TeeWorkflowConfiguration(Validator validator) {
+        this.validator = validator;
+    }
+
+    @PostConstruct
+    private void validate() {
+        if (!validator.validate(this).isEmpty()) {
+            throw new ConstraintViolationException(validator.validate(this));
+        }
+    }
 
     public TeeWorkflowSharedConfiguration getPublicConfiguration() {
         return TeeWorkflowSharedConfiguration.builder()
