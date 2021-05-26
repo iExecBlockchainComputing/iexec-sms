@@ -26,6 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
 
 @Configuration
 @Getter
@@ -40,8 +41,8 @@ public class TeeWorkflowConfiguration {
     String preComputeFingerprint;
 
     @Value("${tee.workflow.pre-compute.heap-size}")
-    @NotBlank(message = "pre-compute heap size must be provided")
-    String preComputeHeapSize;
+    @Positive(message = "pre-compute heap size must be provided")
+    long preComputeHeapSize;
     
     @Value("${tee.workflow.post-compute.image}")
     @NotBlank(message = "post-compute image must be provided")
@@ -52,8 +53,8 @@ public class TeeWorkflowConfiguration {
     String postComputeFingerprint;
     
     @Value("${tee.workflow.post-compute.heap-size}")
-    @NotBlank(message = "post-compute heap size must be provided")
-    String postComputeHeapSize;
+    @Positive(message = "post-compute heap size must be provided")
+    long postComputeHeapSize;
 
     @Getter(AccessLevel.NONE) // no getter
     private Validator validator;

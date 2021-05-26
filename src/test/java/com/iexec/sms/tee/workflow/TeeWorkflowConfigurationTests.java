@@ -11,10 +11,10 @@ public class TeeWorkflowConfigurationTests {
 
     private static final String PRE_COMPUTE_IMAGE = "preComputeImage";
     private static final String PRE_COMPUTE_FINGERPRINT = "preComputeFingerprint";
-    private static final String PRE_COMPUTE_HEAP = "preComputeHeap";
+    private static final long PRE_COMPUTE_HEAP = 1024;
     private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String POST_COMPUTE_FINGERPRINT = "postComputeFingerprint";
-    private static final String POST_COMPUTE_HEAP = "postComputeHeap";
+    private static final long POST_COMPUTE_HEAP = 2048;
 
     TeeWorkflowConfiguration teeWorkflowConfiguration = new TeeWorkflowConfiguration(null);
     
