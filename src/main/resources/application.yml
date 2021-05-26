@@ -53,6 +53,8 @@ scone:
   cas:
     host: ${IEXEC_SCONE_CAS_HOST:localhost}
     port: ${IEXEC_SCONE_CAS_PORT:8081}
+    public-host: ${IEXEC_SCONE_CAS_PUBLIC_HOST:localhost}
+    enclave-port: ${IEXEC_SCONE_CAS_ENCLAVE_PORT:18765}
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
   attestation:
     tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode}

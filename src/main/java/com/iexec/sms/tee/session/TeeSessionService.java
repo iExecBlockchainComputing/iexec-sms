@@ -18,6 +18,7 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.tee.session.cas.CasClient;
 import com.iexec.sms.tee.session.palaemon.PalaemonSessionRequest;
 import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,19 +33,19 @@ import static java.util.Objects.requireNonNull;
 public class TeeSessionService {
 
     private final IexecHubService iexecHubService;
-    private final TeeSessionClient teeSessionClient;
+    private final CasClient casClient;
     private final PalaemonSessionService palaemonSessionService;
     private final boolean shouldDisplayDebugSession;
 
     public TeeSessionService(
             IexecHubService iexecService,
             PalaemonSessionService palaemonSessionService,
-            TeeSessionClient teeSessionClient,
+            CasClient casClient,
             @Value("${logging.tee.display-debug-session}")
             boolean shouldDisplayDebugSession) {
         this.iexecHubService = iexecService;
         this.palaemonSessionService = palaemonSessionService;
-        this.teeSessionClient = teeSessionClient;
+        this.casClient = casClient;
         this.shouldDisplayDebugSession = shouldDisplayDebugSession;
     }
 
@@ -73,7 +74,7 @@ public class TeeSessionService {
             log.info("Session yml content [taskId:{}]\n{}", taskId, sessionYmlAsString);
         }
         // /!\ TODO clean expired tasks sessions
-        boolean isSessionGenerated = teeSessionClient
+        boolean isSessionGenerated = casClient
                 .generateSecureSession(sessionYmlAsString.getBytes())
                 .getStatusCode()
                 .is2xxSuccessful();
