@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.unit.DataSize;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolationException;
@@ -40,9 +41,9 @@ public class TeeWorkflowConfiguration {
     @NotBlank(message = "pre-compute fingerprint must be provided")
     String preComputeFingerprint;
 
-    @Value("${tee.workflow.pre-compute.heap-size}")
+    @Value("${tee.workflow.pre-compute.heap-size-gb}")
     @Positive(message = "pre-compute heap size must be provided")
-    long preComputeHeapSize;
+    int preComputeHeapSizeGb;
     
     @Value("${tee.workflow.post-compute.image}")
     @NotBlank(message = "post-compute image must be provided")
@@ -52,9 +53,9 @@ public class TeeWorkflowConfiguration {
     @NotBlank(message = "post-compute fingerprint must be provided")
     String postComputeFingerprint;
     
-    @Value("${tee.workflow.post-compute.heap-size}")
+    @Value("${tee.workflow.post-compute.heap-size-gb}")
     @Positive(message = "post-compute heap size must be provided")
-    long postComputeHeapSize;
+    int postComputeHeapSizeGb;
 
     @Getter(AccessLevel.NONE) // no getter
     private Validator validator;
@@ -73,9 +74,13 @@ public class TeeWorkflowConfiguration {
     public TeeWorkflowSharedConfiguration getPublicConfiguration() {
         return TeeWorkflowSharedConfiguration.builder()
                     .preComputeImage(preComputeImage)
-                    .preComputeHeapSize(preComputeHeapSize)
+                    .preComputeHeapSize(DataSize
+                            .ofGigabytes(preComputeHeapSizeGb)
+                            .toBytes())
                     .postComputeImage(postComputeImage)
-                    .postComputeHeapSize(postComputeHeapSize)
+                    .postComputeHeapSize(DataSize
+                            .ofGigabytes(postComputeHeapSizeGb)
+                            .toBytes())
                     .build();
     }
 }
