@@ -4,6 +4,7 @@ import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.unit.DataSize;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,10 +12,10 @@ public class TeeWorkflowConfigurationTests {
 
     private static final String PRE_COMPUTE_IMAGE = "preComputeImage";
     private static final String PRE_COMPUTE_FINGERPRINT = "preComputeFingerprint";
-    private static final long PRE_COMPUTE_HEAP = 1024;
+    private static final int PRE_COMPUTE_HEAP_GB = 1;
     private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String POST_COMPUTE_FINGERPRINT = "postComputeFingerprint";
-    private static final long POST_COMPUTE_HEAP = 2048;
+    private static final int POST_COMPUTE_HEAP_GB = 2;
 
     TeeWorkflowConfiguration teeWorkflowConfiguration = new TeeWorkflowConfiguration(null);
     
@@ -22,10 +23,10 @@ public class TeeWorkflowConfigurationTests {
     void beforeEach() {
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeImage", PRE_COMPUTE_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeFingerprint", PRE_COMPUTE_FINGERPRINT);
-        ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeHeapSize", PRE_COMPUTE_HEAP);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeHeapSizeGb", PRE_COMPUTE_HEAP_GB);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeImage", POST_COMPUTE_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeFingerprint", POST_COMPUTE_FINGERPRINT);
-        ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeHeapSize", POST_COMPUTE_HEAP);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeHeapSizeGb", POST_COMPUTE_HEAP_GB);
     }
 
     @Test
@@ -33,9 +34,9 @@ public class TeeWorkflowConfigurationTests {
         assertThat(teeWorkflowConfiguration.getPublicConfiguration())
                 .isEqualTo(TeeWorkflowSharedConfiguration.builder()
                 .preComputeImage(PRE_COMPUTE_IMAGE)
-                .preComputeHeapSize(PRE_COMPUTE_HEAP)
+                .preComputeHeapSize(DataSize.ofGigabytes(PRE_COMPUTE_HEAP_GB).toBytes())
                 .postComputeImage(POST_COMPUTE_IMAGE)
-                .postComputeHeapSize(POST_COMPUTE_HEAP)
+                .postComputeHeapSize(DataSize.ofGigabytes(POST_COMPUTE_HEAP_GB).toBytes())
                 .build());
     }
 }
