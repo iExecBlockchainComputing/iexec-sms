@@ -55,7 +55,7 @@ public class CasConfiguration {
         return "https://" + host + ":" + port;
     }
 
-    public String getEnclaveDedicatedUrl() {
+    public String getEnclaveUrl() {
         return publicHost + ":" + enclavePort;
     }
 }

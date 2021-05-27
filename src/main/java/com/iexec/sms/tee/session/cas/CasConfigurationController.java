@@ -36,7 +36,7 @@ public class CasConfigurationController {
      * @return enclave dedicated url
      */
     @GetMapping("/url")
-    public String getEnclaveDedicatedCasUrl() {
-        return casConfiguration.getEnclaveDedicatedUrl();
+    public String getCasEnclaveUrl() {
+        return casConfiguration.getEnclaveUrl();
     }
 }
