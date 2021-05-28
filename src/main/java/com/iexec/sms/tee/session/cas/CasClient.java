@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.cas;
 
 import com.iexec.sms.ssl.TwoWaySslClient;
 import org.springframework.http.HttpEntity;
@@ -22,14 +22,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TeeSessionClient {
+public class CasClient {
 
-    private final TeeCasConfiguration teeCasConfiguration;
+    private final CasConfiguration casConfiguration;
     private final TwoWaySslClient twoWaySslClient;
 
-    public TeeSessionClient(TeeCasConfiguration teeCasConfiguration,
+    public CasClient(CasConfiguration teeCasConfiguration,
                             TwoWaySslClient twoWaySslClient) {
-        this.teeCasConfiguration = teeCasConfiguration;
+        this.casConfiguration = teeCasConfiguration;
         this.twoWaySslClient = twoWaySslClient;
     }
 
@@ -37,7 +37,7 @@ public class TeeSessionClient {
      * POST /session of CAS requires 2-way SSL authentication
      * */
     public ResponseEntity<String> generateSecureSession(byte[] palaemonFile) {
-        String url = teeCasConfiguration.getCasUrl() + "/session";
+        String url = casConfiguration.getUrl() + "/session";
         HttpEntity<byte[]> request = new HttpEntity<>(palaemonFile);
         return twoWaySslClient
                 .getRestTemplate()

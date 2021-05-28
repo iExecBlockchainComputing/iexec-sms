@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.cas;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,11 +22,22 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * CAS: Configuration and Attestation Service.
+ * It handles configurations and secret provisioning: a user uploads secrets
+ * and configuration infos for a specific service to the CAS.
+ * When a service wants to access those secrets, it sends a quote with its MREnclave.
+ * The CAS attests the quote through Intel Attestation Service and sends the secrets
+ * if the MREnclave is as expected.
+ * 
+ * MREnclave: an enclave identifier, created by hashing all its
+ * code. It guarantees that a code behaves exactly as expected.
+ */
 @Component
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TeeCasConfiguration {
+public class CasConfiguration {
 
     @Value("${scone.cas.host}")
     private String host;
@@ -34,7 +45,17 @@ public class TeeCasConfiguration {
     @Value("${scone.cas.port}")
     private String port;
 
-    public String getCasUrl() {
+    @Value("${scone.cas.public-host}")
+    private String publicHost;
+
+    @Value("${scone.cas.enclave-port}")
+    private String enclavePort;
+
+    public String getUrl() {
         return "https://" + host + ":" + port;
+    }
+
+    public String getEnclaveUrl() {
+        return publicHost + ":" + enclavePort;
     }
 }
