@@ -66,8 +66,8 @@ public class TeeController {
      * pre-compute fingerprint, heap size, ...)
      */
     @GetMapping("/workflow/config")
-    public ResponseEntity<TeeWorkflowSharedConfiguration> getPreComputeConfig() {
-        return ResponseEntity.ok(teeWorkflowConfig.getPublicConfiguration());
+    public ResponseEntity<TeeWorkflowSharedConfiguration> getTeeWorkflowSharedConfig() {
+        return ResponseEntity.ok(teeWorkflowConfig.getSharedConfiguration());
     }
 
     /**

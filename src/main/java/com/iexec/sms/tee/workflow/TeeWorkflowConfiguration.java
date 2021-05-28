@@ -71,7 +71,7 @@ public class TeeWorkflowConfiguration {
         }
     }
 
-    public TeeWorkflowSharedConfiguration getPublicConfiguration() {
+    public TeeWorkflowSharedConfiguration getSharedConfiguration() {
         return TeeWorkflowSharedConfiguration.builder()
                     .preComputeImage(preComputeImage)
                     .preComputeHeapSize(DataSize

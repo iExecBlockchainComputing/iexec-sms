@@ -31,7 +31,7 @@ public class TeeWorkflowConfigurationTests {
 
     @Test
     public void shouldGetPublicConfiguration() {
-        assertThat(teeWorkflowConfiguration.getPublicConfiguration())
+        assertThat(teeWorkflowConfiguration.getSharedConfiguration())
                 .isEqualTo(TeeWorkflowSharedConfiguration.builder()
                 .preComputeImage(PRE_COMPUTE_IMAGE)
                 .preComputeHeapSize(DataSize.ofGigabytes(PRE_COMPUTE_HEAP_GB).toBytes())
