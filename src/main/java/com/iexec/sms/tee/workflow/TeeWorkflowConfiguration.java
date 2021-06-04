@@ -33,6 +33,10 @@ import javax.validation.constraints.Positive;
 @Getter
 public class TeeWorkflowConfiguration {
 
+    @Value("${tee.workflow.las-image}")
+    @NotBlank(message = "las image must be provided")
+    String lasImage;
+
     @Value("${tee.workflow.pre-compute.image}")
     @NotBlank(message = "pre-compute image must be provided")
     String preComputeImage;
@@ -73,6 +77,7 @@ public class TeeWorkflowConfiguration {
 
     public TeeWorkflowSharedConfiguration getSharedConfiguration() {
         return TeeWorkflowSharedConfiguration.builder()
+                    .lasImage(lasImage)
                     .preComputeImage(preComputeImage)
                     .preComputeHeapSize(DataSize
                             .ofGigabytes(preComputeHeapSizeGb)

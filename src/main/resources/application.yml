@@ -63,6 +63,7 @@ scone:
 
 # TODO /!\ remove the option of env variable for releases.
 tee.workflow:
+  las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:registry.scontain.com:5050/scone-debug/iexec-las:5.2.1}
   pre-compute:
     image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:}
     fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
