@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class TeeWorkflowConfigurationTests {
 
+    private static final String LAS_IMAGE = "lasImage";
     private static final String PRE_COMPUTE_IMAGE = "preComputeImage";
     private static final String PRE_COMPUTE_FINGERPRINT = "preComputeFingerprint";
     private static final int PRE_COMPUTE_HEAP_GB = 1;
@@ -21,6 +22,7 @@ public class TeeWorkflowConfigurationTests {
     
     @BeforeEach
     void beforeEach() {
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "lasImage", LAS_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeImage", PRE_COMPUTE_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeFingerprint", PRE_COMPUTE_FINGERPRINT);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeHeapSizeGb", PRE_COMPUTE_HEAP_GB);
@@ -33,6 +35,7 @@ public class TeeWorkflowConfigurationTests {
     public void shouldGetPublicConfiguration() {
         assertThat(teeWorkflowConfiguration.getSharedConfiguration())
                 .isEqualTo(TeeWorkflowSharedConfiguration.builder()
+                .lasImage(LAS_IMAGE)
                 .preComputeImage(PRE_COMPUTE_IMAGE)
                 .preComputeHeapSize(DataSize.ofGigabytes(PRE_COMPUTE_HEAP_GB).toBytes())
                 .postComputeImage(POST_COMPUTE_IMAGE)
