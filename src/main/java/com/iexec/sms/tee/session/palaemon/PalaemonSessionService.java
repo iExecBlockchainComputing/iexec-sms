@@ -70,15 +70,13 @@ public class PalaemonSessionService {
     // PreCompute
     static final String IS_PRE_COMPUTE_REQUIRED = "IS_PRE_COMPUTE_REQUIRED";
     static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
-    static final String PRE_COMPUTE_FSPF_KEY = "PRE_COMPUTE_FSPF_KEY";
-    static final String PRE_COMPUTE_FSPF_TAG = "PRE_COMPUTE_FSPF_TAG";
+    static final String PRE_COMPUTE_ENTRYPOINT = "PRE_COMPUTE_ENTRYPOINT";
     // Compute
-    static final String APP_FSPF_KEY = "APP_FSPF_KEY";
-    static final String APP_FSPF_TAG = "APP_FSPF_TAG";
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
+    static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
     // Env
     private static final String ENV_PROPERTY = "env";
 
@@ -173,6 +171,8 @@ public class PalaemonSessionService {
         Map<String, Object> tokens = new HashMap<>();
         String fingerprint = teeWorkflowConfig.getPreComputeFingerprint();
         tokens.put(PRE_COMPUTE_MRENCLAVE, fingerprint);
+        String entrypoint = teeWorkflowConfig.getPreComputeEntrypoint();
+        tokens.put(PRE_COMPUTE_ENTRYPOINT, entrypoint);
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
         tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
         if (taskDescription.containsDataset()) {
@@ -240,6 +240,8 @@ public class PalaemonSessionService {
             defaultTeePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
         }
         tokens.put(POST_COMPUTE_MRENCLAVE, defaultTeePostComputeFingerprint);
+        String entrypoint = teeWorkflowConfig.getPostComputeEntrypoint();
+        tokens.put(POST_COMPUTE_ENTRYPOINT, entrypoint);
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         if (encryptionTokens.isEmpty()) {

@@ -45,6 +45,10 @@ public class TeeWorkflowConfiguration {
     @NotBlank(message = "pre-compute fingerprint must be provided")
     String preComputeFingerprint;
 
+    @Value("${tee.workflow.pre-compute.entrypoint}")
+    @NotBlank(message = "pre-compute entrypoint must be provided")
+    String preComputeEntrypoint;
+
     @Value("${tee.workflow.pre-compute.heap-size-gb}")
     @Positive(message = "pre-compute heap size must be provided")
     int preComputeHeapSizeGb;
@@ -56,6 +60,10 @@ public class TeeWorkflowConfiguration {
     @Value("${tee.workflow.post-compute.fingerprint}")
     @NotBlank(message = "post-compute fingerprint must be provided")
     String postComputeFingerprint;
+
+    @Value("${tee.workflow.post-compute.entrypoint}")
+    @NotBlank(message = "post-compute entrypoint must be provided")
+    String postComputeEntrypoint;
     
     @Value("${tee.workflow.post-compute.heap-size-gb}")
     @Positive(message = "post-compute heap size must be provided")
@@ -79,10 +87,12 @@ public class TeeWorkflowConfiguration {
         return TeeWorkflowSharedConfiguration.builder()
                     .lasImage(lasImage)
                     .preComputeImage(preComputeImage)
+                    .preComputeEntrypoint(preComputeEntrypoint)
                     .preComputeHeapSize(DataSize
                             .ofGigabytes(preComputeHeapSizeGb)
                             .toBytes())
                     .postComputeImage(postComputeImage)
+                    .postComputeEntrypoint(postComputeEntrypoint)
                     .postComputeHeapSize(DataSize
                             .ofGigabytes(postComputeHeapSizeGb)
                             .toBytes())

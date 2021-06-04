@@ -69,6 +69,7 @@ public class PalaemonSessionServiceTests {
     private static final String REQUESTER = "requester";
     // pre-compute
     private static final String PRE_COMPUTE_FINGERPRINT = "mrEnclave1";
+    private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
     private static final String DATASET_ADDRESS = "0xDatasetAddress";
     private static final String DATASET_NAME = "datasetName";
     private static final String DATASET_CHECKSUM = "datasetChecksum";
@@ -84,6 +85,7 @@ public class PalaemonSessionServiceTests {
     private static final String ARGS = "args";
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
+    private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
     private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String STORAGE_PROVIDER = "ipfs";
     private static final String STORAGE_PROXY = "storageProxy";
@@ -155,6 +157,8 @@ public class PalaemonSessionServiceTests {
         PalaemonSessionRequest request = createSessionRequest();
         when(teeWorkflowConfig.getPreComputeFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
+        when(teeWorkflowConfig.getPreComputeEntrypoint())
+                .thenReturn(PRE_COMPUTE_ENTRYPOINT);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
@@ -164,6 +168,8 @@ public class PalaemonSessionServiceTests {
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
                 .isEqualTo(PRE_COMPUTE_FINGERPRINT);
+        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT))
+                .isEqualTo(PRE_COMPUTE_ENTRYPOINT);
         assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY))
                 .isEqualTo(secret.getTrimmedValue());
         assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_URLS))
@@ -260,9 +266,12 @@ public class PalaemonSessionServiceTests {
         PalaemonSessionRequest request = createSessionRequest();
         request.getTaskDescription().setTeePostComputeImage("");
         request.getTaskDescription().setTeePostComputeFingerprint("");
-        String taskSpecificPostComputeImage = "newMrEnclave";
+        String taskSpecificPostComputeFingerprint = "newMrEnclave";
+        String taskSpecificPostComputeEntrypoint = "newEntrypoint";
         when(teeWorkflowConfig.getPostComputeFingerprint())
-                .thenReturn(taskSpecificPostComputeImage);
+                .thenReturn(taskSpecificPostComputeFingerprint);
+        when(teeWorkflowConfig.getPostComputeEntrypoint())
+                .thenReturn(taskSpecificPostComputeEntrypoint);
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
@@ -287,7 +296,9 @@ public class PalaemonSessionServiceTests {
                 palaemonSessionService.getPostComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_MRENCLAVE))
-                .isEqualTo(taskSpecificPostComputeImage);
+                .isEqualTo(taskSpecificPostComputeFingerprint);
+        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT))
+                .isEqualTo(taskSpecificPostComputeEntrypoint);
         // encryption tokens
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION)).isEqualTo("yes") ;
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY))
@@ -343,6 +354,7 @@ public class PalaemonSessionServiceTests {
     private Map<String, Object> getPreComputeTokens() {
         return Map.of(
                 PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
+                PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
                 IS_DATASET_REQUIRED, true,
                 IEXEC_DATASET_KEY, DATASET_KEY.trim(),
                 INPUT_FILE_URLS, Map.of(
@@ -362,6 +374,7 @@ public class PalaemonSessionServiceTests {
     private Map<String, Object> getPostComputeTokens() {
         Map<String, Object> map = new HashMap<>();
         map.put(POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT);
+        map.put(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT, POST_COMPUTE_ENTRYPOINT);
         map.put(RESULT_TASK_ID, TASK_ID);
         map.put(RESULT_ENCRYPTION, "yes");
         map.put(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
