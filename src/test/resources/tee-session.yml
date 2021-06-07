@@ -14,7 +14,7 @@ services:
     image_name: 'pre-compute-image'
     mrenclaves: ['mrEnclave1']
     pwd: '/'
-    command: 'java -jar /app/app.jar'
+    command: 'entrypoint1'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
@@ -61,7 +61,7 @@ services:
     image_name: 'post-compute-image'
     mrenclaves: ['mrEnclave3']
     pwd: '/'
-    command: 'java -jar /app/app.jar'
+    command: 'entrypoint3'
     environment:
       LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'

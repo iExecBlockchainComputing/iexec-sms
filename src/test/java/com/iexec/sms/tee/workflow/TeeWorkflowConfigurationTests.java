@@ -13,9 +13,11 @@ public class TeeWorkflowConfigurationTests {
     private static final String LAS_IMAGE = "lasImage";
     private static final String PRE_COMPUTE_IMAGE = "preComputeImage";
     private static final String PRE_COMPUTE_FINGERPRINT = "preComputeFingerprint";
+    private static final String PRE_COMPUTE_ENTRYPOINT = "preComputeEntrypoint";
     private static final int PRE_COMPUTE_HEAP_GB = 1;
     private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String POST_COMPUTE_FINGERPRINT = "postComputeFingerprint";
+    private static final String POST_COMPUTE_ENTRYPOINT = "postComputeEntrypoint";
     private static final int POST_COMPUTE_HEAP_GB = 2;
 
     TeeWorkflowConfiguration teeWorkflowConfiguration = new TeeWorkflowConfiguration(null);
@@ -25,9 +27,11 @@ public class TeeWorkflowConfigurationTests {
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "lasImage", LAS_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeImage", PRE_COMPUTE_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeFingerprint", PRE_COMPUTE_FINGERPRINT);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeEntrypoint", PRE_COMPUTE_ENTRYPOINT);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "preComputeHeapSizeGb", PRE_COMPUTE_HEAP_GB);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeImage", POST_COMPUTE_IMAGE);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeFingerprint", POST_COMPUTE_FINGERPRINT);
+        ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeEntrypoint", POST_COMPUTE_ENTRYPOINT);
         ReflectionTestUtils.setField(teeWorkflowConfiguration, "postComputeHeapSizeGb", POST_COMPUTE_HEAP_GB);
     }
 
@@ -37,8 +41,10 @@ public class TeeWorkflowConfigurationTests {
                 .isEqualTo(TeeWorkflowSharedConfiguration.builder()
                 .lasImage(LAS_IMAGE)
                 .preComputeImage(PRE_COMPUTE_IMAGE)
+                .preComputeEntrypoint(PRE_COMPUTE_ENTRYPOINT)
                 .preComputeHeapSize(DataSize.ofGigabytes(PRE_COMPUTE_HEAP_GB).toBytes())
                 .postComputeImage(POST_COMPUTE_IMAGE)
+                .postComputeEntrypoint(POST_COMPUTE_ENTRYPOINT)
                 .postComputeHeapSize(DataSize.ofGigabytes(POST_COMPUTE_HEAP_GB).toBytes())
                 .build());
     }
