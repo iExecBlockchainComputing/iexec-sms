@@ -214,9 +214,13 @@ public class PalaemonSessionServiceTests {
     // post-compute
 
     @Test
-    public void shouldGetPostComputePalaemonTokensWithDefaultPostCompute() throws Exception {
+    public void shouldGetPostComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
+        when(teeWorkflowConfig.getPostComputeFingerprint())
+                .thenReturn(POST_COMPUTE_FINGERPRINT);
+        when(teeWorkflowConfig.getPostComputeEntrypoint())
+                .thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
@@ -241,64 +245,8 @@ public class PalaemonSessionServiceTests {
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_MRENCLAVE))
                 .isEqualTo(POST_COMPUTE_FINGERPRINT);
-        // encryption tokens
-        assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION)).isEqualTo("yes") ;
-        assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY))
-                .isEqualTo(ENCRYPTION_PUBLIC_KEY);
-        // storage tokens
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_CALLBACK)).isEqualTo("no");
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_PROVIDER))
-                .isEqualTo(STORAGE_PROVIDER);
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_PROXY))
-                .isEqualTo(STORAGE_PROXY);
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_TOKEN))
-                .isEqualTo(STORAGE_TOKEN);
-        // sign tokens
-        assertThat(tokens.get(ResultUtils.RESULT_TASK_ID)).isEqualTo(TASK_ID);
-        assertThat(tokens.get(ResultUtils.RESULT_SIGN_WORKER_ADDRESS))
-                .isEqualTo(WORKER_ADDRESS);
-        assertThat(tokens.get(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY))
-                .isEqualTo(challenge.getCredentials().getPrivateKey());
-    }
-
-    @Test
-    public void shouldGetPostComputePalaemonTokensWithSpecificPostCompute() throws Exception {
-        PalaemonSessionRequest request = createSessionRequest();
-        request.getTaskDescription().setTeePostComputeImage("");
-        request.getTaskDescription().setTeePostComputeFingerprint("");
-        String taskSpecificPostComputeFingerprint = "newMrEnclave";
-        String taskSpecificPostComputeEntrypoint = "newEntrypoint";
-        when(teeWorkflowConfig.getPostComputeFingerprint())
-                .thenReturn(taskSpecificPostComputeFingerprint);
-        when(teeWorkflowConfig.getPostComputeEntrypoint())
-                .thenReturn(taskSpecificPostComputeEntrypoint);
-        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
-        when(web2SecretsService.getSecret(
-                request.getTaskDescription().getBeneficiary(),
-                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
-                true))
-                .thenReturn(Optional.of(publicKeySecret));
-        Secret storageSecret = new Secret("address", STORAGE_TOKEN);
-        when(web2SecretsService.getSecret(
-                REQUESTER,
-                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN,
-                true))
-                .thenReturn(Optional.of(storageSecret));
-        
-        TeeChallenge challenge = TeeChallenge.builder()
-                .credentials(new EthereumCredentials())
-                .build();
-        when(teeChallengeService.getOrCreate(TASK_ID, true))
-                .thenReturn(Optional.of(challenge));
-
-
-        Map<String, String> tokens =
-                palaemonSessionService.getPostComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_MRENCLAVE))
-                .isEqualTo(taskSpecificPostComputeFingerprint);
         assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT))
-                .isEqualTo(taskSpecificPostComputeEntrypoint);
+                .isEqualTo(POST_COMPUTE_ENTRYPOINT);
         // encryption tokens
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION)).isEqualTo("yes") ;
         assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY))
@@ -343,8 +291,6 @@ public class PalaemonSessionServiceTests {
                 .isResultEncryption(true)
                 .resultStorageProvider(STORAGE_PROVIDER)
                 .resultStorageProxy(STORAGE_PROXY)
-                .teePostComputeFingerprint(POST_COMPUTE_FINGERPRINT)
-                .teePostComputeImage(POST_COMPUTE_IMAGE)
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0)

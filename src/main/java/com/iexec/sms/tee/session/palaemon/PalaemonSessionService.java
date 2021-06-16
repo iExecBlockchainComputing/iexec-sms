@@ -235,11 +235,17 @@ public class PalaemonSessionService {
         requireNonNull(taskDescription, "Task description must no be null");
         String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
-        String defaultTeePostComputeFingerprint = teeWorkflowConfig.getPostComputeFingerprint();
-        if (taskDescription.containsPostCompute()) {
-            defaultTeePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
-        }
-        tokens.put(POST_COMPUTE_MRENCLAVE, defaultTeePostComputeFingerprint);
+        String teePostComputeFingerprint = teeWorkflowConfig.getPostComputeFingerprint();
+        // ###############################################################################
+        // TODO: activate this when user specific post-compute is properly
+        // supported. See https://github.com/iExecBlockchainComputing/iexec-sms/issues/52.
+        // ###############################################################################
+        // // Use specific post-compute image if requested.
+        //if (taskDescription.containsPostCompute()) {
+        //    teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
+        //    //add entrypoint too
+        //}
+        tokens.put(POST_COMPUTE_MRENCLAVE, teePostComputeFingerprint);
         String entrypoint = teeWorkflowConfig.getPostComputeEntrypoint();
         tokens.put(POST_COMPUTE_ENTRYPOINT, entrypoint);
         // encryption
