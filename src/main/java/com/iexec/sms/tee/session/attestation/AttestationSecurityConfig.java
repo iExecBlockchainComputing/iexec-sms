@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.web2;
+package com.iexec.sms.tee.session.attestation;
 
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 
-import org.springframework.data.repository.CrudRepository;
+import java.util.List;
 
-import java.util.Optional;
+@Configuration
+public class AttestationSecurityConfig {
 
-public interface Web2SecretsRepository extends CrudRepository<Web2Secrets, String> {
+    @Value("${scone.attestation.tolerated-insecure-options}")
+    @Getter
+    private List<String> toleratedInsecureOptions;
 
-    Optional<Web2Secrets> findWeb2SecretsByOwnerAddress(String ownerAddress);
-
+    @Value("${scone.attestation.ignored-sgx-advisories}")
+    @Getter
+    private List<String> ignoredSgxAdvisories;
 }

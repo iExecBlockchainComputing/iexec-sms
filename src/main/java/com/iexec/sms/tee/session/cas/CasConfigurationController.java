@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package com.iexec.sms;
+package com.iexec.sms.tee.session.cas;
 
-
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
-
 @RestController
-public class AppController {
+@RequestMapping("/cas")
+public class CasConfigurationController {
 
-    public AppController() {
+    private final CasConfiguration casConfiguration;
+
+    public CasConfigurationController(CasConfiguration casConfiguration) {
+        this.casConfiguration = casConfiguration;
     }
 
-    @GetMapping(value = "/up")
-    public static ResponseEntity<String> isUp() {
-        String message = String.format("Up! (%s)", new Date());
-        return ResponseEntity.ok(message);
+    /**
+     * Get CAS public url intended for enclaves.
+     * 
+     * @return enclave dedicated url
+     */
+    @GetMapping("/url")
+    public String getCasEnclaveUrl() {
+        return casConfiguration.getEnclaveUrl();
     }
-
 }
-

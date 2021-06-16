@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.web2;
+package com.iexec.sms.tee.session.palaemon;
 
+import com.iexec.common.task.TaskDescription;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import org.springframework.data.repository.CrudRepository;
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PalaemonSessionRequest {
 
-import java.util.Optional;
-
-public interface Web2SecretsRepository extends CrudRepository<Web2Secrets, String> {
-
-    Optional<Web2Secrets> findWeb2SecretsByOwnerAddress(String ownerAddress);
-
+    private String sessionId;
+    private TaskDescription taskDescription;
+    private String workerAddress;
+    private String enclaveChallenge;
 }

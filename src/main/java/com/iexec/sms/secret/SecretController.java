@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.iexec.sms.secret;
 
 
@@ -40,7 +56,7 @@ public class SecretController {
     // Web3
 
     @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
-    public ResponseEntity isWeb3SecretSet(@RequestParam String secretAddress) {
+    public ResponseEntity<?> isWeb3SecretSet(@RequestParam String secretAddress) {
         Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -87,7 +103,7 @@ public class SecretController {
     // Web2
 
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
-    public ResponseEntity isWeb2SecretSet(@RequestParam String ownerAddress,
+    public ResponseEntity<?> isWeb2SecretSet(@RequestParam String ownerAddress,
                                           @RequestParam String secretName) {
         Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, false);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
@@ -159,7 +175,7 @@ public class SecretController {
      * Server-side signature of a messageHash
      * */
     @PostMapping("/delegate/signature")
-    private ResponseEntity signMessageHashOnServerSide(@RequestParam String messageHash,
+    private ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
                                                        @RequestBody String privateKey) {
         Signature signature = signMessageHashAndGetSignature(messageHash, privateKey);
 
