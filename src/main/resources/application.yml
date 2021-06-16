@@ -57,20 +57,19 @@ scone:
     enclave-port: ${IEXEC_SCONE_CAS_ENCLAVE_PORT:18765}
     palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
   attestation:
-    tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode}
-    ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:INTEL-SA-00161,INTEL-SA-00289,INTEL-SA-00334,INTEL-SA-00381,INTEL-SA-00389}
-        # INTEL-SA-00220,INTEL-SA-00270,INTEL-SA-00293,INTEL-SA-00320,INTEL-SA-00329 // for sgx-server machine
+    tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:} # e.g.: hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode
+    ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270
 
 # TODO /!\ remove the option of env variable for releases.
 tee.workflow:
-  las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:registry.scontain.com:5050/scone-debug/iexec-las:5.2.1}
+  las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:} # e.g.: registry.scontain.com:5050/scone-production/iexec-las:x.y.z
   pre-compute:
-    image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:}
+    image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
     fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
     heap-size-gb: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB:4}
     entrypoint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
   post-compute:
-      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:}
+      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-post-compute:x.y.z-production
       fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
       heap-size-gb: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB:4}
       entrypoint: ${IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
