@@ -40,14 +40,14 @@ public class SecretController {
 
     private AuthorizationService authorizationService;
     private Web3SecretService web3SecretService;
-    private VersionService versionService;
     private Web2SecretsService web2SecretsService;
+    private SecretUtils secretUtils;
 
-    public SecretController(VersionService versionService,
+    public SecretController(SecretUtils secretUtils,
                             AuthorizationService authorizationService,
                             Web2SecretsService web2SecretsService,
                             Web3SecretService web3SecretService) {
-        this.versionService = versionService;
+        this.secretUtils = secretUtils;
         this.web2SecretsService = web2SecretsService;
         this.authorizationService = authorizationService;
         this.web3SecretService = web3SecretService;
@@ -65,7 +65,7 @@ public class SecretController {
     public ResponseEntity<Web3Secret> getWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                     @RequestParam String secretAddress,
                                                     @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
-        if (isInProduction(authorization)) {
+        if (secretUtils.isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForGetWeb3Secret(secretAddress);
 
             //TODO: also isAuthorizedOnExecution(..)
@@ -83,7 +83,7 @@ public class SecretController {
     public ResponseEntity<String> addWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                 @RequestParam String secretAddress,
                                                 @RequestBody String secretValue) {
-        if (isInProduction(authorization)) {
+        if (secretUtils.isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
 
             if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
@@ -114,7 +114,7 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
-        if (isInProduction(authorization)) {
+        if (secretUtils.isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretName);
 
             if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
@@ -132,7 +132,7 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestBody String secretValue) {
-        if (isInProduction(authorization)) {
+        if (secretUtils.isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, secretValue);
 
             if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
@@ -154,7 +154,7 @@ public class SecretController {
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
-        if (isInProduction(authorization)) {
+        if (secretUtils.isInProduction(authorization)) {
             String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
 
             if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
@@ -185,11 +185,5 @@ public class SecretController {
 
         return ResponseEntity.ok(signature.getValue());
     }
-
-    private boolean isInProduction(String authorization) {
-        boolean canAvoidAuthorization = versionService.isSnapshot() && authorization.equals("*");
-        return !canAvoidAuthorization;
-    }
-
 }
 
