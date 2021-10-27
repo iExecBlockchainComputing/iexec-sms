@@ -21,5 +21,5 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface RuntimeSecretRepository extends CrudRepository<RuntimeSecret, String> {
-    Optional<RuntimeSecret> findRuntimeSecretByAppAddressAndIndex(String secretAddress, long index);
+    Optional<RuntimeSecret> findByAddressAndIndex(String address, long index);
 }
