@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.runtime;
+package com.iexec.sms.secret.applicationruntime;
 
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface RuntimeSecretRepository extends CrudRepository<RuntimeSecret, String> {
-    Optional<RuntimeSecret> findByAddressIgnoreCaseAndIndex(String address, long index);
+public interface ApplicationRuntimeSecretRepository extends CrudRepository<ApplicationRuntimeSecret, String> {
+    Optional<ApplicationRuntimeSecret> findByAddressIgnoreCaseAndIndex(String address, long index);
 }

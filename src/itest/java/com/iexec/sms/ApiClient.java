@@ -30,7 +30,7 @@ public interface ApiClient {
     String API_URL = "http://localhost:13300";
 
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addRuntimeSecret(
+    ResponseEntity<String> addApplicationRuntimeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable("appAddress") String appAddress,
             @PathVariable("secretIndex") long secretIndex,

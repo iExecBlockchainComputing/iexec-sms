@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.runtime;
+package com.iexec.sms.secret.applicationruntime;
 
 import com.iexec.sms.secret.Secret;
 import lombok.Data;
@@ -30,7 +30,7 @@ import javax.persistence.Id;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Entity
-public class RuntimeSecret extends Secret {
+public class ApplicationRuntimeSecret extends Secret {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -38,7 +38,7 @@ public class RuntimeSecret extends Secret {
 
     private long index;
 
-    public RuntimeSecret(String address, long index, String value) {
+    public ApplicationRuntimeSecret(String address, long index, String value) {
         super(address, value);
         this.index = index;
     }

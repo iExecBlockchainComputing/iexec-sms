@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.runtime;
+package com.iexec.sms.secret.applicationruntime;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +26,14 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 @RestController
 @RequestMapping("/apps")
-public class RuntimeSecretController {
+public class ApplicationRuntimeSecretController {
     private final AuthorizationService authorizationService;
-    private final RuntimeSecretService runtimeSecretService;
+    private final ApplicationRuntimeSecretService applicationRuntimeSecretService;
 
-    public RuntimeSecretController(AuthorizationService authorizationService,
-                                   RuntimeSecretService runtimeSecretService) {
+    public ApplicationRuntimeSecretController(AuthorizationService authorizationService,
+                                              ApplicationRuntimeSecretService applicationRuntimeSecretService) {
         this.authorizationService = authorizationService;
-        this.runtimeSecretService = runtimeSecretService;
+        this.applicationRuntimeSecretService = applicationRuntimeSecretService;
     }
 
     @PostMapping("/{appAddress}/secrets/0")
@@ -49,11 +49,11 @@ public class RuntimeSecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (runtimeSecretService.getSecret(appAddress, secretIndex).isPresent()) {
+        if (applicationRuntimeSecretService.getSecret(appAddress, secretIndex).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
-        runtimeSecretService.addSecret(appAddress, secretIndex, secretValue);
+        applicationRuntimeSecretService.addSecret(appAddress, secretIndex, secretValue);
         return ResponseEntity.noContent().build();
     }
 
