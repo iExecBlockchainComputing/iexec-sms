@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret;
+package com.iexec.sms.secret.runtime;
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.runtime.RuntimeSecretService;
+import com.iexec.sms.secret.SecretUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
