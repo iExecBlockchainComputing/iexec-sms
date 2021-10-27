@@ -17,7 +17,6 @@
 package com.iexec.sms.secret.runtime;
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.SecretUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +29,11 @@ import org.springframework.web.bind.annotation.*;
 public class RuntimeSecretController {
     private final AuthorizationService authorizationService;
     private final RuntimeSecretService runtimeSecretService;
-    private final SecretUtils secretUtils;
 
-    public RuntimeSecretController(AuthorizationService authorizationService, RuntimeSecretService runtimeSecretService, SecretUtils secretUtils) {
+    public RuntimeSecretController(AuthorizationService authorizationService,
+                                   RuntimeSecretService runtimeSecretService) {
         this.authorizationService = authorizationService;
         this.runtimeSecretService = runtimeSecretService;
-        this.secretUtils = secretUtils;
     }
 
     @PostMapping("/{appAddress}/secrets/0")
@@ -44,13 +42,11 @@ public class RuntimeSecretController {
 //                                                   @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
                                                    @RequestBody String secretValue) {
         long secretIndex = 0;   // FIXME: remove once functioning has been validated.
-        if (secretUtils.isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForSetRuntimeSecret(appAddress, secretIndex, secretValue);
+        String challenge = authorizationService.getChallengeForSetRuntimeSecret(appAddress, secretIndex, secretValue);
 
-            if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-                log.error("Unauthorized to addRuntimeSecret [expectedChallenge:{}]", challenge);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
+            log.error("Unauthorized to addRuntimeSecret [expectedChallenge:{}]", challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (runtimeSecretService.getSecret(appAddress, secretIndex).isPresent()) {
