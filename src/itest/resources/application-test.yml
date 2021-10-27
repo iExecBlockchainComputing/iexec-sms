@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:db # Run database in-mem
+
+tee.workflow:
+  las-image: "none"
+  pre-compute:
+    image: "none"
+    fingerprint: "none"
+  post-compute:
+    image: "none"
+    fingerprint: "none"
