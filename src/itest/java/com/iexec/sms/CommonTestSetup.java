@@ -18,6 +18,7 @@ package com.iexec.sms;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.blockchain.Web3jService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
@@ -33,5 +34,8 @@ public abstract class CommonTestSetup {
 
     @MockBean
     protected IexecHubService iexecHubService;
+
+    @MockBean
+    protected Web3jService web3jService;
     // endregion
 }
