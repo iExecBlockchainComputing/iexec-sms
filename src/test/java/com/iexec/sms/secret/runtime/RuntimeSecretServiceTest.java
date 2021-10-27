@@ -53,7 +53,7 @@ class RuntimeSecretServiceTest {
 
     @Test
     void shouldGetSecret() {
-        when(runtimeSecretRepository.findByAddressAndIndex(APP_ADDRESS.toLowerCase(), 0))
+        when(runtimeSecretRepository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS.toLowerCase(), 0))
                 .thenReturn(Optional.of(RUNTIME_SECRET));
         when(encryptionService.decrypt(ENCRYPTED_SECRET_VALUE))
                 .thenReturn(DECRYPTED_SECRET_VALUE);

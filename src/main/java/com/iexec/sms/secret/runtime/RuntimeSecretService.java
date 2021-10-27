@@ -40,7 +40,7 @@ public class RuntimeSecretService extends AbstractSecretService {
      */
     public Optional<RuntimeSecret> getSecret(String secretAppAddress, long secretIndex, boolean shouldDecryptValue) {
         secretAppAddress = secretAppAddress.toLowerCase();
-        Optional<RuntimeSecret> secret = runtimeSecretRepository.findByAddressAndIndex(secretAppAddress, secretIndex);
+        Optional<RuntimeSecret> secret = runtimeSecretRepository.findByAddressIgnoreCaseAndIndex(secretAppAddress, secretIndex);
         if (secret.isEmpty()) {
             return Optional.empty();
         }
