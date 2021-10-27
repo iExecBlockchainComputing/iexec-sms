@@ -38,7 +38,7 @@ public class RuntimeSecretController {
         this.secretUtils = secretUtils;
     }
 
-    @PostMapping("/{appAddress}/secrets/0}")
+    @PostMapping("/{appAddress}/secrets/0")
     public ResponseEntity<String> addRuntimeSecret(@RequestHeader("Authorization") String authorization,
                                                    @PathVariable String appAddress,
 //                                                   @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
