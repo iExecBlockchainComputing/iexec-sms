@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
         name = "apiClient",
         url = ApiClient.API_URL)
 public interface ApiClient {
-    String API_URL = "http://localhost:13300";
+    String API_URL = "http://localhost:${local.server.port}";
 
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
     ResponseEntity<String> addApplicationRuntimeSecret(
