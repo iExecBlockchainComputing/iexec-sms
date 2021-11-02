@@ -100,7 +100,7 @@ sourceSets {
 }
 
 task itest(type:Test) {
-    description = "Run integration tests (src/it/...)."
+    description = "Run integration tests (src/itest/...)."
     // enabled isDev
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
