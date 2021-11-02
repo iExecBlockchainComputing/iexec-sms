@@ -45,7 +45,8 @@ public class ApplicationRuntimeSecretController {
         String challenge = authorizationService.getChallengeForSetAppRuntimeSecret(appAddress, secretIndex, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to addRuntimeSecret [expectedChallenge:{}]", challenge);
+            log.error("Unauthorized to addRuntimeSecret [appAddress: {}, expectedChallenge: {}]",
+                    appAddress, challenge);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
