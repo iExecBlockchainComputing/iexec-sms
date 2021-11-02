@@ -64,6 +64,7 @@ class ApplicationApplicationRuntimeSecretServiceTest {
         Assertions.assertThat(encryptedSecret.get().getIndex()).isZero();
         Assertions.assertThat(encryptedSecret.get().getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(encryptedSecret.get().getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
+        verify(applicationRuntimeSecretService, Mockito.times(0)).decryptSecret(any());
 
         // Second call will decrypt secret value
         Optional<ApplicationRuntimeSecret> decryptedSecret = applicationRuntimeSecretService.getSecret(APP_ADDRESS, 0, true);
@@ -71,5 +72,6 @@ class ApplicationApplicationRuntimeSecretServiceTest {
         Assertions.assertThat(decryptedSecret.get().getIndex()).isZero();
         Assertions.assertThat(decryptedSecret.get().getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
+        verify(applicationRuntimeSecretService, Mockito.times(1)).decryptSecret(any());
     }
 }
