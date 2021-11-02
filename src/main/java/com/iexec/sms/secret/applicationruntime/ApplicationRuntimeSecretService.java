@@ -38,9 +38,12 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
      * Retrieve a secret identified by its app address and its index.
      * Decrypt it if required and if its decryption is required.
      */
-    public Optional<ApplicationRuntimeSecret> getSecret(String secretAppAddress, long secretIndex, boolean shouldDecryptValue) {
+    public Optional<ApplicationRuntimeSecret> getSecret(String secretAppAddress,
+                                                        long secretIndex,
+                                                        boolean shouldDecryptValue) {
         secretAppAddress = secretAppAddress.toLowerCase();
-        Optional<ApplicationRuntimeSecret> secret = applicationRuntimeSecretRepository.findByAddressIgnoreCaseAndIndex(secretAppAddress, secretIndex);
+        Optional<ApplicationRuntimeSecret> secret =
+                applicationRuntimeSecretRepository.findByAddressIgnoreCaseAndIndex(secretAppAddress, secretIndex);
         if (secret.isEmpty()) {
             return Optional.empty();
         }
@@ -63,7 +66,8 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
      */
     public void addSecret(String secretAppAddress, long secretIndex, String secretValue) {
         secretAppAddress = secretAppAddress.toLowerCase();
-        ApplicationRuntimeSecret applicationRuntimeSecret = new ApplicationRuntimeSecret(secretAppAddress, secretIndex, secretValue);
+        ApplicationRuntimeSecret applicationRuntimeSecret =
+                new ApplicationRuntimeSecret(secretAppAddress, secretIndex, secretValue);
         encryptSecret(applicationRuntimeSecret);
         log.info("Adding new runtime secret [secretAppAddress:{}, secretIndex:{}, secretValueHash:{}]",
                 secretAppAddress, secretIndex, applicationRuntimeSecret.getValue());
