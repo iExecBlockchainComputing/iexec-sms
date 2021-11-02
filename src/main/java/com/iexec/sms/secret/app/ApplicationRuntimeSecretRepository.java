@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.applicationruntime;
+package com.iexec.sms.secret.app;
 
 import org.springframework.data.repository.CrudRepository;
 

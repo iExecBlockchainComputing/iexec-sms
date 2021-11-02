@@ -1,4 +1,4 @@
-package com.iexec.sms.secret.applicationruntime;
+package com.iexec.sms.secret.app;
 
 import com.iexec.sms.encryption.EncryptionService;
 import org.assertj.core.api.Assertions;
@@ -42,7 +42,7 @@ class ApplicationApplicationRuntimeSecretServiceTest {
         when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
 
-        applicationRuntimeSecretService.addSecret(APP_ADDRESS, 0, DECRYPTED_SECRET_VALUE);
+        applicationRuntimeSecretService.encryptAndSaveSecret(APP_ADDRESS, 0, DECRYPTED_SECRET_VALUE);
 
         verify(applicationRuntimeSecretRepository, times(1)).save(runtimeSecretCaptor.capture());
         final ApplicationRuntimeSecret savedApplicationRuntimeSecret = runtimeSecretCaptor.getValue();

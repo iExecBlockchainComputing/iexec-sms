@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.applicationruntime;
+package com.iexec.sms.secret.app;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +37,12 @@ public class ApplicationRuntimeSecretController {
     }
 
     @PostMapping("/{appAddress}/secrets/0")
-    public ResponseEntity<String> addRuntimeSecret(@RequestHeader("Authorization") String authorization,
-                                                   @PathVariable String appAddress,
-//                                                   @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
-                                                   @RequestBody String secretValue) {
+    public ResponseEntity<String> addApplicationRuntimeSecret(@RequestHeader("Authorization") String authorization,
+                                                              @PathVariable String appAddress,
+//                                                              @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
+                                                              @RequestBody String secretValue) {
         long secretIndex = 0;   // FIXME: remove once functioning has been validated.
-        String challenge = authorizationService.getChallengeForSetRuntimeSecret(appAddress, secretIndex, secretValue);
+        String challenge = authorizationService.getChallengeForSetAppRuntimeSecret(appAddress, secretIndex, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
             log.error("Unauthorized to addRuntimeSecret [expectedChallenge:{}]", challenge);
@@ -53,7 +53,7 @@ public class ApplicationRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
-        applicationRuntimeSecretService.addSecret(appAddress, secretIndex, secretValue);
+        applicationRuntimeSecretService.encryptAndSaveSecret(appAddress, secretIndex, secretValue);
         return ResponseEntity.noContent().build();
     }
 

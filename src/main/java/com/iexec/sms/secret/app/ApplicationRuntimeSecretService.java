@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.applicationruntime;
+package com.iexec.sms.secret.app;
 
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.AbstractSecretService;
@@ -38,12 +38,12 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
      * Retrieve a secret identified by its app address and its index.
      * Decrypt it if required and if its decryption is required.
      */
-    public Optional<ApplicationRuntimeSecret> getSecret(String secretAppAddress,
+    public Optional<ApplicationRuntimeSecret> getSecret(String appAddress,
                                                         long secretIndex,
                                                         boolean shouldDecryptValue) {
-        secretAppAddress = secretAppAddress.toLowerCase();
+        appAddress = appAddress.toLowerCase();
         Optional<ApplicationRuntimeSecret> secret =
-                applicationRuntimeSecretRepository.findByAddressIgnoreCaseAndIndex(secretAppAddress, secretIndex);
+                applicationRuntimeSecretRepository.findByAddressIgnoreCaseAndIndex(appAddress, secretIndex);
         if (secret.isEmpty()) {
             return Optional.empty();
         }
@@ -56,21 +56,21 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
     /**
      * Retrieve a secret identified by its app address and its index.
      */
-    public Optional<ApplicationRuntimeSecret> getSecret(String secretAppAddress, long secretIndex) {
-        secretAppAddress = secretAppAddress.toLowerCase();
-        return getSecret(secretAppAddress, secretIndex, false);
+    public Optional<ApplicationRuntimeSecret> getSecret(String appAddress, long secretIndex) {
+        appAddress = appAddress.toLowerCase();
+        return getSecret(appAddress, secretIndex, false);
     }
 
     /**
      * Stores encrypted secrets.
      */
-    public void addSecret(String secretAppAddress, long secretIndex, String secretValue) {
-        secretAppAddress = secretAppAddress.toLowerCase();
+    public void encryptAndSaveSecret(String appAddress, long secretIndex, String secretValue) {
+        appAddress = appAddress.toLowerCase();
         ApplicationRuntimeSecret applicationRuntimeSecret =
-                new ApplicationRuntimeSecret(secretAppAddress, secretIndex, secretValue);
+                new ApplicationRuntimeSecret(appAddress, secretIndex, secretValue);
         encryptSecret(applicationRuntimeSecret);
-        log.info("Adding new runtime secret [secretAppAddress:{}, secretIndex:{}, secretValueHash:{}]",
-                secretAppAddress, secretIndex, applicationRuntimeSecret.getValue());
+        log.info("Adding new app runtime secret [appAddress:{}, secretIndex:{}, secretValueHash:{}]",
+                appAddress, secretIndex, applicationRuntimeSecret.getValue());
         applicationRuntimeSecretRepository.save(applicationRuntimeSecret);
     }
 }
