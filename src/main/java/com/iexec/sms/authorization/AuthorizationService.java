@@ -138,7 +138,7 @@ public class AuthorizationService {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
-                Long.toString(secretIndex),
+                Long.toHexString(secretIndex),
                 Hash.sha3String(secretValue));
     }
 

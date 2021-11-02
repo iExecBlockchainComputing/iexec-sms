@@ -16,6 +16,7 @@
 
 package com.iexec.sms.secret;
 
+import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
@@ -25,16 +26,19 @@ import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.web3j.crypto.Hash;
 
 import java.util.Optional;
 
+import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static org.mockito.Mockito.when;
 
 public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
-    private static final String APP_ADDRESS   = "appAddress";
+    private static final String APP_ADDRESS   = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String SECRET_VALUE  = "secretValue";
-    private static final String AUTHORIZATION = "authorization";
-    private static final String CHALLENGE     = "challenge";
+    private static final String OWNER_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
+    private static final String DOMAIN        = "IEXEC_SMS_DOMAIN";
+    private static final String PRIVATE_KEY   = "0x2fac4d263f1b20bfc33ea2bcb1cbe1521322dbde81d04b0c454ffff1218f0ed6";
 
     @Autowired
     private ApiClient apiClient;
@@ -47,18 +51,25 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void shouldAddNewRuntimeSecret() {
-        when(authorizationService.getChallengeForSetRuntimeSecret(APP_ADDRESS, 0, SECRET_VALUE)).thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS)).thenReturn(true);
+        when(iexecHubService.getOwner(APP_ADDRESS)).thenReturn(OWNER_ADDRESS);
+
+        final long secretIndex = 0;
+        final String challenge = HashUtils.concatenateAndHash(
+                Hash.sha3String(DOMAIN),
+                APP_ADDRESS,
+                Long.toHexString(secretIndex),
+                Hash.sha3String(SECRET_VALUE));
+        final String authorization = signMessageHashAndGetSignature(challenge, PRIVATE_KEY).getValue();
 
         // At first, no secret should be in the database
-        final Optional<ApplicationRuntimeSecret> noSecret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, 0);
+        final Optional<ApplicationRuntimeSecret> noSecret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, secretIndex);
         Assertions.assertThat(noSecret).isEmpty();
 
         // We add a new secret to the database
-        apiClient.addApplicationRuntimeSecret(AUTHORIZATION, APP_ADDRESS, 0, SECRET_VALUE);
+        apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
 
         // We check the secret has been added to the database
-        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, 0);
+        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, secretIndex);
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`
             // but Sonar needs a call to `secret.isEmpty()` to avoid triggering a warning.
@@ -74,7 +85,7 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
 
         // We shouldn't be able to add a new secret to the database with the same appAddress/index
         try {
-            apiClient.addApplicationRuntimeSecret(AUTHORIZATION, APP_ADDRESS, 0, SECRET_VALUE);
+            apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
             Assertions.fail("A second runtime secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.

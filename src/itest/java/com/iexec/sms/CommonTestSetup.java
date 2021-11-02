@@ -16,7 +16,6 @@
 
 package com.iexec.sms;
 
-import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.blockchain.Web3jService;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,9 +28,6 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {"spring.config.location = classpath:/application.yml, classpath:/application-test.yml"})
 public abstract class CommonTestSetup {
     // region Following beans are mocked as they use the blockchain
-    @MockBean
-    protected AuthorizationService authorizationService;
-
     @MockBean
     protected IexecHubService iexecHubService;
 
