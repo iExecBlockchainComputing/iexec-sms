@@ -31,11 +31,6 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @Entity
 public class ApplicationRuntimeSecret extends Secret {
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
     private long index;
 
     public ApplicationRuntimeSecret(String address, long index, String value) {
