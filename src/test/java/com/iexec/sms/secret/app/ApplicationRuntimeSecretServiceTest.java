@@ -74,4 +74,24 @@ class ApplicationRuntimeSecretServiceTest {
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
         verify(applicationRuntimeSecretService, Mockito.times(1)).decryptSecret(any());
     }
+
+    @Test
+    void secretShouldExist() {
+        when(applicationRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
+                .thenReturn(Optional.of(RUNTIME_SECRET));
+
+        Assertions.assertThat(applicationRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
+                .isTrue();
+        Mockito.verify(applicationRuntimeSecretService).getSecret(APP_ADDRESS, 0);
+    }
+
+    @Test
+    void secretShouldNotExist() {
+        when(applicationRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
+                .thenReturn(Optional.empty());
+
+        Assertions.assertThat(applicationRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
+                .isFalse();
+        Mockito.verify(applicationRuntimeSecretService).getSecret(APP_ADDRESS, 0);
+    }
 }
