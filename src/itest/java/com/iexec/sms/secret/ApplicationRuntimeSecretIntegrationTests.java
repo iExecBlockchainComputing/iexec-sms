@@ -26,6 +26,8 @@ import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.Hash;
 
 import java.util.Optional;
@@ -65,8 +67,10 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
         final Optional<ApplicationRuntimeSecret> noSecret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, secretIndex);
         Assertions.assertThat(noSecret).isEmpty();
 
-        // We add a new secret to the database
+        // We add a new secret to the database and check it exists for the API
         apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
+        ResponseEntity<Void> secretExistence = apiClient.checkApplicationRuntimeSecretExistence(APP_ADDRESS, secretIndex);
+        Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
         final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, secretIndex);

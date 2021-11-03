@@ -18,10 +18,7 @@ package com.iexec.sms;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "apiClient",
@@ -36,4 +33,8 @@ public interface ApiClient {
             @PathVariable("secretIndex") long secretIndex,
             @RequestBody String secretValue
     );
+
+    @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
+    ResponseEntity<Void> checkApplicationRuntimeSecretExistence(@PathVariable String appAddress,
+                                                                @PathVariable long secretIndex);
 }
