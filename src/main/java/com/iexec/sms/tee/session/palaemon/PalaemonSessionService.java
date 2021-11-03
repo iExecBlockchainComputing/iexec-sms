@@ -22,6 +22,7 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
+import com.iexec.sms.secret.app.ApplicationRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -38,7 +39,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -74,6 +74,7 @@ public class PalaemonSessionService {
     // Compute
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
+    static final String APP_PROVIDER_SECRET = "APP_PROVIDER_SECRET";
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
@@ -85,6 +86,7 @@ public class PalaemonSessionService {
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final AttestationSecurityConfig attestationSecurityConfig;
+    private final ApplicationRuntimeSecretService applicationRuntimeSecretService;
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
@@ -94,12 +96,14 @@ public class PalaemonSessionService {
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
-            AttestationSecurityConfig attestationSecurityConfig) {
+            AttestationSecurityConfig attestationSecurityConfig,
+            ApplicationRuntimeSecretService applicationRuntimeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
+        this.applicationRuntimeSecretService = applicationRuntimeSecretService;
     }
 
     @PostConstruct
@@ -223,6 +227,13 @@ public class PalaemonSessionService {
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
         tokens.put(INPUT_FILE_NAMES, inputFileNames);
+
+        // Add application runtime secrets
+        final long secretIndex = 0;
+        applicationRuntimeSecretService.getSecret(taskDescription.getAppAddress(), secretIndex, true)
+                .ifPresent(applicationRuntimeSecret ->
+                        tokens.put(APP_PROVIDER_SECRET + "_" + secretIndex, applicationRuntimeSecret.getValue()));
+
         return tokens;
     }
 

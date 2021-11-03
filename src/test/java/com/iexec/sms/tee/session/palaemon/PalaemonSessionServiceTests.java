@@ -24,8 +24,9 @@ import com.iexec.common.tee.TeeEnclaveConfigurationValidator;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
-import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.Secret;
+import com.iexec.sms.secret.app.ApplicationRuntimeSecret;
+import com.iexec.sms.secret.app.ApplicationRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -46,12 +47,11 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.util.*;
 
-import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
-import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
+import static com.iexec.common.precompute.PreComputeUtils.*;
 import static com.iexec.common.worker.result.ResultUtils.*;
-import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.INPUT_FILE_NAMES;
+import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -77,7 +77,9 @@ public class PalaemonSessionServiceTests {
     // keys with leading/trailing \n should not break the workflow
     private static final String DATASET_KEY = "\ndatasetKey\n";
     // app
+    private static final String SECRET_VALUE = "secretValue";
     private static final String APP_URI = "appUri";
+    private static final String APP_ADDRESS = "appAddress";
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
     private static final TeeEnclaveConfiguration enclaveConfig =
@@ -99,8 +101,6 @@ public class PalaemonSessionServiceTests {
     private static final String INPUT_FILE_NAME_2 = "file2";
 
     @Mock
-    private IexecHubService iexecHubService;
-    @Mock
     private Web3SecretService web3SecretService;
     @Mock
     private Web2SecretsService web2SecretsService;
@@ -110,6 +110,8 @@ public class PalaemonSessionServiceTests {
     private TeeWorkflowConfiguration teeWorkflowConfig;
     @Mock
     private AttestationSecurityConfig attestationSecurityConfig;
+    @Mock
+    private ApplicationRuntimeSecretService applicationRuntimeSecretService;
 
     private PalaemonSessionService palaemonSessionService;
 
@@ -123,7 +125,9 @@ public class PalaemonSessionServiceTests {
                 web2SecretsService,
                 teeChallengeService,
                 teeWorkflowConfig,
-                attestationSecurityConfig));
+                attestationSecurityConfig,
+                applicationRuntimeSecretService
+        ));
         ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
@@ -184,8 +188,13 @@ public class PalaemonSessionServiceTests {
     public void shouldGetAppPalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        final int secretIndex = 0;
+
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
+        when(applicationRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
+                .thenReturn(Optional.of(new ApplicationRuntimeSecret(APP_ADDRESS, secretIndex, SECRET_VALUE)));
+
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
         assertThat(tokens).isNotEmpty();
@@ -197,8 +206,33 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
+        assertThat(tokens).containsEntry(APP_PROVIDER_SECRET + "_0", SECRET_VALUE);
     }
 
+    @Test
+    void shouldGetPalaemonTokensWithoutAppRuntimeSecret() throws Exception {
+        PalaemonSessionRequest request = createSessionRequest();
+        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        final int secretIndex = 0;
+
+        when(enclaveConfig.getValidator()).thenReturn(validator);
+        when(validator.isValid()).thenReturn(true);
+        when(applicationRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
+                .thenReturn(Optional.empty());
+
+        Map<String, Object> tokens =
+                palaemonSessionService.getAppPalaemonTokens(request);
+        assertThat(tokens).isNotEmpty();
+        assertThat(tokens.get(PalaemonSessionService.APP_MRENCLAVE))
+                .isEqualTo(APP_FINGERPRINT);
+        assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
+                .isEqualTo(APP_ENTRYPOINT + " " + ARGS);
+        assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
+                .isEqualTo(Map.of(
+                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
+        assertThat(tokens.get(APP_PROVIDER_SECRET + "_0")).isNull();
+    }
     @Test
     public void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
         PalaemonSessionRequest request = createSessionRequest();
@@ -280,6 +314,7 @@ public class PalaemonSessionServiceTests {
         return TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
+                .appAddress(APP_ADDRESS)
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
