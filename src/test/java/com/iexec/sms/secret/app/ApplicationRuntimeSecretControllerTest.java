@@ -34,6 +34,8 @@ class ApplicationRuntimeSecretControllerTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    // region addApplicationRuntimeSecret
+
     @Test
     void shouldAddSecret() {
         long secretIndex = 0;
@@ -98,4 +100,36 @@ class ApplicationRuntimeSecretControllerTest {
         verify(applicationRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, SECRET_VALUE);
     }
+
+    // endregion
+
+    // region checkApplicationRuntimeSecretExistence
+    @Test
+    void secretShouldExist() {
+        long secretIndex = 0;
+        when(applicationRuntimeSecretService.doesSecretExist(APP_ADDRESS, secretIndex))
+                .thenReturn(true);
+
+        ResponseEntity<Void> result =
+                applicationRuntimeSecretController.checkApplicationRuntimeSecretExistence(APP_ADDRESS, secretIndex);
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        verify(applicationRuntimeSecretService, times(1))
+                .doesSecretExist(APP_ADDRESS, secretIndex);
+    }
+
+    @Test
+    void secretShouldNotExist() {
+        long secretIndex = 0;
+        when(applicationRuntimeSecretService.doesSecretExist(APP_ADDRESS, secretIndex))
+                .thenReturn(false);
+
+        ResponseEntity<Void> result =
+                applicationRuntimeSecretController.checkApplicationRuntimeSecretExistence(APP_ADDRESS, secretIndex);
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
+        verify(applicationRuntimeSecretService, times(1))
+                .doesSecretExist(APP_ADDRESS, secretIndex);
+    }
+    // endregion
 }
