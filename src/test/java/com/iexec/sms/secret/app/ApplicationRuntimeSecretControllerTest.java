@@ -107,7 +107,7 @@ class ApplicationRuntimeSecretControllerTest {
     @Test
     void secretShouldExist() {
         long secretIndex = 0;
-        when(applicationRuntimeSecretService.doesSecretExist(APP_ADDRESS, secretIndex))
+        when(applicationRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<Void> result =
@@ -115,13 +115,13 @@ class ApplicationRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(applicationRuntimeSecretService, times(1))
-                .doesSecretExist(APP_ADDRESS, secretIndex);
+                .isSecretPresent(APP_ADDRESS, secretIndex);
     }
 
     @Test
     void secretShouldNotExist() {
         long secretIndex = 0;
-        when(applicationRuntimeSecretService.doesSecretExist(APP_ADDRESS, secretIndex))
+        when(applicationRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<Void> result =
@@ -129,7 +129,7 @@ class ApplicationRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
         verify(applicationRuntimeSecretService, times(1))
-                .doesSecretExist(APP_ADDRESS, secretIndex);
+                .isSecretPresent(APP_ADDRESS, secretIndex);
     }
     // endregion
 }

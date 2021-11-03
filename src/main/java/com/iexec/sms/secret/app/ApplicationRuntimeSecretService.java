@@ -65,7 +65,7 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
      * Check whether a secret exists.
      * @return {@code true} if the secret exists in the database, {@code false} otherwise.
      */
-    public boolean doesSecretExist(String appAddress, long secretIndex) {
+    public boolean isSecretPresent(String appAddress, long secretIndex) {
         return getSecret(appAddress, secretIndex).isPresent();
     }
 

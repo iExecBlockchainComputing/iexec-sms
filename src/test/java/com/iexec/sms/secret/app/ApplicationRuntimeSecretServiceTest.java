@@ -80,7 +80,7 @@ class ApplicationRuntimeSecretServiceTest {
         when(applicationRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
                 .thenReturn(Optional.of(RUNTIME_SECRET));
 
-        Assertions.assertThat(applicationRuntimeSecretService.doesSecretExist(APP_ADDRESS, 0))
+        Assertions.assertThat(applicationRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
                 .isTrue();
         Mockito.verify(applicationRuntimeSecretService).getSecret(APP_ADDRESS, 0);
     }
@@ -90,7 +90,7 @@ class ApplicationRuntimeSecretServiceTest {
         when(applicationRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThat(applicationRuntimeSecretService.doesSecretExist(APP_ADDRESS, 0))
+        Assertions.assertThat(applicationRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
                 .isFalse();
         Mockito.verify(applicationRuntimeSecretService).getSecret(APP_ADDRESS, 0);
     }
