@@ -111,7 +111,7 @@ class ApplicationRuntimeSecretControllerTest {
                 .thenReturn(true);
 
         ResponseEntity<Void> result =
-                applicationRuntimeSecretController.checkApplicationRuntimeSecretExistence(APP_ADDRESS, secretIndex);
+                applicationRuntimeSecretController.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(applicationRuntimeSecretService, times(1))
@@ -125,7 +125,7 @@ class ApplicationRuntimeSecretControllerTest {
                 .thenReturn(false);
 
         ResponseEntity<Void> result =
-                applicationRuntimeSecretController.checkApplicationRuntimeSecretExistence(APP_ADDRESS, secretIndex);
+                applicationRuntimeSecretController.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
         verify(applicationRuntimeSecretService, times(1))

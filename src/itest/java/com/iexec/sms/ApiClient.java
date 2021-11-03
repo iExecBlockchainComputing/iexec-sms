@@ -35,6 +35,6 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> checkApplicationRuntimeSecretExistence(@PathVariable String appAddress,
-                                                                @PathVariable long secretIndex);
+    ResponseEntity<Void> isApplicationRuntimeSecretPresent(@PathVariable String appAddress,
+                                                           @PathVariable long secretIndex);
 }

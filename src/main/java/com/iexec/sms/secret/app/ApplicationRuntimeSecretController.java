@@ -59,8 +59,8 @@ public class ApplicationRuntimeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Void> checkApplicationRuntimeSecretExistence(@PathVariable String appAddress,
-                                                                       @PathVariable long secretIndex) {
+    public ResponseEntity<Void> isApplicationRuntimeSecretPresent(@PathVariable String appAddress,
+                                                                  @PathVariable long secretIndex) {
         boolean secretExists = applicationRuntimeSecretService.isSecretPresent(appAddress, secretIndex);
         if (secretExists) {
             log.info("Secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);

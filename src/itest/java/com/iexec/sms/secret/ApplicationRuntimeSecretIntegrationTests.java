@@ -69,7 +69,7 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
 
         // We add a new secret to the database and check it exists for the API
         apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
-        ResponseEntity<Void> secretExistence = apiClient.checkApplicationRuntimeSecretExistence(APP_ADDRESS, secretIndex);
+        ResponseEntity<Void> secretExistence = apiClient.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
