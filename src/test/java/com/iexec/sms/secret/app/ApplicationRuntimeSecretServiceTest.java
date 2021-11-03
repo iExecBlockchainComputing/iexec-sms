@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
-class ApplicationApplicationRuntimeSecretServiceTest {
+class ApplicationRuntimeSecretServiceTest {
     private static final String APP_ADDRESS = "appAddress";
     private static final String DECRYPTED_SECRET_VALUE = "I'm a secret.";
     private static final String ENCRYPTED_SECRET_VALUE = "I'm an encrypted secret.";
