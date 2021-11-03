@@ -65,9 +65,9 @@ public class ApplicationRuntimeSecretController {
         if (secretExists) {
             log.info("Secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
             return ResponseEntity.noContent().build();
-        } else {
-            log.info("Secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
-            return ResponseEntity.notFound().build();
         }
+
+        log.info("Secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+        return ResponseEntity.notFound().build();
     }
 }
