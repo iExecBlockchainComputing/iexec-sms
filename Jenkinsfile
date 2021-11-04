@@ -12,6 +12,13 @@ pipeline {
             }
         }
 
+        stage('Test') {
+            steps {
+                sh './gradlew build itest -i --no-daemon'
+                junit 'build/test-results/**/*.xml'
+            }
+        }
+
         stage('Upload Jars') {
             when {
                 anyOf{

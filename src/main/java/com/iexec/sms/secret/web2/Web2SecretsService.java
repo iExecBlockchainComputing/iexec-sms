@@ -43,7 +43,6 @@ public class Web2SecretsService extends AbstractSecretService {
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress) {
-        ownerAddress = ownerAddress.toLowerCase();
         return getSecret(ownerAddress, secretAddress, false);
     }
 
@@ -73,7 +72,7 @@ public class Web2SecretsService extends AbstractSecretService {
 
         Secret secret = new Secret(secretAddress, secretValue);
         encryptSecret(secret);
-        log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, secretValueHash:{}]",
+        log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, encryptedSecretValue:{}]",
                 ownerAddress, secretAddress, secret.getValue());
         web2Secrets.getSecrets().add(secret);
         web2SecretsRepository.save(web2Secrets);
@@ -91,7 +90,7 @@ public class Web2SecretsService extends AbstractSecretService {
             return;
         }
 
-        log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHash:{}]",
+        log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldEncryptedSecretValue:{}, newEncryptedSecretValue:{}]",
                 ownerAddress, secretAddress, existingSecret.getValue(), newSecret.getValue());
         existingSecret.setValue(newSecret.getValue(), true);
         web2SecretsRepository.save(web2Secrets.get());

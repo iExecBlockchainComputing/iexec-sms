@@ -26,6 +26,9 @@ repositories {
 
 configurations {
     deployerJars
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+    integrationTestImplementation.extendsFrom testImplementation
 }
 
 ext {
@@ -78,6 +81,31 @@ dependencies {
     }
     testImplementation 'org.springframework.security:spring-security-test'
     // testImplementation 'org.mockito:mockito-inline:2.13.0' // activates mocking final classes/methods
+
+    // test containers
+    testImplementation 'org.testcontainers:junit-jupiter:1.16.0'
+    testImplementation 'org.testcontainers:testcontainers:1.16.0'
+    testImplementation 'org.testcontainers:mongodb:1.16.0'
+}
+
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir 'src/itest/java'
+        }
+        resources.srcDir 'src/itest/resources'
+    }
+}
+
+task itest(type:Test) {
+    description = "Run integration tests (src/itest/...)."
+    // enabled isDev
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false } // run always
+    useJUnitPlatform()
 }
 
 test {

@@ -1,0 +1,21 @@
+# Those `server` properties are needed so that a random port is chosen for the HTTP listener
+server:
+  http:
+    enabled: false
+  ssl:
+    enabled: false
+
+# Run database in-mem
+spring:
+  datasource:
+    url: jdbc:h2:mem:db
+
+# `TeeWorkflowConfiguration` needs some dummy value to be instantiated
+tee.workflow:
+  las-image: "none"
+  pre-compute:
+    image: "none"
+    fingerprint: "none"
+  post-compute:
+    image: "none"
+    fingerprint: "none"

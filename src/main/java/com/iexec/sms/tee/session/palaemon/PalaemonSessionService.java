@@ -22,6 +22,7 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
+import com.iexec.sms.secret.app.ApplicationRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -38,7 +39,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -74,6 +74,7 @@ public class PalaemonSessionService {
     // Compute
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
+    static final String IEXEC_APP_PROVIDER_SECRET_PREFIX = "IEXEC_APP_PROVIDER_SECRET_";
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
@@ -85,6 +86,7 @@ public class PalaemonSessionService {
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final AttestationSecurityConfig attestationSecurityConfig;
+    private final ApplicationRuntimeSecretService applicationRuntimeSecretService;
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
@@ -94,12 +96,14 @@ public class PalaemonSessionService {
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
-            AttestationSecurityConfig attestationSecurityConfig) {
+            AttestationSecurityConfig attestationSecurityConfig,
+            ApplicationRuntimeSecretService applicationRuntimeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
+        this.applicationRuntimeSecretService = applicationRuntimeSecretService;
     }
 
     @PostConstruct
@@ -119,7 +123,7 @@ public class PalaemonSessionService {
      * TODO: Read onchain available infos from enclave instead of copying
      * public vars to palaemon.yml. It needs ssl call from enclave to eth
      * node (only ethereum node address required inside palaemon.yml)
-     * 
+     *
      * @param request session request details
      * @return session config in yaml string format
      * @throws Exception
@@ -159,7 +163,7 @@ public class PalaemonSessionService {
 
     /**
      * Get tokens to be injected in the pre-compute enclave.
-     * 
+     *
      * @param request
      * @return map of pre-compute tokens
      * @throws Exception if dataset secret is not found.
@@ -223,6 +227,16 @@ public class PalaemonSessionService {
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
         tokens.put(INPUT_FILE_NAMES, inputFileNames);
+
+        // Add application runtime secrets
+        final long secretIndex = 0;
+        String appProviderSecret0 =
+                applicationRuntimeSecretService.getSecret(taskDescription.getAppAddress(),
+                        secretIndex, true)
+                        .map(Secret::getValue)
+                        .orElse(EMPTY_YML_VALUE);
+        tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, appProviderSecret0);
+
         return tokens;
     }
 
@@ -315,7 +329,7 @@ public class PalaemonSessionService {
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN
                 : ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<Secret> requesterStorageTokenSecret = 
+        Optional<Secret> requesterStorageTokenSecret =
                 web2SecretsService.getSecret(taskDescription.getRequester(), keyName, true);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
