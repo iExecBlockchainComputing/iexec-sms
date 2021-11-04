@@ -43,7 +43,6 @@ public class Web2SecretsService extends AbstractSecretService {
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress) {
-        ownerAddress = ownerAddress.toLowerCase();
         return getSecret(ownerAddress, secretAddress, false);
     }
 

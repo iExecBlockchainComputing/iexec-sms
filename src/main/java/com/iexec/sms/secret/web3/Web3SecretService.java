@@ -49,7 +49,6 @@ public class Web3SecretService extends AbstractSecretService {
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress) {
-        secretAddress = secretAddress.toLowerCase();
         return getSecret(secretAddress, false);
     }
 

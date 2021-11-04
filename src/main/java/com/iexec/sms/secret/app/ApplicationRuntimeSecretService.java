@@ -57,7 +57,6 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
      * Retrieve a secret identified by its app address and its index.
      */
     public Optional<ApplicationRuntimeSecret> getSecret(String appAddress, long secretIndex) {
-        appAddress = appAddress.toLowerCase();
         return getSecret(appAddress, secretIndex, false);
     }
 
