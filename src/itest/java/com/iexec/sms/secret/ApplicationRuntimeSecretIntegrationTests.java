@@ -67,7 +67,7 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
-        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressIgnoreCaseAndIndex(appAddress, secretIndex);
+        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressAndIndex(appAddress, secretIndex);
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`
             // but Sonar needs a call to `secret.isEmpty()` to avoid triggering a warning.
@@ -93,6 +93,8 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
         // We shouldn't be able to add a new secret to the database with the same index
         // and an appAddress whose only difference is the case.
         try {
+            when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
+
             final String authorization = getAuthorization(UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
             apiClient.addApplicationRuntimeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
             Assertions.fail("A second runtime secret with the same index " +

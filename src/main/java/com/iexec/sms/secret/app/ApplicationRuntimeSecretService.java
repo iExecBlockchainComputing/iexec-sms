@@ -43,7 +43,7 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
                                                         boolean shouldDecryptValue) {
         appAddress = appAddress.toLowerCase();
         Optional<ApplicationRuntimeSecret> secret =
-                applicationRuntimeSecretRepository.findByAddressIgnoreCaseAndIndex(appAddress, secretIndex);
+                applicationRuntimeSecretRepository.findByAddressAndIndex(appAddress, secretIndex);
         if (secret.isEmpty()) {
             return Optional.empty();
         }
