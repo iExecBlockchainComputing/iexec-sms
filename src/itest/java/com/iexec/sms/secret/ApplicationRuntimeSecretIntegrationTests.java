@@ -64,8 +64,12 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
         final String authorization = signMessageHashAndGetSignature(challenge, PRIVATE_KEY).getValue();
 
         // At first, no secret should be in the database
-        final Optional<ApplicationRuntimeSecret> noSecret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, secretIndex);
-        Assertions.assertThat(noSecret).isEmpty();
+        try {
+            apiClient.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
+            Assertions.fail("No secret was expected but one has been retrieved.");
+        } catch (FeignException.NotFound ignored) {
+            // Having a Not Found exception is what we expect there.
+        }
 
         // We add a new secret to the database and check it exists for the API
         final ResponseEntity<String> secretCreationResult = apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
