@@ -78,6 +78,10 @@ public class SecretController {
     public ResponseEntity<String> addWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                 @RequestParam String secretAddress,
                                                 @RequestBody String secretValue) {
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+
         String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
@@ -87,10 +91,6 @@ public class SecretController {
 
         if (web3SecretService.getSecret(secretAddress).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
-        }
-
-        if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         web3SecretService.addSecret(secretAddress, secretValue);
@@ -127,6 +127,10 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestBody String secretValue) {
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+
         String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, secretValue);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
@@ -136,10 +140,6 @@ public class SecretController {
 
         if (web2SecretsService.getSecret(ownerAddress, secretName).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
-        if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         web2SecretsService.addSecret(ownerAddress, secretName, secretValue);

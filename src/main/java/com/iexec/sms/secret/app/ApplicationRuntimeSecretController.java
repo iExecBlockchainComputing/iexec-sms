@@ -45,6 +45,11 @@ public class ApplicationRuntimeSecretController {
 //                                                              @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
                                                               @RequestBody String secretValue) {
         long secretIndex = 0;   // FIXME: remove once functioning has been validated.
+
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+
         String challenge = authorizationService.getChallengeForSetAppRuntimeSecret(appAddress, secretIndex, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
@@ -55,10 +60,6 @@ public class ApplicationRuntimeSecretController {
 
         if (applicationRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
-        }
-
-        if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         applicationRuntimeSecretService.encryptAndSaveSecret(appAddress, secretIndex, secretValue);

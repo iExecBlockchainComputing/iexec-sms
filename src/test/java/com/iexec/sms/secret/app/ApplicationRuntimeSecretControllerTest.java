@@ -133,7 +133,7 @@ class ApplicationRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build());
 
-        verify(applicationRuntimeSecretService, times(1))
+        verify(applicationRuntimeSecretService, times(0))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
         verify(applicationRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
