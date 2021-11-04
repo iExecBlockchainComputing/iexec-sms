@@ -123,7 +123,7 @@ public class PalaemonSessionService {
      * TODO: Read onchain available infos from enclave instead of copying
      * public vars to palaemon.yml. It needs ssl call from enclave to eth
      * node (only ethereum node address required inside palaemon.yml)
-     * 
+     *
      * @param request session request details
      * @return session config in yaml string format
      * @throws Exception
@@ -163,7 +163,7 @@ public class PalaemonSessionService {
 
     /**
      * Get tokens to be injected in the pre-compute enclave.
-     * 
+     *
      * @param request
      * @return map of pre-compute tokens
      * @throws Exception if dataset secret is not found.
@@ -230,9 +230,12 @@ public class PalaemonSessionService {
 
         // Add application runtime secrets
         final long secretIndex = 0;
-        applicationRuntimeSecretService.getSecret(taskDescription.getAppAddress(), secretIndex, true)
-                .ifPresent(applicationRuntimeSecret ->
-                        tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, applicationRuntimeSecret.getValue()));
+        String appProviderSecret0 =
+                applicationRuntimeSecretService.getSecret(taskDescription.getAppAddress(),
+                        secretIndex, true)
+                        .map(Secret::getValue)
+                        .orElse(EMPTY_YML_VALUE);
+        tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, appProviderSecret0);
 
         return tokens;
     }
@@ -326,7 +329,7 @@ public class PalaemonSessionService {
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN
                 : ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<Secret> requesterStorageTokenSecret = 
+        Optional<Secret> requesterStorageTokenSecret =
                 web2SecretsService.getSecret(taskDescription.getRequester(), keyName, true);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",

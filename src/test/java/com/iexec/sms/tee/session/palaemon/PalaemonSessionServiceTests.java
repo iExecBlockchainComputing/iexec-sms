@@ -232,7 +232,7 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(Map.of(
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
-        assertThat(tokens.get(IEXEC_APP_PROVIDER_SECRET_0)).isNull();
+        assertThat(tokens.get(IEXEC_APP_PROVIDER_SECRET_0)).isEqualTo("");
     }
     @Test
     public void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
