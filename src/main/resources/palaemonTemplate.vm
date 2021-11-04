@@ -73,7 +73,7 @@ services:
       #foreach($key in $INPUT_FILE_NAMES.keySet())
       $key: '$INPUT_FILE_NAMES.get($key)'
       #end
-      APP_PROVIDER_SECRET_0: '$env.get("APP_PROVIDER_SECRET_0")'
+      IEXEC_APP_PROVIDER_SECRET_0: '$env.get("IEXEC_APP_PROVIDER_SECRET_0")'
 
   #* 
     Post-compute enclave

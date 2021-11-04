@@ -85,7 +85,7 @@ public class PalaemonSessionServiceTests {
     private static final TeeEnclaveConfiguration enclaveConfig =
             mock(TeeEnclaveConfiguration.class);
     private static final String ARGS = "args";
-    private static final String APP_PROVIDER_SECRET_0 = "APP_PROVIDER_SECRET_0";
+    private static final String IEXEC_APP_PROVIDER_SECRET_0 = "IEXEC_APP_PROVIDER_SECRET_0";
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
@@ -207,7 +207,7 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
-        assertThat(tokens).containsEntry(APP_PROVIDER_SECRET_0, SECRET_VALUE);
+        assertThat(tokens).containsEntry(IEXEC_APP_PROVIDER_SECRET_0, SECRET_VALUE);
     }
 
     @Test
@@ -232,7 +232,7 @@ public class PalaemonSessionServiceTests {
                 .isEqualTo(Map.of(
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
-        assertThat(tokens.get(APP_PROVIDER_SECRET_0)).isNull();
+        assertThat(tokens.get(IEXEC_APP_PROVIDER_SECRET_0)).isNull();
     }
     @Test
     public void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
