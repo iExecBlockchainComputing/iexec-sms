@@ -74,7 +74,7 @@ public class PalaemonSessionService {
     // Compute
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
-    static final String IEXEC_APP_PROVIDER_SECRET_0 = "IEXEC_APP_PROVIDER_SECRET_";
+    static final String IEXEC_APP_PROVIDER_SECRET_PREFIX = "IEXEC_APP_PROVIDER_SECRET_";
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
@@ -232,7 +232,7 @@ public class PalaemonSessionService {
         final long secretIndex = 0;
         applicationRuntimeSecretService.getSecret(taskDescription.getAppAddress(), secretIndex, true)
                 .ifPresent(applicationRuntimeSecret ->
-                        tokens.put(IEXEC_APP_PROVIDER_SECRET_0 + secretIndex, applicationRuntimeSecret.getValue()));
+                        tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, applicationRuntimeSecret.getValue()));
 
         return tokens;
     }
