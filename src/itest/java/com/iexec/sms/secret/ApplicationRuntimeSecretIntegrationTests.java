@@ -37,6 +37,7 @@ import static org.mockito.Mockito.when;
 
 public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS   = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
+    private static final String UPPER_CASE_APP_ADDRESS   = "0XABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
     private static final String SECRET_VALUE  = "secretValue";
     private static final String OWNER_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String DOMAIN        = "IEXEC_SMS_DOMAIN";
@@ -53,33 +54,20 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void shouldAddNewRuntimeSecret() {
-        when(iexecHubService.getOwner(APP_ADDRESS)).thenReturn(OWNER_ADDRESS);
-
         final long secretIndex = 0;
-        final String challenge = HashUtils.concatenateAndHash(
-                Hash.sha3String(DOMAIN),
-                APP_ADDRESS,
-                Long.toHexString(secretIndex),
-                Hash.sha3String(SECRET_VALUE));
-        final String authorization = signMessageHashAndGetSignature(challenge, PRIVATE_KEY).getValue();
+        final String appAddress = APP_ADDRESS;
+        final String secretValue = SECRET_VALUE;
+        //noinspection UnnecessaryLocalVariable
+        final String ownerAddress = OWNER_ADDRESS;
 
-        // At first, no secret should be in the database
-        try {
-            apiClient.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
-            Assertions.fail("No secret was expected but one has been retrieved.");
-        } catch (FeignException.NotFound ignored) {
-            // Having a Not Found exception is what we expect there.
-        }
+        addNewSecret(appAddress, secretIndex, secretValue, ownerAddress);
 
-        // We add a new secret to the database and check it exists for the API
-        final ResponseEntity<String> secretCreationResult = apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
-        Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-
-        ResponseEntity<Void> secretExistence = apiClient.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
+        // Check the new secret exists for the API
+        ResponseEntity<Void> secretExistence = apiClient.isApplicationRuntimeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
-        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressIgnoreCaseAndIndex(APP_ADDRESS, secretIndex);
+        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressIgnoreCaseAndIndex(appAddress, secretIndex);
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`
             // but Sonar needs a call to `secret.isEmpty()` to avoid triggering a warning.
@@ -87,18 +75,65 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
             return;
         }
         Assertions.assertThat(secret.get().getId()).isNotBlank();
-        Assertions.assertThat(secret.get().getAddress()).isEqualToIgnoringCase(APP_ADDRESS);
+        Assertions.assertThat(secret.get().getAddress()).isEqualToIgnoringCase(appAddress);
         Assertions.assertThat(secret.get().getIndex()).isZero();
-        Assertions.assertThat(secret.get().getValue()).isNotEqualTo(SECRET_VALUE);
-        Assertions.assertThat(secret.get().getValue()).isEqualTo(encryptionService.encrypt(SECRET_VALUE));
+        Assertions.assertThat(secret.get().getValue()).isNotEqualTo(secretValue);
+        Assertions.assertThat(secret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
         Assertions.assertThat(secret.get().isEncryptedValue()).isEqualTo(true);
 
         // We shouldn't be able to add a new secret to the database with the same appAddress/index
         try {
-            apiClient.addApplicationRuntimeSecret(authorization, APP_ADDRESS, secretIndex, SECRET_VALUE);
+            final String authorization = getAuthorization(appAddress, secretIndex, secretValue);
+            apiClient.addApplicationRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
             Assertions.fail("A second runtime secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
         }
+
+        // We shouldn't be able to add a new secret to the database with the same index
+        // and an appAddress whose only difference is the case.
+        try {
+            final String authorization = getAuthorization(UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
+            apiClient.addApplicationRuntimeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
+            Assertions.fail("A second runtime secret with the same index " +
+                    "and an app address whose only difference is the case should be rejected.");
+        } catch (FeignException.Conflict ignored) {
+            // Having a Conflict exception is what we expect there.
+        }
+    }
+
+    /**
+     * Checks no secret already exists with given appAddress/index couple
+     * and adds a new runtime secret to the database
+     */
+    @SuppressWarnings("SameParameterValue")
+    private void addNewSecret(String appAddress, long secretIndex, String secretValue, String ownerAddress) {
+        when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
+
+        final String authorization = getAuthorization(appAddress, secretIndex, secretValue);
+
+        // At first, no secret should be in the database
+        try {
+            apiClient.isApplicationRuntimeSecretPresent(appAddress, secretIndex);
+            Assertions.fail("No secret was expected but one has been retrieved.");
+        } catch (FeignException.NotFound ignored) {
+            // Having a Not Found exception is what we expect there.
+        }
+
+        // Add a new secret to the database
+        final ResponseEntity<String> secretCreationResult = apiClient.addApplicationRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
+        Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Forges an authorization that'll permit adding given secret to database.
+     */
+    private String getAuthorization(String appAddress, long secretIndex, String secretValue) {
+        final String challenge = HashUtils.concatenateAndHash(
+                Hash.sha3String(DOMAIN),
+                appAddress,
+                Long.toHexString(secretIndex),
+                Hash.sha3String(secretValue));
+        return signMessageHashAndGetSignature(challenge, PRIVATE_KEY).getValue();
     }
 }
