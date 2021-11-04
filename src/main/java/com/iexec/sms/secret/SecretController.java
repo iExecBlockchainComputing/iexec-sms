@@ -89,6 +89,10 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+
         web3SecretService.addSecret(secretAddress, secretValue);
         return ResponseEntity.noContent().build();
     }
@@ -132,6 +136,10 @@ public class SecretController {
 
         if (web2SecretsService.getSecret(ownerAddress, secretName).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         web2SecretsService.addSecret(ownerAddress, secretName, secretValue);

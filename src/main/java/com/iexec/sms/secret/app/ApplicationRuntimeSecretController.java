@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.app;
 
 import com.iexec.sms.authorization.AuthorizationService;
+import com.iexec.sms.secret.SecretUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,7 +57,7 @@ public class ApplicationRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
-        if (secretValue.getBytes(StandardCharsets.UTF_8).length > 4096) {
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
