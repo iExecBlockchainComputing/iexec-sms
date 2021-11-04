@@ -61,7 +61,7 @@ public class Web3SecretService extends AbstractSecretService {
         secretAddress = secretAddress.toLowerCase();
         Web3Secret web3Secret = new Web3Secret(secretAddress, secretValue);
         encryptSecret(web3Secret);
-        log.info("Adding new web3 secret [secretAddress:{}, secretValueHash:{}]",
+        log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
                 secretAddress, web3Secret.getValue());
         web3SecretRepository.save(web3Secret);
     }

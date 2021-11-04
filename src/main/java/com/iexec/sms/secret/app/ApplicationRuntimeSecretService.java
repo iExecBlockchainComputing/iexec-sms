@@ -77,7 +77,7 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
         ApplicationRuntimeSecret applicationRuntimeSecret =
                 new ApplicationRuntimeSecret(appAddress, secretIndex, secretValue);
         encryptSecret(applicationRuntimeSecret);
-        log.info("Adding new app runtime secret [appAddress:{}, secretIndex:{}, secretValueHash:{}]",
+        log.info("Adding new app runtime secret [appAddress:{}, secretIndex:{}, encryptedSecretValue:{}]",
                 appAddress, secretIndex, applicationRuntimeSecret.getValue());
         applicationRuntimeSecretRepository.save(applicationRuntimeSecret);
     }
