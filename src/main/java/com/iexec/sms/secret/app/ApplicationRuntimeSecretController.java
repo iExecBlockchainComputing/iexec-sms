@@ -22,6 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
 @CrossOrigin
 @RestController
@@ -50,8 +52,12 @@ public class ApplicationRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (applicationRuntimeSecretService.getSecret(appAddress, secretIndex).isPresent()) {
+        if (applicationRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
+        }
+
+        if (secretValue.getBytes(StandardCharsets.UTF_8).length > 4096) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         applicationRuntimeSecretService.encryptAndSaveSecret(appAddress, secretIndex, secretValue);
