@@ -26,8 +26,8 @@ repositories {
 }
 
 configurations {
-    integrationTestCompile.extendsFrom testCompile
-    integrationTestRuntime.extendsFrom testRuntime
+    integrationTestImplementation.extendsFrom implementation
+    integrationTestRuntimeOnly.extendsFrom runtimeOnly
     integrationTestImplementation.extendsFrom testImplementation
 }
 
@@ -90,8 +90,8 @@ dependencies {
 sourceSets {
     integrationTest {
         java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
             srcDir 'src/itest/java'
         }
         resources.srcDir 'src/itest/resources'
