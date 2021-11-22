@@ -53,7 +53,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     // H2
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtime 'com.h2database:h2:1.4.200'
+    runtimeOnly 'com.h2database:h2:1.4.200'
 
     // swagger
     implementation "io.springfox:springfox-swagger2:2.9.2"
