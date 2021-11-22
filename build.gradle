@@ -26,7 +26,6 @@ repositories {
 }
 
 configurations {
-    deployerJars
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
     integrationTestImplementation.extendsFrom testImplementation
