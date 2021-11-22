@@ -2,7 +2,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'java'
-    id 'maven'
+    id 'maven-publish'
     id 'jacoco'
     id 'org.springframework.boot' version '2.4.3'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
@@ -45,7 +45,6 @@ dependencyManagement {
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
     // spring
     implementation "org.springframework.boot:spring-boot-starter-web"
@@ -134,15 +133,25 @@ project.ext.getNexusMaven = {
     }
 }
 
-uploadArchives {
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJars
-        repository(url: getNexusMaven()) {
-            authentication(userName: project.nexusUser, password: project.nexusPassword)
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact bootJar
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username nexusUser
+                password nexusPassword
+            }
+            url getNexusMaven
         }
     }
 }
-uploadArchives.enabled = canUploadArchives
+
+publish.enabled = canUploadArchives
 
 // create the version controller for the core
 task createVersion(type: Copy) {
