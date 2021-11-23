@@ -17,10 +17,6 @@
 package com.iexec.sms.authorization;
 
 
-import static com.iexec.sms.App.DOMAIN;
-
-import java.util.Optional;
-
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.ChainTaskStatus;
@@ -30,11 +26,13 @@ import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.common.utils.SignatureUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-
-import org.springframework.stereotype.Service;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
+
+import java.util.Optional;
+
+import static com.iexec.sms.App.DOMAIN;
 
 @Slf4j
 @Service
@@ -143,10 +141,12 @@ public class AuthorizationService {
     }
 
     public String getChallengeForSetAppRequesterRuntimeSecretCount(
-            String appAddress) {
+            String appAddress,
+            Integer secretCount) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
-                appAddress);
+                appAddress,
+                Long.toHexString(secretCount));
     }
 
 

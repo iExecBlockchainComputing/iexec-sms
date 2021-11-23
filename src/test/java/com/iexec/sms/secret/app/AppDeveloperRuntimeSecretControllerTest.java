@@ -208,7 +208,7 @@ class AppDeveloperRuntimeSecretControllerTest {
     void shouldSetAppRequestersRuntimeSecretCount() {
         int secretCount = 10;
 
-        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS))
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS, secretCount))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
@@ -232,7 +232,7 @@ class AppDeveloperRuntimeSecretControllerTest {
     void shouldNotSetAppRequestersRuntimeSecretCountSinceNotSignedByOwner() {
         int secretCount = 10;
 
-        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS))
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS, secretCount))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(false);
@@ -254,7 +254,7 @@ class AppDeveloperRuntimeSecretControllerTest {
     void shouldNotSetAppRequestersRuntimeSecretCountSinceSecretCountAlreadyExists() {
         int secretCount = 1;
 
-        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS))
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS, secretCount))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
@@ -278,7 +278,7 @@ class AppDeveloperRuntimeSecretControllerTest {
     void shouldNotSetAppRequestersRuntimeSecretCountSinceNotSecretCountIsNull() {
         Integer secretCount = null;
 
-        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS))
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS, secretCount))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
@@ -304,7 +304,7 @@ class AppDeveloperRuntimeSecretControllerTest {
     void shouldNotSetAppRequestersRuntimeSecretCountSinceNotSecretCountIsNegative() {
         int secretCount = -1;
 
-        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS))
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS, secretCount))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);

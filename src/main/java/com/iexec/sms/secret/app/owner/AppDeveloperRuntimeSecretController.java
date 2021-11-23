@@ -86,7 +86,10 @@ public class AppDeveloperRuntimeSecretController {
             @PathVariable String appAddress,
             @RequestBody Integer secretCount) {
         String challenge = authorizationService
-                .getChallengeForSetAppRequesterRuntimeSecretCount(appAddress);
+                .getChallengeForSetAppRequesterRuntimeSecretCount(
+                        appAddress,
+                        secretCount
+                );
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
             log.error("Unauthorized to setAppRequestersRuntimeSecretCount" +
