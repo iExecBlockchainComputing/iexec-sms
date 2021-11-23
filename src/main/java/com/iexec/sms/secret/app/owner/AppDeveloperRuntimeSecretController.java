@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.app.owner;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
@@ -23,20 +23,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
-
 @Slf4j
 @CrossOrigin
 @RestController
 @RequestMapping("/apps")
-public class ApplicationRuntimeSecretController {
+public class AppDeveloperRuntimeSecretController {
     private final AuthorizationService authorizationService;
-    private final ApplicationRuntimeSecretService applicationRuntimeSecretService;
+    private final AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService;
 
-    public ApplicationRuntimeSecretController(AuthorizationService authorizationService,
-                                              ApplicationRuntimeSecretService applicationRuntimeSecretService) {
+    public AppDeveloperRuntimeSecretController(AuthorizationService authorizationService,
+                                               AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService) {
         this.authorizationService = authorizationService;
-        this.applicationRuntimeSecretService = applicationRuntimeSecretService;
+        this.appDeveloperRuntimeSecretService = appDeveloperRuntimeSecretService;
     }
 
     @PostMapping("/{appAddress}/secrets/0")
@@ -58,18 +56,18 @@ public class ApplicationRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (applicationRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
+        if (appDeveloperRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
-        applicationRuntimeSecretService.encryptAndSaveSecret(appAddress, secretIndex, secretValue);
+        appDeveloperRuntimeSecretService.encryptAndSaveSecret(appAddress, secretIndex, secretValue);
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<Void> isApplicationRuntimeSecretPresent(@PathVariable String appAddress,
                                                                   @PathVariable long secretIndex) {
-        if (applicationRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
+        if (appDeveloperRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
             log.info("Secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
             return ResponseEntity.noContent().build();
         }

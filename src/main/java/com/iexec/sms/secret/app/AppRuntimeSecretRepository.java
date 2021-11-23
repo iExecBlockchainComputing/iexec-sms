@@ -16,25 +16,10 @@
 
 package com.iexec.sms.secret.app;
 
-import com.iexec.sms.secret.Secret;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.repository.CrudRepository;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import java.util.Optional;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-@Entity
-public class ApplicationRuntimeSecret extends Secret {
-    private long index;
-
-    public ApplicationRuntimeSecret(String address, long index, String value) {
-        super(address, value);
-        this.index = index;
-    }
+public interface AppRuntimeSecretRepository extends CrudRepository<AppRuntimeSecret, String> {
+    Optional<AppRuntimeSecret> findByAddressAndIndex(String address, long index);
 }

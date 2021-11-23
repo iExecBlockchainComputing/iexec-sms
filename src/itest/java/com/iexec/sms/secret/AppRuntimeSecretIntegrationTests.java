@@ -20,8 +20,8 @@ import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.app.ApplicationRuntimeSecret;
-import com.iexec.sms.secret.app.ApplicationRuntimeSecretRepository;
+import com.iexec.sms.secret.app.AppRuntimeSecret;
+import com.iexec.sms.secret.app.AppRuntimeSecretRepository;
 import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ import java.util.Optional;
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static org.mockito.Mockito.when;
 
-public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
+public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS   = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS   = "0XABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
     private static final String SECRET_VALUE  = "secretValue";
@@ -50,7 +50,7 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
     private EncryptionService encryptionService;
 
     @Autowired
-    private ApplicationRuntimeSecretRepository repository;
+    private AppRuntimeSecretRepository repository;
 
     @Test
     void shouldAddNewRuntimeSecret() {
@@ -67,7 +67,7 @@ public class ApplicationRuntimeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
-        final Optional<ApplicationRuntimeSecret> secret = repository.findByAddressAndIndex(appAddress, secretIndex);
+        final Optional<AppRuntimeSecret> secret = repository.findByAddressAndIndex(appAddress, secretIndex);
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`
             // but Sonar needs a call to `secret.isEmpty()` to avoid triggering a warning.

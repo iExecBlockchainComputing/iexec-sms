@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.app.owner;
 
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.AbstractSecretService;
+import com.iexec.sms.secret.app.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,25 +26,25 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class ApplicationRuntimeSecretService extends AbstractSecretService {
-    private final ApplicationRuntimeSecretRepository applicationRuntimeSecretRepository;
+public class AppDeveloperRuntimeSecretService extends AbstractSecretService {
+    private final AppRuntimeSecretRepository appRuntimeSecretRepository;
 
-    public ApplicationRuntimeSecretService(ApplicationRuntimeSecretRepository applicationRuntimeSecretRepository,
-                                           EncryptionService encryptionService) {
+    public AppDeveloperRuntimeSecretService(AppRuntimeSecretRepository appRuntimeSecretRepository,
+                                            EncryptionService encryptionService) {
         super(encryptionService);
-        this.applicationRuntimeSecretRepository = applicationRuntimeSecretRepository;
+        this.appRuntimeSecretRepository = appRuntimeSecretRepository;
     }
 
     /**
      * Retrieve a secret identified by its app address and its index.
      * Decrypt it if required and if its decryption is required.
      */
-    public Optional<ApplicationRuntimeSecret> getSecret(String appAddress,
-                                                        long secretIndex,
-                                                        boolean shouldDecryptValue) {
+    public Optional<AppRuntimeSecret> getSecret(String appAddress,
+                                                long secretIndex,
+                                                boolean shouldDecryptValue) {
         appAddress = appAddress.toLowerCase();
-        Optional<ApplicationRuntimeSecret> secret =
-                applicationRuntimeSecretRepository.findByAddressAndIndex(appAddress, secretIndex);
+        Optional<AppRuntimeSecret> secret =
+                appRuntimeSecretRepository.findByAddressAndIndex(appAddress, secretIndex);
         if (secret.isEmpty()) {
             return Optional.empty();
         }
@@ -56,7 +57,7 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
     /**
      * Retrieve a secret identified by its app address and its index.
      */
-    public Optional<ApplicationRuntimeSecret> getSecret(String appAddress, long secretIndex) {
+    public Optional<AppRuntimeSecret> getSecret(String appAddress, long secretIndex) {
         return getSecret(appAddress, secretIndex, false);
     }
 
@@ -73,11 +74,11 @@ public class ApplicationRuntimeSecretService extends AbstractSecretService {
      */
     public void encryptAndSaveSecret(String appAddress, long secretIndex, String secretValue) {
         appAddress = appAddress.toLowerCase();
-        ApplicationRuntimeSecret applicationRuntimeSecret =
-                new ApplicationRuntimeSecret(appAddress, secretIndex, secretValue);
-        encryptSecret(applicationRuntimeSecret);
+        AppRuntimeSecret appRuntimeSecret =
+                new AppRuntimeSecret(appAddress, secretIndex, secretValue);
+        encryptSecret(appRuntimeSecret);
         log.info("Adding new app runtime secret [appAddress:{}, secretIndex:{}, encryptedSecretValue:{}]",
-                appAddress, secretIndex, applicationRuntimeSecret.getValue());
-        applicationRuntimeSecretRepository.save(applicationRuntimeSecret);
+                appAddress, secretIndex, appRuntimeSecret.getValue());
+        appRuntimeSecretRepository.save(appRuntimeSecret);
     }
 }

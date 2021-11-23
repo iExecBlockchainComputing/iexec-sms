@@ -25,8 +25,8 @@ import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.app.ApplicationRuntimeSecret;
-import com.iexec.sms.secret.app.ApplicationRuntimeSecretService;
+import com.iexec.sms.secret.app.AppRuntimeSecret;
+import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -112,7 +112,7 @@ public class PalaemonSessionServiceTests {
     @Mock
     private AttestationSecurityConfig attestationSecurityConfig;
     @Mock
-    private ApplicationRuntimeSecretService applicationRuntimeSecretService;
+    private AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService;
 
     private PalaemonSessionService palaemonSessionService;
 
@@ -127,7 +127,7 @@ public class PalaemonSessionServiceTests {
                 teeChallengeService,
                 teeWorkflowConfig,
                 attestationSecurityConfig,
-                applicationRuntimeSecretService
+                appDeveloperRuntimeSecretService
         ));
         ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
@@ -193,8 +193,8 @@ public class PalaemonSessionServiceTests {
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
-        when(applicationRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
-                .thenReturn(Optional.of(new ApplicationRuntimeSecret(APP_ADDRESS, secretIndex, SECRET_VALUE)));
+        when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
+                .thenReturn(Optional.of(new AppRuntimeSecret(APP_ADDRESS, secretIndex, SECRET_VALUE)));
 
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);
@@ -218,7 +218,7 @@ public class PalaemonSessionServiceTests {
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
-        when(applicationRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
+        when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
                 .thenReturn(Optional.empty());
 
         Map<String, Object> tokens =

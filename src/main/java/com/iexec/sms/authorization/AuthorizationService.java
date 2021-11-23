@@ -142,6 +142,13 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
+    public String getChallengeForSetAppRequesterRuntimeSecretCount(
+            String appAddress) {
+        return HashUtils.concatenateAndHash(
+                Hash.sha3String(DOMAIN),
+                appAddress);
+    }
+
 
     public String getChallengeForSetWeb2Secret(String ownerAddress,
                                                String secretKey,
