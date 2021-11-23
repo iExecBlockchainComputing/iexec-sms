@@ -27,7 +27,7 @@ import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.app.AppRuntimeSecret;
 import com.iexec.sms.secret.app.AppRuntimeSecretOwnerRole;
-import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretService;
+import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -113,7 +113,7 @@ public class PalaemonSessionServiceTests {
     @Mock
     private AttestationSecurityConfig attestationSecurityConfig;
     @Mock
-    private AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService;
+    private AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService;
 
     private PalaemonSessionService palaemonSessionService;
 
@@ -128,7 +128,7 @@ public class PalaemonSessionServiceTests {
                 teeChallengeService,
                 teeWorkflowConfig,
                 attestationSecurityConfig,
-                appDeveloperRuntimeSecretService
+                appDeveloperAppRuntimeSecretService
         ));
         ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
@@ -194,7 +194,7 @@ public class PalaemonSessionServiceTests {
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
-        when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
+        when(appDeveloperAppRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
                 .thenReturn(Optional.of(new AppRuntimeSecret(
                         APP_ADDRESS,
                         secretIndex,
@@ -224,7 +224,7 @@ public class PalaemonSessionServiceTests {
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
-        when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
+        when(appDeveloperAppRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
                 .thenReturn(Optional.empty());
 
         Map<String, Object> tokens =

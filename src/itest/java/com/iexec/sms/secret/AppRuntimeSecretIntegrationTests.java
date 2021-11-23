@@ -58,13 +58,12 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
         final long secretIndex = 0;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
-        //noinspection UnnecessaryLocalVariable
         final String ownerAddress = OWNER_ADDRESS;
 
         addNewSecret(appAddress, secretIndex, secretValue, ownerAddress);
 
         // Check the new secret exists for the API
-        ResponseEntity<Void> secretExistence = apiClient.isAppDeveloperRuntimeSecretPresent(appAddress, secretIndex);
+        ResponseEntity<Void> secretExistence = apiClient.isAppDeveloperAppRuntimeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
@@ -89,7 +88,7 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
         // We shouldn't be able to add a new secret to the database with the same appAddress/index
         try {
             final String authorization = getAuthorization(appAddress, secretIndex, secretValue);
-            apiClient.addAppDeveloperRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
+            apiClient.addAppDeveloperAppRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
             Assertions.fail("A second runtime secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
@@ -101,7 +100,7 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
             when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
 
             final String authorization = getAuthorization(UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
-            apiClient.addAppDeveloperRuntimeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
+            apiClient.addAppDeveloperAppRuntimeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
             Assertions.fail("A second runtime secret with the same index " +
                     "and an app address whose only difference is the case should be rejected.");
         } catch (FeignException.Conflict ignored) {
@@ -121,14 +120,14 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
 
         // At first, no secret should be in the database
         try {
-            apiClient.isAppDeveloperRuntimeSecretPresent(appAddress, secretIndex);
+            apiClient.isAppDeveloperAppRuntimeSecretPresent(appAddress, secretIndex);
             Assertions.fail("No secret was expected but one has been retrieved.");
         } catch (FeignException.NotFound ignored) {
             // Having a Not Found exception is what we expect there.
         }
 
         // Add a new secret to the database
-        final ResponseEntity<String> secretCreationResult = apiClient.addAppDeveloperRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
+        final ResponseEntity<String> secretCreationResult = apiClient.addAppDeveloperAppRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
         Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 

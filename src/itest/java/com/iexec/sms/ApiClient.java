@@ -27,7 +27,7 @@ public interface ApiClient {
     String API_URL = "http://localhost:${local.server.port}";
 
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addAppDeveloperRuntimeSecret(
+    ResponseEntity<String> addAppDeveloperAppRuntimeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable("appAddress") String appAddress,
             @PathVariable("secretIndex") long secretIndex,
@@ -35,6 +35,8 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isAppDeveloperRuntimeSecretPresent(@PathVariable String appAddress,
-                                                            @PathVariable long secretIndex);
+    ResponseEntity<Void> isAppDeveloperAppRuntimeSecretPresent(
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex
+    );
 }

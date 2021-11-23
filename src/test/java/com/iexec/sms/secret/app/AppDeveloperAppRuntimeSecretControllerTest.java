@@ -1,9 +1,9 @@
 package com.iexec.sms.secret.app;
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretController;
-import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretService;
-import com.iexec.sms.secret.app.requester.AppRequesterRuntimeSecretService;
+import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretController;
+import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretService;
+import com.iexec.sms.secret.app.requester.AppRequesterAppRuntimeSecretService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 
 import static org.mockito.Mockito.*;
 
-class AppDeveloperRuntimeSecretControllerTest {
+class AppDeveloperAppRuntimeSecretControllerTest {
     private static final String AUTHORIZATION = "authorization";
     private static final String APP_ADDRESS = "appAddress";
     private static final String COMMON_SECRET_VALUE = "I'm a secret.";
@@ -24,16 +24,16 @@ class AppDeveloperRuntimeSecretControllerTest {
     private static final String CHALLENGE = "challenge";
 
     @Mock
-    AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService;
+    AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService;
 
     @Mock
-    AppRequesterRuntimeSecretService appRequesterRuntimeSecretService;
+    AppRequesterAppRuntimeSecretService appRequesterAppRuntimeSecretService;
 
     @Mock
     AuthorizationService authorizationService;
 
     @InjectMocks
-    AppDeveloperRuntimeSecretController appDeveloperRuntimeSecretController;
+    AppDeveloperAppRuntimeSecretController appDeveloperAppRuntimeSecretController;
 
     @BeforeEach
     public void beforeEach() {
@@ -51,20 +51,20 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
+        when(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(false);
-        doNothing().when(appDeveloperRuntimeSecretService).encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
+        doNothing().when(appDeveloperAppRuntimeSecretService).encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.addApplicationRuntimeSecret(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.addAppDeveloperAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
     }
 
@@ -79,7 +79,7 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(false);
 
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.addApplicationRuntimeSecret(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.addAppDeveloperAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -87,9 +87,9 @@ class AppDeveloperRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
 
-        verify(appDeveloperRuntimeSecretService, times(0))
+        verify(appDeveloperAppRuntimeSecretService, times(0))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
-        verify(appDeveloperRuntimeSecretService, times(0))
+        verify(appDeveloperAppRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
     }
 
@@ -102,10 +102,10 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
+        when(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(true);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.addApplicationRuntimeSecret(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.addAppDeveloperAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -113,9 +113,9 @@ class AppDeveloperRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
-        verify(appDeveloperRuntimeSecretService, times(0))
+        verify(appDeveloperAppRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
     }
 
@@ -128,10 +128,10 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
+        when(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.addApplicationRuntimeSecret(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.addAppDeveloperAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -139,9 +139,9 @@ class AppDeveloperRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build());
 
-        verify(appDeveloperRuntimeSecretService, times(0))
+        verify(appDeveloperAppRuntimeSecretService, times(0))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
-        verify(appDeveloperRuntimeSecretService, times(0))
+        verify(appDeveloperAppRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
     }
 
@@ -154,20 +154,20 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
+        when(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(false);
-        doNothing().when(appDeveloperRuntimeSecretService).encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
+        doNothing().when(appDeveloperAppRuntimeSecretService).encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.addApplicationRuntimeSecret(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.addAppDeveloperAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .encryptAndSaveSecret(APP_ADDRESS, secretIndex, secretValue);
     }
 
@@ -177,28 +177,28 @@ class AppDeveloperRuntimeSecretControllerTest {
     @Test
     void secretShouldExist() {
         long secretIndex = 0;
-        when(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
+        when(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<Void> result =
-                appDeveloperRuntimeSecretController.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
+                appDeveloperAppRuntimeSecretController.isAppDeveloperAppRuntimeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
     }
 
     @Test
     void secretShouldNotExist() {
         long secretIndex = 0;
-        when(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
+        when(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<Void> result =
-                appDeveloperRuntimeSecretController.isApplicationRuntimeSecretPresent(APP_ADDRESS, secretIndex);
+                appDeveloperAppRuntimeSecretController.isAppDeveloperAppRuntimeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
-        verify(appDeveloperRuntimeSecretService, times(1))
+        verify(appDeveloperAppRuntimeSecretService, times(1))
                 .isSecretPresent(APP_ADDRESS, secretIndex);
     }
     // endregion
@@ -212,19 +212,19 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appRequesterRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
+        when(appRequesterAppRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
                 .thenReturn(false);
-        doNothing().when(appRequesterRuntimeSecretService)
+        doNothing().when(appRequesterAppRuntimeSecretService)
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.setAppRequestersRuntimeSecretCount(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
-        verify(appRequesterRuntimeSecretService, times(1))
+        verify(appRequesterAppRuntimeSecretService, times(1))
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
     }
 
@@ -236,17 +236,17 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(false);
-        when(appRequesterRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
+        when(appRequesterAppRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.setAppRequestersRuntimeSecretCount(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
-        verify(appRequesterRuntimeSecretService, times(0))
+        verify(appRequesterAppRuntimeSecretService, times(0))
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
     }
 
@@ -258,11 +258,11 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appRequesterRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
+        when(appRequesterAppRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
                 .thenReturn(true);
 
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.setAppRequestersRuntimeSecretCount(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -270,7 +270,7 @@ class AppDeveloperRuntimeSecretControllerTest {
 
         Assertions.assertThat(result)
                 .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
-        verify(appRequesterRuntimeSecretService, times(0))
+        verify(appRequesterAppRuntimeSecretService, times(0))
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
     }
 
@@ -282,12 +282,12 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appRequesterRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
+        when(appRequesterAppRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
                 .thenReturn(false);
-        doNothing().when(appRequesterRuntimeSecretService)
+        doNothing().when(appRequesterAppRuntimeSecretService)
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.setAppRequestersRuntimeSecretCount(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -296,7 +296,7 @@ class AppDeveloperRuntimeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity
                 .badRequest()
                 .body("Secret count should be positive. Can't accept value null"));
-        verify(appRequesterRuntimeSecretService, times(0))
+        verify(appRequesterAppRuntimeSecretService, times(0))
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
     }
 
@@ -308,12 +308,12 @@ class AppDeveloperRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(appRequesterRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
+        when(appRequesterAppRuntimeSecretService.isAppRuntimeSecretCountPresent(APP_ADDRESS))
                 .thenReturn(false);
-        doNothing().when(appRequesterRuntimeSecretService)
+        doNothing().when(appRequesterAppRuntimeSecretService)
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
 
-        ResponseEntity<String> result = appDeveloperRuntimeSecretController.setAppRequestersRuntimeSecretCount(
+        ResponseEntity<String> result = appDeveloperAppRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -322,7 +322,7 @@ class AppDeveloperRuntimeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity
                 .badRequest()
                 .body("Secret count should be positive. Can't accept value -1"));
-        verify(appRequesterRuntimeSecretService, times(0))
+        verify(appRequesterAppRuntimeSecretService, times(0))
                 .setAppRuntimeSecretCount(APP_ADDRESS, secretCount);
     }
     // endregion

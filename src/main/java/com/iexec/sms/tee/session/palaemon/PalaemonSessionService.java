@@ -22,7 +22,7 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretService;
+import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -86,7 +86,7 @@ public class PalaemonSessionService {
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final AttestationSecurityConfig attestationSecurityConfig;
-    private final AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService;
+    private final AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService;
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
@@ -97,13 +97,13 @@ public class PalaemonSessionService {
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
             AttestationSecurityConfig attestationSecurityConfig,
-            AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService) {
+            AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
-        this.appDeveloperRuntimeSecretService = appDeveloperRuntimeSecretService;
+        this.appDeveloperAppRuntimeSecretService = appDeveloperAppRuntimeSecretService;
     }
 
     @PostConstruct
@@ -231,7 +231,7 @@ public class PalaemonSessionService {
         // Add application runtime secrets
         final long secretIndex = 0;
         String appProviderSecret0 =
-                appDeveloperRuntimeSecretService.getSecret(taskDescription.getAppAddress(),
+                appDeveloperAppRuntimeSecretService.getSecret(taskDescription.getAppAddress(),
                         secretIndex, true)
                         .map(Secret::getValue)
                         .orElse(EMPTY_YML_VALUE);

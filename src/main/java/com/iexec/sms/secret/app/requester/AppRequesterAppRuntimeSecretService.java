@@ -26,11 +26,11 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class AppRequesterRuntimeSecretService extends AbstractAppRuntimeSecretService {
+public class AppRequesterAppRuntimeSecretService extends AbstractAppRuntimeSecretService {
 
-    public AppRequesterRuntimeSecretService(AppRuntimeSecretRepository appRuntimeSecretRepository,
-                                            AppRuntimeSecretCountRepository appRuntimeSecretCountRepository,
-                                            EncryptionService encryptionService) {
+    public AppRequesterAppRuntimeSecretService(AppRuntimeSecretRepository appRuntimeSecretRepository,
+                                               AppRuntimeSecretCountRepository appRuntimeSecretCountRepository,
+                                               EncryptionService encryptionService) {
         super(
                 appRuntimeSecretRepository,
                 appRuntimeSecretCountRepository,

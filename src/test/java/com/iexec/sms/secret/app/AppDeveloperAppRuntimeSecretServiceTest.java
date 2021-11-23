@@ -1,7 +1,7 @@
 package com.iexec.sms.secret.app;
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretService;
+import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
-class AppDeveloperRuntimeSecretServiceTest {
+class AppDeveloperAppRuntimeSecretServiceTest {
     private static final String APP_ADDRESS = "appAddress";
     private static final String DECRYPTED_SECRET_VALUE = "I'm a secret.";
     private static final String ENCRYPTED_SECRET_VALUE = "I'm an encrypted secret.";
@@ -32,7 +32,7 @@ class AppDeveloperRuntimeSecretServiceTest {
 
     @InjectMocks
     @Spy
-    AppDeveloperRuntimeSecretService appDeveloperRuntimeSecretService;
+    AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService;
 
     @Captor
     ArgumentCaptor<AppRuntimeSecret> runtimeSecretCaptor;
@@ -47,7 +47,7 @@ class AppDeveloperRuntimeSecretServiceTest {
         when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
 
-        appDeveloperRuntimeSecretService.encryptAndSaveSecret(APP_ADDRESS, 0, DECRYPTED_SECRET_VALUE);
+        appDeveloperAppRuntimeSecretService.encryptAndSaveSecret(APP_ADDRESS, 0, DECRYPTED_SECRET_VALUE);
 
         verify(appRuntimeSecretRepository, times(1)).save(runtimeSecretCaptor.capture());
         final AppRuntimeSecret savedAppRuntimeSecret = runtimeSecretCaptor.getValue();
@@ -67,39 +67,39 @@ class AppDeveloperRuntimeSecretServiceTest {
                 .thenReturn(DECRYPTED_SECRET_VALUE);
 
         // First call will not decrypt secret value
-        Optional<AppRuntimeSecret> encryptedSecret = appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, 0);
+        Optional<AppRuntimeSecret> encryptedSecret = appDeveloperAppRuntimeSecretService.getSecret(APP_ADDRESS, 0);
         Assertions.assertThat(encryptedSecret).isPresent();
         Assertions.assertThat(encryptedSecret.get().getIndex()).isZero();
         Assertions.assertThat(encryptedSecret.get().getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(encryptedSecret.get().getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
-        verify(appDeveloperRuntimeSecretService, Mockito.times(0)).decryptSecret(any());
+        verify(appDeveloperAppRuntimeSecretService, Mockito.times(0)).decryptSecret(any());
 
         // Second call will decrypt secret value
-        Optional<AppRuntimeSecret> decryptedSecret = appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, 0, true);
+        Optional<AppRuntimeSecret> decryptedSecret = appDeveloperAppRuntimeSecretService.getSecret(APP_ADDRESS, 0, true);
         Assertions.assertThat(decryptedSecret).isPresent();
         Assertions.assertThat(decryptedSecret.get().getIndex()).isZero();
         Assertions.assertThat(decryptedSecret.get().getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
-        verify(appDeveloperRuntimeSecretService, Mockito.times(1)).decryptSecret(any());
+        verify(appDeveloperAppRuntimeSecretService, Mockito.times(1)).decryptSecret(any());
     }
 
     @Test
     void secretShouldExist() {
-        when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
+        when(appDeveloperAppRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
                 .thenReturn(Optional.of(RUNTIME_SECRET));
 
-        Assertions.assertThat(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
+        Assertions.assertThat(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
                 .isTrue();
-        Mockito.verify(appDeveloperRuntimeSecretService).getSecret(APP_ADDRESS, 0);
+        Mockito.verify(appDeveloperAppRuntimeSecretService).getSecret(APP_ADDRESS, 0);
     }
 
     @Test
     void secretShouldNotExist() {
-        when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
+        when(appDeveloperAppRuntimeSecretService.getSecret(APP_ADDRESS.toLowerCase(), 0))
                 .thenReturn(Optional.empty());
 
-        Assertions.assertThat(appDeveloperRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
+        Assertions.assertThat(appDeveloperAppRuntimeSecretService.isSecretPresent(APP_ADDRESS, 0))
                 .isFalse();
-        Mockito.verify(appDeveloperRuntimeSecretService).getSecret(APP_ADDRESS, 0);
+        Mockito.verify(appDeveloperAppRuntimeSecretService).getSecret(APP_ADDRESS, 0);
     }
 }
