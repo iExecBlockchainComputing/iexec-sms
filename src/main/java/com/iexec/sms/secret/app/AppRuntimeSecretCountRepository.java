@@ -20,10 +20,9 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface AppRuntimeSecretRepository extends CrudRepository<AppRuntimeSecret, String> {
-    Optional<AppRuntimeSecret> findByAddressAndIndexAndOwnerRole(
-            String address,
-            long index,
+public interface AppRuntimeSecretCountRepository extends CrudRepository<AppRuntimeSecretCount, String> {
+    Optional<AppRuntimeSecretCount> findByAppAddressAndOwnerRole(
+            String appAddress,
             AppRuntimeSecretOwnerRole ownerRole
     );
 }

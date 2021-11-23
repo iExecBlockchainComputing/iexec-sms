@@ -21,6 +21,7 @@ import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.app.AppRuntimeSecret;
+import com.iexec.sms.secret.app.AppRuntimeSecretOwnerRole;
 import com.iexec.sms.secret.app.AppRuntimeSecretRepository;
 import feign.FeignException;
 import org.assertj.core.api.Assertions;
@@ -63,11 +64,15 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
         addNewSecret(appAddress, secretIndex, secretValue, ownerAddress);
 
         // Check the new secret exists for the API
-        ResponseEntity<Void> secretExistence = apiClient.isApplicationRuntimeSecretPresent(appAddress, secretIndex);
+        ResponseEntity<Void> secretExistence = apiClient.isAppDeveloperRuntimeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
-        final Optional<AppRuntimeSecret> secret = repository.findByAddressAndIndex(appAddress, secretIndex);
+        final Optional<AppRuntimeSecret> secret = repository.findByAddressAndIndexAndOwnerRole(
+                appAddress,
+                secretIndex,
+                AppRuntimeSecretOwnerRole.APP_DEVELOPER
+        );
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`
             // but Sonar needs a call to `secret.isEmpty()` to avoid triggering a warning.
@@ -84,7 +89,7 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
         // We shouldn't be able to add a new secret to the database with the same appAddress/index
         try {
             final String authorization = getAuthorization(appAddress, secretIndex, secretValue);
-            apiClient.addApplicationRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
+            apiClient.addAppDeveloperRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
             Assertions.fail("A second runtime secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
@@ -96,7 +101,7 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
             when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
 
             final String authorization = getAuthorization(UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
-            apiClient.addApplicationRuntimeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
+            apiClient.addAppDeveloperRuntimeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
             Assertions.fail("A second runtime secret with the same index " +
                     "and an app address whose only difference is the case should be rejected.");
         } catch (FeignException.Conflict ignored) {
@@ -116,14 +121,14 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
 
         // At first, no secret should be in the database
         try {
-            apiClient.isApplicationRuntimeSecretPresent(appAddress, secretIndex);
+            apiClient.isAppDeveloperRuntimeSecretPresent(appAddress, secretIndex);
             Assertions.fail("No secret was expected but one has been retrieved.");
         } catch (FeignException.NotFound ignored) {
             // Having a Not Found exception is what we expect there.
         }
 
         // Add a new secret to the database
-        final ResponseEntity<String> secretCreationResult = apiClient.addApplicationRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
+        final ResponseEntity<String> secretCreationResult = apiClient.addAppDeveloperRuntimeSecret(authorization, appAddress, secretIndex, secretValue);
         Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 

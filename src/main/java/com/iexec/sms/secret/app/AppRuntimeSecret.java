@@ -20,11 +20,8 @@ import com.iexec.sms.secret.Secret;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -32,9 +29,15 @@ import javax.persistence.Id;
 @Entity
 public class AppRuntimeSecret extends Secret {
     private long index;
+    private AppRuntimeSecretOwnerRole ownerRole;
 
-    public AppRuntimeSecret(String address, long index, String value) {
+    public AppRuntimeSecret(
+            String address,
+            long index,
+            AppRuntimeSecretOwnerRole ownerRole,
+            String value) {
         super(address, value);
         this.index = index;
+        this.ownerRole = ownerRole;
     }
 }

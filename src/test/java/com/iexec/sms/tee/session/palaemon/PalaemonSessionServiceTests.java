@@ -26,6 +26,7 @@ import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.app.AppRuntimeSecret;
+import com.iexec.sms.secret.app.AppRuntimeSecretOwnerRole;
 import com.iexec.sms.secret.app.owner.AppDeveloperRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -194,7 +195,12 @@ public class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         when(appDeveloperRuntimeSecretService.getSecret(APP_ADDRESS, secretIndex, true))
-                .thenReturn(Optional.of(new AppRuntimeSecret(APP_ADDRESS, secretIndex, SECRET_VALUE)));
+                .thenReturn(Optional.of(new AppRuntimeSecret(
+                        APP_ADDRESS,
+                        secretIndex,
+                        AppRuntimeSecretOwnerRole.APP_DEVELOPER,
+                        SECRET_VALUE
+                )));
 
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);

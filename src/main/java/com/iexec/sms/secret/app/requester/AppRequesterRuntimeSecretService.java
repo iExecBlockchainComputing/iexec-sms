@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app.owner;
+package com.iexec.sms.secret.app.requester;
 
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.app.AbstractAppRuntimeSecretService;
@@ -26,16 +26,16 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class AppDeveloperRuntimeSecretService extends AbstractAppRuntimeSecretService {
+public class AppRequesterRuntimeSecretService extends AbstractAppRuntimeSecretService {
 
-    public AppDeveloperRuntimeSecretService(AppRuntimeSecretRepository appRuntimeSecretRepository,
+    public AppRequesterRuntimeSecretService(AppRuntimeSecretRepository appRuntimeSecretRepository,
                                             AppRuntimeSecretCountRepository appRuntimeSecretCountRepository,
                                             EncryptionService encryptionService) {
         super(
                 appRuntimeSecretRepository,
                 appRuntimeSecretCountRepository,
                 encryptionService,
-                AppRuntimeSecretOwnerRole.APP_DEVELOPER
+                AppRuntimeSecretOwnerRole.REQUESTER
         );
     }
 }

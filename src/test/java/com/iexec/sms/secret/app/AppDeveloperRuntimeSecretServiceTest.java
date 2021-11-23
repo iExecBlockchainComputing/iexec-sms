@@ -15,7 +15,11 @@ class AppDeveloperRuntimeSecretServiceTest {
     private static final String APP_ADDRESS = "appAddress";
     private static final String DECRYPTED_SECRET_VALUE = "I'm a secret.";
     private static final String ENCRYPTED_SECRET_VALUE = "I'm an encrypted secret.";
-    private static final AppRuntimeSecret RUNTIME_SECRET = new AppRuntimeSecret(APP_ADDRESS.toLowerCase(), 0, ENCRYPTED_SECRET_VALUE);
+    private static final AppRuntimeSecret RUNTIME_SECRET = new AppRuntimeSecret(
+            APP_ADDRESS.toLowerCase(),
+            0,
+            AppRuntimeSecretOwnerRole.APP_DEVELOPER,
+            ENCRYPTED_SECRET_VALUE);
     static {
         RUNTIME_SECRET.setValue(ENCRYPTED_SECRET_VALUE, true);  // Just set `isEncryptedValue` to `true`
     }
@@ -54,8 +58,11 @@ class AppDeveloperRuntimeSecretServiceTest {
 
     @Test
     void shouldGetSecret() {
-        when(appRuntimeSecretRepository.findByAddressAndIndex(APP_ADDRESS.toLowerCase(), 0))
-                .thenReturn(Optional.of(RUNTIME_SECRET));
+        when(appRuntimeSecretRepository.findByAddressAndIndexAndOwnerRole(
+                APP_ADDRESS.toLowerCase(),
+                0,
+                AppRuntimeSecretOwnerRole.APP_DEVELOPER)
+        ).thenReturn(Optional.of(RUNTIME_SECRET));
         when(encryptionService.decrypt(ENCRYPTED_SECRET_VALUE))
                 .thenReturn(DECRYPTED_SECRET_VALUE);
 
