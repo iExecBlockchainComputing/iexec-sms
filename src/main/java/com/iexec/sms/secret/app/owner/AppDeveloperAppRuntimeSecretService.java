@@ -19,8 +19,8 @@ package com.iexec.sms.secret.app.owner;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.app.AbstractAppRuntimeSecretService;
 import com.iexec.sms.secret.app.AppRuntimeSecretCountRepository;
-import com.iexec.sms.secret.app.AppRuntimeSecretOwnerRole;
 import com.iexec.sms.secret.app.AppRuntimeSecretRepository;
+import com.iexec.sms.secret.app.OwnerRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +35,7 @@ public class AppDeveloperAppRuntimeSecretService extends AbstractAppRuntimeSecre
                 appRuntimeSecretRepository,
                 appRuntimeSecretCountRepository,
                 encryptionService,
-                AppRuntimeSecretOwnerRole.APP_DEVELOPER
+                OwnerRole.APP_DEVELOPER
         );
     }
 }

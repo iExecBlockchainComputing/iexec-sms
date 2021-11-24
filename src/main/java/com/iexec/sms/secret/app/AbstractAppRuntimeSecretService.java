@@ -26,12 +26,12 @@ import java.util.Optional;
 public abstract class AbstractAppRuntimeSecretService extends AbstractSecretService {
     private final AppRuntimeSecretRepository appRuntimeSecretRepository;
     private final AppRuntimeSecretCountRepository appRuntimeSecretCountRepository;
-    private final AppRuntimeSecretOwnerRole ownerRole;
+    private final OwnerRole ownerRole;
 
     protected AbstractAppRuntimeSecretService(AppRuntimeSecretRepository appRuntimeSecretRepository,
                                               AppRuntimeSecretCountRepository appRuntimeSecretCountRepository,
                                               EncryptionService encryptionService,
-                                              AppRuntimeSecretOwnerRole ownerRole) {
+                                              OwnerRole ownerRole) {
         super(encryptionService);
         this.appRuntimeSecretRepository = appRuntimeSecretRepository;
         this.appRuntimeSecretCountRepository = appRuntimeSecretCountRepository;
@@ -107,7 +107,7 @@ public abstract class AbstractAppRuntimeSecretService extends AbstractSecretServ
                         .build();
         log.info("Adding new app runtime secret count" +
                         "[ownerRole:{}, appAddress:{}, secretCount:{}]",
-                AppRuntimeSecretOwnerRole.REQUESTER, appAddress, secretCount);
+                OwnerRole.REQUESTER, appAddress, secretCount);
         appRuntimeSecretCountRepository.save(appRuntimeSecretCount);
     }
 

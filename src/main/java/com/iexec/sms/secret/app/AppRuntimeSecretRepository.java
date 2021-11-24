@@ -24,6 +24,6 @@ public interface AppRuntimeSecretRepository extends CrudRepository<AppRuntimeSec
     Optional<AppRuntimeSecret> findByAddressAndIndexAndOwnerRole(
             String address,
             long index,
-            AppRuntimeSecretOwnerRole ownerRole
+            OwnerRole ownerRole
     );
 }

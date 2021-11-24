@@ -29,12 +29,12 @@ import javax.persistence.Entity;
 @Entity
 public class AppRuntimeSecret extends Secret {
     private long index;
-    private AppRuntimeSecretOwnerRole ownerRole;
+    private OwnerRole ownerRole;
 
     public AppRuntimeSecret(
             String address,
             long index,
-            AppRuntimeSecretOwnerRole ownerRole,
+            OwnerRole ownerRole,
             String value) {
         super(address, value);
         this.index = index;

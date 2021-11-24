@@ -19,7 +19,7 @@ package com.iexec.sms.secret.app;
 /**
  * Defines which role an app runtime secret owner can have.
  */
-public enum AppRuntimeSecretOwnerRole {
+public enum OwnerRole {
     APP_DEVELOPER,
     REQUESTER
 }

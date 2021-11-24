@@ -37,7 +37,7 @@ public class AppRuntimeSecretCount {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    private AppRuntimeSecretOwnerRole ownerRole;
+    private OwnerRole ownerRole;
 
     private String appAddress;
 

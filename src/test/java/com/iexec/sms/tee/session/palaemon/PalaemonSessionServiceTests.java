@@ -26,7 +26,7 @@ import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.app.AppRuntimeSecret;
-import com.iexec.sms.secret.app.AppRuntimeSecretOwnerRole;
+import com.iexec.sms.secret.app.OwnerRole;
 import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -198,7 +198,7 @@ public class PalaemonSessionServiceTests {
                 .thenReturn(Optional.of(new AppRuntimeSecret(
                         APP_ADDRESS,
                         secretIndex,
-                        AppRuntimeSecretOwnerRole.APP_DEVELOPER,
+                        OwnerRole.APP_DEVELOPER,
                         SECRET_VALUE
                 )));
 

@@ -23,6 +23,6 @@ import java.util.Optional;
 public interface AppRuntimeSecretCountRepository extends CrudRepository<AppRuntimeSecretCount, String> {
     Optional<AppRuntimeSecretCount> findByAppAddressAndOwnerRole(
             String appAddress,
-            AppRuntimeSecretOwnerRole ownerRole
+            OwnerRole ownerRole
     );
 }

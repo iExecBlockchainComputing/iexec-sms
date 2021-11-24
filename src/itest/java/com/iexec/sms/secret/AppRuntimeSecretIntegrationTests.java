@@ -21,8 +21,8 @@ import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.app.AppRuntimeSecret;
-import com.iexec.sms.secret.app.AppRuntimeSecretOwnerRole;
 import com.iexec.sms.secret.app.AppRuntimeSecretRepository;
+import com.iexec.sms.secret.app.OwnerRole;
 import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -70,7 +70,7 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
         final Optional<AppRuntimeSecret> secret = repository.findByAddressAndIndexAndOwnerRole(
                 appAddress,
                 secretIndex,
-                AppRuntimeSecretOwnerRole.APP_DEVELOPER
+                OwnerRole.APP_DEVELOPER
         );
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`
