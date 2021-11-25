@@ -16,14 +16,6 @@
 
 package com.iexec.sms.secret.app;
 
-import org.springframework.data.repository.CrudRepository;
-
-import java.util.Optional;
-
-public interface AppRuntimeSecretRepository extends CrudRepository<AppRuntimeSecret, String> {
-    Optional<AppRuntimeSecret> findByAddressAndIndexAndOwnerRole(
-            String address,
-            long index,
-            OwnerRole ownerRole
-    );
+public enum DeployedObjectType {
+    APP
 }

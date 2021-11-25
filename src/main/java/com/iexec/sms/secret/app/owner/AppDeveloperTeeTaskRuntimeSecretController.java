@@ -18,7 +18,10 @@ package com.iexec.sms.secret.app.owner;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
-import com.iexec.sms.secret.app.requester.AppRequesterAppRuntimeSecretService;
+import com.iexec.sms.secret.app.DeployedObjectType;
+import com.iexec.sms.secret.app.OwnerRole;
+import com.iexec.sms.secret.app.TeeTaskRuntimeSecretCountService;
+import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,24 +31,24 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 @RestController
 @RequestMapping("/apps")
-public class AppDeveloperAppRuntimeSecretController {
+public class AppDeveloperTeeTaskRuntimeSecretController {
     private final AuthorizationService authorizationService;
-    private final AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService;
-    private final AppRequesterAppRuntimeSecretService appRequesterAppRuntimeSecretService;
+    private final TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
+    private final TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService;
 
-    public AppDeveloperAppRuntimeSecretController(AuthorizationService authorizationService,
-                                                  AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService,
-                                                  AppRequesterAppRuntimeSecretService appRequesterAppRuntimeSecretService) {
+    public AppDeveloperTeeTaskRuntimeSecretController(AuthorizationService authorizationService,
+                                                      TeeTaskRuntimeSecretService teeTaskRuntimeSecretService,
+                                                      TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService) {
         this.authorizationService = authorizationService;
-        this.appDeveloperAppRuntimeSecretService = appDeveloperAppRuntimeSecretService;
-        this.appRequesterAppRuntimeSecretService = appRequesterAppRuntimeSecretService;
+        this.teeTaskRuntimeSecretService = teeTaskRuntimeSecretService;
+        this.teeTaskRuntimeSecretCountService = teeTaskRuntimeSecretCountService;
     }
 
     @PostMapping("/{appAddress}/secrets/0")
-    public ResponseEntity<String> addAppDeveloperAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
-                                                                  @PathVariable String appAddress,
-//                                                              @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
-                                                                  @RequestBody String secretValue) {
+    public ResponseEntity<String> addAppDeveloperTeeTaskRuntimeSecret(@RequestHeader("Authorization") String authorization,
+                                                                      @PathVariable String appAddress,
+//                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
+                                                                      @RequestBody String secretValue) {
         long secretIndex = 0;   // FIXME: remove once functioning has been validated.
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
@@ -61,28 +64,47 @@ public class AppDeveloperAppRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (appDeveloperAppRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
+        if (teeTaskRuntimeSecretService.isSecretPresent(
+                DeployedObjectType.APP,
+                appAddress,
+                OwnerRole.APP_DEVELOPER,
+                null,
+                secretIndex)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
-        appDeveloperAppRuntimeSecretService.encryptAndSaveSecret(appAddress, secretIndex, secretValue);
+        teeTaskRuntimeSecretService.encryptAndSaveSecret(
+                DeployedObjectType.APP,
+                appAddress,
+                OwnerRole.APP_DEVELOPER,
+                null,
+                secretIndex,
+                secretValue
+        );
         return ResponseEntity.noContent().build();
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Void> isAppDeveloperAppRuntimeSecretPresent(@PathVariable String appAddress,
-                                                                      @PathVariable long secretIndex) {
-        if (appDeveloperAppRuntimeSecretService.isSecretPresent(appAddress, secretIndex)) {
-            log.info("Secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+    public ResponseEntity<Void> isAppDeveloperTeeTaskRuntimeSecret(@PathVariable String appAddress,
+                                                                   @PathVariable long secretIndex) {
+        final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
+                DeployedObjectType.APP,
+                appAddress,
+                OwnerRole.APP_DEVELOPER,
+                null,
+                secretIndex
+        );
+        if (isSecretPresent) {
+            log.info("App developer secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
             return ResponseEntity.noContent().build();
         }
 
-        log.info("Secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+        log.info("App developer secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
         return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/{appAddress}/requesters/secrets")
-    public ResponseEntity<String> setAppRequestersAppRuntimeSecretCount(
+    public ResponseEntity<String> setAppRequestersTeeTaskRuntimeSecretCount(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody Integer secretCount) {
@@ -99,7 +121,12 @@ public class AppDeveloperAppRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (appRequesterAppRuntimeSecretService.isAppRuntimeSecretCountPresent(appAddress)) {
+        final boolean isCountAlreadyPresent = teeTaskRuntimeSecretCountService
+                .isAppRuntimeSecretCountPresent(
+                        appAddress,
+                        OwnerRole.REQUESTER
+                );
+        if (isCountAlreadyPresent) {
             log.info("Can't add app requester app secret count as it already exist"
             + " [appAddress:{}]", appAddress);
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret count already exists
@@ -112,8 +139,9 @@ public class AppDeveloperAppRuntimeSecretController {
                             "Can't accept value " + secretCount);
         }
 
-        appRequesterAppRuntimeSecretService.setAppRuntimeSecretCount(
+        teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
                 appAddress,
+                OwnerRole.REQUESTER,
                 secretCount
         );
         return ResponseEntity.noContent().build();

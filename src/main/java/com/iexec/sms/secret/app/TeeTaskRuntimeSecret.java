@@ -27,17 +27,23 @@ import javax.persistence.Entity;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Entity
-public class AppRuntimeSecret extends Secret {
+public class TeeTaskRuntimeSecret extends Secret {
+    private DeployedObjectType deployedObjectType;
+    private OwnerRole secretOwnerRole;
+    private String fixedOwner;  // May be null if the owner is not fixed
     private long index;
-    private OwnerRole ownerRole;
 
-    public AppRuntimeSecret(
-            String address,
+    public TeeTaskRuntimeSecret(
+            DeployedObjectType deployedObjectType,
+            String deployedObjectAddress,
+            OwnerRole secretOwnerRole,
+            String fixedOwner,
             long index,
-            OwnerRole ownerRole,
             String value) {
-        super(address, value);
+        super(deployedObjectAddress, value);
+        this.deployedObjectType = deployedObjectType;
+        this.secretOwnerRole = secretOwnerRole;
+        this.fixedOwner = fixedOwner;
         this.index = index;
-        this.ownerRole = ownerRole;
     }
 }

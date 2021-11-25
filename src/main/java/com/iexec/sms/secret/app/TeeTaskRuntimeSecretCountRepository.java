@@ -16,30 +16,13 @@
 
 package com.iexec.sms.secret.app;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.repository.CrudRepository;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import java.util.Optional;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Getter
-@Builder
-public class AppRuntimeSecretCount {
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
-    private OwnerRole ownerRole;
-
-    private String appAddress;
-
-    private Integer secretCount;
+public interface TeeTaskRuntimeSecretCountRepository extends CrudRepository<TeeTaskRuntimeSecretCount, String> {
+    Optional<TeeTaskRuntimeSecretCount> findByAppAddressAndOwnerRole(
+            String appAddress,
+            OwnerRole ownerRole
+    );
 }

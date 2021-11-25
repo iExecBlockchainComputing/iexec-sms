@@ -20,13 +20,16 @@ import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.app.AppRuntimeSecret;
-import com.iexec.sms.secret.app.AppRuntimeSecretRepository;
+import com.iexec.sms.secret.app.DeployedObjectType;
 import com.iexec.sms.secret.app.OwnerRole;
+import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
+import com.iexec.sms.secret.app.TeeTaskRuntimeSecretRepository;
 import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.Hash;
@@ -36,7 +39,7 @@ import java.util.Optional;
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static org.mockito.Mockito.when;
 
-public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
+public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS   = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS   = "0XABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
     private static final String SECRET_VALUE  = "secretValue";
@@ -51,7 +54,7 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
     private EncryptionService encryptionService;
 
     @Autowired
-    private AppRuntimeSecretRepository repository;
+    private TeeTaskRuntimeSecretRepository repository;
 
     @Test
     void shouldAddNewRuntimeSecret() {
@@ -67,10 +70,18 @@ public class AppRuntimeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(secretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secret has been added to the database
-        final Optional<AppRuntimeSecret> secret = repository.findByAddressAndIndexAndOwnerRole(
-                appAddress,
-                secretIndex,
-                OwnerRole.APP_DEVELOPER
+        final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
+                .withIgnorePaths("value")
+                .withIgnorePaths("isEncryptedValue");
+        final Optional<TeeTaskRuntimeSecret> secret = repository.findOne(
+                Example.of(new TeeTaskRuntimeSecret(
+                        DeployedObjectType.APP,
+                        appAddress,
+                        OwnerRole.APP_DEVELOPER,
+                        null,
+                        secretIndex,
+                        null
+                ), exampleMatcher)
         );
         if (secret.isEmpty()) {
             // Could be something like `Assertions.assertThat(secret).isPresent()`

@@ -22,7 +22,9 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.app.owner.AppDeveloperAppRuntimeSecretService;
+import com.iexec.sms.secret.app.DeployedObjectType;
+import com.iexec.sms.secret.app.OwnerRole;
+import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -86,7 +88,7 @@ public class PalaemonSessionService {
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final AttestationSecurityConfig attestationSecurityConfig;
-    private final AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService;
+    private final TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
@@ -97,13 +99,13 @@ public class PalaemonSessionService {
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
             AttestationSecurityConfig attestationSecurityConfig,
-            AppDeveloperAppRuntimeSecretService appDeveloperAppRuntimeSecretService) {
+            TeeTaskRuntimeSecretService teeTaskRuntimeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
-        this.appDeveloperAppRuntimeSecretService = appDeveloperAppRuntimeSecretService;
+        this.teeTaskRuntimeSecretService = teeTaskRuntimeSecretService;
     }
 
     @PostConstruct
@@ -202,8 +204,7 @@ public class PalaemonSessionService {
     /*
      * Compute (App)
      */
-    Map<String, Object> getAppPalaemonTokens(PalaemonSessionRequest request)
-            throws Exception {
+    Map<String, Object> getAppPalaemonTokens(PalaemonSessionRequest request) {
         TaskDescription taskDescription = request.getTaskDescription();
         requireNonNull(taskDescription, "Task description must no be null");
         Map<String, Object> tokens = new HashMap<>();
@@ -231,8 +232,13 @@ public class PalaemonSessionService {
         // Add application runtime secrets
         final long secretIndex = 0;
         String appProviderSecret0 =
-                appDeveloperAppRuntimeSecretService.getSecret(taskDescription.getAppAddress(),
-                        secretIndex, true)
+                teeTaskRuntimeSecretService.getSecret(
+                                DeployedObjectType.APP,
+                                taskDescription.getAppAddress(),
+                                OwnerRole.APP_DEVELOPER,
+                                null,
+                                secretIndex,
+                                true)
                         .map(Secret::getValue)
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, appProviderSecret0);
