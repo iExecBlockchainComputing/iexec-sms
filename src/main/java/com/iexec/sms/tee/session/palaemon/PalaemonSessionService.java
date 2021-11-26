@@ -24,6 +24,7 @@ import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.app.DeployedObjectType;
 import com.iexec.sms.secret.app.OwnerRole;
+import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -239,7 +240,7 @@ public class PalaemonSessionService {
                                 null,
                                 secretIndex,
                                 true)
-                        .map(Secret::getValue)
+                        .map(TeeTaskRuntimeSecret::getValue)
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, appProviderSecret0);
 

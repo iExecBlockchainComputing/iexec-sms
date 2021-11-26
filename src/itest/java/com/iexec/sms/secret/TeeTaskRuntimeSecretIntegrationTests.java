@@ -71,8 +71,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
 
         // We check the secret has been added to the database
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
-                .withIgnorePaths("value")
-                .withIgnorePaths("isEncryptedValue");
+                .withIgnorePaths("value");
         final Optional<TeeTaskRuntimeSecret> secret = repository.findOne(
                 Example.of(new TeeTaskRuntimeSecret(
                         DeployedObjectType.APP,
@@ -90,11 +89,10 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
             return;
         }
         Assertions.assertThat(secret.get().getId()).isNotBlank();
-        Assertions.assertThat(secret.get().getAddress()).isEqualToIgnoringCase(appAddress);
+        Assertions.assertThat(secret.get().getDeployedObjectAddress()).isEqualToIgnoringCase(appAddress);
         Assertions.assertThat(secret.get().getIndex()).isZero();
         Assertions.assertThat(secret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(secret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
-        Assertions.assertThat(secret.get().isEncryptedValue()).isEqualTo(true);
 
         // We shouldn't be able to add a new secret to the database with the same appAddress/index
         try {

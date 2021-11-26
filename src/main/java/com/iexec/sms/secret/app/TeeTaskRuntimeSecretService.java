@@ -17,7 +17,6 @@
 package com.iexec.sms.secret.app;
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -27,19 +26,20 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskRuntimeSecretService extends AbstractSecretService {
+public class TeeTaskRuntimeSecretService {
     private final TeeTaskRuntimeSecretRepository teeTaskRuntimeSecretRepository;
+    private final EncryptionService encryptionService;
 
     protected TeeTaskRuntimeSecretService(
             TeeTaskRuntimeSecretRepository teeTaskRuntimeSecretRepository,
             EncryptionService encryptionService) {
-        super(encryptionService);
         this.teeTaskRuntimeSecretRepository = teeTaskRuntimeSecretRepository;
+        this.encryptionService = encryptionService;
     }
 
     /**
      * Retrieve a secret.
-     * Decrypt it's encrypted and if its decryption is required.
+     * Decrypt if required.
      */
     public Optional<TeeTaskRuntimeSecret> getSecret(
             DeployedObjectType deployedObjectType,
@@ -58,17 +58,18 @@ public class TeeTaskRuntimeSecretService extends AbstractSecretService {
                 null
         );
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
-                .withIgnorePaths("value")
-                .withIgnorePaths("isEncryptedValue");
-        final Optional<TeeTaskRuntimeSecret> secret = teeTaskRuntimeSecretRepository
+                .withIgnorePaths("value");
+        final Optional<TeeTaskRuntimeSecret> oSecret = teeTaskRuntimeSecretRepository
                 .findOne(Example.of(wantedSecret, exampleMatcher));
-        if (secret.isEmpty()) {
+        if (oSecret.isEmpty()) {
             return Optional.empty();
         }
         if (shouldDecryptValue) {
-            decryptSecret(secret.get());
+            final TeeTaskRuntimeSecret secret = oSecret.get();
+            final String decryptedValue = encryptionService.decrypt(secret.getValue());
+            secret.setValue(decryptedValue);
         }
-        return secret;
+        return oSecret;
     }
 
     /**
@@ -92,7 +93,7 @@ public class TeeTaskRuntimeSecretService extends AbstractSecretService {
     }
 
     /**
-     * Stores encrypted secrets.
+     * Encrypt secrets and store them.
      */
     public void encryptAndSaveSecret(DeployedObjectType deployedObjectType,
                                      String deployedObjectAddress,
@@ -106,9 +107,9 @@ public class TeeTaskRuntimeSecretService extends AbstractSecretService {
                 deployedObjectAddress,
                 secretOwnerRole,
                 owner,
-                secretIndex, secretValue
+                secretIndex,
+                encryptionService.encrypt(secretValue)
         );
-        encryptSecret(secret);
         log.info("Adding new tee task runtime secret " +
                         "[secret:{}]", secret);
         teeTaskRuntimeSecretRepository.save(secret);

@@ -21,9 +21,6 @@ class TeeTaskRuntimeSecretServiceTest {
             null,
             0,
             ENCRYPTED_SECRET_VALUE);
-    static {
-        RUNTIME_SECRET.setValue(ENCRYPTED_SECRET_VALUE, true);  // Just set `isEncryptedValue` to `true`
-    }
 
     @Mock
     TeeTaskRuntimeSecretRepository teeTaskRuntimeSecretRepository;
@@ -53,7 +50,7 @@ class TeeTaskRuntimeSecretServiceTest {
         verify(teeTaskRuntimeSecretRepository, times(1)).save(runtimeSecretCaptor.capture());
         final TeeTaskRuntimeSecret savedTeeTaskRuntimeSecret = runtimeSecretCaptor.getValue();
         Assertions.assertThat(savedTeeTaskRuntimeSecret.getIndex()).isZero();
-        Assertions.assertThat(savedTeeTaskRuntimeSecret.getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
+        Assertions.assertThat(savedTeeTaskRuntimeSecret.getDeployedObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(savedTeeTaskRuntimeSecret.getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
     }
 
@@ -68,17 +65,17 @@ class TeeTaskRuntimeSecretServiceTest {
         Optional<TeeTaskRuntimeSecret> encryptedSecret = teeTaskRuntimeSecretService.getSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, 0, false);
         Assertions.assertThat(encryptedSecret).isPresent();
         Assertions.assertThat(encryptedSecret.get().getIndex()).isZero();
-        Assertions.assertThat(encryptedSecret.get().getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
+        Assertions.assertThat(encryptedSecret.get().getDeployedObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(encryptedSecret.get().getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
-        verify(teeTaskRuntimeSecretService, Mockito.times(0)).decryptSecret(any());
+        verify(encryptionService, Mockito.times(0)).decrypt(any());
 
         // Second call will decrypt secret value
         Optional<TeeTaskRuntimeSecret> decryptedSecret = teeTaskRuntimeSecretService.getSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, 0, true);
         Assertions.assertThat(decryptedSecret).isPresent();
         Assertions.assertThat(decryptedSecret.get().getIndex()).isZero();
-        Assertions.assertThat(decryptedSecret.get().getAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
+        Assertions.assertThat(decryptedSecret.get().getDeployedObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
-        verify(teeTaskRuntimeSecretService, Mockito.times(1)).decryptSecret(any());
+        verify(encryptionService, Mockito.times(1)).decrypt(any());
     }
 
     @Test

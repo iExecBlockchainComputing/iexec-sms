@@ -16,22 +16,31 @@
 
 package com.iexec.sms.secret.app;
 
-import com.iexec.sms.secret.Secret;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Entity
-public class TeeTaskRuntimeSecret extends Secret {
+public class TeeTaskRuntimeSecret {
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
+
+    private String deployedObjectAddress; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
     private DeployedObjectType deployedObjectType;
     private OwnerRole secretOwnerRole;
     private String fixedOwner;  // May be null if the owner is not fixed
     private long index;
+    @Column(columnDefinition = "LONGTEXT")
+    private String value;
 
     public TeeTaskRuntimeSecret(
             DeployedObjectType deployedObjectType,
@@ -40,10 +49,11 @@ public class TeeTaskRuntimeSecret extends Secret {
             String fixedOwner,
             long index,
             String value) {
-        super(deployedObjectAddress, value);
         this.deployedObjectType = deployedObjectType;
+        this.deployedObjectAddress = deployedObjectAddress;
         this.secretOwnerRole = secretOwnerRole;
         this.fixedOwner = fixedOwner;
         this.index = index;
+        this.value = value;
     }
 }
