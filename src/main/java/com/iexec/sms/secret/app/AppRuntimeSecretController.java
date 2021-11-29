@@ -68,6 +68,10 @@ public class AppRuntimeSecretController {
                 OwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex)) {
+            log.error("Unauthorized to addAppDeveloperAppRuntimeSecret: " +
+                            "secret already exists" +
+                            " [appAddress:{}, secretIndex:{}]",
+                    appAddress, secretIndex);
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
@@ -192,6 +196,10 @@ public class AppRuntimeSecretController {
                 OwnerRole.REQUESTER,
                 requesterAddress,
                 secretIndex)) {
+            log.error("Unauthorized to addAppRequesterAppRuntimeSecret: " +
+                            "secret already exists" +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
+                    requesterAddress, appAddress, secretIndex);
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
