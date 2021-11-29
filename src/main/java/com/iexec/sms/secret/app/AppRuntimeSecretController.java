@@ -18,10 +18,6 @@ package com.iexec.sms.secret.app;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
-import com.iexec.sms.secret.app.DeployedObjectType;
-import com.iexec.sms.secret.app.OwnerRole;
-import com.iexec.sms.secret.app.TeeTaskRuntimeSecretCountService;
-import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
