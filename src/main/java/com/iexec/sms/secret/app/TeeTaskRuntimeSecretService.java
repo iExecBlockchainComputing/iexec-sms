@@ -95,14 +95,27 @@ public class TeeTaskRuntimeSecretService {
     /**
      * Encrypt secrets and store them.
      */
-    public void encryptAndSaveSecret(DeployedObjectType deployedObjectType,
+    public boolean encryptAndSaveSecret(DeployedObjectType deployedObjectType,
                                      String deployedObjectAddress,
                                      OwnerRole secretOwnerRole,
                                      String owner,
                                      long secretIndex,
                                      String secretValue) {
+        if (isSecretPresent(deployedObjectType, deployedObjectAddress, secretOwnerRole, owner, secretIndex)) {
+            final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
+                    deployedObjectType,
+                    deployedObjectAddress,
+                    secretOwnerRole,
+                    owner,
+                    secretIndex,
+                    null
+            );
+            log.info("Tee task runtime secret already exists, can't update it." +
+                    "[secret:{}]", secret);
+            return false;
+        }
         deployedObjectAddress = deployedObjectAddress.toLowerCase();
-        TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
+        final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
                 deployedObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
@@ -113,5 +126,6 @@ public class TeeTaskRuntimeSecretService {
         log.info("Adding new tee task runtime secret " +
                         "[secret:{}]", secret);
         teeTaskRuntimeSecretRepository.save(secret);
+        return true;
     }
 }
