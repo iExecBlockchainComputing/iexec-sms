@@ -16,21 +16,22 @@
 
 package com.iexec.sms.utils;
 
-import java.math.BigInteger;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
+import com.iexec.common.utils.CredentialsUtils;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
 import org.hibernate.annotations.GenericGenerator;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
+/**
+ * Domain entity
+ */
 @Data
 @Getter
 @AllArgsConstructor
@@ -42,33 +43,33 @@ public class EthereumCredentials {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    private String address;
     private String privateKey;
-    private String publicKey;
-    private boolean isEncrypted; // private & public keys
+    private boolean isEncrypted;
 
-    public EthereumCredentials() throws Exception {
-        ECKeyPair ecKeyPair = Keys.createEcKeyPair();
-        this.address = Numeric.prependHexPrefix(Keys.getAddress(ecKeyPair));
-        setPlainKeys(toHex(ecKeyPair.getPrivateKey()),
-                toHex(ecKeyPair.getPublicKey()));
+    private EthereumCredentials(String privateKey) {
+        this.setPlainTextPrivateKey(privateKey);
     }
 
-    public void setPlainKeys(String privateKey, String publicKey) {
-        this.setKeys(privateKey, publicKey, false);
+    public static EthereumCredentials generate() throws java.security.GeneralSecurityException {
+        ECKeyPair randomEcKeyPair = Keys.createEcKeyPair();
+        String privateKey =
+                Numeric.toHexStringWithPrefixZeroPadded(randomEcKeyPair.getPrivateKey(),
+                        Keys.PRIVATE_KEY_LENGTH_IN_HEX);//hex-string size of 32 bytes (64)
+        return new EthereumCredentials(privateKey);
     }
 
-    public void setEncryptedKeys(String privateKey, String publicKey) {
-        this.setKeys(privateKey, publicKey, true);
+    public String getAddress() {
+        return isEncrypted ? "" : CredentialsUtils.getAddress(privateKey);
     }
 
-    private void setKeys(String privateKey, String publicKey, boolean isEncrypted) {
+    public void setPlainTextPrivateKey(String privateKey) {
         this.privateKey = privateKey;
-        this.publicKey = publicKey;
-        this.isEncrypted = isEncrypted;
+        this.isEncrypted = false;
     }
 
-    private String toHex(BigInteger input) {
-        return Numeric.prependHexPrefix(input.toString(16));
+    public void setEncryptedPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+        this.isEncrypted = true;
     }
+
 }
