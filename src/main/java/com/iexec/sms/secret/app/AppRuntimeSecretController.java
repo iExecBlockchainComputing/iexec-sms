@@ -23,6 +23,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @CrossOrigin
 @RestController
@@ -100,7 +102,7 @@ public class AppRuntimeSecretController {
     }
 
     @PostMapping("/{appAddress}/requesters/secrets")
-    public ResponseEntity<String> setRequesterSecretCountForApp(
+    public ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody Integer secretCount) {
@@ -131,7 +133,7 @@ public class AppRuntimeSecretController {
         if (secretCount == null) {
             return ResponseEntity
                     .badRequest()
-                    .body("Secret count cannot be null.");
+                    .body(createErrorPayload("Secret count cannot be null."));
         }
 
         final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
@@ -143,10 +145,16 @@ public class AppRuntimeSecretController {
         if (!hasBeenInserted) {
             return ResponseEntity
                     .badRequest()
-                    .body("Secret count should be positive. " +
-                            "Can't accept value " + secretCount);
+                    .body(createErrorPayload(
+                            "Secret count should be positive. " +
+                            "Can't accept value " + secretCount
+                    ));
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    private Map<String, String> createErrorPayload(String errorMessage) {
+        return Map.of("error", errorMessage);
     }
 }
