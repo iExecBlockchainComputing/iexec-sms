@@ -93,7 +93,9 @@ public class TeeTaskRuntimeSecretService {
     }
 
     /**
-     * Encrypt secrets and store them.
+     * Encrypt a secret and store it if it doesn't already exist.
+     *
+     * @return {@code false} if the secret already exists, {@code true} otherwise.
      */
     public boolean encryptAndSaveSecret(DeployedObjectType deployedObjectType,
                                      String deployedObjectAddress,

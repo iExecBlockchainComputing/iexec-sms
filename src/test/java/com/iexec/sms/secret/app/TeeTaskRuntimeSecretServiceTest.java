@@ -40,8 +40,11 @@ class TeeTaskRuntimeSecretServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    // region encryptAndSaveSecret
     @Test
     void shouldAddSecret() {
+        doReturn(false).when(teeTaskRuntimeSecretService)
+                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, 0);
         when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
 
@@ -54,6 +57,18 @@ class TeeTaskRuntimeSecretServiceTest {
         Assertions.assertThat(savedTeeTaskRuntimeSecret.getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
     }
 
+    @Test
+    void shouldNotAddSecretSinceAlreadyExist() {
+        doReturn(true).when(teeTaskRuntimeSecretService)
+                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, 0);
+
+        teeTaskRuntimeSecretService.encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, 0, DECRYPTED_SECRET_VALUE);
+
+        verify(teeTaskRuntimeSecretRepository, times(0)).save(runtimeSecretCaptor.capture());
+    }
+    // endregion
+
+    // region getSecret
     @Test
     void shouldGetSecret() {
         when(teeTaskRuntimeSecretRepository.findOne(any()))
@@ -77,7 +92,9 @@ class TeeTaskRuntimeSecretServiceTest {
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
         verify(encryptionService, Mockito.times(1)).decrypt(any());
     }
+    // endregion
 
+    // region isSecretPresent
     @Test
     void secretShouldExist() {
         when(teeTaskRuntimeSecretService.getSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, 0, false))
@@ -97,4 +114,5 @@ class TeeTaskRuntimeSecretServiceTest {
 
         Assertions.assertThat(isSecretPresent).isFalse();
     }
+    // endregion
 }
