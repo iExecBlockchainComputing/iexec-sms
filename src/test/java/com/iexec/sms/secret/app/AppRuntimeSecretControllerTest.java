@@ -633,4 +633,34 @@ class AppRuntimeSecretControllerTest {
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
     // endregion
+
+    // region isAppRequesterAppRuntimeSecretPresent
+    @Test
+    void requesterSecretShouldExist() {
+        long secretIndex = 0;
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+                .thenReturn(true);
+
+        ResponseEntity<Void> result =
+                appRuntimeSecretController.isAppRequesterAppRuntimeSecretPresent(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex);
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        verify(teeTaskRuntimeSecretService, times(1))
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+    }
+
+    @Test
+    void requesterSecretShouldNotExist() {
+        long secretIndex = 0;
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+                .thenReturn(false);
+
+        ResponseEntity<Void> result =
+                appRuntimeSecretController.isAppRequesterAppRuntimeSecretPresent(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex);
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
+        verify(teeTaskRuntimeSecretService, times(1))
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+    }
+    // endregion
 }

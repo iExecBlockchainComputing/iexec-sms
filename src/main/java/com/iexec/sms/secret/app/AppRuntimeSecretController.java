@@ -236,5 +236,30 @@ public class AppRuntimeSecretController {
         );
         return ResponseEntity.noContent().build();
     }
+
+    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
+    public ResponseEntity<Void> isAppRequesterAppRuntimeSecretPresent(
+            @PathVariable String requesterAddress,
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex) {
+        final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
+                DeployedObjectType.APPLICATION,
+                appAddress,
+                OwnerRole.REQUESTER,
+                requesterAddress,
+                secretIndex
+        );
+        if (isSecretPresent) {
+            log.info("App requester secret found" +
+                            " [appRequester: {}, appAddress: {}, secretIndex: {}]",
+                    requesterAddress, appAddress, secretIndex);
+            return ResponseEntity.noContent().build();
+        }
+
+        log.info("App developer secret not found " +
+                        " [appRequester: {}, appAddress: {}, secretIndex: {}]",
+                requesterAddress, appAddress, secretIndex);
+        return ResponseEntity.notFound().build();
+    }
     // endregion
 }
