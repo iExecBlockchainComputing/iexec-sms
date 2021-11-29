@@ -16,6 +16,8 @@
 
 package com.iexec.sms.secret.app;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -27,7 +29,9 @@ import javax.persistence.Id;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
+@Builder
 public class TeeTaskRuntimeSecret {
     @Id
     @GeneratedValue(generator = "system-uuid")
