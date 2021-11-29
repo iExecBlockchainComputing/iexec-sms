@@ -32,10 +32,16 @@ public class TeeTaskRuntimeSecretCountService {
 
     /**
      * Defines how many runtime secrets an app requires.
+     *
+     * @return {@code true} if {@code secretCount} is positive
+     * and has been correctly inserted in DB, {@code false} otherwise
      */
-    public void setAppRuntimeSecretCount(String appAddress,
+    public boolean setAppRuntimeSecretCount(String appAddress,
                                          OwnerRole secretOwnerRole,
                                          Integer secretCount) {
+        if (secretCount < 0) {
+            return false;
+        }
         appAddress = appAddress.toLowerCase();
         final TeeTaskRuntimeSecretCount teeTaskRuntimeSecretCount =
                 TeeTaskRuntimeSecretCount.builder()
@@ -47,6 +53,8 @@ public class TeeTaskRuntimeSecretCountService {
                         "[ownerRole:{}, appAddress:{}, secretCount:{}]",
                 OwnerRole.REQUESTER, appAddress, secretCount);
         teeTaskRuntimeSecretCountRepository.save(teeTaskRuntimeSecretCount);
+
+        return true;
     }
 
     /**
