@@ -74,9 +74,9 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
                 .withIgnorePaths("value");
         final Optional<TeeTaskRuntimeSecret> secret = repository.findOne(
                 Example.of(new TeeTaskRuntimeSecret(
-                        DeployedObjectType.APP,
+                        DeployedObjectType.APPLICATION,
                         appAddress,
-                        OwnerRole.APP_DEVELOPER,
+                        OwnerRole.APPLICATION_DEVELOPER,
                         null,
                         secretIndex,
                         null

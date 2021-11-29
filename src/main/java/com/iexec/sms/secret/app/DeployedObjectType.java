@@ -17,5 +17,5 @@
 package com.iexec.sms.secret.app;
 
 public enum DeployedObjectType {
-    APP
+    APPLICATION
 }

@@ -196,16 +196,16 @@ public class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         when(teeTaskRuntimeSecretService.getSecret(
-                DeployedObjectType.APP,
+                DeployedObjectType.APPLICATION,
                 APP_ADDRESS,
-                OwnerRole.APP_DEVELOPER,
+                OwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 true))
                 .thenReturn(Optional.of(new TeeTaskRuntimeSecret(
-                        DeployedObjectType.APP,
+                        DeployedObjectType.APPLICATION,
                         APP_ADDRESS,
-                        OwnerRole.APP_DEVELOPER,
+                        OwnerRole.APPLICATION_DEVELOPER,
                         null,
                         secretIndex,
                         SECRET_VALUE
@@ -234,9 +234,9 @@ public class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         when(teeTaskRuntimeSecretService.getSecret(
-                DeployedObjectType.APP,
+                DeployedObjectType.APPLICATION,
                 APP_ADDRESS,
-                OwnerRole.APP_DEVELOPER,
+                OwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 true))

@@ -65,18 +65,18 @@ public class AppDeveloperTeeTaskRuntimeSecretController {
         }
 
         if (teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APP,
+                DeployedObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APP_DEVELOPER,
+                OwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
         teeTaskRuntimeSecretService.encryptAndSaveSecret(
-                DeployedObjectType.APP,
+                DeployedObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APP_DEVELOPER,
+                OwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 secretValue
@@ -88,9 +88,9 @@ public class AppDeveloperTeeTaskRuntimeSecretController {
     public ResponseEntity<Void> isAppDeveloperTeeTaskRuntimeSecret(@PathVariable String appAddress,
                                                                    @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APP,
+                DeployedObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APP_DEVELOPER,
+                OwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex
         );

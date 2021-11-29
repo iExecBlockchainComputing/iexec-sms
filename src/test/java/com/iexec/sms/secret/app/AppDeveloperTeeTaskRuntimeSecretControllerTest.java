@@ -49,10 +49,10 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
         doReturn(true).when(teeTaskRuntimeSecretService)
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
 
         ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
                 AUTHORIZATION,
@@ -62,9 +62,9 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
         verify(teeTaskRuntimeSecretService, times(1))
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
     }
 
     @Test
@@ -87,9 +87,9 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
 
         verify(teeTaskRuntimeSecretService, times(0))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
         verify(teeTaskRuntimeSecretService, times(0))
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
     }
 
     @Test
@@ -101,7 +101,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
@@ -113,9 +113,9 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
         verify(teeTaskRuntimeSecretService, times(0))
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
     }
 
     @Test
@@ -127,7 +127,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
@@ -139,9 +139,9 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build());
 
         verify(teeTaskRuntimeSecretService, times(0))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
         verify(teeTaskRuntimeSecretService, times(0))
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
     }
 
     @Test
@@ -153,10 +153,10 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
         doReturn(true).when(teeTaskRuntimeSecretService)
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
 
         ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
                 AUTHORIZATION,
@@ -166,9 +166,9 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
         verify(teeTaskRuntimeSecretService, times(1))
-                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
     }
 
     // endregion
@@ -177,7 +177,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
     @Test
     void secretShouldExist() {
         long secretIndex = 0;
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<Void> result =
@@ -185,13 +185,13 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
     }
 
     @Test
     void secretShouldNotExist() {
         long secretIndex = 0;
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<Void> result =
@@ -199,7 +199,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex);
+                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex);
     }
     // endregion
 

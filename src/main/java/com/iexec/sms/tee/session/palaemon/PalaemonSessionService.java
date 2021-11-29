@@ -234,9 +234,9 @@ public class PalaemonSessionService {
         final long secretIndex = 0;
         String appProviderSecret0 =
                 teeTaskRuntimeSecretService.getSecret(
-                                DeployedObjectType.APP,
+                                DeployedObjectType.APPLICATION,
                                 taskDescription.getAppAddress(),
-                                OwnerRole.APP_DEVELOPER,
+                                OwnerRole.APPLICATION_DEVELOPER,
                                 null,
                                 secretIndex,
                                 true)

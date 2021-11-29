@@ -80,13 +80,13 @@ public class TeeTaskRuntimeSecretService {
     public boolean isSecretPresent(DeployedObjectType deployedObjectType,
                                    String deployedObjectAddress,
                                    OwnerRole secretOwnerRole,
-                                   String owner,
+                                   String secretOwner,
                                    long secretIndex) {
         return getSecret(
                 deployedObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
-                owner,
+                secretOwner,
                 secretIndex,
                 false
         ).isPresent();
@@ -100,15 +100,15 @@ public class TeeTaskRuntimeSecretService {
     public boolean encryptAndSaveSecret(DeployedObjectType deployedObjectType,
                                      String deployedObjectAddress,
                                      OwnerRole secretOwnerRole,
-                                     String owner,
+                                     String secretOwner,
                                      long secretIndex,
                                      String secretValue) {
-        if (isSecretPresent(deployedObjectType, deployedObjectAddress, secretOwnerRole, owner, secretIndex)) {
+        if (isSecretPresent(deployedObjectType, deployedObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
             final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
                     deployedObjectType,
                     deployedObjectAddress,
                     secretOwnerRole,
-                    owner,
+                    secretOwner,
                     secretIndex,
                     null
             );
@@ -121,7 +121,7 @@ public class TeeTaskRuntimeSecretService {
                 deployedObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
-                owner,
+                secretOwner,
                 secretIndex,
                 encryptionService.encrypt(secretValue)
         );

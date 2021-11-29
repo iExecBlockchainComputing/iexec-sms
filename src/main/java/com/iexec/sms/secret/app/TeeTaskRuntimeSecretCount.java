@@ -37,7 +37,7 @@ public class TeeTaskRuntimeSecretCount {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    private OwnerRole ownerRole;
+    private OwnerRole secretOwnerRole;
 
     private String appAddress;
 
