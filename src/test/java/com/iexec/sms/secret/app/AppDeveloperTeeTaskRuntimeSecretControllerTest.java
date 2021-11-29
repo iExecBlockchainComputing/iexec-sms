@@ -51,7 +51,8 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(true);
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
-        doNothing().when(teeTaskRuntimeSecretService).encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
+        doReturn(true).when(teeTaskRuntimeSecretService)
+                .encryptAndSaveSecret(DeployedObjectType.APP, APP_ADDRESS, OwnerRole.APP_DEVELOPER, null, secretIndex, secretValue);
 
         ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
                 AUTHORIZATION,
