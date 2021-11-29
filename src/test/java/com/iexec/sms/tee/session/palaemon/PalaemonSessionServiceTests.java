@@ -26,7 +26,7 @@ import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.app.DeployedObjectType;
-import com.iexec.sms.secret.app.OwnerRole;
+import com.iexec.sms.secret.app.SecretOwnerRole;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
@@ -198,14 +198,14 @@ public class PalaemonSessionServiceTests {
         when(teeTaskRuntimeSecretService.getSecret(
                 DeployedObjectType.APPLICATION,
                 APP_ADDRESS,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 true))
                 .thenReturn(Optional.of(new TeeTaskRuntimeSecret(
                         DeployedObjectType.APPLICATION,
                         APP_ADDRESS,
-                        OwnerRole.APPLICATION_DEVELOPER,
+                        SecretOwnerRole.APPLICATION_DEVELOPER,
                         null,
                         secretIndex,
                         SECRET_VALUE
@@ -236,7 +236,7 @@ public class PalaemonSessionServiceTests {
         when(teeTaskRuntimeSecretService.getSecret(
                 DeployedObjectType.APPLICATION,
                 APP_ADDRESS,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 true))

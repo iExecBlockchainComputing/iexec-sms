@@ -21,7 +21,7 @@ import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.app.DeployedObjectType;
-import com.iexec.sms.secret.app.OwnerRole;
+import com.iexec.sms.secret.app.SecretOwnerRole;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecretRepository;
 import feign.FeignException;
@@ -76,7 +76,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
                 Example.of(new TeeTaskRuntimeSecret(
                         DeployedObjectType.APPLICATION,
                         appAddress,
-                        OwnerRole.APPLICATION_DEVELOPER,
+                        SecretOwnerRole.APPLICATION_DEVELOPER,
                         null,
                         secretIndex,
                         null

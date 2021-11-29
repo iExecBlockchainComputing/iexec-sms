@@ -23,6 +23,6 @@ import java.util.Optional;
 public interface TeeTaskRuntimeSecretCountRepository extends CrudRepository<TeeTaskRuntimeSecretCount, String> {
     Optional<TeeTaskRuntimeSecretCount> findByAppAddressAndSecretOwnerRole(
             String appAddress,
-            OwnerRole secretOwnerRole
+            SecretOwnerRole secretOwnerRole
     );
 }

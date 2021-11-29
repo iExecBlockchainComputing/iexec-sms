@@ -44,7 +44,7 @@ public class TeeTaskRuntimeSecretService {
     public Optional<TeeTaskRuntimeSecret> getSecret(
             DeployedObjectType deployedObjectType,
             String deployedObjectAddress,
-            OwnerRole secretOwnerRole,
+            SecretOwnerRole secretOwnerRole,
             String secretOwner,
             long secretIndex,
             boolean shouldDecryptValue) {
@@ -79,7 +79,7 @@ public class TeeTaskRuntimeSecretService {
      */
     public boolean isSecretPresent(DeployedObjectType deployedObjectType,
                                    String deployedObjectAddress,
-                                   OwnerRole secretOwnerRole,
+                                   SecretOwnerRole secretOwnerRole,
                                    String secretOwner,
                                    long secretIndex) {
         return getSecret(
@@ -99,7 +99,7 @@ public class TeeTaskRuntimeSecretService {
      */
     public boolean encryptAndSaveSecret(DeployedObjectType deployedObjectType,
                                      String deployedObjectAddress,
-                                     OwnerRole secretOwnerRole,
+                                     SecretOwnerRole secretOwnerRole,
                                      String secretOwner,
                                      long secretIndex,
                                      String secretValue) {

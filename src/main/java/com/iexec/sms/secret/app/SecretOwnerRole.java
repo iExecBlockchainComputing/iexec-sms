@@ -19,7 +19,7 @@ package com.iexec.sms.secret.app;
 /**
  * Defines which role a tee task runtime secret owner can have.
  */
-public enum OwnerRole {
+public enum SecretOwnerRole {
     APPLICATION_DEVELOPER,
     REQUESTER
 }

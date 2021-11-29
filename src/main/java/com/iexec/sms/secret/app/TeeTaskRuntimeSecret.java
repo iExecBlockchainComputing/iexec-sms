@@ -46,7 +46,7 @@ public class TeeTaskRuntimeSecret {
      */
     private String deployedObjectAddress;
     private DeployedObjectType deployedObjectType;
-    private OwnerRole secretOwnerRole;
+    private SecretOwnerRole secretOwnerRole;
     private String fixedSecretOwner;  // May be null if the owner is not fixed
     private long index;
     @Column(columnDefinition = "LONGTEXT")
@@ -55,7 +55,7 @@ public class TeeTaskRuntimeSecret {
     public TeeTaskRuntimeSecret(
             DeployedObjectType deployedObjectType,
             String deployedObjectAddress,
-            OwnerRole secretOwnerRole,
+            SecretOwnerRole secretOwnerRole,
             String fixedSecretOwner,
             long index,
             String value) {

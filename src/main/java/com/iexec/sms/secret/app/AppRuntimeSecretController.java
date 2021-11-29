@@ -65,7 +65,7 @@ public class AppRuntimeSecretController {
         if (teeTaskRuntimeSecretService.isSecretPresent(
                 DeployedObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
@@ -74,7 +74,7 @@ public class AppRuntimeSecretController {
         teeTaskRuntimeSecretService.encryptAndSaveSecret(
                 DeployedObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 secretValue
@@ -88,7 +88,7 @@ public class AppRuntimeSecretController {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
                 DeployedObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex
         );
@@ -122,7 +122,7 @@ public class AppRuntimeSecretController {
         final boolean isCountAlreadyPresent = teeTaskRuntimeSecretCountService
                 .isAppRuntimeSecretCountPresent(
                         appAddress,
-                        OwnerRole.REQUESTER
+                        SecretOwnerRole.REQUESTER
                 );
         if (isCountAlreadyPresent) {
             log.info("Can't add app requester app secret count as it already exist"
@@ -138,7 +138,7 @@ public class AppRuntimeSecretController {
 
         final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
                 appAddress,
-                OwnerRole.REQUESTER,
+                SecretOwnerRole.REQUESTER,
                 secretCount
         );
 
