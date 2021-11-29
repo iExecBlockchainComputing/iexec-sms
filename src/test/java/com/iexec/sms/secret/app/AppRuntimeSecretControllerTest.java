@@ -43,7 +43,7 @@ class AppRuntimeSecretControllerTest {
     // region addAppDeveloperAppRuntimeSecret
 
     @Test
-    void shouldAddSecret() {
+    void shouldAddAppDeveloperSecret() {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -70,7 +70,7 @@ class AppRuntimeSecretControllerTest {
     }
 
     @Test
-    void shouldNotAddSecretSinceNotSignedByOwner() {
+    void shouldNotAddAppDeveloperSecretSinceNotSignedByOwner() {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -95,7 +95,7 @@ class AppRuntimeSecretControllerTest {
     }
 
     @Test
-    void shouldNotAddSecretSinceSecretAlreadyExists() {
+    void shouldNotAddAppDeveloperSecretSinceSecretAlreadyExists() {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -121,7 +121,7 @@ class AppRuntimeSecretControllerTest {
     }
 
     @Test
-    void shouldNotAddSecretSinceSecretValueTooLong() {
+    void shouldNotAddAppDeveloperSecretSinceSecretValueTooLong() {
         long secretIndex = 0;
         String secretValue = TOO_LONG_SECRET_VALUE;
 
@@ -147,7 +147,7 @@ class AppRuntimeSecretControllerTest {
     }
 
     @Test
-    void shouldAddMaxSizeSecret() {
+    void shouldAddMaxSizeAppDeveloperSecret() {
         long secretIndex = 0;
         String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
@@ -177,7 +177,7 @@ class AppRuntimeSecretControllerTest {
 
     // region isAppDeveloperAppRuntimeSecretPresent
     @Test
-    void secretShouldExist() {
+    void appDeveloperSecretShouldExist() {
         long secretIndex = 0;
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(true);
@@ -191,7 +191,7 @@ class AppRuntimeSecretControllerTest {
     }
 
     @Test
-    void secretShouldNotExist() {
+    void appDeveloperSecretShouldNotExist() {
         long secretIndex = 0;
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
