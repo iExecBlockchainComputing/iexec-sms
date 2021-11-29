@@ -202,7 +202,7 @@ class AppRuntimeSecretControllerTest {
     }
     // endregion
 
-    // region setAppRequestersAppRuntimeSecretCount
+    // region setRequesterSecretCountForApp
     @Test
     void shouldSetAppRequestersRuntimeSecretCount() {
         int secretCount = 10;
@@ -216,7 +216,7 @@ class AppRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount))
                 .thenReturn(true);
 
-        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setRequesterSecretCountForApp(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -238,7 +238,7 @@ class AppRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, OwnerRole.REQUESTER))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setRequesterSecretCountForApp(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -261,7 +261,7 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(true);
 
 
-        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setRequesterSecretCountForApp(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -284,7 +284,7 @@ class AppRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, OwnerRole.REQUESTER))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setRequesterSecretCountForApp(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -310,7 +310,7 @@ class AppRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setRequesterSecretCountForApp(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount

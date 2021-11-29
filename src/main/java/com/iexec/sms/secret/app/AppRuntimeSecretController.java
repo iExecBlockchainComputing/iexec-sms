@@ -100,7 +100,7 @@ public class AppRuntimeSecretController {
     }
 
     @PostMapping("/{appAddress}/requesters/secrets")
-    public ResponseEntity<String> setAppRequestersAppRuntimeSecretCount(
+    public ResponseEntity<String> setRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody Integer secretCount) {
@@ -111,7 +111,7 @@ public class AppRuntimeSecretController {
                 );
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to setAppRequestersAppRuntimeSecretCount" +
+            log.error("Unauthorized to setRequesterSecretCountForApp" +
                             " [appAddress: {}, expectedChallenge: {}]",
                     appAddress, challenge);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
