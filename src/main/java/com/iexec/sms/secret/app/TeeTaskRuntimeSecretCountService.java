@@ -55,7 +55,7 @@ public class TeeTaskRuntimeSecretCountService {
     public Optional<TeeTaskRuntimeSecretCount> getAppRuntimeSecretCount(String appAddress,
                                                                         OwnerRole secretOwnerRole) {
         appAddress = appAddress.toLowerCase();
-        return teeTaskRuntimeSecretCountRepository.findByAppAddressAndOwnerRole(
+        return teeTaskRuntimeSecretCountRepository.findByAppAddressAndSecretOwnerRole(
                 appAddress,
                 secretOwnerRole);
     }

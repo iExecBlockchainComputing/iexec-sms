@@ -21,7 +21,7 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface TeeTaskRuntimeSecretCountRepository extends CrudRepository<TeeTaskRuntimeSecretCount, String> {
-    Optional<TeeTaskRuntimeSecretCount> findByAppAddressAndOwnerRole(
+    Optional<TeeTaskRuntimeSecretCount> findByAppAddressAndSecretOwnerRole(
             String appAddress,
             OwnerRole secretOwnerRole
     );
