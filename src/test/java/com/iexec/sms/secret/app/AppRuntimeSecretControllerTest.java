@@ -10,6 +10,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Optional;
+
 import static org.mockito.Mockito.*;
 
 class AppRuntimeSecretControllerTest {
@@ -339,6 +341,8 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(true);
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
+        when(teeTaskRuntimeSecretCountService.getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER))
+                .thenReturn(Optional.of(TeeTaskRuntimeSecretCount.builder().secretCount(1).build()));
         doReturn(true).when(teeTaskRuntimeSecretService)
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
 
@@ -351,14 +355,20 @@ class AppRuntimeSecretControllerTest {
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        verify(authorizationService, times(1))
+                .getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(1)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(1))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
 
     @Test
-    void shouldNotAddRequesterSecretSinceNotSignedByOwner() {
+    void shouldNotAddRequesterSecretSinceNotSignedByRequester() {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -377,8 +387,14 @@ class AppRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
 
+        verify(authorizationService, times(1))
+                .getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(0))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
@@ -405,8 +421,14 @@ class AppRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
 
+        verify(authorizationService, times(1))
+                .getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
@@ -433,8 +455,14 @@ class AppRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build());
 
+        verify(authorizationService, times(0))
+                .getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(0))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(0))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
@@ -450,6 +478,8 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(true);
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
+        when(teeTaskRuntimeSecretCountService.getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER))
+                .thenReturn(Optional.of(TeeTaskRuntimeSecretCount.builder().secretCount(1).build()));
         doReturn(true).when(teeTaskRuntimeSecretService)
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
 
@@ -462,8 +492,14 @@ class AppRuntimeSecretControllerTest {
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        verify(authorizationService, times(1))
+                .getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(1)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(1))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
@@ -490,10 +526,8 @@ class AppRuntimeSecretControllerTest {
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(0))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
-        verify(teeTaskRuntimeSecretService, times(0))
-                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
-        verify(teeTaskRuntimeSecretService, times(0))
-                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
@@ -519,10 +553,82 @@ class AppRuntimeSecretControllerTest {
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(0))
                 .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+    }
+
+    @Test
+    void shouldNotAddRequesterSecretSinceSecretCountNotSet() {
+        long secretIndex = 0;
+        final String secretValue = COMMON_SECRET_VALUE;
+
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+                .thenReturn(true);
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+                .thenReturn(false);
+        when(teeTaskRuntimeSecretCountService.getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER))
+                .thenReturn(Optional.empty());
+        doReturn(true).when(teeTaskRuntimeSecretService)
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRequesterAppRuntimeSecret(
+                AUTHORIZATION,
+                REQUESTER_ADDRESS,
+                APP_ADDRESS,
+                secretIndex,
+                secretValue
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest().build());
+        verify(authorizationService, times(1)).
+                getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1)).
+                isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(teeTaskRuntimeSecretService, times(1)).
+                isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(1)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
-                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+    }
+
+    @Test
+    void shouldNotAddRequesterSecretSinceSecretIndexBiggerThanMaxAllowedSecrets() {
+        long secretIndex = 0;
+        final String secretValue = COMMON_SECRET_VALUE;
+
+        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+                .thenReturn(true);
+        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+                .thenReturn(false);
+        when(teeTaskRuntimeSecretCountService.getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER))
+                .thenReturn(Optional.of(TeeTaskRuntimeSecretCount.builder().secretCount(0).build()));
+        doReturn(true).when(teeTaskRuntimeSecretService)
+                .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRequesterAppRuntimeSecret(
+                AUTHORIZATION,
+                REQUESTER_ADDRESS,
+                APP_ADDRESS,
+                secretIndex,
+                secretValue
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest().build());
+        verify(authorizationService, times(1)).
+                getChallengeForSetAppRequesterRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1)).
+                isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(teeTaskRuntimeSecretService, times(1)).
+                isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(1)).
+                getAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
