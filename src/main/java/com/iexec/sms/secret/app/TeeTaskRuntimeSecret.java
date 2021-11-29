@@ -34,10 +34,10 @@ public class TeeTaskRuntimeSecret {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    private String deployedObjectAddress; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
+    private String deployedObjectAddress; //0xapplication, 0xdataset, 0xworkerpool
     private DeployedObjectType deployedObjectType;
     private OwnerRole secretOwnerRole;
-    private String fixedOwner;  // May be null if the owner is not fixed
+    private String fixedSecretOwner;  // May be null if the owner is not fixed
     private long index;
     @Column(columnDefinition = "LONGTEXT")
     private String value;
@@ -46,13 +46,13 @@ public class TeeTaskRuntimeSecret {
             DeployedObjectType deployedObjectType,
             String deployedObjectAddress,
             OwnerRole secretOwnerRole,
-            String fixedOwner,
+            String fixedSecretOwner,
             long index,
             String value) {
         this.deployedObjectType = deployedObjectType;
         this.deployedObjectAddress = deployedObjectAddress;
         this.secretOwnerRole = secretOwnerRole;
-        this.fixedOwner = fixedOwner;
+        this.fixedSecretOwner = fixedSecretOwner;
         this.index = index;
         this.value = value;
     }

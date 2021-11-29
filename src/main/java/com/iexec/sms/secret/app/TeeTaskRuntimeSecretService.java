@@ -45,7 +45,7 @@ public class TeeTaskRuntimeSecretService {
             DeployedObjectType deployedObjectType,
             String deployedObjectAddress,
             OwnerRole secretOwnerRole,
-            String owner,
+            String secretOwner,
             long secretIndex,
             boolean shouldDecryptValue) {
         deployedObjectAddress = deployedObjectAddress.toLowerCase();
@@ -53,7 +53,7 @@ public class TeeTaskRuntimeSecretService {
                 deployedObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
-                owner,
+                secretOwner,
                 secretIndex,
                 null
         );
