@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -105,8 +106,8 @@ public class AppRuntimeSecretController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/apps/{appAddress}/requesters/secrets")
-    public ResponseEntity<String> setAppRequesterAppRuntimeSecretCount(
+    @PostMapping("/{appAddress}/requesters/secrets")
+    public ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody Integer secretCount) {
@@ -117,7 +118,7 @@ public class AppRuntimeSecretController {
                 );
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to setAppRequesterAppRuntimeSecretCount" +
+            log.error("Unauthorized to setRequesterSecretCountForApp" +
                             " [appAddress: {}, expectedChallenge: {}]",
                     appAddress, challenge);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -134,18 +135,27 @@ public class AppRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret count already exists
         }
 
-        if (secretCount == null || secretCount < 0) {
+        if (secretCount == null) {
             return ResponseEntity
                     .badRequest()
-                    .body("Secret count should be positive. " +
-                            "Can't accept value " + secretCount);
+                    .body(createErrorPayload("Secret count cannot be null."));
         }
 
-        teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
+        final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
                 appAddress,
                 OwnerRole.REQUESTER,
                 secretCount
         );
+
+        if (!hasBeenInserted) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(
+                            "Secret count should be positive. " +
+                            "Can't accept value " + secretCount
+                    ));
+        }
+
         return ResponseEntity.noContent().build();
     }
     // endregion
@@ -262,4 +272,8 @@ public class AppRuntimeSecretController {
         return ResponseEntity.notFound().build();
     }
     // endregion
+
+    private Map<String, String> createErrorPayload(String errorMessage) {
+        return Map.of("error", errorMessage);
+    }
 }
