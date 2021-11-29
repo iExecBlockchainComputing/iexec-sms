@@ -128,18 +128,25 @@ public class AppRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret count already exists
         }
 
-        if (secretCount == null || secretCount < 0) {
+        if (secretCount == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Secret count cannot be null.");
+        }
+
+        final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
+                appAddress,
+                OwnerRole.REQUESTER,
+                secretCount
+        );
+
+        if (!hasBeenInserted) {
             return ResponseEntity
                     .badRequest()
                     .body("Secret count should be positive. " +
                             "Can't accept value " + secretCount);
         }
 
-        teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
-                appAddress,
-                OwnerRole.REQUESTER,
-                secretCount
-        );
         return ResponseEntity.noContent().build();
     }
 }

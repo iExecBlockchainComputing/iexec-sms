@@ -213,8 +213,8 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(true);
         when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, OwnerRole.REQUESTER))
                 .thenReturn(false);
-        doNothing().when(teeTaskRuntimeSecretCountService)
-                .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
+        when(teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount))
+                .thenReturn(true);
 
         ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
@@ -283,8 +283,6 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(true);
         when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, OwnerRole.REQUESTER))
                 .thenReturn(false);
-        doNothing().when(teeTaskRuntimeSecretCountService)
-                .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
 
         ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
@@ -294,7 +292,7 @@ class AppRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity
                 .badRequest()
-                .body("Secret count should be positive. Can't accept value null"));
+                .body("Secret count cannot be null."));
         verify(teeTaskRuntimeSecretCountService, times(0))
                 .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
     }
@@ -309,8 +307,8 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(true);
         when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, OwnerRole.REQUESTER))
                 .thenReturn(false);
-        doNothing().when(teeTaskRuntimeSecretCountService)
-                .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
+        when(teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount))
+                .thenReturn(false);
 
         ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
@@ -321,7 +319,7 @@ class AppRuntimeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity
                 .badRequest()
                 .body("Secret count should be positive. Can't accept value -1"));
-        verify(teeTaskRuntimeSecretCountService, times(0))
+        verify(teeTaskRuntimeSecretCountService, times(1))
                 .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
     }
     // endregion
