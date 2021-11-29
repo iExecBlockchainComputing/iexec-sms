@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @CrossOrigin
 @RestController
-@RequestMapping("/apps")
 public class AppRuntimeSecretController {
     private final AuthorizationService authorizationService;
     private final TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
@@ -40,7 +39,8 @@ public class AppRuntimeSecretController {
         this.teeTaskRuntimeSecretCountService = teeTaskRuntimeSecretCountService;
     }
 
-    @PostMapping("/{appAddress}/secrets/0")
+    // region App developer endpoints
+    @PostMapping("/apps/{appAddress}/secrets/0")
     public ResponseEntity<String> addAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
                                                       @PathVariable String appAddress,
 //                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
@@ -80,7 +80,7 @@ public class AppRuntimeSecretController {
         return ResponseEntity.noContent().build();
     }
 
-    @RequestMapping(method = RequestMethod.HEAD, path = "/{appAddress}/secrets/{secretIndex}")
+    @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<Void> isAppRuntimeSecretPresent(@PathVariable String appAddress,
                                                           @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
@@ -99,7 +99,7 @@ public class AppRuntimeSecretController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{appAddress}/requesters/secrets")
+    @PostMapping("/apps/{appAddress}/requesters/secrets")
     public ResponseEntity<String> setAppRequestersAppRuntimeSecretCount(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
@@ -142,4 +142,66 @@ public class AppRuntimeSecretController {
         );
         return ResponseEntity.noContent().build();
     }
+    // endregion
+
+    // region App requester endpoint
+    @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
+    public ResponseEntity<String> addAppRequesterAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
+                                                                  @PathVariable String requesterAddress,
+                                                                  @PathVariable String appAddress,
+                                                                  @PathVariable long secretIndex,
+                                                                  @RequestBody String secretValue) {
+        // TODO: remove following bloc once functioning has been validated
+        if (secretIndex > 0) {
+            log.error("Can't add more than a single app requester secret as of now." +
+                            " [requesterAddress: {}, appAddress: {}, secretIndex: {}]",
+                    requesterAddress, appAddress, secretIndex);
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (secretIndex < 0) {
+            log.error("Negative index are forbidden for app requester secrets." +
+                            " [requesterAddress: {}, appAddress: {}, secretIndex: {}]",
+                    requesterAddress, appAddress, secretIndex);
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+
+        String challenge = authorizationService.getChallengeForSetAppRequesterRuntimeSecret(
+                requesterAddress,
+                appAddress,
+                secretIndex,
+                secretValue
+        );
+
+        if (!authorizationService.isSignedByHimself(challenge, authorization, requesterAddress)) {
+            log.error("Unauthorized to addAppRequesterRuntimeSecret" +
+                            " [requesterAddress:{}, appAddress: {}, expectedChallenge: {}]",
+                    requesterAddress, appAddress, challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (teeTaskRuntimeSecretService.isSecretPresent(
+                DeployedObjectType.APPLICATION,
+                appAddress,
+                OwnerRole.REQUESTER,
+                requesterAddress,
+                secretIndex)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
+        }
+
+        teeTaskRuntimeSecretService.encryptAndSaveSecret(
+                DeployedObjectType.APPLICATION,
+                appAddress,
+                OwnerRole.REQUESTER,
+                requesterAddress,
+                secretIndex,
+                secretValue
+        );
+        return ResponseEntity.noContent().build();
+    }
+    // endregion
 }
