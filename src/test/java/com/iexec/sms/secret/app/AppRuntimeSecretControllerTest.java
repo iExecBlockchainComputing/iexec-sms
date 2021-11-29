@@ -1,7 +1,6 @@
 package com.iexec.sms.secret.app;
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.app.owner.AppDeveloperTeeTaskRuntimeSecretController;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 
 import static org.mockito.Mockito.*;
 
-class AppDeveloperTeeTaskRuntimeSecretControllerTest {
+class AppRuntimeSecretControllerTest {
     private static final String AUTHORIZATION = "authorization";
     private static final String APP_ADDRESS = "appAddress";
     private static final String COMMON_SECRET_VALUE = "I'm a secret.";
@@ -31,14 +30,14 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
     AuthorizationService authorizationService;
 
     @InjectMocks
-    AppDeveloperTeeTaskRuntimeSecretController appDeveloperTeeTaskRuntimeSecretController;
+    AppRuntimeSecretController appRuntimeSecretController;
 
     @BeforeEach
     public void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 
-    // region addApplicationRuntimeSecret
+    // region addAppRuntimeSecret
 
     @Test
     void shouldAddSecret() {
@@ -54,7 +53,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         doReturn(true).when(teeTaskRuntimeSecretService)
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -78,7 +77,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(false);
 
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -104,7 +103,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(true);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -130,7 +129,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -158,7 +157,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         doReturn(true).when(teeTaskRuntimeSecretService)
                 .encryptAndSaveSecret(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.APPLICATION_DEVELOPER, null, secretIndex, secretValue);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.addAppDeveloperTeeTaskRuntimeSecret(
+        ResponseEntity<String> result = appRuntimeSecretController.addAppRuntimeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -173,7 +172,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
 
     // endregion
 
-    // region checkApplicationRuntimeSecretExistence
+    // region isAppRuntimeSecretPresent
     @Test
     void secretShouldExist() {
         long secretIndex = 0;
@@ -181,7 +180,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(true);
 
         ResponseEntity<Void> result =
-                appDeveloperTeeTaskRuntimeSecretController.isAppDeveloperTeeTaskRuntimeSecret(APP_ADDRESS, secretIndex);
+                appRuntimeSecretController.isAppRuntimeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskRuntimeSecretService, times(1))
@@ -195,7 +194,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(false);
 
         ResponseEntity<Void> result =
-                appDeveloperTeeTaskRuntimeSecretController.isAppDeveloperTeeTaskRuntimeSecret(APP_ADDRESS, secretIndex);
+                appRuntimeSecretController.isAppRuntimeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
         verify(teeTaskRuntimeSecretService, times(1))
@@ -203,7 +202,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
     }
     // endregion
 
-    // region setAppRequestersRuntimeSecretCount
+    // region setAppRequestersAppRuntimeSecretCount
     @Test
     void shouldSetAppRequestersRuntimeSecretCount() {
         int secretCount = 10;
@@ -217,7 +216,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         doNothing().when(teeTaskRuntimeSecretCountService)
                 .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.setAppRequestersTeeTaskRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -239,7 +238,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, OwnerRole.REQUESTER))
                 .thenReturn(false);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.setAppRequestersTeeTaskRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -262,7 +261,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
                 .thenReturn(true);
 
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.setAppRequestersTeeTaskRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -287,7 +286,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         doNothing().when(teeTaskRuntimeSecretCountService)
                 .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.setAppRequestersTeeTaskRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -313,7 +312,7 @@ class AppDeveloperTeeTaskRuntimeSecretControllerTest {
         doNothing().when(teeTaskRuntimeSecretCountService)
                 .setAppRuntimeSecretCount(APP_ADDRESS, OwnerRole.REQUESTER, secretCount);
 
-        ResponseEntity<String> result = appDeveloperTeeTaskRuntimeSecretController.setAppRequestersTeeTaskRuntimeSecretCount(
+        ResponseEntity<String> result = appRuntimeSecretController.setAppRequestersAppRuntimeSecretCount(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount

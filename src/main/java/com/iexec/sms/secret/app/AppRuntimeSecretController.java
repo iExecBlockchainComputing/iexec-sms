@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app.owner;
+package com.iexec.sms.secret.app;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
@@ -31,24 +31,24 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 @RestController
 @RequestMapping("/apps")
-public class AppDeveloperTeeTaskRuntimeSecretController {
+public class AppRuntimeSecretController {
     private final AuthorizationService authorizationService;
     private final TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
     private final TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService;
 
-    public AppDeveloperTeeTaskRuntimeSecretController(AuthorizationService authorizationService,
-                                                      TeeTaskRuntimeSecretService teeTaskRuntimeSecretService,
-                                                      TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService) {
+    public AppRuntimeSecretController(AuthorizationService authorizationService,
+                                      TeeTaskRuntimeSecretService teeTaskRuntimeSecretService,
+                                      TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService) {
         this.authorizationService = authorizationService;
         this.teeTaskRuntimeSecretService = teeTaskRuntimeSecretService;
         this.teeTaskRuntimeSecretCountService = teeTaskRuntimeSecretCountService;
     }
 
     @PostMapping("/{appAddress}/secrets/0")
-    public ResponseEntity<String> addAppDeveloperTeeTaskRuntimeSecret(@RequestHeader("Authorization") String authorization,
-                                                                      @PathVariable String appAddress,
+    public ResponseEntity<String> addAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
+                                                      @PathVariable String appAddress,
 //                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
-                                                                      @RequestBody String secretValue) {
+                                                      @RequestBody String secretValue) {
         long secretIndex = 0;   // FIXME: remove once functioning has been validated.
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
@@ -85,8 +85,8 @@ public class AppDeveloperTeeTaskRuntimeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Void> isAppDeveloperTeeTaskRuntimeSecret(@PathVariable String appAddress,
-                                                                   @PathVariable long secretIndex) {
+    public ResponseEntity<Void> isAppRuntimeSecretPresent(@PathVariable String appAddress,
+                                                          @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
                 DeployedObjectType.APPLICATION,
                 appAddress,
@@ -104,7 +104,7 @@ public class AppDeveloperTeeTaskRuntimeSecretController {
     }
 
     @PostMapping("/{appAddress}/requesters/secrets")
-    public ResponseEntity<String> setAppRequestersTeeTaskRuntimeSecretCount(
+    public ResponseEntity<String> setAppRequestersAppRuntimeSecretCount(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody Integer secretCount) {
