@@ -25,7 +25,7 @@ import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.app.DeployedObjectType;
+import com.iexec.sms.secret.app.OnChainObjectType;
 import com.iexec.sms.secret.app.SecretOwnerRole;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
@@ -196,14 +196,14 @@ public class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         when(teeTaskRuntimeSecretService.getSecret(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 true))
                 .thenReturn(Optional.of(new TeeTaskRuntimeSecret(
-                        DeployedObjectType.APPLICATION,
+                        OnChainObjectType.APPLICATION,
                         APP_ADDRESS,
                         SecretOwnerRole.APPLICATION_DEVELOPER,
                         null,
@@ -234,7 +234,7 @@ public class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         when(teeTaskRuntimeSecretService.getSecret(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,

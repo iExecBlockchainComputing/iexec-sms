@@ -16,6 +16,6 @@
 
 package com.iexec.sms.secret.app;
 
-public enum DeployedObjectType {
+public enum OnChainObjectType {
     APPLICATION
 }

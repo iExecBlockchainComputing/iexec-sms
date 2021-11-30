@@ -44,8 +44,8 @@ public class TeeTaskRuntimeSecret {
      * <br>
      * In a future release, it should also handle ENS names.
      */
-    private String deployedObjectAddress;
-    private DeployedObjectType deployedObjectType;
+    private String onChainObjectAddress;
+    private OnChainObjectType onChainObjectType;
     private SecretOwnerRole secretOwnerRole;
     private String fixedSecretOwner;  // May be null if the owner is not fixed
     private long index;
@@ -53,14 +53,14 @@ public class TeeTaskRuntimeSecret {
     private String value;
 
     public TeeTaskRuntimeSecret(
-            DeployedObjectType deployedObjectType,
-            String deployedObjectAddress,
+            OnChainObjectType onChainObjectType,
+            String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String fixedSecretOwner,
             long index,
             String value) {
-        this.deployedObjectType = deployedObjectType;
-        this.deployedObjectAddress = deployedObjectAddress;
+        this.onChainObjectType = onChainObjectType;
+        this.onChainObjectAddress = onChainObjectAddress;
         this.secretOwnerRole = secretOwnerRole;
         this.fixedSecretOwner = fixedSecretOwner;
         this.index = index;

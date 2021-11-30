@@ -42,7 +42,7 @@ public class TeeTaskRuntimeSecretService {
      * Decrypt if required.
      */
     public Optional<TeeTaskRuntimeSecret> getSecret(
-            DeployedObjectType deployedObjectType,
+            OnChainObjectType onChainObjectType,
             String deployedObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String secretOwner,
@@ -50,7 +50,7 @@ public class TeeTaskRuntimeSecretService {
             boolean shouldDecryptValue) {
         deployedObjectAddress = deployedObjectAddress.toLowerCase();
         final TeeTaskRuntimeSecret wantedSecret = new TeeTaskRuntimeSecret(
-                deployedObjectType,
+                onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
@@ -77,13 +77,13 @@ public class TeeTaskRuntimeSecretService {
      *
      * @return {@code true} if the secret exists in the database, {@code false} otherwise.
      */
-    public boolean isSecretPresent(DeployedObjectType deployedObjectType,
+    public boolean isSecretPresent(OnChainObjectType onChainObjectType,
                                    String deployedObjectAddress,
                                    SecretOwnerRole secretOwnerRole,
                                    String secretOwner,
                                    long secretIndex) {
         return getSecret(
-                deployedObjectType,
+                onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
@@ -97,15 +97,15 @@ public class TeeTaskRuntimeSecretService {
      *
      * @return {@code false} if the secret already exists, {@code true} otherwise.
      */
-    public boolean encryptAndSaveSecret(DeployedObjectType deployedObjectType,
-                                     String deployedObjectAddress,
-                                     SecretOwnerRole secretOwnerRole,
-                                     String secretOwner,
-                                     long secretIndex,
-                                     String secretValue) {
-        if (isSecretPresent(deployedObjectType, deployedObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
+    public boolean encryptAndSaveSecret(OnChainObjectType onChainObjectType,
+                                        String deployedObjectAddress,
+                                        SecretOwnerRole secretOwnerRole,
+                                        String secretOwner,
+                                        long secretIndex,
+                                        String secretValue) {
+        if (isSecretPresent(onChainObjectType, deployedObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
             final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
-                    deployedObjectType,
+                    onChainObjectType,
                     deployedObjectAddress,
                     secretOwnerRole,
                     secretOwner,
@@ -118,7 +118,7 @@ public class TeeTaskRuntimeSecretService {
         }
         deployedObjectAddress = deployedObjectAddress.toLowerCase();
         final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
-                deployedObjectType,
+                onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,

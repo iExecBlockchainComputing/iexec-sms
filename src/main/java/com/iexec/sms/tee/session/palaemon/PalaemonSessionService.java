@@ -22,7 +22,7 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.app.DeployedObjectType;
+import com.iexec.sms.secret.app.OnChainObjectType;
 import com.iexec.sms.secret.app.SecretOwnerRole;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecretService;
@@ -234,7 +234,7 @@ public class PalaemonSessionService {
         final long secretIndex = 0;
         String appProviderSecret0 =
                 teeTaskRuntimeSecretService.getSecret(
-                                DeployedObjectType.APPLICATION,
+                                OnChainObjectType.APPLICATION,
                                 taskDescription.getAppAddress(),
                                 SecretOwnerRole.APPLICATION_DEVELOPER,
                                 null,

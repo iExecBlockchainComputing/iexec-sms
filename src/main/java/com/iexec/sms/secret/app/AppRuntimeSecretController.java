@@ -63,7 +63,7 @@ public class AppRuntimeSecretController {
         }
 
         if (teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
@@ -72,7 +72,7 @@ public class AppRuntimeSecretController {
         }
 
         teeTaskRuntimeSecretService.encryptAndSaveSecret(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
@@ -86,7 +86,7 @@ public class AppRuntimeSecretController {
     public ResponseEntity<Void> isAppRuntimeSecretPresent(@PathVariable String appAddress,
                                                           @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
@@ -105,7 +105,7 @@ public class AppRuntimeSecretController {
     public ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
-            @RequestBody Integer secretCount) {
+            @RequestBody int secretCount) {
         String challenge = authorizationService
                 .getChallengeForSetAppRequesterRuntimeSecretCount(
                         appAddress,

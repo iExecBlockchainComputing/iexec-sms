@@ -20,7 +20,7 @@ import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.app.DeployedObjectType;
+import com.iexec.sms.secret.app.OnChainObjectType;
 import com.iexec.sms.secret.app.SecretOwnerRole;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.app.TeeTaskRuntimeSecretRepository;
@@ -74,7 +74,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
                 .withIgnorePaths("value");
         final Optional<TeeTaskRuntimeSecret> secret = repository.findOne(
                 Example.of(new TeeTaskRuntimeSecret(
-                        DeployedObjectType.APPLICATION,
+                        OnChainObjectType.APPLICATION,
                         appAddress,
                         SecretOwnerRole.APPLICATION_DEVELOPER,
                         null,
@@ -89,7 +89,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
             return;
         }
         Assertions.assertThat(secret.get().getId()).isNotBlank();
-        Assertions.assertThat(secret.get().getDeployedObjectAddress()).isEqualToIgnoringCase(appAddress);
+        Assertions.assertThat(secret.get().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
         Assertions.assertThat(secret.get().getIndex()).isZero();
         Assertions.assertThat(secret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(secret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
