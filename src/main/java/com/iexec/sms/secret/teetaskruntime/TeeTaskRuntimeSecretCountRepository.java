@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
-/**
- * Defines which role a tee task runtime secret owner can have.
- */
-public enum SecretOwnerRole {
-    APPLICATION_DEVELOPER,
-    REQUESTER
+import org.springframework.data.repository.CrudRepository;
+
+import java.util.Optional;
+
+public interface TeeTaskRuntimeSecretCountRepository extends CrudRepository<TeeTaskRuntimeSecretCount, String> {
+    Optional<TeeTaskRuntimeSecretCount> findByAppAddressAndSecretOwnerRole(
+            String appAddress,
+            SecretOwnerRole secretOwnerRole
+    );
 }

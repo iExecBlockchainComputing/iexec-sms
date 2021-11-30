@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
-public enum OnChainObjectType {
-    APPLICATION
+/**
+ * Defines which role a tee task runtime secret owner can have.
+ */
+public enum SecretOwnerRole {
+    APPLICATION_DEVELOPER,
+    REQUESTER
 }

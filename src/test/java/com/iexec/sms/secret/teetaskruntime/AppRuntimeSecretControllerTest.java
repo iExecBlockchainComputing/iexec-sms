@@ -1,4 +1,4 @@
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import org.assertj.core.api.Assertions;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

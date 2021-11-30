@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
