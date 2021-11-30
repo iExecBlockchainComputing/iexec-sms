@@ -20,6 +20,7 @@ import com.iexec.common.utils.CredentialsUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
@@ -34,6 +35,7 @@ import javax.persistence.Id;
  */
 @Data
 @Getter
+@NoArgsConstructor //for hibernate
 @AllArgsConstructor
 @Entity
 public class EthereumCredentials {
@@ -45,9 +47,15 @@ public class EthereumCredentials {
 
     private String privateKey;
     private boolean isEncrypted;
+    /*
+     * Address is required since recovering from private key is not possible
+     * from an encrypted private key state.
+     */
+    private String address;
 
-    private EthereumCredentials(String privateKey) {
+    private EthereumCredentials(String privateKey, String address) {
         this.setPlainTextPrivateKey(privateKey);
+        this.address = address;
     }
 
     /**
@@ -63,11 +71,7 @@ public class EthereumCredentials {
         String privateKey =
                 Numeric.toHexStringWithPrefixZeroPadded(randomEcKeyPair.getPrivateKey(),
                         Keys.PRIVATE_KEY_LENGTH_IN_HEX);//hex-string size of 32 bytes (64)
-        return new EthereumCredentials(privateKey);
-    }
-
-    public String getAddress() {
-        return isEncrypted ? "" : CredentialsUtils.getAddress(privateKey);
+        return new EthereumCredentials(privateKey, CredentialsUtils.getAddress(privateKey));
     }
 
     public void setPlainTextPrivateKey(String privateKey) {
