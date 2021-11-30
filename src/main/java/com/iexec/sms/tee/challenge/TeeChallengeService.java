@@ -71,8 +71,7 @@ public class TeeChallengeService {
         EthereumCredentials credentials = teeChallenge.getCredentials();
         if (!credentials.isEncrypted()) {
             String encPrivateKey = encryptionService.encrypt(credentials.getPrivateKey());
-            String encPublicKey = encryptionService.encrypt(credentials.getPublicKey());
-            credentials.setEncryptedKeys(encPrivateKey, encPublicKey);
+            credentials.setEncryptedPrivateKey(encPrivateKey);
         }
     }
 
@@ -80,8 +79,7 @@ public class TeeChallengeService {
         EthereumCredentials credentials = teeChallenge.getCredentials();
         if (credentials.isEncrypted()) {
             String privateKey = encryptionService.decrypt(credentials.getPrivateKey());
-            String publicKey = encryptionService.decrypt(credentials.getPublicKey());
-            credentials.setPlainKeys(privateKey, publicKey);
+            credentials.setPlainTextPrivateKey(privateKey);
         }
     }
 }
