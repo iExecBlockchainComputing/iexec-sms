@@ -276,30 +276,6 @@ class AppRuntimeSecretControllerTest {
     }
 
     @Test
-    void shouldNotSetAppRequestersRuntimeSecretCountSinceNotSecretCountIsNull() {
-        Integer secretCount = null;
-
-        when(authorizationService.getChallengeForSetAppRequesterRuntimeSecretCount(APP_ADDRESS, secretCount))
-                .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
-                .thenReturn(true);
-        when(teeTaskRuntimeSecretCountService.isAppRuntimeSecretCountPresent(APP_ADDRESS, SecretOwnerRole.REQUESTER))
-                .thenReturn(false);
-
-        ResponseEntity<Map<String, String>> result = appRuntimeSecretController.setRequesterSecretCountForApp(
-                AUTHORIZATION,
-                APP_ADDRESS,
-                secretCount
-        );
-
-        Assertions.assertThat(result).isEqualTo(ResponseEntity
-                .badRequest()
-                .body(Map.of("error", "Secret count cannot be null.")));
-        verify(teeTaskRuntimeSecretCountService, times(0))
-                .setAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER, secretCount);
-    }
-
-    @Test
     void shouldNotSetAppRequestersRuntimeSecretCountSinceNotSecretCountIsNegative() {
         int secretCount = -1;
 

@@ -130,12 +130,6 @@ public class AppRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret count already exists
         }
 
-        if (secretCount == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload("Secret count cannot be null."));
-        }
-
         final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
                 appAddress,
                 SecretOwnerRole.REQUESTER,
