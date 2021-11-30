@@ -16,23 +16,26 @@
 
 package com.iexec.sms.utils;
 
-import java.math.BigInteger;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-
+import com.iexec.common.utils.CredentialsUtils;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
+/**
+ * Domain entity
+ */
 @Data
 @Getter
+@NoArgsConstructor //for hibernate
 @AllArgsConstructor
 @Entity
 public class EthereumCredentials {
@@ -42,33 +45,43 @@ public class EthereumCredentials {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    private String address;
     private String privateKey;
-    private String publicKey;
-    private boolean isEncrypted; // private & public keys
+    private boolean isEncrypted;
+    /*
+     * Address is required since recovering from private key is not possible
+     * from an encrypted private key state.
+     */
+    private String address;
 
-    public EthereumCredentials() throws Exception {
-        ECKeyPair ecKeyPair = Keys.createEcKeyPair();
-        this.address = Numeric.prependHexPrefix(Keys.getAddress(ecKeyPair));
-        setPlainKeys(toHex(ecKeyPair.getPrivateKey()),
-                toHex(ecKeyPair.getPublicKey()));
+    private EthereumCredentials(String privateKey, String address) {
+        this.setPlainTextPrivateKey(privateKey);
+        this.address = address;
     }
 
-    public void setPlainKeys(String privateKey, String publicKey) {
-        this.setKeys(privateKey, publicKey, false);
+    /**
+     * Build EthereumCredentials from a random private key (generated from a
+     * secure random source).
+     *
+     * @return Ethereum credentials
+     * @throws java.security.GeneralSecurityException exception if failed to
+     *                                                generate credentials
+     */
+    public static EthereumCredentials generate() throws java.security.GeneralSecurityException {
+        ECKeyPair randomEcKeyPair = Keys.createEcKeyPair();
+        String privateKey =
+                Numeric.toHexStringWithPrefixZeroPadded(randomEcKeyPair.getPrivateKey(),
+                        Keys.PRIVATE_KEY_LENGTH_IN_HEX);//hex-string size of 32 bytes (64)
+        return new EthereumCredentials(privateKey, CredentialsUtils.getAddress(privateKey));
     }
 
-    public void setEncryptedKeys(String privateKey, String publicKey) {
-        this.setKeys(privateKey, publicKey, true);
-    }
-
-    private void setKeys(String privateKey, String publicKey, boolean isEncrypted) {
+    public void setPlainTextPrivateKey(String privateKey) {
         this.privateKey = privateKey;
-        this.publicKey = publicKey;
-        this.isEncrypted = isEncrypted;
+        this.isEncrypted = false;
     }
 
-    private String toHex(BigInteger input) {
-        return Numeric.prependHexPrefix(input.toString(16));
+    public void setEncryptedPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+        this.isEncrypted = true;
     }
+
 }

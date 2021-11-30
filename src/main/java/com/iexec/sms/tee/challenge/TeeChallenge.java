@@ -42,6 +42,6 @@ public class TeeChallenge {
 
     public TeeChallenge(String taskId) throws Exception {
         this.taskId = taskId;
-        this.credentials = new EthereumCredentials();
+        this.credentials = EthereumCredentials.generate();
     }
 }
