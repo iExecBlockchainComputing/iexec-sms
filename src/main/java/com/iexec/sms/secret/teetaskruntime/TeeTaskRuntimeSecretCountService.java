@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class TeeTaskRuntimeSecretCountService {
      * and has been correctly inserted in DB, {@code false} otherwise
      */
     public boolean setAppRuntimeSecretCount(String appAddress,
-                                         OwnerRole secretOwnerRole,
+                                         SecretOwnerRole secretOwnerRole,
                                          Integer secretCount) {
         if (secretCount < 0) {
             return false;
@@ -51,7 +51,7 @@ public class TeeTaskRuntimeSecretCountService {
                         .build();
         log.info("Adding new app runtime secret count" +
                         "[ownerRole:{}, appAddress:{}, secretCount:{}]",
-                OwnerRole.REQUESTER, appAddress, secretCount);
+                SecretOwnerRole.REQUESTER, appAddress, secretCount);
         teeTaskRuntimeSecretCountRepository.save(teeTaskRuntimeSecretCount);
 
         return true;
@@ -61,7 +61,7 @@ public class TeeTaskRuntimeSecretCountService {
      * Retrieve a secret count.
      */
     public Optional<TeeTaskRuntimeSecretCount> getAppRuntimeSecretCount(String appAddress,
-                                                                        OwnerRole secretOwnerRole) {
+                                                                        SecretOwnerRole secretOwnerRole) {
         appAddress = appAddress.toLowerCase();
         return teeTaskRuntimeSecretCountRepository.findByAppAddressAndSecretOwnerRole(
                 appAddress,
@@ -75,7 +75,7 @@ public class TeeTaskRuntimeSecretCountService {
      * {@code false} otherwise.
      */
     public boolean isAppRuntimeSecretCountPresent(String appAddress,
-                                                  OwnerRole secretOwnerRole) {
+                                                  SecretOwnerRole secretOwnerRole) {
         return getAppRuntimeSecretCount(appAddress, secretOwnerRole).isPresent();
     }
 }

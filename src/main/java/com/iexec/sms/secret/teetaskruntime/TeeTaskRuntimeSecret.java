@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,23 +44,23 @@ public class TeeTaskRuntimeSecret {
      * <br>
      * In a future release, it should also handle ENS names.
      */
-    private String deployedObjectAddress;
-    private DeployedObjectType deployedObjectType;
-    private OwnerRole secretOwnerRole;
+    private String onChainObjectAddress;
+    private OnChainObjectType onChainObjectType;
+    private SecretOwnerRole secretOwnerRole;
     private String fixedSecretOwner;  // May be null if the owner is not fixed
     private long index;
     @Column(columnDefinition = "LONGTEXT")
     private String value;
 
     public TeeTaskRuntimeSecret(
-            DeployedObjectType deployedObjectType,
-            String deployedObjectAddress,
-            OwnerRole secretOwnerRole,
+            OnChainObjectType onChainObjectType,
+            String onChainObjectAddress,
+            SecretOwnerRole secretOwnerRole,
             String fixedSecretOwner,
             long index,
             String value) {
-        this.deployedObjectType = deployedObjectType;
-        this.deployedObjectAddress = deployedObjectAddress;
+        this.onChainObjectType = onChainObjectType;
+        this.onChainObjectAddress = onChainObjectAddress;
         this.secretOwnerRole = secretOwnerRole;
         this.fixedSecretOwner = fixedSecretOwner;
         this.index = index;

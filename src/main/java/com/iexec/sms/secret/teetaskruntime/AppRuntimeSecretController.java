@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
@@ -64,9 +64,9 @@ public class AppRuntimeSecretController {
         }
 
         if (teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex)) {
             log.error("Unauthorized to addAppDeveloperAppRuntimeSecret: " +
@@ -77,9 +77,9 @@ public class AppRuntimeSecretController {
         }
 
         teeTaskRuntimeSecretService.encryptAndSaveSecret(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 secretValue
@@ -91,9 +91,9 @@ public class AppRuntimeSecretController {
     public ResponseEntity<Void> isAppDeveloperAppRuntimeSecretPresent(@PathVariable String appAddress,
                                                                       @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.APPLICATION_DEVELOPER,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex
         );
@@ -110,7 +110,7 @@ public class AppRuntimeSecretController {
     public ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
-            @RequestBody Integer secretCount) {
+            @RequestBody int secretCount) {
         String challenge = authorizationService
                 .getChallengeForSetAppRequesterAppRuntimeSecretCount(
                         appAddress,
@@ -127,7 +127,7 @@ public class AppRuntimeSecretController {
         final boolean isCountAlreadyPresent = teeTaskRuntimeSecretCountService
                 .isAppRuntimeSecretCountPresent(
                         appAddress,
-                        OwnerRole.REQUESTER
+                        SecretOwnerRole.REQUESTER
                 );
         if (isCountAlreadyPresent) {
             log.info("Can't add app requester app secret count as it already exist"
@@ -135,15 +135,9 @@ public class AppRuntimeSecretController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret count already exists
         }
 
-        if (secretCount == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload("Secret count cannot be null."));
-        }
-
         final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
                 appAddress,
-                OwnerRole.REQUESTER,
+                SecretOwnerRole.REQUESTER,
                 secretCount
         );
 
@@ -201,9 +195,9 @@ public class AppRuntimeSecretController {
         }
 
         if (teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.REQUESTER,
+                SecretOwnerRole.REQUESTER,
                 requesterAddress,
                 secretIndex)) {
             log.error("Unauthorized to addAppRequesterAppRuntimeSecret: " +
@@ -216,7 +210,7 @@ public class AppRuntimeSecretController {
         final Optional<TeeTaskRuntimeSecretCount> oAllowedSecretsCount =
                 teeTaskRuntimeSecretCountService.getAppRuntimeSecretCount(
                         appAddress,
-                        OwnerRole.REQUESTER
+                        SecretOwnerRole.REQUESTER
                 );
 
         if (oAllowedSecretsCount.isEmpty()) {
@@ -237,9 +231,9 @@ public class AppRuntimeSecretController {
         }
 
         teeTaskRuntimeSecretService.encryptAndSaveSecret(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.REQUESTER,
+                SecretOwnerRole.REQUESTER,
                 requesterAddress,
                 secretIndex,
                 secretValue
