@@ -50,6 +50,14 @@ public class EthereumCredentials {
         this.setPlainTextPrivateKey(privateKey);
     }
 
+    /**
+     * Build EthereumCredentials from a random private key (generated from a
+     * secure random source).
+     *
+     * @return Ethereum credentials
+     * @throws java.security.GeneralSecurityException exception if failed to
+     *                                                generate credentials
+     */
     public static EthereumCredentials generate() throws java.security.GeneralSecurityException {
         ECKeyPair randomEcKeyPair = Keys.createEcKeyPair();
         String privateKey =
