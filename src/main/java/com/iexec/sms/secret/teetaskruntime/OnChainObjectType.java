@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.QueryByExampleExecutor;
-
-public interface TeeTaskRuntimeSecretRepository extends CrudRepository<TeeTaskRuntimeSecret, String>, QueryByExampleExecutor<TeeTaskRuntimeSecret> {
+public enum OnChainObjectType {
+    APPLICATION
 }

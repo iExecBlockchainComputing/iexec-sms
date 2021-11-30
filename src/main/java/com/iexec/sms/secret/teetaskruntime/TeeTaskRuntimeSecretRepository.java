@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.teetaskruntime;
 
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.QueryByExampleExecutor;
 
-import java.util.Optional;
-
-public interface TeeTaskRuntimeSecretCountRepository extends CrudRepository<TeeTaskRuntimeSecretCount, String> {
-    Optional<TeeTaskRuntimeSecretCount> findByAppAddressAndSecretOwnerRole(
-            String appAddress,
-            OwnerRole secretOwnerRole
-    );
+public interface TeeTaskRuntimeSecretRepository extends CrudRepository<TeeTaskRuntimeSecret, String>, QueryByExampleExecutor<TeeTaskRuntimeSecret> {
 }
