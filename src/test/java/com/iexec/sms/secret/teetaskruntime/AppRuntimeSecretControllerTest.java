@@ -613,7 +613,7 @@ class AppRuntimeSecretControllerTest {
     @Test
     void requesterSecretShouldExist() {
         long secretIndex = 0;
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<Void> result =
@@ -621,13 +621,13 @@ class AppRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
     }
 
     @Test
     void requesterSecretShouldNotExist() {
         long secretIndex = 0;
-        when(teeTaskRuntimeSecretService.isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+        when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<Void> result =
@@ -635,7 +635,7 @@ class AppRuntimeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.notFound().build());
         verify(teeTaskRuntimeSecretService, times(1))
-                .isSecretPresent(DeployedObjectType.APPLICATION, APP_ADDRESS, OwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
     }
     // endregion
 }

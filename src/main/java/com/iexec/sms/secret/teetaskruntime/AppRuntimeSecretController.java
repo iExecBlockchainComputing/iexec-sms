@@ -247,9 +247,9 @@ public class AppRuntimeSecretController {
             @PathVariable String appAddress,
             @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
-                DeployedObjectType.APPLICATION,
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                OwnerRole.REQUESTER,
+                SecretOwnerRole.REQUESTER,
                 requesterAddress,
                 secretIndex
         );
