@@ -1,6 +1,9 @@
 package com.iexec.sms.secret.teetaskruntime;
 
+import com.iexec.common.contract.generated.Ownable;
 import com.iexec.sms.authorization.AuthorizationService;
+import com.iexec.sms.blockchain.IexecHubService;
+import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,7 @@ class AppRuntimeSecretControllerTest {
     private static final String TOO_LONG_SECRET_VALUE = new String(new byte[4097]);
     private static final String CHALLENGE = "challenge";
     private static final Map<String, String> INVALID_AUTHORIZATION_PAYLOAD = createErrorPayload("Invalid authorization");
+    private static final Ownable APP_CONTRACT = mockAppContract();
 
     @Mock
     TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
@@ -33,6 +37,9 @@ class AppRuntimeSecretControllerTest {
 
     @Mock
     AuthorizationService authorizationService;
+
+    @Mock
+    IexecHubService iexecHubService;
 
     @InjectMocks
     AppRuntimeSecretController appRuntimeSecretController;
@@ -315,6 +322,7 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
                 .thenReturn(true);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(APP_CONTRACT);
         when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
         when(teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
@@ -335,6 +343,8 @@ class AppRuntimeSecretControllerTest {
                 .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(1))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(1))
+                .getOwnableContract(APP_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(1)).
@@ -384,6 +394,7 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
                 .thenReturn(true);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(APP_CONTRACT);
         when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(true);
 
@@ -401,6 +412,8 @@ class AppRuntimeSecretControllerTest {
                 .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(1))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(1))
+                .getOwnableContract(APP_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(0)).
@@ -452,6 +465,7 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
                 .thenReturn(true);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(APP_CONTRACT);
         when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
         when(teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
@@ -472,6 +486,8 @@ class AppRuntimeSecretControllerTest {
                 .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(1))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(1))
+                .getOwnableContract(APP_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(1)).
@@ -500,6 +516,8 @@ class AppRuntimeSecretControllerTest {
                 .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(0))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(0))
+                .getOwnableContract(APP_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(0))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(0)).
@@ -527,6 +545,8 @@ class AppRuntimeSecretControllerTest {
                 .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(0))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(0))
+                .getOwnableContract(APP_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(0))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(0)).
@@ -544,6 +564,7 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
                 .thenReturn(true);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(APP_CONTRACT);
         when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
         when(teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
@@ -564,6 +585,7 @@ class AppRuntimeSecretControllerTest {
                 getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(1)).
                 isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(APP_CONTRACT);
         verify(teeTaskRuntimeSecretService, times(1)).
                 isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(1)).
@@ -581,6 +603,7 @@ class AppRuntimeSecretControllerTest {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
                 .thenReturn(true);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(APP_CONTRACT);
         when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
                 .thenReturn(false);
         when(teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
@@ -601,9 +624,51 @@ class AppRuntimeSecretControllerTest {
                 getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
         verify(authorizationService, times(1)).
                 isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(1))
+                .getOwnableContract(APP_ADDRESS);
         verify(teeTaskRuntimeSecretService, times(1)).
                 isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
         verify(teeTaskRuntimeSecretCountService, times(1)).
+                getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER);
+        verify(teeTaskRuntimeSecretService, times(0))
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+    }
+
+    @Test
+    void shouldNotAddRequesterSecretSinceAppNotExist() {
+        long secretIndex = 0;
+        final String secretValue = COMMON_SECRET_VALUE;
+
+        when(authorizationService.getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+                .thenReturn(true);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS)).thenReturn(null);
+        when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+                .thenReturn(false);
+        when(teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
+                .thenReturn(Optional.of(TeeTaskRuntimeSecretCount.builder().secretCount(1).build()));
+        doReturn(true).when(teeTaskRuntimeSecretService)
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+
+        ResponseEntity<Map<String, String>> result = appRuntimeSecretController.addRequesterAppRuntimeSecret(
+                AUTHORIZATION,
+                REQUESTER_ADDRESS,
+                APP_ADDRESS,
+                secretIndex,
+                secretValue
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorPayload("App does not exist")));
+        verify(authorizationService, times(1))
+                .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
+        verify(authorizationService, times(1))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(1))
+                .getOwnableContract(APP_ADDRESS);
+        verify(teeTaskRuntimeSecretService, times(0))
+                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
                 getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
@@ -642,5 +707,12 @@ class AppRuntimeSecretControllerTest {
 
     private static Map<String, String> createErrorPayload(String errorMessage) {
         return Map.of("error", errorMessage);
+    }
+
+    @SneakyThrows
+    private static Ownable mockAppContract() {
+        final Ownable appContract = mock(Ownable.class);
+        when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
+        return appContract;
     }
 }

@@ -16,7 +16,9 @@
 
 package com.iexec.sms.secret.teetaskruntime;
 
+import com.iexec.common.contract.generated.Ownable;
 import com.iexec.sms.authorization.AuthorizationService;
+import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.SecretUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -33,15 +36,18 @@ public class AppRuntimeSecretController {
     private final AuthorizationService authorizationService;
     private final TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
     private final TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService;
+    private final IexecHubService iexecHubService;
 
     private static final Map<String, String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
     public AppRuntimeSecretController(AuthorizationService authorizationService,
                                       TeeTaskRuntimeSecretService teeTaskRuntimeSecretService,
-                                      TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService) {
+                                      TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService,
+                                      IexecHubService iexecHubService) {
         this.authorizationService = authorizationService;
         this.teeTaskRuntimeSecretService = teeTaskRuntimeSecretService;
         this.teeTaskRuntimeSecretCountService = teeTaskRuntimeSecretCountService;
+        this.iexecHubService = iexecHubService;
     }
 
     // region App developer endpoints
@@ -213,6 +219,16 @@ public class AppRuntimeSecretController {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(invalidAuthorizationPayload);
+        }
+
+        final Ownable appContract = iexecHubService.getOwnableContract(appAddress);
+        if (appContract == null || !Objects.equals(appContract.getContractAddress(), appAddress)) {
+            log.debug("App does not exist" +
+                            " [requesterAddress:{}, appAddress:{}]",
+                    requesterAddress, appAddress);
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(createErrorPayload("App does not exist"));
         }
 
         if (teeTaskRuntimeSecretService.isSecretPresent(
