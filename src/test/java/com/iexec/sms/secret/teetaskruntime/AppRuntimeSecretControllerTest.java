@@ -709,7 +709,6 @@ class AppRuntimeSecretControllerTest {
         return Map.of("error", errorMessage);
     }
 
-    @SneakyThrows
     private static Ownable mockAppContract() {
         final Ownable appContract = mock(Ownable.class);
         when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);

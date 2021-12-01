@@ -16,6 +16,7 @@
 
 package com.iexec.sms.secret;
 
+import com.iexec.common.contract.generated.Ownable;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
@@ -26,6 +27,7 @@ import com.iexec.sms.secret.teetaskruntime.TeeTaskRuntimeSecret;
 import com.iexec.sms.secret.teetaskruntime.TeeTaskRuntimeSecretRepository;
 import feign.FeignException;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -38,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
@@ -58,6 +61,14 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
 
     @Autowired
     private TeeTaskRuntimeSecretRepository repository;
+
+    @BeforeEach
+    private void setUp() {
+        final Ownable appContract = mock(Ownable.class);
+        when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
+        when(iexecHubService.getOwnableContract(APP_ADDRESS))
+                .thenReturn(appContract);
+    }
 
     @Test
     void shouldAddNewRuntimeSecrets() {
