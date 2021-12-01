@@ -16,7 +16,6 @@
 
 package com.iexec.sms.secret.teetaskruntime;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,9 +28,7 @@ import javax.persistence.Id;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Builder
 public class TeeTaskRuntimeSecret {
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -52,6 +49,7 @@ public class TeeTaskRuntimeSecret {
     @Column(columnDefinition = "LONGTEXT")
     private String value;
 
+    @Builder
     public TeeTaskRuntimeSecret(
             OnChainObjectType onChainObjectType,
             String onChainObjectAddress,
