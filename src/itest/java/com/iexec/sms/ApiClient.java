@@ -20,6 +20,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @FeignClient(
         name = "apiClient",
         url = ApiClient.API_URL)
@@ -29,13 +31,35 @@ public interface ApiClient {
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
     ResponseEntity<String> addAppDeveloperAppRuntimeSecret(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable("appAddress") String appAddress,
-            @PathVariable("secretIndex") long secretIndex,
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex,
             @RequestBody String secretValue
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     ResponseEntity<Void> isAppDeveloperAppRuntimeSecretPresent(
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex
+    );
+
+    @PostMapping("/{appAddress}/requesters/secrets")
+    ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable String appAddress,
+            @RequestBody int secretCount);
+
+    @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
+    ResponseEntity<String> addAppRequesterAppRuntimeSecret(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable String requesterAddress,
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex,
+            @RequestBody String secretValue
+    );
+
+    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
+    ResponseEntity<Void> isAppRequesterAppRuntimeSecretPresent(
+            @PathVariable String requesterAddress,
             @PathVariable String appAddress,
             @PathVariable long secretIndex
     );
