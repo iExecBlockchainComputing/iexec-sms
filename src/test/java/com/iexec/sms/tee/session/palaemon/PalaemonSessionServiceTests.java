@@ -204,14 +204,15 @@ public class PalaemonSessionServiceTests {
                 null,
                 secretIndex,
                 true))
-                .thenReturn(Optional.of(new TeeTaskRuntimeSecret(
-                        OnChainObjectType.APPLICATION,
-                        APP_ADDRESS,
-                        SecretOwnerRole.APPLICATION_DEVELOPER,
-                        null,
-                        secretIndex,
-                        APP_DEVELOPER_SECRET_VALUE
-                )));
+                .thenReturn(Optional.of(TeeTaskRuntimeSecret
+                        .builder()
+                        .onChainObjectType(OnChainObjectType.APPLICATION)
+                        .onChainObjectAddress(APP_ADDRESS)
+                        .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
+                        .index(secretIndex)
+                        .value(APP_DEVELOPER_SECRET_VALUE)
+                        .build()
+                ));
         when(teeTaskRuntimeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
@@ -219,14 +220,16 @@ public class PalaemonSessionServiceTests {
                 REQUESTER,
                 secretIndex,
                 true))
-                .thenReturn(Optional.of(new TeeTaskRuntimeSecret(
-                        OnChainObjectType.APPLICATION,
-                        APP_ADDRESS,
-                        SecretOwnerRole.REQUESTER,
-                        REQUESTER,
-                        secretIndex,
-                        REQUESTER_SECRET_VALUE
-                )));
+                .thenReturn(Optional.of(TeeTaskRuntimeSecret
+                        .builder()
+                        .onChainObjectType(OnChainObjectType.APPLICATION)
+                        .onChainObjectAddress(APP_ADDRESS)
+                        .secretOwnerRole(SecretOwnerRole.REQUESTER)
+                        .fixedSecretOwner(REQUESTER)
+                        .index(secretIndex)
+                        .value(REQUESTER_SECRET_VALUE)
+                        .build()
+                ));
 
         Map<String, Object> tokens =
                 palaemonSessionService.getAppPalaemonTokens(request);

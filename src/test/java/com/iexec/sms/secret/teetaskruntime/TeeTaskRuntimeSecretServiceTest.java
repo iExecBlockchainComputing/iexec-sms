@@ -14,13 +14,14 @@ class TeeTaskRuntimeSecretServiceTest {
     private static final String APP_ADDRESS = "appAddress";
     private static final String DECRYPTED_SECRET_VALUE = "I'm a secret.";
     private static final String ENCRYPTED_SECRET_VALUE = "I'm an encrypted secret.";
-    private static final TeeTaskRuntimeSecret RUNTIME_SECRET = new TeeTaskRuntimeSecret(
-            OnChainObjectType.APPLICATION,
-            APP_ADDRESS.toLowerCase(),
-            SecretOwnerRole.APPLICATION_DEVELOPER,
-            null,
-            0,
-            ENCRYPTED_SECRET_VALUE);
+    private static final TeeTaskRuntimeSecret RUNTIME_SECRET = TeeTaskRuntimeSecret
+            .builder()
+            .onChainObjectType(OnChainObjectType.APPLICATION)
+            .onChainObjectAddress(APP_ADDRESS.toLowerCase())
+            .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
+            .index(0)
+            .value(ENCRYPTED_SECRET_VALUE)
+            .build();
 
     @Mock
     TeeTaskRuntimeSecretRepository teeTaskRuntimeSecretRepository;

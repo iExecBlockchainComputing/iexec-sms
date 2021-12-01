@@ -83,14 +83,15 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
                 .withIgnorePaths("value");
         final Optional<TeeTaskRuntimeSecret> appDeveloperSecret = repository.findOne(
-                Example.of(new TeeTaskRuntimeSecret(
-                        OnChainObjectType.APPLICATION,
-                        appAddress,
-                        SecretOwnerRole.APPLICATION_DEVELOPER,
-                        null,
-                        secretIndex,
-                        null
-                ), exampleMatcher)
+                Example.of(TeeTaskRuntimeSecret
+                                .builder()
+                                .onChainObjectType(OnChainObjectType.APPLICATION)
+                                .onChainObjectAddress(appAddress)
+                                .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
+                                .index(secretIndex)
+                                .build(),
+                        exampleMatcher
+                )
         );
         if (appDeveloperSecret.isEmpty()) {
             // Could be something like `Assertions.assertThat(appDeveloperSecret).isPresent()`
@@ -105,14 +106,15 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
         final Optional<TeeTaskRuntimeSecret> requesterSecret = repository.findOne(
-                Example.of(new TeeTaskRuntimeSecret(
-                        OnChainObjectType.APPLICATION,
-                        appAddress,
-                        SecretOwnerRole.REQUESTER,
-                        requesterAddress,
-                        secretIndex,
-                        null
-                ), exampleMatcher)
+                Example.of(TeeTaskRuntimeSecret
+                                .builder()
+                                .onChainObjectType(OnChainObjectType.APPLICATION)
+                                .onChainObjectAddress(appAddress)
+                                .secretOwnerRole(SecretOwnerRole.REQUESTER)
+                                .fixedSecretOwner(requesterAddress)
+                                .index(secretIndex)
+                                .build(),
+                        exampleMatcher)
         );
         if (requesterSecret.isEmpty()) {
             // Could be something like `Assertions.assertThat(requesterSecret).isPresent()`

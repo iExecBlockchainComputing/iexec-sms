@@ -43,20 +43,20 @@ public class TeeTaskRuntimeSecretService {
      */
     public Optional<TeeTaskRuntimeSecret> getSecret(
             OnChainObjectType onChainObjectType,
-            String deployedObjectAddress,
+            String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String secretOwner,
             long secretIndex,
             boolean shouldDecryptValue) {
-        deployedObjectAddress = deployedObjectAddress.toLowerCase();
-        final TeeTaskRuntimeSecret wantedSecret = new TeeTaskRuntimeSecret(
-                onChainObjectType,
-                deployedObjectAddress,
-                secretOwnerRole,
-                secretOwner,
-                secretIndex,
-                null
-        );
+        onChainObjectAddress = onChainObjectAddress.toLowerCase();
+        final TeeTaskRuntimeSecret wantedSecret = TeeTaskRuntimeSecret
+                .builder()
+                .onChainObjectType(onChainObjectType)
+                .onChainObjectAddress(onChainObjectAddress)
+                .secretOwnerRole(secretOwnerRole)
+                .fixedSecretOwner(secretOwner)
+                .index(secretIndex)
+                .build();
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
                 .withIgnorePaths("value");
         final Optional<TeeTaskRuntimeSecret> oSecret = teeTaskRuntimeSecretRepository
@@ -98,33 +98,34 @@ public class TeeTaskRuntimeSecretService {
      * @return {@code false} if the secret already exists, {@code true} otherwise.
      */
     public boolean encryptAndSaveSecret(OnChainObjectType onChainObjectType,
-                                        String deployedObjectAddress,
+                                        String onChainObjectAddress,
                                         SecretOwnerRole secretOwnerRole,
                                         String secretOwner,
                                         long secretIndex,
                                         String secretValue) {
-        if (isSecretPresent(onChainObjectType, deployedObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
-            final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
-                    onChainObjectType,
-                    deployedObjectAddress,
-                    secretOwnerRole,
-                    secretOwner,
-                    secretIndex,
-                    null
-            );
+        if (isSecretPresent(onChainObjectType, onChainObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
+            final TeeTaskRuntimeSecret secret = TeeTaskRuntimeSecret
+                    .builder()
+                    .onChainObjectType(onChainObjectType)
+                    .onChainObjectAddress(onChainObjectAddress)
+                    .secretOwnerRole(secretOwnerRole)
+                    .fixedSecretOwner(secretOwner)
+                    .index(secretIndex)
+                    .build();
             log.info("Tee task runtime secret already exists, can't update it." +
                     "[secret:{}]", secret);
             return false;
         }
-        deployedObjectAddress = deployedObjectAddress.toLowerCase();
-        final TeeTaskRuntimeSecret secret = new TeeTaskRuntimeSecret(
-                onChainObjectType,
-                deployedObjectAddress,
-                secretOwnerRole,
-                secretOwner,
-                secretIndex,
-                encryptionService.encrypt(secretValue)
-        );
+        onChainObjectAddress = onChainObjectAddress.toLowerCase();
+        final TeeTaskRuntimeSecret secret = TeeTaskRuntimeSecret
+                .builder()
+                .onChainObjectType(onChainObjectType)
+                .onChainObjectAddress(onChainObjectAddress)
+                .secretOwnerRole(secretOwnerRole)
+                .fixedSecretOwner(secretOwner)
+                .index(secretIndex)
+                .value(encryptionService.encrypt(secretValue))
+                .build();
         log.info("Adding new tee task runtime secret " +
                         "[secret:{}]", secret);
         teeTaskRuntimeSecretRepository.save(secret);
