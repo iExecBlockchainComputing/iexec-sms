@@ -76,8 +76,8 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
         ResponseEntity<Void> appDeveloperSecretExistence = apiClient.isAppDeveloperAppRuntimeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(appDeveloperSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<Void> appRequesterSecretExistence = apiClient.isAppRequesterAppRuntimeSecretPresent(requesterAddress, appAddress, secretIndex);
-        Assertions.assertThat(appRequesterSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        ResponseEntity<Void> requesterSecretExistence = apiClient.isRequesterAppRuntimeSecretPresent(requesterAddress, appAddress, secretIndex);
+        Assertions.assertThat(requesterSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secrets have been added to the database
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
@@ -104,7 +104,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
-        final Optional<TeeTaskRuntimeSecret> appRequesterSecret = repository.findOne(
+        final Optional<TeeTaskRuntimeSecret> requesterSecret = repository.findOne(
                 Example.of(new TeeTaskRuntimeSecret(
                         OnChainObjectType.APPLICATION,
                         appAddress,
@@ -114,17 +114,17 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
                         null
                 ), exampleMatcher)
         );
-        if (appRequesterSecret.isEmpty()) {
-            // Could be something like `Assertions.assertThat(appRequesterSecret).isPresent()`
-            // but Sonar needs a call to `appRequesterSecret.isEmpty()` to avoid triggering a warning.
+        if (requesterSecret.isEmpty()) {
+            // Could be something like `Assertions.assertThat(requesterSecret).isPresent()`
+            // but Sonar needs a call to `requesterSecret.isEmpty()` to avoid triggering a warning.
             Assertions.fail("An app requester secret was expected but none has been retrieved.");
             return;
         }
-        Assertions.assertThat(appRequesterSecret.get().getId()).isNotBlank();
-        Assertions.assertThat(appRequesterSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
-        Assertions.assertThat(appRequesterSecret.get().getIndex()).isZero();
-        Assertions.assertThat(appRequesterSecret.get().getValue()).isNotEqualTo(secretValue);
-        Assertions.assertThat(appRequesterSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
+        Assertions.assertThat(requesterSecret.get().getId()).isNotBlank();
+        Assertions.assertThat(requesterSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
+        Assertions.assertThat(requesterSecret.get().getIndex()).isZero();
+        Assertions.assertThat(requesterSecret.get().getValue()).isNotEqualTo(secretValue);
+        Assertions.assertThat(requesterSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
         // We shouldn't be able to add a new secrets to the database with the same IDs
         try {
@@ -135,8 +135,8 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
             // Having a Conflict exception is what we expect there.
         }
         try {
-            final String authorization = getAuthorizationForAppRequester(requesterAddress, appAddress, secretIndex, secretValue);
-            apiClient.addAppRequesterAppRuntimeSecret(authorization, requesterAddress, appAddress, secretIndex, secretValue);
+            final String authorization = getAuthorizationForRequester(requesterAddress, appAddress, secretIndex, secretValue);
+            apiClient.addRequesterAppRuntimeSecret(authorization, requesterAddress, appAddress, secretIndex, secretValue);
             Assertions.fail("A second app requester secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
@@ -195,11 +195,11 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
                                        String appAddress,
                                        long secretIndex,
                                        String secretValue) {
-        final String authorization = getAuthorizationForAppRequester(requesterAddress, appAddress, secretIndex, secretValue);
+        final String authorization = getAuthorizationForRequester(requesterAddress, appAddress, secretIndex, secretValue);
 
         // At first, no secret should be in the database
         try {
-            apiClient.isAppRequesterAppRuntimeSecretPresent(requesterAddress, appAddress, secretIndex);
+            apiClient.isRequesterAppRuntimeSecretPresent(requesterAddress, appAddress, secretIndex);
             Assertions.fail("No application requester secret was expected but one has been retrieved.");
         } catch (FeignException.NotFound ignored) {
             // Having a Not Found exception is what we expect there.
@@ -207,7 +207,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
 
         // Add a new secret to the database
         final ResponseEntity<String> secretCreationResult =
-                apiClient.addAppRequesterAppRuntimeSecret(
+                apiClient.addRequesterAppRuntimeSecret(
                         authorization,
                         requesterAddress,
                         appAddress,
@@ -251,7 +251,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
      * Forges an authorization that'll permit adding
      * given requester secret to database.
      */
-    private String getAuthorizationForAppRequester(
+    private String getAuthorizationForRequester(
             String requesterAddress,
             String appAddress,
             long secretIndex,

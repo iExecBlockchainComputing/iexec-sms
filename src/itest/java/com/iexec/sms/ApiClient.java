@@ -49,7 +49,7 @@ public interface ApiClient {
             @RequestBody int secretCount);
 
     @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addAppRequesterAppRuntimeSecret(
+    ResponseEntity<String> addRequesterAppRuntimeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
@@ -58,7 +58,7 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isAppRequesterAppRuntimeSecretPresent(
+    ResponseEntity<Void> isRequesterAppRuntimeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
             @PathVariable long secretIndex
