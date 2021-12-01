@@ -115,7 +115,7 @@ public class AppRuntimeSecretController {
                 .body(createErrorPayload("Secret not found"));
     }
 
-    @PostMapping("/{appAddress}/requesters/secrets")
+    @PostMapping("/apps/{appAddress}/requesters/secrets")
     public ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
