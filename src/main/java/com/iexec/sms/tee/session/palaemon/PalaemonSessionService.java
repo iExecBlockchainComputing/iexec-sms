@@ -78,6 +78,7 @@ public class PalaemonSessionService {
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
     static final String IEXEC_APP_PROVIDER_SECRET_PREFIX = "IEXEC_APP_PROVIDER_SECRET_";
+    static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
@@ -230,7 +231,15 @@ public class PalaemonSessionService {
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
         tokens.put(INPUT_FILE_NAMES, inputFileNames);
 
-        // Add application runtime secrets
+        final Map<String, Object> runtimeSecrets = getApplicationRuntimeSecrets(taskDescription);
+        tokens.putAll(runtimeSecrets);
+
+        return tokens;
+    }
+
+    private Map<String, Object> getApplicationRuntimeSecrets(TaskDescription taskDescription) {
+        Map<String, Object> tokens = new HashMap<>();
+
         final long secretIndex = 0;
         String appProviderSecret0 =
                 teeTaskRuntimeSecretService.getSecret(
@@ -243,6 +252,18 @@ public class PalaemonSessionService {
                         .map(TeeTaskRuntimeSecret::getValue)
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IEXEC_APP_PROVIDER_SECRET_PREFIX + secretIndex, appProviderSecret0);
+
+        String requesterSecret0 =
+                teeTaskRuntimeSecretService.getSecret(
+                                OnChainObjectType.APPLICATION,
+                                taskDescription.getAppAddress(),
+                                SecretOwnerRole.REQUESTER,
+                                taskDescription.getRequester(),
+                                secretIndex,
+                                true)
+                        .map(TeeTaskRuntimeSecret::getValue)
+                        .orElse(EMPTY_YML_VALUE);
+        tokens.put(IEXEC_REQUESTER_SECRET_PREFIX + secretIndex, requesterSecret0);
 
         return tokens;
     }

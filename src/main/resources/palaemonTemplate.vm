@@ -74,6 +74,7 @@ services:
       $key: '$INPUT_FILE_NAMES.get($key)'
       #end
       IEXEC_APP_PROVIDER_SECRET_0: '$IEXEC_APP_PROVIDER_SECRET_0'
+      IEXEC_REQUESTER_SECRET_0: '$IEXEC_REQUESTER_SECRET_0'
 
   #* 
     Post-compute enclave
