@@ -88,7 +88,7 @@ public class PalaemonSessionServiceTests {
     private static final TeeEnclaveConfiguration enclaveConfig =
             mock(TeeEnclaveConfiguration.class);
     private static final String ARGS = "args";
-    private static final String IEXEC_APP_PROVIDER_SECRET_0 = "IEXEC_APP_PROVIDER_SECRET_0";
+    private static final String IEXEC_APP_DEVELOPER_SECRET_0 = "IEXEC_APP_DEVELOPER_SECRET_0";
     private static final String IEXEC_REQUESTER_SECRET_0 = "IEXEC_REQUESTER_SECRET_0";
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
@@ -240,7 +240,7 @@ public class PalaemonSessionServiceTests {
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
         assertThat(tokens)
-                .containsEntry(IEXEC_APP_PROVIDER_SECRET_0, APP_DEVELOPER_SECRET_VALUE)
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE)
                 .containsEntry(IEXEC_REQUESTER_SECRET_0, REQUESTER_SECRET_VALUE);
     }
 
@@ -281,7 +281,7 @@ public class PalaemonSessionServiceTests {
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
         assertThat(tokens)
-                .containsEntry(IEXEC_APP_PROVIDER_SECRET_0, "")
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
                 .containsEntry(IEXEC_REQUESTER_SECRET_0, "");
     }
     @Test
