@@ -98,11 +98,11 @@ public class AppRuntimeSecretController {
                 secretIndex
         );
         if (isSecretPresent) {
-            log.info("App developer secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+            log.debug("App developer secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
             return ResponseEntity.noContent().build();
         }
 
-        log.info("App developer secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+        log.debug("App developer secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
         return ResponseEntity.notFound().build();
     }
 
@@ -130,7 +130,7 @@ public class AppRuntimeSecretController {
                         SecretOwnerRole.REQUESTER
                 );
         if (isCountAlreadyPresent) {
-            log.info("Can't add app requester app secret count as it already exist"
+            log.debug("Can't add app requester app secret count as it already exist"
             + " [appAddress:{}]", appAddress);
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret count already exists
         }
@@ -163,14 +163,14 @@ public class AppRuntimeSecretController {
                                                                   @RequestBody String secretValue) {
         // TODO: remove following bloc once functioning has been validated
         if (secretIndex > 0) {
-            log.error("Can't add more than a single app requester secret as of now." +
+            log.debug("Can't add more than a single app requester secret as of now." +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
                     requesterAddress, appAddress, secretIndex);
             return ResponseEntity.badRequest().build();
         }
 
         if (secretIndex < 0) {
-            log.error("Negative index are forbidden for app requester secrets." +
+            log.debug("Negative index are forbidden for app requester secrets." +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
                     requesterAddress, appAddress, secretIndex);
             return ResponseEntity.badRequest().build();
@@ -200,8 +200,7 @@ public class AppRuntimeSecretController {
                 SecretOwnerRole.REQUESTER,
                 requesterAddress,
                 secretIndex)) {
-            log.error("Unauthorized to addRequesterAppRuntimeSecret: " +
-                            "secret already exists" +
+            log.debug("Can't add requester secret as it already exists" +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
                     requesterAddress, appAddress, secretIndex);
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
@@ -214,8 +213,7 @@ public class AppRuntimeSecretController {
                 );
 
         if (oAllowedSecretsCount.isEmpty()) {
-            log.error("Unauthorized to addRequesterAppRuntimeSecret: " +
-                            "no secret count has been provided" +
+            log.error("Can't add requester secret as no secret count has been provided" +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
                     requesterAddress, appAddress, secretIndex);
             return ResponseEntity.badRequest().build();
@@ -223,8 +221,7 @@ public class AppRuntimeSecretController {
 
         final Integer allowedSecretsCount = oAllowedSecretsCount.get().getSecretCount();
         if (secretIndex >= allowedSecretsCount) {
-            log.error("Unauthorized to addRequesterAppRuntimeSecret: " +
-                            "secret index is greater than allowed secrets count" +
+            log.error("Can't add requester secret as index is greater than allowed secrets count" +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}, secretCount:{}]",
                     requesterAddress, appAddress, secretIndex, allowedSecretsCount);
             return ResponseEntity.badRequest().build();
@@ -254,13 +251,13 @@ public class AppRuntimeSecretController {
                 secretIndex
         );
         if (isSecretPresent) {
-            log.info("App requester secret found" +
+            log.debug("App requester secret found" +
                             " [requester: {}, appAddress: {}, secretIndex: {}]",
                     requesterAddress, appAddress, secretIndex);
             return ResponseEntity.noContent().build();
         }
 
-        log.info("App developer secret not found " +
+        log.debug("App developer secret not found " +
                         " [requester: {}, appAddress: {}, secretIndex: {}]",
                 requesterAddress, appAddress, secretIndex);
         return ResponseEntity.notFound().build();
