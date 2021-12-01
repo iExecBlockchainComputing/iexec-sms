@@ -116,7 +116,7 @@ public class AppRuntimeSecretController {
     }
 
     @PostMapping("/{appAddress}/requesters/secrets")
-    public ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
+    public ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount) {
@@ -136,7 +136,7 @@ public class AppRuntimeSecretController {
         }
 
         final boolean isCountAlreadyPresent = teeTaskRuntimeSecretCountService
-                .isAppRuntimeSecretCountPresent(
+                .isMaxAppRuntimeSecretCountPresent(
                         appAddress,
                         SecretOwnerRole.REQUESTER
                 );
@@ -148,7 +148,7 @@ public class AppRuntimeSecretController {
                     .body(createErrorPayload("Secret count already exists"));
         }
 
-        final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setAppRuntimeSecretCount(
+        final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setMaxAppRuntimeSecretCount(
                 appAddress,
                 SecretOwnerRole.REQUESTER,
                 secretCount
@@ -230,7 +230,7 @@ public class AppRuntimeSecretController {
         }
 
         final Optional<TeeTaskRuntimeSecretCount> oAllowedSecretsCount =
-                teeTaskRuntimeSecretCountService.getAppRuntimeSecretCount(
+                teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(
                         appAddress,
                         SecretOwnerRole.REQUESTER
                 );
