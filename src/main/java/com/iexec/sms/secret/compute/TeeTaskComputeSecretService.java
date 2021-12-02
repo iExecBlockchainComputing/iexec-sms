@@ -113,7 +113,7 @@ public class TeeTaskComputeSecretService {
                     .index(secretIndex)
                     .build();
             log.info("Tee task compute secret already exists, can't update it." +
-                    "[secret:{}]", secret);
+                    " [secret:{}]", secret);
             return false;
         }
         onChainObjectAddress = onChainObjectAddress.toLowerCase();
@@ -126,8 +126,8 @@ public class TeeTaskComputeSecretService {
                 .index(secretIndex)
                 .value(encryptionService.encrypt(secretValue))
                 .build();
-        log.info("Adding new tee task compute secret " +
-                        "[secret:{}]", secret);
+        log.info("Adding new tee task compute secret" +
+                        " [secret:{}]", secret);
         teeTaskComputeSecretRepository.save(secret);
         return true;
     }
