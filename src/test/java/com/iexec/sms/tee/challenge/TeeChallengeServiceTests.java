@@ -38,9 +38,7 @@ public class TeeChallengeServiceTests {
 
     private final static String TASK_ID = "0x123";
     private final static String PLAIN_PRIVATE = "plainPrivate";
-    private final static String PLAIN_PUBLIC = "plainPublic";
     private final static String ENC_PRIVATE = "encPrivate";
-    private final static String ENC_PUBLIC = "encPublic";
 
     @Mock
     private TeeChallengeRepository teeChallengeRepository;
@@ -58,7 +56,7 @@ public class TeeChallengeServiceTests {
 
     private TeeChallenge getEncryptedTeeChallengeStub() throws Exception {
         TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
-        teeChallenge.getCredentials().setEncryptedKeys(ENC_PRIVATE, ENC_PUBLIC);
+        teeChallenge.getCredentials().setEncryptedPrivateKey(ENC_PRIVATE);
         return teeChallenge;
     }
 
@@ -68,8 +66,8 @@ public class TeeChallengeServiceTests {
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.of(encryptedTeeChallengeStub));
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
+        assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
-        assertThat(oTeeChallenge.get().getCredentials().getPublicKey()).isEqualTo(ENC_PUBLIC);
         verify(encryptionService, never()).decrypt(anyString());
     }
 
@@ -77,24 +75,24 @@ public class TeeChallengeServiceTests {
     public void shouldGetExistingChallengeAndDecryptKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.of(encryptedTeeChallengeStub));
-        when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE, PLAIN_PUBLIC);
+        when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
+        assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
-        assertThat(oTeeChallenge.get().getCredentials().getPublicKey()).isEqualTo(PLAIN_PUBLIC);
-        verify(encryptionService, times(2)).decrypt(anyString());
+        verify(encryptionService, times(1)).decrypt(anyString());
     }
 
     @Test
     public void shouldCreateNewChallengeWithoutDecryptingKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.empty());
-        when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE, ENC_PUBLIC);
+        when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
         when(teeChallengeRepository.save(any())).thenReturn(encryptedTeeChallengeStub);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
+        assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
-        assertThat(oTeeChallenge.get().getCredentials().getPublicKey()).isEqualTo(ENC_PUBLIC);
         verify(encryptionService, never()).decrypt(anyString());
     }
 
@@ -102,33 +100,31 @@ public class TeeChallengeServiceTests {
     public void shouldCreateNewChallengeAndDecryptKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.empty());
-        when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE, ENC_PUBLIC);
+        when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
         when(teeChallengeRepository.save(any())).thenReturn(encryptedTeeChallengeStub);
-        when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE, PLAIN_PUBLIC);
+        when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
+        assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
-        assertThat(oTeeChallenge.get().getCredentials().getPublicKey()).isEqualTo(PLAIN_PUBLIC);
     }
 
     @Test
     public void shouldEncryptChallengeKeys() throws Exception {
         TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
-        when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE, ENC_PUBLIC);
+        when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
         teeChallengeService.encryptChallengeKeys(teeChallenge);
 
         assertThat(teeChallenge.getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
-        assertThat(teeChallenge.getCredentials().getPublicKey()).isEqualTo(ENC_PUBLIC);
     }
 
     @Test
     public void shouldDecryptChallengeKeys() throws Exception {
         TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
         teeChallenge.getCredentials().setEncrypted(true);
-        when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE, PLAIN_PUBLIC);
+        when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
         teeChallengeService.decryptChallengeKeys(teeChallenge);
         assertThat(teeChallenge.getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
-        assertThat(teeChallenge.getCredentials().getPublicKey()).isEqualTo(PLAIN_PUBLIC);
     }
 }

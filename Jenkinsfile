@@ -14,8 +14,12 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh './gradlew build itest -i --no-daemon'
+                withCredentials([string(credentialsId: 'ADDRESS_SONAR', variable: 'address_sonar'),
+                                 string(credentialsId: 'SONAR_TOKEN',   variable: 'sonar_token')]) {
+                    sh './gradlew clean test itest sonarqube -Dsonar.projectKey=iexec-sms -Dsonar.host.url=$address_sonar -Dsonar.login=$sonar_token --refresh-dependencies --no-daemon'
+                }
                 junit 'build/test-results/**/*.xml'
+                jacoco()
             }
         }
 

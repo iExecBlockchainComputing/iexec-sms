@@ -322,7 +322,7 @@ public class PalaemonSessionServiceTests {
                 .thenReturn(Optional.of(storageSecret));
         
         TeeChallenge challenge = TeeChallenge.builder()
-                .credentials(new EthereumCredentials())
+                .credentials(EthereumCredentials.generate())
                 .build();
         when(teeChallengeService.getOrCreate(TASK_ID, true))
                 .thenReturn(Optional.of(challenge));
