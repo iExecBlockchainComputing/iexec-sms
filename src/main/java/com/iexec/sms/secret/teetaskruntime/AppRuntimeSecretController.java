@@ -81,7 +81,7 @@ public class AppRuntimeSecretController {
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                null,
+                "",
                 secretIndex)) {
             log.error("Can't add app developer secret as it already exists" +
                             " [appAddress:{}, secretIndex:{}]",
@@ -95,7 +95,7 @@ public class AppRuntimeSecretController {
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                null,
+                "",
                 secretIndex,
                 secretValue
         );
@@ -109,7 +109,7 @@ public class AppRuntimeSecretController {
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                null,
+                "",
                 secretIndex
         );
         if (isSecretPresent) {

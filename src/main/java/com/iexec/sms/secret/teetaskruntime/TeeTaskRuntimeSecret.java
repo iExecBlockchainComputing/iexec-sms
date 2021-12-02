@@ -44,7 +44,7 @@ public class TeeTaskRuntimeSecret {
     private String onChainObjectAddress;
     private OnChainObjectType onChainObjectType;
     private SecretOwnerRole secretOwnerRole;
-    private String fixedSecretOwner;  // May be null if the owner is not fixed
+    private String fixedSecretOwner;  // May be empty if the owner is not fixed
     private long index;
     @Column(columnDefinition = "LONGTEXT")
     private String value;
