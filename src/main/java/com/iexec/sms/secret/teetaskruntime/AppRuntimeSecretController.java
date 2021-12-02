@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -175,102 +176,56 @@ public class AppRuntimeSecretController {
     // endregion
 
     // region App requester endpoint
+    private static class RequesterAppRuntimeSecretData {
+        private final String authorization;
+        private final String requesterAddress;
+        private final String appAddress;
+        private final long secretIndex;
+        private final String secretValue;
+
+        public RequesterAppRuntimeSecretData(String authorization, String requesterAddress, String appAddress, long secretIndex, String secretValue) {
+            this.authorization = authorization;
+            this.requesterAddress = requesterAddress;
+            this.appAddress = appAddress;
+            this.secretIndex = secretIndex;
+            this.secretValue = secretValue;
+        }
+    }
+    @FunctionalInterface
+    interface RequesterAppRuntimeSecretValidator {
+        Optional<ResponseEntity<Map<String, String>>> validate(RequesterAppRuntimeSecretData data);
+    }
+
     @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<Map<String, String>> addRequesterAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
                                                                   @PathVariable String requesterAddress,
                                                                   @PathVariable String appAddress,
                                                                   @PathVariable long secretIndex,
                                                                   @RequestBody String secretValue) {
-        // TODO: remove following bloc once functioning has been validated
-        if (secretIndex > 0) {
-            log.debug("Can't add more than a single app requester secret as of now." +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    requesterAddress, appAddress, secretIndex);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload("Can't add more than a single app requester secret as of now."));
-        }
+        List<RequesterAppRuntimeSecretValidator> validationList = List.of(
+                this::checkRequesterAppRuntimeSecretIndex,
+                this::validateRequesterAppRuntimeSecretSize,
+                this::validateRequesterAppRuntimeSecretAuthorization,
+                this::validateRequesterAppRuntimeAppAddress,
+                this::validateRequesterAppRuntimeSecretPresent,
+                this::validateRequesterAppRuntimeSecretIndexAllowed
+        );
 
-        if (secretIndex < 0) {
-            log.debug("Negative index are forbidden for app requester secrets." +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    requesterAddress, appAddress, secretIndex);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload("Negative index are forbidden for app requester secrets."));
-        }
-
-        if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            return ResponseEntity
-                    .status(HttpStatus.PAYLOAD_TOO_LARGE)
-                    .body(createErrorPayload("Secret size should not exceed 4 Kb"));
-        }
-
-        String challenge = authorizationService.getChallengeForSetRequesterAppRuntimeSecret(
+        final RequesterAppRuntimeSecretData data = new RequesterAppRuntimeSecretData(
+                authorization,
                 requesterAddress,
                 appAddress,
                 secretIndex,
                 secretValue
         );
 
-        if (!authorizationService.isSignedByHimself(challenge, authorization, requesterAddress)) {
-            log.error("Unauthorized to addRequesterAppRuntimeSecret" +
-                            " [requesterAddress:{}, appAddress:{}, expectedChallenge:{}]",
-                    requesterAddress, appAddress, challenge);
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(invalidAuthorizationPayload);
-        }
-
-        final Ownable appContract = iexecHubService.getOwnableContract(appAddress);
-        if (appContract == null
-                || BytesUtils.EMPTY_ADDRESS.equals(appAddress)
-                || !Objects.equals(appContract.getContractAddress(), appAddress)) {
-            log.debug("App does not exist" +
-                            " [requesterAddress:{}, appAddress:{}]",
-                    requesterAddress, appAddress);
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(createErrorPayload("App does not exist"));
-        }
-
-        if (teeTaskRuntimeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                appAddress,
-                SecretOwnerRole.REQUESTER,
-                requesterAddress,
-                secretIndex)) {
-            log.debug("Can't add requester secret as it already exists" +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    requesterAddress, appAddress, secretIndex);
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(createErrorPayload("Secret already exists"));
-        }
-
-        final Optional<TeeTaskRuntimeSecretCount> oAllowedSecretsCount =
-                teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(
-                        appAddress,
-                        SecretOwnerRole.REQUESTER
-                );
-
-        if (oAllowedSecretsCount.isEmpty()) {
-            log.error("Can't add requester secret as no secret count has been provided" +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    requesterAddress, appAddress, secretIndex);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload("No secret count has been provided"));
-        }
-
-        final Integer allowedSecretsCount = oAllowedSecretsCount.get().getSecretCount();
-        if (secretIndex >= allowedSecretsCount) {
-            log.error("Can't add requester secret as index is greater than allowed secrets count" +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}, secretCount:{}]",
-                    requesterAddress, appAddress, secretIndex, allowedSecretsCount);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload("Index is greater than allowed secrets count"));
+        final Optional<ResponseEntity<Map<String, String>>> validationIssue = validationList.stream()
+                .map(validator -> validator.validate(data))
+                .filter(Optional::isPresent)
+                .findFirst()
+                .orElse(Optional.empty());
+        if (validationIssue.isPresent()) {
+            return validationIssue.get();
         }
 
         teeTaskRuntimeSecretService.encryptAndSaveSecret(
@@ -282,6 +237,130 @@ public class AppRuntimeSecretController {
                 secretValue
         );
         return ResponseEntity.noContent().build();
+    }
+
+    private Optional<ResponseEntity<Map<String, String>>> checkRequesterAppRuntimeSecretIndex(RequesterAppRuntimeSecretData data) {
+        // TODO: remove following bloc once functioning has been validated
+        if (data.secretIndex > 0) {
+            log.debug("Can't add more than a single app requester secret as of now." +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
+                    data.requesterAddress, data.appAddress, data.secretIndex);
+            return Optional.of(
+                    ResponseEntity
+                            .badRequest()
+                            .body(createErrorPayload("Can't add more than a single app requester secret as of now."))
+            );
+        }
+
+        if (data.secretIndex < 0) {
+            log.debug("Negative index are forbidden for app requester secrets." +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
+                    data.requesterAddress, data.appAddress, data.secretIndex);
+            return Optional.of(
+                    ResponseEntity
+                            .badRequest()
+                            .body(createErrorPayload("Negative index are forbidden for app requester secrets."))
+            );
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretSize(RequesterAppRuntimeSecretData data) {
+        if (!SecretUtils.isSecretSizeValid(data.secretValue)) {
+            return Optional.of(
+                    ResponseEntity
+                            .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                            .body(createErrorPayload("Secret size should not exceed 4 Kb"))
+            );
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretAuthorization(RequesterAppRuntimeSecretData data) {
+        String challenge = authorizationService.getChallengeForSetRequesterAppRuntimeSecret(
+                data.requesterAddress,
+                data.appAddress,
+                data.secretIndex,
+                data.secretValue
+        );
+
+        if (!authorizationService.isSignedByHimself(challenge, data.authorization, data.requesterAddress)) {
+            log.error("Unauthorized to addRequesterAppRuntimeSecret" +
+                            " [requesterAddress:{}, appAddress:{}, expectedChallenge:{}]",
+                    data.requesterAddress, data.appAddress, challenge);
+            return Optional.of(
+                    ResponseEntity
+                            .status(HttpStatus.UNAUTHORIZED)
+                            .body(invalidAuthorizationPayload)
+            );
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeAppAddress(RequesterAppRuntimeSecretData data) {
+        final Ownable appContract = iexecHubService.getOwnableContract(data.appAddress);
+        if (appContract == null
+                || BytesUtils.EMPTY_ADDRESS.equals(data.appAddress)
+                || !Objects.equals(appContract.getContractAddress(), data.appAddress)) {
+            log.debug("App does not exist" +
+                            " [requesterAddress:{}, appAddress:{}]",
+                    data.requesterAddress, data.appAddress);
+            return Optional.of(ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(createErrorPayload("App does not exist"))) ;
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretPresent(RequesterAppRuntimeSecretData data) {
+        if (teeTaskRuntimeSecretService.isSecretPresent(
+                OnChainObjectType.APPLICATION,
+                data.appAddress,
+                SecretOwnerRole.REQUESTER,
+                data.requesterAddress,
+                data.secretIndex)) {
+            log.debug("Can't add requester secret as it already exists" +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
+                    data.requesterAddress, data.appAddress, data.secretIndex);
+            return Optional.of(
+                    ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(createErrorPayload("Secret already exists"))
+            );
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretIndexAllowed(RequesterAppRuntimeSecretData data) {
+        final Optional<TeeTaskRuntimeSecretCount> oAllowedSecretsCount =
+                teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(
+                        data.appAddress,
+                        SecretOwnerRole.REQUESTER
+                );
+
+        if (oAllowedSecretsCount.isEmpty()) {
+            log.error("Can't add requester secret as no secret count has been provided" +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
+                    data.requesterAddress, data.appAddress, data.secretIndex);
+            return Optional.of(
+                    ResponseEntity
+                            .badRequest()
+                            .body(createErrorPayload("No secret count has been provided"))
+            );
+        }
+
+        final Integer allowedSecretsCount = oAllowedSecretsCount.get().getSecretCount();
+        if (data.secretIndex >= allowedSecretsCount) {
+            log.error("Can't add requester secret as index is greater than allowed secrets count" +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}, secretCount:{}]",
+                    data.requesterAddress, data.appAddress, data.secretIndex, allowedSecretsCount);
+            return Optional.of(
+                    ResponseEntity
+                            .badRequest()
+                            .body(createErrorPayload("Index is greater than allowed secrets count"))
+            );
+        }
+        return Optional.empty();
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
