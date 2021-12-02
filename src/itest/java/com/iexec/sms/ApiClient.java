@@ -42,7 +42,7 @@ public interface ApiClient {
             @PathVariable long secretIndex
     );
 
-    @PostMapping("/apps/{appAddress}/requesters/secrets")
+    @PostMapping("/apps/{appAddress}/requesters/secrets-count")
     ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
