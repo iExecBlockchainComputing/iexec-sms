@@ -64,7 +64,7 @@ public class AppComputeSecretController {
                     .body(createErrorPayload("Secret size should not exceed 4 Kb"));
         }
 
-        String challenge = authorizationService.getChallengeForSetAppComputeSecret(appAddress, secretIndex, secretValue);
+        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
             log.error("Unauthorized to addAppDeveloperComputeComputeSecret" +

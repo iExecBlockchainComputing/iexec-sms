@@ -57,7 +57,7 @@ class AppComputeSecretControllerTest {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
@@ -84,7 +84,7 @@ class AppComputeSecretControllerTest {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(false);
@@ -109,7 +109,7 @@ class AppComputeSecretControllerTest {
         long secretIndex = 0;
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
@@ -135,7 +135,7 @@ class AppComputeSecretControllerTest {
         long secretIndex = 0;
         String secretValue = TOO_LONG_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);
@@ -161,7 +161,7 @@ class AppComputeSecretControllerTest {
         long secretIndex = 0;
         String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
                 .thenReturn(true);

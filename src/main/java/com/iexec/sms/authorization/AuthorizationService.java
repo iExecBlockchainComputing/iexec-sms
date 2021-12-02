@@ -130,9 +130,9 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetAppComputeSecret(String appAddress,
-                                                     long secretIndex,
-                                                     String secretValue) {
+    public String getChallengeForSetAppDeveloperAppComputeSecret(String appAddress,
+                                                                 long secretIndex,
+                                                                 String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
