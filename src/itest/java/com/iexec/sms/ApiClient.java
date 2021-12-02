@@ -29,7 +29,7 @@ public interface ApiClient {
     String API_URL = "http://localhost:${local.server.port}";
 
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addAppDeveloperAppRuntimeSecret(
+    ResponseEntity<String> addRequesterAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @PathVariable long secretIndex,
@@ -37,19 +37,19 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isAppDeveloperAppRuntimeSecretPresent(
+    ResponseEntity<Void> isAppDeveloperAppComputeSecretPresent(
             @PathVariable String appAddress,
             @PathVariable long secretIndex
     );
 
     @PostMapping("/apps/{appAddress}/requesters/secrets-count")
-    ResponseEntity<Map<String, String>> setRequesterSecretCountForApp(
+    ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForAppCompute(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount);
 
     @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addRequesterAppRuntimeSecret(
+    ResponseEntity<String> addRequesterAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
@@ -58,7 +58,7 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isRequesterAppRuntimeSecretPresent(
+    ResponseEntity<Void> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
             @PathVariable long secretIndex
