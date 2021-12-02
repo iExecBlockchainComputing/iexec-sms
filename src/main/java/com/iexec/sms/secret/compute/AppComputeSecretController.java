@@ -281,21 +281,28 @@ public class AppComputeSecretController {
 
         // TODO: remove following bloc once functioning has been validated
         if (secretIndex > 0) {
-            log.debug("Can't add more than a single app requester secret as of now." +
+            final String errorMessage = "Can't add more than a single app requester secret as of now.";
+            log.debug(errorMessage +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
                     requesterAddress, appAddress, secretIndex);
-            errors.add("Can't add more than a single app requester secret as of now.");
+            errors.add(errorMessage);
         }
 
         if (secretIndex < 0) {
-            log.debug("Negative index are forbidden for app requester secrets." +
+            final String errorMessage = "Negative index are forbidden for app requester secrets.";
+            log.debug(errorMessage +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
                     requesterAddress, appAddress, secretIndex);
-            errors.add("Negative index are forbidden for app requester secrets.");
+            errors.add(errorMessage);
         }
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            errors.add("Secret size should not exceed 4 Kb");
+            final String errorMessage = "Secret size should not exceed 4 Kb";
+            log.debug(errorMessage +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}, secretLength:{}]",
+                    requesterAddress, appAddress, secretIndex, secretValue.length()
+                    );
+            errors.add(errorMessage);
         }
 
         final Optional<TeeTaskComputeSecretCount> oAllowedSecretsCount =
