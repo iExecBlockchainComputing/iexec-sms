@@ -51,7 +51,7 @@ public class TeeTaskComputeSecretCountService {
                         .build();
         log.info("Adding new app compute secret count" +
                         " [ownerRole:{}, appAddress:{}, maxSecretCount:{}]",
-                SecretOwnerRole.REQUESTER, appAddress, maxSecretCount);
+                secretOwnerRole, appAddress, maxSecretCount);
         teeTaskComputeSecretCountRepository.save(teeTaskComputeSecretCount);
 
         return true;
