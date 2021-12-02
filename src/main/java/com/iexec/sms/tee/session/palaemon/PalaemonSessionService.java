@@ -246,7 +246,7 @@ public class PalaemonSessionService {
                                 OnChainObjectType.APPLICATION,
                                 taskDescription.getAppAddress(),
                                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                                null,
+                                "",
                                 secretIndex,
                                 true)
                         .map(TeeTaskComputeSecret::getValue)

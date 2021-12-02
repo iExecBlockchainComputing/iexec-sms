@@ -201,7 +201,7 @@ public class PalaemonSessionServiceTests {
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                null,
+                "",
                 secretIndex,
                 true))
                 .thenReturn(Optional.of(TeeTaskComputeSecret
