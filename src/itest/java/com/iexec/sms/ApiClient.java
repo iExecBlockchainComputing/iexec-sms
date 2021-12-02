@@ -16,11 +16,10 @@
 
 package com.iexec.sms;
 
+import com.iexec.common.web.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @FeignClient(
         name = "apiClient",
@@ -29,7 +28,7 @@ public interface ApiClient {
     String API_URL = "http://localhost:${local.server.port}";
 
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addRequesterAppComputeSecret(
+    ResponseEntity<ApiResponse<String>> addRequesterAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @PathVariable long secretIndex,
@@ -37,19 +36,19 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isAppDeveloperAppComputeSecretPresent(
+    ResponseEntity<ApiResponse<String>> isAppDeveloperAppComputeSecretPresent(
             @PathVariable String appAddress,
             @PathVariable long secretIndex
     );
 
     @PostMapping("/apps/{appAddress}/requesters/secrets-count")
-    ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForAppCompute(
+    ResponseEntity<ApiResponse<String>> setMaxRequesterSecretCountForAppCompute(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount);
 
     @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addRequesterAppComputeSecret(
+    ResponseEntity<ApiResponse<String>> addRequesterAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
@@ -58,7 +57,7 @@ public interface ApiClient {
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isRequesterAppComputeSecretPresent(
+    ResponseEntity<ApiResponse<String>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
             @PathVariable long secretIndex

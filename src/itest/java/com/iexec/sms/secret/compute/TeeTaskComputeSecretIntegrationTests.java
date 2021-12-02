@@ -18,6 +18,7 @@ package com.iexec.sms.secret.compute;
 
 import com.iexec.common.contract.generated.Ownable;
 import com.iexec.common.utils.HashUtils;
+import com.iexec.common.web.ApiResponse;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
@@ -32,7 +33,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.Hash;
 
-import java.util.Map;
 import java.util.Optional;
 
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
@@ -80,10 +80,10 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         addNewRequesterSecret(requesterAddress, appAddress, secretIndex, secretValue);
 
         // Check the new secrets exists for the API
-        ResponseEntity<Void> appDeveloperSecretExistence = apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
+        ResponseEntity<ApiResponse<String>> appDeveloperSecretExistence = apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(appDeveloperSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<Void> requesterSecretExistence = apiClient.isRequesterAppComputeSecretPresent(requesterAddress, appAddress, secretIndex);
+        ResponseEntity<ApiResponse<String>> requesterSecretExistence = apiClient.isRequesterAppComputeSecretPresent(requesterAddress, appAddress, secretIndex);
         Assertions.assertThat(requesterSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secrets have been added to the database
@@ -184,14 +184,14 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
 
         // Add a new secret to the database
-        final ResponseEntity<String> secretCreationResult = apiClient.addRequesterAppComputeSecret(authorization, appAddress, secretIndex, secretValue);
+        final ResponseEntity<ApiResponse<String>> secretCreationResult = apiClient.addRequesterAppComputeSecret(authorization, appAddress, secretIndex, secretValue);
         Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
     private void setRequesterSecretCount(String appAddress, int secretCount, String ownerAddress) {
         when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
         final String authorization = getAuthorizationForRequesterSecretCount(appAddress, secretCount);
-        final ResponseEntity<Map<String, String>> result = apiClient.setMaxRequesterSecretCountForAppCompute(authorization, appAddress, secretCount);
+        final ResponseEntity<ApiResponse<String>> result = apiClient.setMaxRequesterSecretCountForAppCompute(authorization, appAddress, secretCount);
         Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
@@ -215,7 +215,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
 
         // Add a new secret to the database
-        final ResponseEntity<String> secretCreationResult =
+        final ResponseEntity<ApiResponse<String>> secretCreationResult =
                 apiClient.addRequesterAppComputeSecret(
                         authorization,
                         requesterAddress,

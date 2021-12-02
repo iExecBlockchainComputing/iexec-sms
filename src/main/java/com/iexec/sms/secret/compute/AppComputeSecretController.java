@@ -21,15 +21,13 @@ import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.SecretUtils;
+import com.iexec.common.web.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @CrossOrigin
@@ -40,7 +38,7 @@ public class AppComputeSecretController {
     private final TeeTaskComputeSecretCountService teeTaskComputeSecretCountService;
     private final IexecHubService iexecHubService;
 
-    private static final Map<String, String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
+    private static final ApiResponse<String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
     public AppComputeSecretController(AuthorizationService authorizationService,
                                       TeeTaskComputeSecretService teeTaskComputeSecretService,
@@ -54,7 +52,7 @@ public class AppComputeSecretController {
 
     // region App developer endpoints
     @PostMapping("/apps/{appAddress}/secrets/0")
-    public ResponseEntity<Map<String, String>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<ApiResponse<String>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                                @PathVariable String appAddress,
 //                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
@@ -103,7 +101,7 @@ public class AppComputeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Map<String, String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
+    public ResponseEntity<ApiResponse<String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
                                                                                      @PathVariable long secretIndex) {
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
@@ -124,7 +122,7 @@ public class AppComputeSecretController {
     }
 
     @PostMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForAppCompute(
+    public ResponseEntity<ApiResponse<String>> setMaxRequesterSecretCountForAppCompute(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount) {
@@ -187,12 +185,17 @@ public class AppComputeSecretController {
     }
 
     @GetMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<Map<String, String>> getMaxRequesterSecretCountForAppCompute(@PathVariable String appAddress) {
+    public ResponseEntity<ApiResponse<Integer>> getMaxRequesterSecretCountForAppCompute(@PathVariable String appAddress) {
         final Optional<TeeTaskComputeSecretCount> secretCount =
                 teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(appAddress, SecretOwnerRole.REQUESTER);
         if (secretCount.isPresent()) {
             log.debug("Requester secret count found [appAddress: {}]", appAddress);
-            return ResponseEntity.ok(Map.of("count", secretCount.get().getSecretCount().toString()));
+            return ResponseEntity.ok(
+                    ApiResponse
+                            .<Integer>builder()
+                            .data(secretCount.get().getSecretCount())
+                            .build()
+            );
         }
 
         log.debug("Requester secret count not found [appAddress: {}]", appAddress);
@@ -203,27 +206,8 @@ public class AppComputeSecretController {
     // endregion
 
     // region App requester endpoint
-    private static class RequesterAppComputeSecretData {
-        private final String requesterAddress;
-        private final String appAddress;
-        private final long secretIndex;
-        private final String secretValue;
-
-        public RequesterAppComputeSecretData(String requesterAddress, String appAddress, long secretIndex, String secretValue) {
-            this.requesterAddress = requesterAddress;
-            this.appAddress = appAddress;
-            this.secretIndex = secretIndex;
-            this.secretValue = secretValue;
-        }
-    }
-
-    @FunctionalInterface
-    interface RequesterAppComputeSecretValidator {
-        Optional<ResponseEntity<Map<String, String>>> validate(RequesterAppComputeSecretData data);
-    }
-
     @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Map<String, String>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<ApiResponse<String>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                             @PathVariable String requesterAddress,
                                                                             @PathVariable String appAddress,
                                                                             @PathVariable long secretIndex,
@@ -244,28 +228,37 @@ public class AppComputeSecretController {
                     .body(invalidAuthorizationPayload);
         }
 
-        List<RequesterAppComputeSecretValidator> validationList = List.of(
-                this::validateRequesterAppComputeSecretIndex,
-                this::validateRequesterAppComputeSecretSize,
-                this::validateRequesterAppComputeAppAddress,
-                this::validateRequesterAppComputeSecretAbsent,
-                this::validateRequesterAppComputeSecretIndexAllowed
-        );
+        final Ownable appContract = iexecHubService.getOwnableContract(appAddress);
+        if (appContract == null
+                || BytesUtils.EMPTY_ADDRESS.equals(appAddress)
+                || !Objects.equals(appContract.getContractAddress(), appAddress)) {
+            log.debug("App does not exist" +
+                            " [requesterAddress:{}, appAddress:{}]",
+                    requesterAddress, appAddress);
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(createErrorPayload("App does not exist"));
+        }
 
-        final RequesterAppComputeSecretData data = new RequesterAppComputeSecretData(
-                requesterAddress,
+        final List<String> badRequestError = validateRequesterAppComputeSecret(requesterAddress, appAddress, secretIndex, secretValue);
+        if (!badRequestError.isEmpty()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(badRequestError));
+        }
+
+        if (teeTaskComputeSecretService.isSecretPresent(
+                OnChainObjectType.APPLICATION,
                 appAddress,
-                secretIndex,
-                secretValue
-        );
-
-        final Optional<ResponseEntity<Map<String, String>>> validationIssue = validationList.stream()
-                .map(validator -> validator.validate(data))
-                .filter(Optional::isPresent)
-                .findFirst()
-                .orElse(Optional.empty());
-        if (validationIssue.isPresent()) {
-            return validationIssue.get();
+                SecretOwnerRole.REQUESTER,
+                requesterAddress,
+                secretIndex)) {
+            log.debug("Can't add requester secret as it already exists" +
+                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
+                    requesterAddress, appAddress, secretIndex);
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(createErrorPayload("Secret already exists"));
         }
 
         teeTaskComputeSecretService.encryptAndSaveSecret(
@@ -279,111 +272,58 @@ public class AppComputeSecretController {
         return ResponseEntity.noContent().build();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretIndex(RequesterAppComputeSecretData data) {
+    private List<String> validateRequesterAppComputeSecret(
+            String requesterAddress,
+            String appAddress,
+            long secretIndex,
+            String secretValue) {
+        List<String> errors = new ArrayList<>();
+
         // TODO: remove following bloc once functioning has been validated
-        if (data.secretIndex > 0) {
+        if (secretIndex > 0) {
             log.debug("Can't add more than a single app requester secret as of now." +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    data.requesterAddress, data.appAddress, data.secretIndex);
-            return Optional.of(
-                    ResponseEntity
-                            .badRequest()
-                            .body(createErrorPayload("Can't add more than a single app requester secret as of now."))
-            );
+                    requesterAddress, appAddress, secretIndex);
+            errors.add("Can't add more than a single app requester secret as of now.");
         }
 
-        if (data.secretIndex < 0) {
+        if (secretIndex < 0) {
             log.debug("Negative index are forbidden for app requester secrets." +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    data.requesterAddress, data.appAddress, data.secretIndex);
-            return Optional.of(
-                    ResponseEntity
-                            .badRequest()
-                            .body(createErrorPayload("Negative index are forbidden for app requester secrets."))
-            );
+                    requesterAddress, appAddress, secretIndex);
+            errors.add("Negative index are forbidden for app requester secrets.");
         }
-        return Optional.empty();
-    }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretSize(RequesterAppComputeSecretData data) {
-        if (!SecretUtils.isSecretSizeValid(data.secretValue)) {
-            return Optional.of(
-                    ResponseEntity
-                            .status(HttpStatus.PAYLOAD_TOO_LARGE)
-                            .body(createErrorPayload("Secret size should not exceed 4 Kb"))
-            );
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            errors.add("Secret size should not exceed 4 Kb");
         }
-        return Optional.empty();
-    }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeAppAddress(RequesterAppComputeSecretData data) {
-        final Ownable appContract = iexecHubService.getOwnableContract(data.appAddress);
-        if (appContract == null
-                || BytesUtils.EMPTY_ADDRESS.equals(data.appAddress)
-                || !Objects.equals(appContract.getContractAddress(), data.appAddress)) {
-            log.debug("App does not exist" +
-                            " [requesterAddress:{}, appAddress:{}]",
-                    data.requesterAddress, data.appAddress);
-            return Optional.of(ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(createErrorPayload("App does not exist"))) ;
-        }
-        return Optional.empty();
-    }
-
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretAbsent(RequesterAppComputeSecretData data) {
-        if (teeTaskComputeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                data.appAddress,
-                SecretOwnerRole.REQUESTER,
-                data.requesterAddress,
-                data.secretIndex)) {
-            log.debug("Can't add requester secret as it already exists" +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    data.requesterAddress, data.appAddress, data.secretIndex);
-            return Optional.of(
-                    ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(createErrorPayload("Secret already exists"))
-            );
-        }
-        return Optional.empty();
-    }
-
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretIndexAllowed(RequesterAppComputeSecretData data) {
         final Optional<TeeTaskComputeSecretCount> oAllowedSecretsCount =
                 teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(
-                        data.appAddress,
+                        appAddress,
                         SecretOwnerRole.REQUESTER
                 );
 
         if (oAllowedSecretsCount.isEmpty()) {
             log.error("Can't add requester secret as no secret count has been provided" +
                             " [requesterAddress:{}, appAddress:{}, secretIndex:{}]",
-                    data.requesterAddress, data.appAddress, data.secretIndex);
-            return Optional.of(
-                    ResponseEntity
-                            .badRequest()
-                            .body(createErrorPayload("No secret count has been provided"))
-            );
+                    requesterAddress, appAddress, secretIndex);
+            errors.add("No secret count has been provided");
+        } else {
+            final Integer allowedSecretsCount = oAllowedSecretsCount.get().getSecretCount();
+            if (secretIndex >= allowedSecretsCount) {
+                log.error("Can't add requester secret as index is greater than allowed secrets count" +
+                                " [requesterAddress:{}, appAddress:{}, secretIndex:{}, secretCount:{}]",
+                        requesterAddress, appAddress, secretIndex, allowedSecretsCount);
+                errors.add("Index is greater than allowed secrets count");
+            }
         }
 
-        final Integer allowedSecretsCount = oAllowedSecretsCount.get().getSecretCount();
-        if (data.secretIndex >= allowedSecretsCount) {
-            log.error("Can't add requester secret as index is greater than allowed secrets count" +
-                            " [requesterAddress:{}, appAddress:{}, secretIndex:{}, secretCount:{}]",
-                    data.requesterAddress, data.appAddress, data.secretIndex, allowedSecretsCount);
-            return Optional.of(
-                    ResponseEntity
-                            .badRequest()
-                            .body(createErrorPayload("Index is greater than allowed secrets count"))
-            );
-        }
-        return Optional.empty();
+        return errors;
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Map<String, String>> isRequesterAppComputeSecretPresent(
+    public ResponseEntity<ApiResponse<String>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
             @PathVariable long secretIndex) {
@@ -410,7 +350,14 @@ public class AppComputeSecretController {
     }
     // endregion
 
-    private static Map<String, String> createErrorPayload(String errorMessage) {
-        return Map.of("error", errorMessage);
+    private static <T> ApiResponse<T> createErrorPayload(String errorMessage) {
+        return createErrorPayload(List.of(errorMessage));
+    }
+
+    private static <T> ApiResponse<T> createErrorPayload(List<String> errors) {
+        return ApiResponse
+                .<T>builder()
+                .errors(errors)
+                .build();
     }
 }
