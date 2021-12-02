@@ -215,7 +215,7 @@ public class AppComputeSecretController {
                                                                             @PathVariable long secretIndex,
                                                                             @RequestBody String secretValue) {
         List<RequesterAppComputeSecretValidator> validationList = List.of(
-                this::checkRequesterAppComputeSecretIndex,
+                this::validateRequesterAppComputeSecretIndex,
                 this::validateRequesterAppComputeSecretSize,
                 this::validateRequesterAppComputeSecretAuthorization,
                 this::validateRequesterAppComputeAppAddress,
@@ -251,7 +251,7 @@ public class AppComputeSecretController {
         return ResponseEntity.noContent().build();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> checkRequesterAppComputeSecretIndex(RequesterAppComputeSecretData data) {
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretIndex(RequesterAppComputeSecretData data) {
         // TODO: remove following bloc once functioning has been validated
         if (data.secretIndex > 0) {
             log.debug("Can't add more than a single app requester secret as of now." +
