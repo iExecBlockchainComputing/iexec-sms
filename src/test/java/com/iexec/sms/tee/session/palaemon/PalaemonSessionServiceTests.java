@@ -25,10 +25,10 @@ import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.teetaskruntime.OnChainObjectType;
-import com.iexec.sms.secret.teetaskruntime.SecretOwnerRole;
-import com.iexec.sms.secret.teetaskruntime.TeeTaskRuntimeSecret;
-import com.iexec.sms.secret.teetaskruntime.TeeTaskRuntimeSecretService;
+import com.iexec.sms.secret.compute.OnChainObjectType;
+import com.iexec.sms.secret.compute.SecretOwnerRole;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -116,7 +116,7 @@ public class PalaemonSessionServiceTests {
     @Mock
     private AttestationSecurityConfig attestationSecurityConfig;
     @Mock
-    private TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
+    private TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     private PalaemonSessionService palaemonSessionService;
 
@@ -131,7 +131,7 @@ public class PalaemonSessionServiceTests {
                 teeChallengeService,
                 teeWorkflowConfig,
                 attestationSecurityConfig,
-                teeTaskRuntimeSecretService
+                teeTaskComputeSecretService
         ));
         ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
@@ -197,14 +197,14 @@ public class PalaemonSessionServiceTests {
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
-        when(teeTaskRuntimeSecretService.getSecret(
+        when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
                 secretIndex,
                 true))
-                .thenReturn(Optional.of(TeeTaskRuntimeSecret
+                .thenReturn(Optional.of(TeeTaskComputeSecret
                         .builder()
                         .onChainObjectType(OnChainObjectType.APPLICATION)
                         .onChainObjectAddress(APP_ADDRESS)
@@ -213,14 +213,14 @@ public class PalaemonSessionServiceTests {
                         .value(APP_DEVELOPER_SECRET_VALUE)
                         .build()
                 ));
-        when(teeTaskRuntimeSecretService.getSecret(
+        when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.REQUESTER,
                 REQUESTER,
                 secretIndex,
                 true))
-                .thenReturn(Optional.of(TeeTaskRuntimeSecret
+                .thenReturn(Optional.of(TeeTaskComputeSecret
                         .builder()
                         .onChainObjectType(OnChainObjectType.APPLICATION)
                         .onChainObjectAddress(APP_ADDRESS)
@@ -248,14 +248,14 @@ public class PalaemonSessionServiceTests {
     }
 
     @Test
-    void shouldGetPalaemonTokensWithoutAppRuntimeSecret() throws Exception {
+    void shouldGetPalaemonTokensWithoutAppComputeSecret() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         final int secretIndex = 0;
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
-        when(teeTaskRuntimeSecretService.getSecret(
+        when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
@@ -263,7 +263,7 @@ public class PalaemonSessionServiceTests {
                 secretIndex,
                 true))
                 .thenReturn(Optional.empty());
-        when(teeTaskRuntimeSecretService.getSecret(
+        when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.REQUESTER,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.teetaskruntime;
+package com.iexec.sms.secret.compute;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,36 +23,36 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskRuntimeSecretCountService {
-    protected final TeeTaskRuntimeSecretCountRepository teeTaskRuntimeSecretCountRepository;
+public class TeeTaskComputeSecretCountService {
+    protected final TeeTaskComputeSecretCountRepository teeTaskComputeSecretCountRepository;
 
-    public TeeTaskRuntimeSecretCountService(TeeTaskRuntimeSecretCountRepository teeTaskRuntimeSecretCountRepository) {
-        this.teeTaskRuntimeSecretCountRepository = teeTaskRuntimeSecretCountRepository;
+    public TeeTaskComputeSecretCountService(TeeTaskComputeSecretCountRepository teeTaskComputeSecretCountRepository) {
+        this.teeTaskComputeSecretCountRepository = teeTaskComputeSecretCountRepository;
     }
 
     /**
-     * Defines how many runtime secrets an app can handle.
+     * Defines how many Compute secrets an app can handle.
      *
      * @return {@code true} if {@code maxSecretCount} is positive
      * and has been correctly inserted in DB, {@code false} otherwise
      */
-    public boolean setMaxAppRuntimeSecretCount(String appAddress,
+    public boolean setMaxAppComputeSecretCount(String appAddress,
                                                SecretOwnerRole secretOwnerRole,
                                                Integer maxSecretCount) {
         if (maxSecretCount < 0) {
             return false;
         }
         appAddress = appAddress.toLowerCase();
-        final TeeTaskRuntimeSecretCount teeTaskRuntimeSecretCount =
-                TeeTaskRuntimeSecretCount.builder()
+        final TeeTaskComputeSecretCount teeTaskComputeSecretCount =
+                TeeTaskComputeSecretCount.builder()
                         .appAddress(appAddress)
                         .secretOwnerRole(secretOwnerRole)
                         .secretCount(maxSecretCount)
                         .build();
-        log.info("Adding new app runtime secret count" +
+        log.info("Adding new app compute secret count" +
                         "[ownerRole:{}, appAddress:{}, maxSecretCount:{}]",
                 SecretOwnerRole.REQUESTER, appAddress, maxSecretCount);
-        teeTaskRuntimeSecretCountRepository.save(teeTaskRuntimeSecretCount);
+        teeTaskComputeSecretCountRepository.save(teeTaskComputeSecretCount);
 
         return true;
     }
@@ -60,10 +60,10 @@ public class TeeTaskRuntimeSecretCountService {
     /**
      * Retrieve a max secret count.
      */
-    public Optional<TeeTaskRuntimeSecretCount> getMaxAppRuntimeSecretCount(String appAddress,
+    public Optional<TeeTaskComputeSecretCount> getMaxAppComputeSecretCount(String appAddress,
                                                                            SecretOwnerRole secretOwnerRole) {
         appAddress = appAddress.toLowerCase();
-        return teeTaskRuntimeSecretCountRepository.findByAppAddressAndSecretOwnerRole(
+        return teeTaskComputeSecretCountRepository.findByAppAddressAndSecretOwnerRole(
                 appAddress,
                 secretOwnerRole);
     }
@@ -74,8 +74,8 @@ public class TeeTaskRuntimeSecretCountService {
      * @return {@code true} if the secret count exists in the database,
      * {@code false} otherwise.
      */
-    public boolean isMaxAppRuntimeSecretCountPresent(String appAddress,
+    public boolean isMaxAppComputeSecretCountPresent(String appAddress,
                                                      SecretOwnerRole secretOwnerRole) {
-        return getMaxAppRuntimeSecretCount(appAddress, secretOwnerRole).isPresent();
+        return getMaxAppComputeSecretCount(appAddress, secretOwnerRole).isPresent();
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.teetaskruntime;
+package com.iexec.sms.secret.compute;
 
 import lombok.Builder;
 import lombok.Data;
@@ -29,7 +29,7 @@ import javax.persistence.Id;
 @Data
 @NoArgsConstructor
 @Entity
-public class TeeTaskRuntimeSecret {
+public class TeeTaskComputeSecret {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -50,7 +50,7 @@ public class TeeTaskRuntimeSecret {
     private String value;
 
     @Builder
-    public TeeTaskRuntimeSecret(
+    public TeeTaskComputeSecret(
             OnChainObjectType onChainObjectType,
             String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,

@@ -130,7 +130,7 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetAppRuntimeSecret(String appAddress,
+    public String getChallengeForSetAppComputeSecret(String appAddress,
                                                      long secretIndex,
                                                      String secretValue) {
         return HashUtils.concatenateAndHash(
@@ -140,7 +140,7 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetRequesterAppRuntimeSecretCount(
+    public String getChallengeForSetRequesterAppComputeSecretCount(
             String appAddress,
             Integer secretCount) {
         return HashUtils.concatenateAndHash(
@@ -149,7 +149,7 @@ public class AuthorizationService {
                 Long.toHexString(secretCount));
     }
 
-    public String getChallengeForSetRequesterAppRuntimeSecret(
+    public String getChallengeForSetRequesterAppComputeSecret(
             String requesterAddress,
             String appAddress,
             long secretIndex,

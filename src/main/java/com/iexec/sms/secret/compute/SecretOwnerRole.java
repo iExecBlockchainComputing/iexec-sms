@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.teetaskruntime;
+package com.iexec.sms.secret.compute;
 
 /**
- * Defines which role a tee task runtime secret owner can have.
+ * Defines which role a tee task compute secret owner can have.
  */
 public enum SecretOwnerRole {
     APPLICATION_DEVELOPER,

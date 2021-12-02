@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.teetaskruntime;
+package com.iexec.sms.secret.compute;
 
 import com.iexec.common.contract.generated.Ownable;
 import com.iexec.common.utils.BytesUtils;
@@ -34,30 +34,30 @@ import java.util.Optional;
 @Slf4j
 @CrossOrigin
 @RestController
-public class AppRuntimeSecretController {
+public class AppComputeSecretController {
     private final AuthorizationService authorizationService;
-    private final TeeTaskRuntimeSecretService teeTaskRuntimeSecretService;
-    private final TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService;
+    private final TeeTaskComputeSecretService teeTaskComputeSecretService;
+    private final TeeTaskComputeSecretCountService teeTaskComputeSecretCountService;
     private final IexecHubService iexecHubService;
 
     private static final Map<String, String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
-    public AppRuntimeSecretController(AuthorizationService authorizationService,
-                                      TeeTaskRuntimeSecretService teeTaskRuntimeSecretService,
-                                      TeeTaskRuntimeSecretCountService teeTaskRuntimeSecretCountService,
+    public AppComputeSecretController(AuthorizationService authorizationService,
+                                      TeeTaskComputeSecretService teeTaskComputeSecretService,
+                                      TeeTaskComputeSecretCountService teeTaskComputeSecretCountService,
                                       IexecHubService iexecHubService) {
         this.authorizationService = authorizationService;
-        this.teeTaskRuntimeSecretService = teeTaskRuntimeSecretService;
-        this.teeTaskRuntimeSecretCountService = teeTaskRuntimeSecretCountService;
+        this.teeTaskComputeSecretService = teeTaskComputeSecretService;
+        this.teeTaskComputeSecretCountService = teeTaskComputeSecretCountService;
         this.iexecHubService = iexecHubService;
     }
 
     // region App developer endpoints
     @PostMapping("/apps/{appAddress}/secrets/0")
-    public ResponseEntity<Map<String, String>> addAppDeveloperAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
-                                                                  @PathVariable String appAddress,
+    public ResponseEntity<Map<String, String>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
+                                                                               @PathVariable String appAddress,
 //                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
-                                                                  @RequestBody String secretValue) {
+                                                                               @RequestBody String secretValue) {
         long secretIndex = 0;   // FIXME: remove once functioning has been validated.
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
@@ -66,10 +66,10 @@ public class AppRuntimeSecretController {
                     .body(createErrorPayload("Secret size should not exceed 4 Kb"));
         }
 
-        String challenge = authorizationService.getChallengeForSetAppRuntimeSecret(appAddress, secretIndex, secretValue);
+        String challenge = authorizationService.getChallengeForSetAppComputeSecret(appAddress, secretIndex, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to addAppDeveloperAppRuntimeSecret" +
+            log.error("Unauthorized to addAppDeveloperComputeComputeSecret" +
                             " [appAddress: {}, expectedChallenge: {}]",
                     appAddress, challenge);
             return ResponseEntity
@@ -77,7 +77,7 @@ public class AppRuntimeSecretController {
                     .body(invalidAuthorizationPayload);
         }
 
-        if (teeTaskRuntimeSecretService.isSecretPresent(
+        if (teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
@@ -91,7 +91,7 @@ public class AppRuntimeSecretController {
                     .body(createErrorPayload("Secret already exists"));
         }
 
-        teeTaskRuntimeSecretService.encryptAndSaveSecret(
+        teeTaskComputeSecretService.encryptAndSaveSecret(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
@@ -103,9 +103,9 @@ public class AppRuntimeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Map<String, String>> isAppDeveloperAppRuntimeSecretPresent(@PathVariable String appAddress,
-                                                                      @PathVariable long secretIndex) {
-        final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
+    public ResponseEntity<Map<String, String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
+                                                                                     @PathVariable long secretIndex) {
+        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
@@ -124,18 +124,18 @@ public class AppRuntimeSecretController {
     }
 
     @PostMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForApp(
+    public ResponseEntity<Map<String, String>> setMaxRequesterSecretCountForAppCompute(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount) {
         String challenge = authorizationService
-                .getChallengeForSetRequesterAppRuntimeSecretCount(
+                .getChallengeForSetRequesterAppComputeSecretCount(
                         appAddress,
                         secretCount
                 );
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to setRequesterSecretCountForApp" +
+            log.error("Unauthorized to setRequesterSecretCountForAppCompute" +
                             " [appAddress: {}, expectedChallenge: {}]",
                     appAddress, challenge);
             return ResponseEntity
@@ -143,8 +143,8 @@ public class AppRuntimeSecretController {
                     .body(invalidAuthorizationPayload);
         }
 
-        final boolean isCountAlreadyPresent = teeTaskRuntimeSecretCountService
-                .isMaxAppRuntimeSecretCountPresent(
+        final boolean isCountAlreadyPresent = teeTaskComputeSecretCountService
+                .isMaxAppComputeSecretCountPresent(
                         appAddress,
                         SecretOwnerRole.REQUESTER
                 );
@@ -156,7 +156,7 @@ public class AppRuntimeSecretController {
                     .body(createErrorPayload("Secret count already exists"));
         }
 
-        final boolean hasBeenInserted = teeTaskRuntimeSecretCountService.setMaxAppRuntimeSecretCount(
+        final boolean hasBeenInserted = teeTaskComputeSecretCountService.setMaxAppComputeSecretCount(
                 appAddress,
                 SecretOwnerRole.REQUESTER,
                 secretCount
@@ -176,14 +176,14 @@ public class AppRuntimeSecretController {
     // endregion
 
     // region App requester endpoint
-    private static class RequesterAppRuntimeSecretData {
+    private static class RequesterAppComputeSecretData {
         private final String authorization;
         private final String requesterAddress;
         private final String appAddress;
         private final long secretIndex;
         private final String secretValue;
 
-        public RequesterAppRuntimeSecretData(String authorization, String requesterAddress, String appAddress, long secretIndex, String secretValue) {
+        public RequesterAppComputeSecretData(String authorization, String requesterAddress, String appAddress, long secretIndex, String secretValue) {
             this.authorization = authorization;
             this.requesterAddress = requesterAddress;
             this.appAddress = appAddress;
@@ -192,26 +192,26 @@ public class AppRuntimeSecretController {
         }
     }
     @FunctionalInterface
-    interface RequesterAppRuntimeSecretValidator {
-        Optional<ResponseEntity<Map<String, String>>> validate(RequesterAppRuntimeSecretData data);
+    interface RequesterAppComputeSecretValidator {
+        Optional<ResponseEntity<Map<String, String>>> validate(RequesterAppComputeSecretData data);
     }
 
     @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Map<String, String>> addRequesterAppRuntimeSecret(@RequestHeader("Authorization") String authorization,
-                                                                  @PathVariable String requesterAddress,
-                                                                  @PathVariable String appAddress,
-                                                                  @PathVariable long secretIndex,
-                                                                  @RequestBody String secretValue) {
-        List<RequesterAppRuntimeSecretValidator> validationList = List.of(
-                this::checkRequesterAppRuntimeSecretIndex,
-                this::validateRequesterAppRuntimeSecretSize,
-                this::validateRequesterAppRuntimeSecretAuthorization,
-                this::validateRequesterAppRuntimeAppAddress,
-                this::validateRequesterAppRuntimeSecretPresent,
-                this::validateRequesterAppRuntimeSecretIndexAllowed
+    public ResponseEntity<Map<String, String>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
+                                                                            @PathVariable String requesterAddress,
+                                                                            @PathVariable String appAddress,
+                                                                            @PathVariable long secretIndex,
+                                                                            @RequestBody String secretValue) {
+        List<RequesterAppComputeSecretValidator> validationList = List.of(
+                this::checkRequesterAppComputeSecretIndex,
+                this::validateRequesterAppComputeSecretSize,
+                this::validateRequesterAppComputeSecretAuthorization,
+                this::validateRequesterAppComputeAppAddress,
+                this::validateRequesterAppComputeSecretPresent,
+                this::validateRequesterAppComputeSecretIndexAllowed
         );
 
-        final RequesterAppRuntimeSecretData data = new RequesterAppRuntimeSecretData(
+        final RequesterAppComputeSecretData data = new RequesterAppComputeSecretData(
                 authorization,
                 requesterAddress,
                 appAddress,
@@ -228,7 +228,7 @@ public class AppRuntimeSecretController {
             return validationIssue.get();
         }
 
-        teeTaskRuntimeSecretService.encryptAndSaveSecret(
+        teeTaskComputeSecretService.encryptAndSaveSecret(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.REQUESTER,
@@ -239,7 +239,7 @@ public class AppRuntimeSecretController {
         return ResponseEntity.noContent().build();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> checkRequesterAppRuntimeSecretIndex(RequesterAppRuntimeSecretData data) {
+    private Optional<ResponseEntity<Map<String, String>>> checkRequesterAppComputeSecretIndex(RequesterAppComputeSecretData data) {
         // TODO: remove following bloc once functioning has been validated
         if (data.secretIndex > 0) {
             log.debug("Can't add more than a single app requester secret as of now." +
@@ -265,7 +265,7 @@ public class AppRuntimeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretSize(RequesterAppRuntimeSecretData data) {
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretSize(RequesterAppComputeSecretData data) {
         if (!SecretUtils.isSecretSizeValid(data.secretValue)) {
             return Optional.of(
                     ResponseEntity
@@ -276,8 +276,8 @@ public class AppRuntimeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretAuthorization(RequesterAppRuntimeSecretData data) {
-        String challenge = authorizationService.getChallengeForSetRequesterAppRuntimeSecret(
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretAuthorization(RequesterAppComputeSecretData data) {
+        String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
                 data.requesterAddress,
                 data.appAddress,
                 data.secretIndex,
@@ -285,7 +285,7 @@ public class AppRuntimeSecretController {
         );
 
         if (!authorizationService.isSignedByHimself(challenge, data.authorization, data.requesterAddress)) {
-            log.error("Unauthorized to addRequesterAppRuntimeSecret" +
+            log.error("Unauthorized to addRequesterAppComputeSecret" +
                             " [requesterAddress:{}, appAddress:{}, expectedChallenge:{}]",
                     data.requesterAddress, data.appAddress, challenge);
             return Optional.of(
@@ -297,7 +297,7 @@ public class AppRuntimeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeAppAddress(RequesterAppRuntimeSecretData data) {
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeAppAddress(RequesterAppComputeSecretData data) {
         final Ownable appContract = iexecHubService.getOwnableContract(data.appAddress);
         if (appContract == null
                 || BytesUtils.EMPTY_ADDRESS.equals(data.appAddress)
@@ -312,8 +312,8 @@ public class AppRuntimeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretPresent(RequesterAppRuntimeSecretData data) {
-        if (teeTaskRuntimeSecretService.isSecretPresent(
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretPresent(RequesterAppComputeSecretData data) {
+        if (teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 data.appAddress,
                 SecretOwnerRole.REQUESTER,
@@ -331,9 +331,9 @@ public class AppRuntimeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppRuntimeSecretIndexAllowed(RequesterAppRuntimeSecretData data) {
-        final Optional<TeeTaskRuntimeSecretCount> oAllowedSecretsCount =
-                teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretIndexAllowed(RequesterAppComputeSecretData data) {
+        final Optional<TeeTaskComputeSecretCount> oAllowedSecretsCount =
+                teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(
                         data.appAddress,
                         SecretOwnerRole.REQUESTER
                 );
@@ -364,11 +364,11 @@ public class AppRuntimeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<Map<String, String>> isRequesterAppRuntimeSecretPresent(
+    public ResponseEntity<Map<String, String>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String appAddress,
             @PathVariable long secretIndex) {
-        final boolean isSecretPresent = teeTaskRuntimeSecretService.isSecretPresent(
+        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.REQUESTER,

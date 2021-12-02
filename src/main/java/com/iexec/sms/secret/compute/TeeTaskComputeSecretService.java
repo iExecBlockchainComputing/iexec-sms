@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.teetaskruntime;
+package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +26,14 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskRuntimeSecretService {
-    private final TeeTaskRuntimeSecretRepository teeTaskRuntimeSecretRepository;
+public class TeeTaskComputeSecretService {
+    private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
 
-    protected TeeTaskRuntimeSecretService(
-            TeeTaskRuntimeSecretRepository teeTaskRuntimeSecretRepository,
+    protected TeeTaskComputeSecretService(
+            TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
             EncryptionService encryptionService) {
-        this.teeTaskRuntimeSecretRepository = teeTaskRuntimeSecretRepository;
+        this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
         this.encryptionService = encryptionService;
     }
 
@@ -41,7 +41,7 @@ public class TeeTaskRuntimeSecretService {
      * Retrieve a secret.
      * Decrypt if required.
      */
-    public Optional<TeeTaskRuntimeSecret> getSecret(
+    public Optional<TeeTaskComputeSecret> getSecret(
             OnChainObjectType onChainObjectType,
             String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
@@ -49,7 +49,7 @@ public class TeeTaskRuntimeSecretService {
             long secretIndex,
             boolean shouldDecryptValue) {
         onChainObjectAddress = onChainObjectAddress.toLowerCase();
-        final TeeTaskRuntimeSecret wantedSecret = TeeTaskRuntimeSecret
+        final TeeTaskComputeSecret wantedSecret = TeeTaskComputeSecret
                 .builder()
                 .onChainObjectType(onChainObjectType)
                 .onChainObjectAddress(onChainObjectAddress)
@@ -59,13 +59,13 @@ public class TeeTaskRuntimeSecretService {
                 .build();
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
                 .withIgnorePaths("value");
-        final Optional<TeeTaskRuntimeSecret> oSecret = teeTaskRuntimeSecretRepository
+        final Optional<TeeTaskComputeSecret> oSecret = teeTaskComputeSecretRepository
                 .findOne(Example.of(wantedSecret, exampleMatcher));
         if (oSecret.isEmpty()) {
             return Optional.empty();
         }
         if (shouldDecryptValue) {
-            final TeeTaskRuntimeSecret secret = oSecret.get();
+            final TeeTaskComputeSecret secret = oSecret.get();
             final String decryptedValue = encryptionService.decrypt(secret.getValue());
             secret.setValue(decryptedValue);
         }
@@ -104,7 +104,7 @@ public class TeeTaskRuntimeSecretService {
                                         long secretIndex,
                                         String secretValue) {
         if (isSecretPresent(onChainObjectType, onChainObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
-            final TeeTaskRuntimeSecret secret = TeeTaskRuntimeSecret
+            final TeeTaskComputeSecret secret = TeeTaskComputeSecret
                     .builder()
                     .onChainObjectType(onChainObjectType)
                     .onChainObjectAddress(onChainObjectAddress)
@@ -112,12 +112,12 @@ public class TeeTaskRuntimeSecretService {
                     .fixedSecretOwner(secretOwner)
                     .index(secretIndex)
                     .build();
-            log.info("Tee task runtime secret already exists, can't update it." +
+            log.info("Tee task compute secret already exists, can't update it." +
                     "[secret:{}]", secret);
             return false;
         }
         onChainObjectAddress = onChainObjectAddress.toLowerCase();
-        final TeeTaskRuntimeSecret secret = TeeTaskRuntimeSecret
+        final TeeTaskComputeSecret secret = TeeTaskComputeSecret
                 .builder()
                 .onChainObjectType(onChainObjectType)
                 .onChainObjectAddress(onChainObjectAddress)
@@ -126,9 +126,9 @@ public class TeeTaskRuntimeSecretService {
                 .index(secretIndex)
                 .value(encryptionService.encrypt(secretValue))
                 .build();
-        log.info("Adding new tee task runtime secret " +
+        log.info("Adding new tee task compute secret " +
                         "[secret:{}]", secret);
-        teeTaskRuntimeSecretRepository.save(secret);
+        teeTaskComputeSecretRepository.save(secret);
         return true;
     }
 }

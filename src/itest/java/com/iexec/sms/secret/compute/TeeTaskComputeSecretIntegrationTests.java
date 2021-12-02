@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret;
+package com.iexec.sms.secret.compute;
 
 import com.iexec.common.contract.generated.Ownable;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.teetaskruntime.OnChainObjectType;
-import com.iexec.sms.secret.teetaskruntime.SecretOwnerRole;
-import com.iexec.sms.secret.teetaskruntime.TeeTaskRuntimeSecret;
-import com.iexec.sms.secret.teetaskruntime.TeeTaskRuntimeSecretRepository;
+import com.iexec.sms.secret.compute.OnChainObjectType;
+import com.iexec.sms.secret.compute.SecretOwnerRole;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
 import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +43,7 @@ import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignatu
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
+public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS = "0xABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
     private static final String SECRET_VALUE = "secretValue";
@@ -60,7 +60,7 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
     private EncryptionService encryptionService;
 
     @Autowired
-    private TeeTaskRuntimeSecretRepository repository;
+    private TeeTaskComputeSecretRepository repository;
 
     @BeforeEach
     private void setUp() {
@@ -93,8 +93,8 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
         // We check the secrets have been added to the database
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
                 .withIgnorePaths("value");
-        final Optional<TeeTaskRuntimeSecret> appDeveloperSecret = repository.findOne(
-                Example.of(TeeTaskRuntimeSecret
+        final Optional<TeeTaskComputeSecret> appDeveloperSecret = repository.findOne(
+                Example.of(TeeTaskComputeSecret
                                 .builder()
                                 .onChainObjectType(OnChainObjectType.APPLICATION)
                                 .onChainObjectAddress(appAddress)
@@ -116,8 +116,8 @@ public class TeeTaskRuntimeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
-        final Optional<TeeTaskRuntimeSecret> requesterSecret = repository.findOne(
-                Example.of(TeeTaskRuntimeSecret
+        final Optional<TeeTaskComputeSecret> requesterSecret = repository.findOne(
+                Example.of(TeeTaskComputeSecret
                                 .builder()
                                 .onChainObjectType(OnChainObjectType.APPLICATION)
                                 .onChainObjectAddress(appAddress)
