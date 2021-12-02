@@ -189,20 +189,19 @@ public class AppComputeSecretController {
 
     // region App requester endpoint
     private static class RequesterAppComputeSecretData {
-        private final String authorization;
         private final String requesterAddress;
         private final String appAddress;
         private final long secretIndex;
         private final String secretValue;
 
-        public RequesterAppComputeSecretData(String authorization, String requesterAddress, String appAddress, long secretIndex, String secretValue) {
-            this.authorization = authorization;
+        public RequesterAppComputeSecretData(String requesterAddress, String appAddress, long secretIndex, String secretValue) {
             this.requesterAddress = requesterAddress;
             this.appAddress = appAddress;
             this.secretIndex = secretIndex;
             this.secretValue = secretValue;
         }
     }
+
     @FunctionalInterface
     interface RequesterAppComputeSecretValidator {
         Optional<ResponseEntity<Map<String, String>>> validate(RequesterAppComputeSecretData data);
@@ -214,17 +213,31 @@ public class AppComputeSecretController {
                                                                             @PathVariable String appAddress,
                                                                             @PathVariable long secretIndex,
                                                                             @RequestBody String secretValue) {
+        String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
+                requesterAddress,
+                appAddress,
+                secretIndex,
+                secretValue
+        );
+
+        if (!authorizationService.isSignedByHimself(challenge, authorization, requesterAddress)) {
+            log.error("Unauthorized to addRequesterAppComputeSecret" +
+                            " [requesterAddress:{}, appAddress:{}, expectedChallenge:{}]",
+                    requesterAddress, appAddress, challenge);
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(invalidAuthorizationPayload);
+        }
+
         List<RequesterAppComputeSecretValidator> validationList = List.of(
                 this::validateRequesterAppComputeSecretIndex,
                 this::validateRequesterAppComputeSecretSize,
-                this::validateRequesterAppComputeSecretAuthorization,
                 this::validateRequesterAppComputeAppAddress,
-                this::validateRequesterAppComputeSecretPresent,
+                this::validateRequesterAppComputeSecretAbsent,
                 this::validateRequesterAppComputeSecretIndexAllowed
         );
 
         final RequesterAppComputeSecretData data = new RequesterAppComputeSecretData(
-                authorization,
                 requesterAddress,
                 appAddress,
                 secretIndex,
@@ -288,27 +301,6 @@ public class AppComputeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretAuthorization(RequesterAppComputeSecretData data) {
-        String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
-                data.requesterAddress,
-                data.appAddress,
-                data.secretIndex,
-                data.secretValue
-        );
-
-        if (!authorizationService.isSignedByHimself(challenge, data.authorization, data.requesterAddress)) {
-            log.error("Unauthorized to addRequesterAppComputeSecret" +
-                            " [requesterAddress:{}, appAddress:{}, expectedChallenge:{}]",
-                    data.requesterAddress, data.appAddress, challenge);
-            return Optional.of(
-                    ResponseEntity
-                            .status(HttpStatus.UNAUTHORIZED)
-                            .body(invalidAuthorizationPayload)
-            );
-        }
-        return Optional.empty();
-    }
-
     private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeAppAddress(RequesterAppComputeSecretData data) {
         final Ownable appContract = iexecHubService.getOwnableContract(data.appAddress);
         if (appContract == null
@@ -324,7 +316,7 @@ public class AppComputeSecretController {
         return Optional.empty();
     }
 
-    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretPresent(RequesterAppComputeSecretData data) {
+    private Optional<ResponseEntity<Map<String, String>>> validateRequesterAppComputeSecretAbsent(RequesterAppComputeSecretData data) {
         if (teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 data.appAddress,

@@ -442,9 +442,9 @@ class AppComputeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(createErrorPayload("Secret size should not exceed 4 Kb")));
 
-        verify(authorizationService, times(0))
+        verify(authorizationService, times(1))
                 .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
-        verify(authorizationService, times(0))
+        verify(authorizationService, times(1))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(teeTaskComputeSecretService, times(0))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
@@ -500,6 +500,11 @@ class AppComputeSecretControllerTest {
         long secretIndex = 1;
         String secretValue = COMMON_SECRET_VALUE;
 
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+                .thenReturn(true);
+
         ResponseEntity<Map<String, String>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
@@ -510,9 +515,9 @@ class AppComputeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest().body(createErrorPayload("Can't add more than a single app requester secret as of now.")));
 
-        verify(authorizationService, times(0))
+        verify(authorizationService, times(1))
                 .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
-        verify(authorizationService, times(0))
+        verify(authorizationService, times(1))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(iexecHubService, times(0))
                 .getOwnableContract(APP_ADDRESS);
@@ -529,6 +534,11 @@ class AppComputeSecretControllerTest {
         long secretIndex = -1;
         String secretValue = COMMON_SECRET_VALUE;
 
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+                .thenReturn(true);
+
         ResponseEntity<Map<String, String>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
@@ -539,9 +549,9 @@ class AppComputeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest().body(createErrorPayload("Negative index are forbidden for app requester secrets.")));
 
-        verify(authorizationService, times(0))
+        verify(authorizationService, times(1))
                 .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, APP_ADDRESS, secretIndex, secretValue);
-        verify(authorizationService, times(0))
+        verify(authorizationService, times(1))
                 .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
         verify(iexecHubService, times(0))
                 .getOwnableContract(APP_ADDRESS);
