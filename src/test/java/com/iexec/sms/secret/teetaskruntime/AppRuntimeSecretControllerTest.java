@@ -1,6 +1,7 @@
 package com.iexec.sms.secret.teetaskruntime;
 
 import com.iexec.common.contract.generated.Ownable;
+import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.blockchain.IexecHubService;
 import lombok.SneakyThrows;
@@ -672,6 +673,47 @@ class AppRuntimeSecretControllerTest {
                 getMaxAppRuntimeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER);
         verify(teeTaskRuntimeSecretService, times(0))
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+    }
+
+    @Test
+    void shouldNotAddRequesterSecretSinceAppAddressEmpty() {
+        long secretIndex = 0;
+        final String secretValue = COMMON_SECRET_VALUE;
+        final String emptyAddress = BytesUtils.EMPTY_ADDRESS;
+
+        when(authorizationService.getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, emptyAddress, secretIndex, secretValue))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+                .thenReturn(true);
+        when(iexecHubService.getOwnableContract(emptyAddress)).thenReturn(null);
+        when(teeTaskRuntimeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, emptyAddress, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex))
+                .thenReturn(false);
+        when(teeTaskRuntimeSecretCountService.getMaxAppRuntimeSecretCount(emptyAddress, SecretOwnerRole.REQUESTER))
+                .thenReturn(Optional.of(TeeTaskRuntimeSecretCount.builder().secretCount(1).build()));
+        doReturn(true).when(teeTaskRuntimeSecretService)
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, emptyAddress, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
+
+        ResponseEntity<Map<String, String>> result = appRuntimeSecretController.addRequesterAppRuntimeSecret(
+                AUTHORIZATION,
+                REQUESTER_ADDRESS,
+                emptyAddress,
+                secretIndex,
+                secretValue
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorPayload("App does not exist")));
+        verify(authorizationService, times(1))
+                .getChallengeForSetRequesterAppRuntimeSecret(REQUESTER_ADDRESS, emptyAddress, secretIndex, secretValue);
+        verify(authorizationService, times(1))
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+        verify(iexecHubService, times(1))
+                .getOwnableContract(emptyAddress);
+        verify(teeTaskRuntimeSecretService, times(0))
+                .isSecretPresent(OnChainObjectType.APPLICATION, emptyAddress, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex);
+        verify(teeTaskRuntimeSecretCountService, times(0)).
+                getMaxAppRuntimeSecretCount(emptyAddress, SecretOwnerRole.REQUESTER);
+        verify(teeTaskRuntimeSecretService, times(0))
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, emptyAddress, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretIndex, secretValue);
     }
     // endregion
 

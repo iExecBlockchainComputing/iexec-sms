@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.teetaskruntime;
 
 import com.iexec.common.contract.generated.Ownable;
+import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.secret.SecretUtils;
@@ -222,7 +223,9 @@ public class AppRuntimeSecretController {
         }
 
         final Ownable appContract = iexecHubService.getOwnableContract(appAddress);
-        if (appContract == null || !Objects.equals(appContract.getContractAddress(), appAddress)) {
+        if (appContract == null
+                || BytesUtils.EMPTY_ADDRESS.equals(appAddress)
+                || !Objects.equals(appContract.getContractAddress(), appAddress)) {
             log.debug("App does not exist" +
                             " [requesterAddress:{}, appAddress:{}]",
                     requesterAddress, appAddress);
