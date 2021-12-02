@@ -240,11 +240,11 @@ public class AppComputeSecretController {
                     .body(createErrorPayload("App does not exist"));
         }
 
-        final List<String> badRequestError = validateRequesterAppComputeSecret(requesterAddress, appAddress, secretIndex, secretValue);
-        if (!badRequestError.isEmpty()) {
+        final List<String> badRequestErrors = validateRequesterAppComputeSecret(requesterAddress, appAddress, secretIndex, secretValue);
+        if (!badRequestErrors.isEmpty()) {
             return ResponseEntity
                     .badRequest()
-                    .body(createErrorPayload(badRequestError));
+                    .body(createErrorPayload(badRequestErrors));
         }
 
         if (teeTaskComputeSecretService.isSecretPresent(
