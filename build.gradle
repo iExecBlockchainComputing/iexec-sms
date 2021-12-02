@@ -123,12 +123,12 @@ jacocoTestReport {
 tasks.test.finalizedBy    tasks.jacocoTestReport
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
-def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
+def gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+def gitShortCommit = 'git rev-parse --short=8 HEAD'.execute().text.trim()
 def isMasterBranch = gitBranch == "master"
 def isDevelopBranch = gitBranch == "develop"
-def canUploadArchives = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
-def gitShortCommit = 'git rev-parse --short HEAD'.execute().text.trim()
-def isSnapshotVersion = project.version.contains("NEXT-SNAPSHOT")
+def canUploadArchives = (isMasterBranch || isDevelopBranch) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
+def isSnapshotVersion = project.version.endsWith('-SNAPSHOT')
 
 project.ext.getNexusMaven = {
     def nexusMavenBase = "https://nexus.iex.ec/repository"
@@ -176,30 +176,31 @@ task createVersion(type: Copy) {
 // the createVersion task should be called before compileJava or the version service will not work
 compileJava.dependsOn createVersion
 
-def imageName = "nexus.iex.ec/iexec-sms"
-def trustedDockerfileName = "Dockerfile"
-def untrustedDockerfileName = "Dockerfile.untrusted"
-def jarName = "iexec-sms-${version}.jar"
+String imageName   = "nexus.iex.ec/iexec-sms"
+String trustedDockerfilePath   = relativePath(sourceSets.main.output.resourcesDir.path + "/Dockerfile")
+String untrustedDockerfilePath = relativePath(sourceSets.main.output.resourcesDir.path + "/Dockerfile.untrusted")
 
-project.ext.getDockerImageNameFull = {
-    def imageNameWithVersion = imageName + ":${version}"
-    if (isSnapshotVersion) {
-        return imageNameWithVersion + "-" + gitShortCommit
-    } else {
-        return imageNameWithVersion
-    }
+ext.bootJarPath = relativePath(tasks.bootJar.outputs.files.singleFile)
+ext.ociImageNameFull = ""
+
+if (gitBranch.equals('master') || gitBranch.startsWith('release/') || gitBranch.startsWith('hotfix/')) {
+    ext.ociImageNameFull = imageName + ':' + version
+}
+if (gitBranch.equals('develop')) {
+    ext.ociImageNameFull = imageName + ':dev-' + gitShortCommit
+}
+if (gitBranch.startsWith('feature/') || gitBranch.startsWith('bugfix/')) {
+    ext.ociImageNameFull = imageName + ':feature-' + gitShortCommit
 }
 
-project.ext.getDockerImageNameShortCommit = {
-    return imageName + ":" + gitShortCommit
-}
+ext.ociImageNameDev         = imageName + ':dev'
+ext.ociImageNameShortCommit = imageName + ":" + gitShortCommit
 
 task buildImage(type: Exec) {
-    description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c",
-            "docker image build -f build/resources/main/${untrustedDockerfileName}" + 
-            " -t ${getDockerImageNameFull()} --build-arg JAR_NAME=${jarName} . &&" +
-            "docker tag ${getDockerImageNameFull()} ${imageName}:dev")
+    dependsOn bootJar
+    description 'Build OCI image'
+    commandLine("sh", "-c", "docker build -f $untrustedDockerfilePath -t $ociImageNameFull --build-arg spring_boot_jar=$bootJarPath ."
+            + " && docker tag $ociImageNameFull $ociImageNameDev")
     standardOutput = new ByteArrayOutputStream()
 
     ext.output = {
@@ -209,12 +210,9 @@ task buildImage(type: Exec) {
 }
 
 task buildTrustedImage(type: Exec) {
-    def trustedImageName = getDockerImageNameFull() + "-trusted"
-    description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c",
-            "docker image build -f build/resources/main/${trustedDockerfileName} " + 
-            "-t ${trustedImageName} --build-arg JAR_NAME=${jarName} --no-cache . && " +
-            "docker tag ${trustedImageName} ${imageName}:dev-trusted")
+    description 'Building OCI trusted image'
+    commandLine("sh", "-c", "docker build -f $trustedDockerfilePath -t $ociImageNameFull-trusted --build-arg boot_jar_name=$bootJarPath --no-cache ."
+            + " && docker tag $ociImageNameFull-trusted $imageName:dev-trusted")
 }
 
 task templatePalaemon {
@@ -266,14 +264,13 @@ task templatePalaemon {
 
 task pushImage(type: Exec) {
     if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {
-        commandLine("sh", "-c", "docker login -u " + project.nexusUser + " -p " + project.nexusPassword + " nexus.iex.ec && " +
-                "docker push " + getDockerImageNameFull() + " && " +
-                "docker tag " + getDockerImageNameFull() + " " + getDockerImageNameShortCommit() + " && " +
-                "docker push " + getDockerImageNameShortCommit() + " && " +
-                "docker logout")
+        commandLine("sh", "-c", "docker login -u $nexusUser -p $nexusPassword nexus.iex.ec"
+                + " && docker tag  $ociImageNameFull $ociImageNameShortCommit"
+                + " && docker push $ociImageNameShortCommit"
+                + " && docker push $ociImageNameFull"
+                + " && docker logout")
     } else {
         println "Credentials for DockerHub are missing, the images cannot be pushed"
     }
 }
 pushImage.dependsOn buildImage
-pushImage.enabled = canUploadArchives
