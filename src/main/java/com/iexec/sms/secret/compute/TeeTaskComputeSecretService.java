@@ -46,8 +46,7 @@ public class TeeTaskComputeSecretService {
             String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String secretOwner,
-            long secretIndex,
-            boolean shouldDecryptValue) {
+            long secretIndex) {
         onChainObjectAddress = onChainObjectAddress.toLowerCase();
         final TeeTaskComputeSecret wantedSecret = TeeTaskComputeSecret
                 .builder()
@@ -64,11 +63,10 @@ public class TeeTaskComputeSecretService {
         if (oSecret.isEmpty()) {
             return Optional.empty();
         }
-        if (shouldDecryptValue) {
-            final TeeTaskComputeSecret secret = oSecret.get();
-            final String decryptedValue = encryptionService.decrypt(secret.getValue());
-            secret.setValue(decryptedValue);
-        }
+        final TeeTaskComputeSecret secret = oSecret.get();
+        final String decryptedValue = encryptionService.decrypt(secret.getValue());
+        secret.setValue(decryptedValue);
+
         return oSecret;
     }
 
@@ -87,8 +85,7 @@ public class TeeTaskComputeSecretService {
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
-                secretIndex,
-                false
+                secretIndex
         ).isPresent();
     }
 

@@ -202,8 +202,7 @@ public class PalaemonSessionServiceTests {
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
-                secretIndex,
-                true))
+                secretIndex))
                 .thenReturn(Optional.of(TeeTaskComputeSecret
                         .builder()
                         .onChainObjectType(OnChainObjectType.APPLICATION)
@@ -218,8 +217,7 @@ public class PalaemonSessionServiceTests {
                 APP_ADDRESS,
                 SecretOwnerRole.REQUESTER,
                 REQUESTER,
-                secretIndex,
-                true))
+                secretIndex))
                 .thenReturn(Optional.of(TeeTaskComputeSecret
                         .builder()
                         .onChainObjectType(OnChainObjectType.APPLICATION)
@@ -260,16 +258,14 @@ public class PalaemonSessionServiceTests {
                 APP_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 null,
-                secretIndex,
-                true))
+                secretIndex))
                 .thenReturn(Optional.empty());
         when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
                 APP_ADDRESS,
                 SecretOwnerRole.REQUESTER,
                 REQUESTER,
-                secretIndex,
-                true))
+                secretIndex))
                 .thenReturn(Optional.empty());
 
         Map<String, Object> tokens =

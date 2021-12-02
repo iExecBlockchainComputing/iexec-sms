@@ -247,8 +247,7 @@ public class PalaemonSessionService {
                                 taskDescription.getAppAddress(),
                                 SecretOwnerRole.APPLICATION_DEVELOPER,
                                 "",
-                                secretIndex,
-                                true)
+                                secretIndex)
                         .map(TeeTaskComputeSecret::getValue)
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
@@ -259,8 +258,7 @@ public class PalaemonSessionService {
                                 taskDescription.getAppAddress(),
                                 SecretOwnerRole.REQUESTER,
                                 taskDescription.getRequester(),
-                                secretIndex,
-                                true)
+                                secretIndex)
                         .map(TeeTaskComputeSecret::getValue)
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IEXEC_REQUESTER_SECRET_PREFIX + secretIndex, requesterSecret0);
