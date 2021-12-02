@@ -128,6 +128,18 @@ public class AppComputeSecretController {
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount) {
+        if (secretCount < 0) {
+            log.debug("Can't add app requester app secret count as it should not be negative"
+                            + " [appAddress:{}, secretCount:{}]",
+                    appAddress, secretCount);
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(
+                            "Secret count should be positive. " +
+                                    "Can't accept value " + secretCount
+                    ));
+        }
+
         String challenge = authorizationService
                 .getChallengeForSetRequesterAppComputeSecretCount(
                         appAddress,
@@ -150,7 +162,7 @@ public class AppComputeSecretController {
                 );
         if (isCountAlreadyPresent) {
             log.debug("Can't add app requester app secret count as it already exist"
-            + " [appAddress:{}]", appAddress);
+                    + " [appAddress:{}]", appAddress);
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(createErrorPayload("Secret count already exists"));

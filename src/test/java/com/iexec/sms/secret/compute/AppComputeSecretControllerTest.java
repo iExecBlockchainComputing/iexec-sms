@@ -289,15 +289,6 @@ class AppComputeSecretControllerTest {
     void shouldNotSetRequestersComputeSecretCountSinceNotSecretCountIsNegative() {
         int secretCount = -1;
 
-        when(authorizationService.getChallengeForSetRequesterAppComputeSecretCount(APP_ADDRESS, secretCount))
-                .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
-                .thenReturn(true);
-        when(teeTaskComputeSecretCountService.isMaxAppComputeSecretCountPresent(APP_ADDRESS, SecretOwnerRole.REQUESTER))
-                .thenReturn(false);
-        when(teeTaskComputeSecretCountService.setMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER, secretCount))
-                .thenReturn(false);
-
         ResponseEntity<Map<String, String>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
                 AUTHORIZATION,
                 APP_ADDRESS,
@@ -307,7 +298,14 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity
                 .badRequest()
                 .body(createErrorPayload("Secret count should be positive. Can't accept value -1")));
-        verify(teeTaskComputeSecretCountService, times(1))
+
+        verify(authorizationService, times(0))
+                .getChallengeForSetRequesterAppComputeSecretCount(APP_ADDRESS, secretCount);
+        verify(authorizationService, times(0))
+                .isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS);
+        verify(teeTaskComputeSecretCountService, times(0))
+                .isMaxAppComputeSecretCountPresent(APP_ADDRESS, SecretOwnerRole.REQUESTER);
+        verify(teeTaskComputeSecretCountService, times(0))
                 .setMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER, secretCount);
     }
     // endregion
