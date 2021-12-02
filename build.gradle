@@ -261,16 +261,3 @@ task templatePalaemon {
 }
 //templatePalaemon.dependsOn buildImage
 //buildImage.finalizedBy templatePalaemon
-
-task pushImage(type: Exec) {
-    if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {
-        commandLine("sh", "-c", "docker login -u $nexusUser -p $nexusPassword nexus.iex.ec"
-                + " && docker tag  $ociImageNameFull $ociImageNameShortCommit"
-                + " && docker push $ociImageNameShortCommit"
-                + " && docker push $ociImageNameFull"
-                + " && docker logout")
-    } else {
-        println "Credentials for DockerHub are missing, the images cannot be pushed"
-    }
-}
-pushImage.dependsOn buildImage
