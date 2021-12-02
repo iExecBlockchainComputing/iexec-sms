@@ -185,6 +185,21 @@ public class AppComputeSecretController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/apps/{appAddress}/requesters/secrets-count")
+    public ResponseEntity<Map<String, String>> getMaxRequesterSecretCountForAppCompute(@PathVariable String appAddress) {
+        final Optional<TeeTaskComputeSecretCount> secretCount =
+                teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(appAddress, SecretOwnerRole.REQUESTER);
+        if (secretCount.isPresent()) {
+            log.debug("Requester secret count found [appAddress: {}]", appAddress);
+            return ResponseEntity.ok(Map.of("count", secretCount.get().getSecretCount().toString()));
+        }
+
+        log.debug("Requester secret count not found [appAddress: {}]", appAddress);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(createErrorPayload("Secret count not found"));
+    }
     // endregion
 
     // region App requester endpoint

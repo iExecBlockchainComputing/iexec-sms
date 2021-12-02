@@ -310,6 +310,43 @@ class AppComputeSecretControllerTest {
     }
     // endregion
 
+    // region setMaxRequesterSecretCountForAppCompute
+    @Test
+    void shouldGetMaxRequesterSecretCountForAppCompute() {
+        final int secretCount = 10;
+
+        when(teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
+                .thenReturn(Optional.of(TeeTaskComputeSecretCount
+                        .builder()
+                        .appAddress(APP_ADDRESS)
+                        .secretOwnerRole(SecretOwnerRole.REQUESTER)
+                        .secretCount(secretCount)
+                        .build())
+                );
+
+        final ResponseEntity<Map<String, String>> result = appComputeSecretController.getMaxRequesterSecretCountForAppCompute(APP_ADDRESS);
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity
+                .ok(Map.of("count", secretCount + "")));
+        verify(teeTaskComputeSecretCountService, times(1))
+                .getMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER);
+    }
+
+    @Test
+    void shouldNotGetMaxRequesterSecretCountForAppComputeSinceNotDefined() {
+        when(teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
+                .thenReturn(Optional.empty());
+
+        final ResponseEntity<Map<String, String>> result = appComputeSecretController.getMaxRequesterSecretCountForAppCompute(APP_ADDRESS);
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Secret count not found")));
+        verify(teeTaskComputeSecretCountService, times(1))
+                .getMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER);
+    }
+    // endregion
+
     // region addRequesterAppComputeSecret
     @Test
     void shouldAddRequesterSecret() {
