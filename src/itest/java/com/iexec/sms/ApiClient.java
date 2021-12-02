@@ -16,6 +16,7 @@
 
 package com.iexec.sms;
 
+import com.iexec.common.web.ApiResponseBody;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,14 +28,38 @@ public interface ApiClient {
     String API_URL = "http://localhost:${local.server.port}";
 
     @PostMapping("/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<String> addApplicationRuntimeSecret(
+    ResponseEntity<ApiResponseBody<String>> addRequesterAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable("appAddress") String appAddress,
-            @PathVariable("secretIndex") long secretIndex,
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex,
             @RequestBody String secretValue
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    ResponseEntity<Void> isApplicationRuntimeSecretPresent(@PathVariable String appAddress,
-                                                           @PathVariable long secretIndex);
+    ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex
+    );
+
+    @PostMapping("/apps/{appAddress}/requesters/secrets-count")
+    ResponseEntity<ApiResponseBody<String>> setMaxRequesterSecretCountForAppCompute(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable String appAddress,
+            @RequestBody int secretCount);
+
+    @PostMapping("/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
+    ResponseEntity<ApiResponseBody<String>> addRequesterAppComputeSecret(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable String requesterAddress,
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex,
+            @RequestBody String secretValue
+    );
+
+    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/apps/{appAddress}/secrets/{secretIndex}")
+    ResponseEntity<ApiResponseBody<String>> isRequesterAppComputeSecretPresent(
+            @PathVariable String requesterAddress,
+            @PathVariable String appAddress,
+            @PathVariable long secretIndex
+    );
 }

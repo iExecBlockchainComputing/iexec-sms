@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.app;
+package com.iexec.sms.secret.compute;
 
-import com.iexec.sms.secret.Secret;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -26,15 +26,20 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
-public class ApplicationRuntimeSecret extends Secret {
-    private long index;
+@Getter
+@Builder
+public class TeeTaskComputeSecretCount {
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    private String id;
 
-    public ApplicationRuntimeSecret(String address, long index, String value) {
-        super(address, value);
-        this.index = index;
-    }
+    private SecretOwnerRole secretOwnerRole;
+
+    private String appAddress;
+
+    private Integer secretCount;
 }

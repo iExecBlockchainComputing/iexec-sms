@@ -17,10 +17,6 @@
 package com.iexec.sms.authorization;
 
 
-import static com.iexec.sms.App.DOMAIN;
-
-import java.util.Optional;
-
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.ChainTaskStatus;
@@ -30,11 +26,13 @@ import com.iexec.common.utils.BytesUtils;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.common.utils.SignatureUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-
-import org.springframework.stereotype.Service;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
+
+import java.util.Optional;
+
+import static com.iexec.sms.App.DOMAIN;
 
 @Slf4j
 @Service
@@ -132,9 +130,9 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetAppRuntimeSecret(String appAddress,
-                                                     long secretIndex,
-                                                     String secretValue) {
+    public String getChallengeForSetAppDeveloperAppComputeSecret(String appAddress,
+                                                                 long secretIndex,
+                                                                 String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
@@ -142,6 +140,27 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
+    public String getChallengeForSetRequesterAppComputeSecretCount(
+            String appAddress,
+            Integer secretCount) {
+        return HashUtils.concatenateAndHash(
+                Hash.sha3String(DOMAIN),
+                appAddress,
+                Long.toHexString(secretCount));
+    }
+
+    public String getChallengeForSetRequesterAppComputeSecret(
+            String requesterAddress,
+            String appAddress,
+            long secretIndex,
+            String secretValue) {
+        return HashUtils.concatenateAndHash(
+                Hash.sha3String(DOMAIN),
+                requesterAddress,
+                appAddress,
+                Long.toHexString(secretIndex),
+                Hash.sha3String(secretValue));
+    }
 
     public String getChallengeForSetWeb2Secret(String ownerAddress,
                                                String secretKey,
