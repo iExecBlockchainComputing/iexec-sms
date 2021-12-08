@@ -127,7 +127,6 @@ def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
 def isMasterBranch = gitBranch == "master"
 def isDevelopBranch = gitBranch == "develop"
 def canUploadArchives = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
-def gitShortCommit = 'git rev-parse --short HEAD'.execute().text.trim()
 def isSnapshotVersion = project.version.contains("NEXT-SNAPSHOT")
 
 project.ext.getNexusMaven = {
@@ -176,32 +175,16 @@ task createVersion(type: Copy) {
 // the createVersion task should be called before compileJava or the version service will not work
 compileJava.dependsOn createVersion
 
-ext.bootJarPath = relativePath(tasks.bootJar.outputs.files.singleFile)
-
-def imageName = "nexus.iex.ec/iexec-sms"
-def trustedDockerfileName = "Dockerfile"
-def untrustedDockerfileName = "Dockerfile.untrusted"
-def jarName = "iexec-sms-${version}.jar"
-
-project.ext.getDockerImageNameFull = {
-    def imageNameWithVersion = imageName + ":${version}"
-    if (isSnapshotVersion) {
-        return imageNameWithVersion + "-" + gitShortCommit
-    } else {
-        return imageNameWithVersion
-    }
-}
-
-project.ext.getDockerImageNameShortCommit = {
-    return imageName + ":" + gitShortCommit
-}
+ext.bootJarPath    = relativePath(tasks.bootJar.outputs.files.singleFile)
+ext.gitShortCommit = 'git rev-parse --short=8 HEAD'.execute().text.trim()
+ext.ociImageName   = "local/${rootProject.name}"
 
 task buildImage(type: Exec) {
-    description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c",
-            "docker image build -f build/resources/main/${untrustedDockerfileName}" + 
-            " -t ${getDockerImageNameFull()} --build-arg JAR_NAME=${jarName} . &&" +
-            "docker tag ${getDockerImageNameFull()} ${imageName}:dev")
+    group       'Build'
+    description 'Builds an OCI image from a Dockerfile.'
+    dependsOn   bootJar
+    commandLine ("sh", "-c", "docker build -f build/resources/main/Dockerfile.untrusted --build-arg spring_boot_jar=$bootJarPath"
+            + " -t $ociImageName:$gitShortCommit . && docker tag $ociImageName:$gitShortCommit $ociImageName:dev")
     standardOutput = new ByteArrayOutputStream()
 
     ext.output = {
@@ -211,12 +194,11 @@ task buildImage(type: Exec) {
 }
 
 task buildTrustedImage(type: Exec) {
-    def trustedImageName = getDockerImageNameFull() + "-trusted"
-    description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c",
-            "docker image build -f build/resources/main/${trustedDockerfileName} " + 
-            "-t ${trustedImageName} --build-arg JAR_NAME=${jarName} --no-cache . && " +
-            "docker tag ${trustedImageName} ${imageName}:dev-trusted")
+    group       'Build'
+    description 'Builds a trusted OCI image from a trusted Dockerfile.'
+    dependsOn   bootJar
+    commandLine ("sh", "-c", "docker image build -f build/resources/main/Dockerfile --build-arg spring_boot_jar=$bootJarPath"
+            + " -t $ociImageName:$gitShortCommit-trusted --no-cache . && docker tag $ociImageName:$gitShortCommit-trusted $ociImageName:dev-trusted")
 }
 
 task templatePalaemon {
@@ -265,17 +247,3 @@ task templatePalaemon {
 }
 //templatePalaemon.dependsOn buildImage
 //buildImage.finalizedBy templatePalaemon
-
-task pushImage(type: Exec) {
-    if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {
-        commandLine("sh", "-c", "docker login -u " + project.nexusUser + " -p " + project.nexusPassword + " nexus.iex.ec && " +
-                "docker push " + getDockerImageNameFull() + " && " +
-                "docker tag " + getDockerImageNameFull() + " " + getDockerImageNameShortCommit() + " && " +
-                "docker push " + getDockerImageNameShortCommit() + " && " +
-                "docker logout")
-    } else {
-        println "Credentials for DockerHub are missing, the images cannot be pushed"
-    }
-}
-pushImage.dependsOn buildImage
-pushImage.enabled = canUploadArchives
