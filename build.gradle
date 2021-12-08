@@ -123,21 +123,6 @@ jacocoTestReport {
 tasks.test.finalizedBy    tasks.jacocoTestReport
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
-def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
-def isMasterBranch = gitBranch == "master"
-def isDevelopBranch = gitBranch == "develop"
-def canUploadArchives = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
-def isSnapshotVersion = project.version.contains("NEXT-SNAPSHOT")
-
-project.ext.getNexusMaven = {
-    def nexusMavenBase = "https://nexus.iex.ec/repository"
-    if (isSnapshotVersion) {
-        return nexusMavenBase + "/maven-snapshots/"
-    } else {
-        return nexusMavenBase + "/maven-releases/"
-    }
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
@@ -148,15 +133,13 @@ publishing {
     repositories {
         maven {
             credentials {
-                username nexusUser
-                password nexusPassword
+                username project.hasProperty('nexusUser') ? nexusUser : ''
+                password project.hasProperty('nexusPassword') ? nexusPassword : ''
             }
-            url getNexusMaven
+            url project.hasProperty('nexusUrl') ? nexusUrl : ''
         }
     }
 }
-
-publish.enabled = canUploadArchives
 
 // create the version controller for the core
 task createVersion(type: Copy) {
