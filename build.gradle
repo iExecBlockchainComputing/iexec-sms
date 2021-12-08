@@ -99,8 +99,8 @@ sourceSets {
 }
 
 task itest(type:Test) {
-    description = "Run integration tests (src/itest/...)."
-    // enabled isDev
+    group       'Verification'
+    description 'Runs the integration tests.'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false } // run always
