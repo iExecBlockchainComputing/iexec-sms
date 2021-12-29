@@ -35,6 +35,9 @@ spring:
     console:
       enabled: ${IEXEC_SMS_H2_CONSOLE:false} # http://localhost:13300/h2-console/
       settings.web-allow-others: ${IEXEC_SMS_H2_CONSOLE:false} # Get console if Docker run
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher # see https://stackoverflow.com/a/70037507/7421571
 
 encryption:
   # Will get previous key or else create one on this path
