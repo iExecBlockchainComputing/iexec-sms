@@ -55,9 +55,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.h2database:h2:1.4.200'
 
-    // swagger
-    implementation "io.springfox:springfox-swagger2:2.9.2"
-    implementation "io.springfox:springfox-swagger-ui:2.9.2"
+    // Spring Doc
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.3'
 
     //ssl
     implementation 'org.apache.httpcomponents:httpclient:4.5.9'
