@@ -14,6 +14,15 @@ group = 'com.iexec.sms'
 sourceCompatibility = 11
 targetCompatibility = 11
 
+ext {
+    springCloudVersion = '2020.0.1'
+    gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+}
+
+if (gitBranch != 'main' && gitBranch != 'master' && ! (gitBranch ==~ '(release|hotfix|support)/.*')) {
+        version += '-NEXT-SNAPSHOT'
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -29,10 +38,6 @@ repositories {
 configurations {
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
-}
-
-ext {
-    set('springCloudVersion', '2021.0.0')
 }
 
 dependencyManagement {
