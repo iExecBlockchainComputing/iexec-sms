@@ -79,3 +79,7 @@ logging:
 #  level:
 #    org.springframework: DEBUG
 #    org.apache.http: DEBUG
+
+springdoc:
+  packagesToScan: com.iexec.sms
+  pathsToMatch: /**

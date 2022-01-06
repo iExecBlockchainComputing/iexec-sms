@@ -3,7 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '5.3.0'
-    id 'org.springframework.boot' version '2.4.3'
+    id 'org.springframework.boot' version '2.6.2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'jacoco'
     id 'org.sonarqube' version '3.3'
@@ -15,7 +15,7 @@ sourceCompatibility = 11
 targetCompatibility = 11
 
 ext {
-    springCloudVersion = '2020.0.1'
+    springCloudVersion = '2021.0.0'
     gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
@@ -60,9 +60,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.h2database:h2:1.4.200'
 
-    // swagger
-    implementation "io.springfox:springfox-swagger2:2.9.2"
-    implementation "io.springfox:springfox-swagger-ui:2.9.2"
+    // Spring Doc
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.3'
 
     //ssl
     implementation 'org.apache.httpcomponents:httpclient:4.5.9'
