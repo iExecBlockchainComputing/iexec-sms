@@ -15,7 +15,7 @@ sourceCompatibility = 11
 targetCompatibility = 11
 
 ext {
-    springCloudVersion = '2020.0.1'
+    springCloudVersion = '2021.0.0'
     gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
