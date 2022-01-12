@@ -130,7 +130,6 @@ public class PalaemonSessionService {
      *
      * @param request session request details
      * @return session config in yaml string format
-     * @throws Exception
      */
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
         requireNonNull(request, "Session request must not be null");
@@ -168,7 +167,6 @@ public class PalaemonSessionService {
     /**
      * Get tokens to be injected in the pre-compute enclave.
      *
-     * @param request
      * @return map of pre-compute tokens
      * @throws Exception if dataset secret is not found.
      */
