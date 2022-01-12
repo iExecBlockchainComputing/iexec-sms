@@ -22,7 +22,6 @@ import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
-import com.iexec.sms.utils.version.VersionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
