@@ -37,7 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class AuthorizationServiceTests {
+class AuthorizationServiceTests {
 
     @Mock
     IexecHubService iexecHubService;
@@ -46,12 +46,12 @@ public class AuthorizationServiceTests {
     private AuthorizationService authorizationService;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void shouldBeAuthorizedOnExecutionOfTeeTask() {
+    void shouldBeAuthorizedOnExecutionOfTeeTask() {
         ChainDeal chainDeal = TestUtils.getChainDeal();
         ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
@@ -64,13 +64,13 @@ public class AuthorizationServiceTests {
     }
 
     @Test
-    public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithNullAuthorization() {
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithNullAuthorization() {
         boolean isAuth = authorizationService.isAuthorizedOnExecution(null, true);
         assertThat(isAuth).isFalse();
     }
 
     @Test
-    public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskTypeNotMatchedOnchain() {
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskTypeNotMatchedOnchain() {
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
@@ -80,7 +80,7 @@ public class AuthorizationServiceTests {
     }
 
     @Test
-    public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActive() {
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActive() {
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         ChainTask chainTask = TestUtils.getChainTask(UNSET);
         when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
@@ -91,7 +91,7 @@ public class AuthorizationServiceTests {
     }
 
     @Test
-    public void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValid() {
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValid() {
         ChainDeal chainDeal = TestUtils.getChainDeal();
         ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();

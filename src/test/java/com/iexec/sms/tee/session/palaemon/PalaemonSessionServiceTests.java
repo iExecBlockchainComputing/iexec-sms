@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-public class PalaemonSessionServiceTests {
+class PalaemonSessionServiceTests {
 
     private static final String TEMPLATE_SESSION_FILE = "src/main/resources/palaemonTemplate.vm";
     private static final String EXPECTED_SESSION_FILE = "src/test/resources/tee-session.yml";
@@ -139,7 +139,7 @@ public class PalaemonSessionServiceTests {
     }
 
     @Test
-    public void shouldGetSessionYml() throws Exception {
+    void shouldGetSessionYml() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         doReturn(getPreComputeTokens()).when(palaemonSessionService)
                 .getPreComputePalaemonTokens(request);
@@ -162,7 +162,7 @@ public class PalaemonSessionServiceTests {
     // pre-compute
 
     @Test
-    public void shouldGetPreComputePalaemonTokens() throws Exception {
+    void shouldGetPreComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         when(teeWorkflowConfig.getPreComputeFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
@@ -190,7 +190,7 @@ public class PalaemonSessionServiceTests {
     // app
 
     @Test
-    public void shouldGetAppPalaemonTokens() throws Exception {
+    void shouldGetAppPalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         final int secretIndex = 0;
@@ -284,7 +284,7 @@ public class PalaemonSessionServiceTests {
                 .containsEntry(IEXEC_REQUESTER_SECRET_0, "");
     }
     @Test
-    public void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
+    void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
@@ -298,7 +298,7 @@ public class PalaemonSessionServiceTests {
     // post-compute
 
     @Test
-    public void shouldGetPostComputePalaemonTokens() throws Exception {
+    void shouldGetPostComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
         when(teeWorkflowConfig.getPostComputeFingerprint())

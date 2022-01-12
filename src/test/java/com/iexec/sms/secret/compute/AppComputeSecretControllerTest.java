@@ -46,7 +46,7 @@ class AppComputeSecretControllerTest {
     AppComputeSecretController appComputeSecretController;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 
