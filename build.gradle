@@ -20,7 +20,7 @@ ext {
 }
 
 if (gitBranch != 'main' && gitBranch != 'master' && ! (gitBranch ==~ '(release|hotfix|support)/.*')) {
-        version += '-NEXT-SNAPSHOT'
+    version += '-NEXT-SNAPSHOT'
 }
 
 repositories {
