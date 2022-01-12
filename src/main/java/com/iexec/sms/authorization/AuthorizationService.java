@@ -61,7 +61,7 @@ public class AuthorizationService {
         }
 
         Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
-        if (!optionalChainTask.isPresent()) {
+        if (optionalChainTask.isEmpty()) {
             log.error("Could not get chainTask [chainTaskId:{}]", chainTaskId);
             return false;
         }
@@ -76,7 +76,7 @@ public class AuthorizationService {
         }
 
         Optional<ChainDeal> optionalChainDeal = iexecHubService.getChainDeal(chainDealId);
-        if (!optionalChainDeal.isPresent()) {
+        if (optionalChainDeal.isEmpty()) {
             log.error("isAuthorizedOnExecution failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
             return false;
         }

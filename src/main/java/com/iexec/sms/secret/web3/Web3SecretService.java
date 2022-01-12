@@ -45,7 +45,7 @@ public class Web3SecretService extends AbstractSecretService {
         if (shouldDecryptValue) {
             decryptSecret(secret.get());
         }
-        return Optional.of(secret.get());
+        return secret;
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress) {
