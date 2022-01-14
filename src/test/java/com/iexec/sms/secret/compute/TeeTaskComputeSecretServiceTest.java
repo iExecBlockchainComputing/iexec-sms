@@ -37,7 +37,7 @@ class TeeTaskComputeSecretServiceTest {
     ArgumentCaptor<TeeTaskComputeSecret> computeSecretCaptor;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 

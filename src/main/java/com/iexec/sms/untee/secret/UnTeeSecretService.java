@@ -60,13 +60,13 @@ public class UnTeeSecretService {
 
         // TODO use taskDescription instead of chainDeal
         Optional<ChainTask> oChainTask = iexecHubService.getChainTask(chainTaskId);
-        if (!oChainTask.isPresent()) {
+        if (oChainTask.isEmpty()) {
             log.error("getUnTeeTaskSecrets failed (getChainTask failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
         ChainTask chainTask = oChainTask.get();
         Optional<ChainDeal> oChainDeal = iexecHubService.getChainDeal(chainTask.getDealid());
-        if (!oChainDeal.isPresent()) {
+        if (oChainDeal.isEmpty()) {
             log.error("getUnTeeTaskSecrets failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }
@@ -74,7 +74,7 @@ public class UnTeeSecretService {
         String chainDatasetId = chainDeal.getChainDataset().getChainDatasetId();
 
         Optional<Web3Secret> datasetSecret = web3SecretService.getSecret(chainDatasetId, true);
-        if (!datasetSecret.isPresent()) {
+        if (datasetSecret.isEmpty()) {
             log.error("getUnTeeTaskSecrets failed (datasetSecret failed) [chainTaskId:{}]", chainTaskId);
             return Optional.empty();
         }

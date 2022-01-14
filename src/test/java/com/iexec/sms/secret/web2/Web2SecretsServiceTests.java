@@ -28,10 +28,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class Web2SecretsServiceTests {
+class Web2SecretsServiceTests {
 
     String ownerAddress = "ownerAddress";
     String secretAddress = "secretAddress";
@@ -48,12 +47,12 @@ public class Web2SecretsServiceTests {
     private Web2SecretsService web2SecretsService;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void shouldGetAndDecryptWeb2Secrets() {
+    void shouldGetAndDecryptWeb2Secrets() {
         ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
@@ -71,14 +70,14 @@ public class Web2SecretsServiceTests {
     }
 
     @Test
-    public void shouldAddSecret() {
+    void shouldAddSecret() {
         ownerAddress = ownerAddress.toLowerCase();
         web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue);
         verify(web2SecretsRepository, times(1)).save(any());
     }
 
     @Test
-    public void shouldUpdateSecret() {
+    void shouldUpdateSecret() {
         ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);

@@ -130,7 +130,6 @@ public class PalaemonSessionService {
      *
      * @param request session request details
      * @return session config in yaml string format
-     * @throws Exception
      */
     public String getSessionYml(PalaemonSessionRequest request) throws Exception {
         requireNonNull(request, "Session request must not be null");
@@ -168,7 +167,6 @@ public class PalaemonSessionService {
     /**
      * Get tokens to be injected in the pre-compute enclave.
      *
-     * @param request
      * @return map of pre-compute tokens
      * @throws Exception if dataset secret is not found.
      */
@@ -198,7 +196,7 @@ public class PalaemonSessionService {
                 .entrySet()
                 .stream()
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         tokens.put(INPUT_FILE_URLS, inputFileUrls);
         return tokens;
     }
@@ -228,7 +226,7 @@ public class PalaemonSessionService {
                 .entrySet()
                 .stream()
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         tokens.put(INPUT_FILE_NAMES, inputFileNames);
 
         final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);

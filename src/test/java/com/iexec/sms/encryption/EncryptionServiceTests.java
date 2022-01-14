@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class EncryptionServiceTests {
+class EncryptionServiceTests {
 
     @TempDir
     public File tempDir;
@@ -37,7 +37,7 @@ public class EncryptionServiceTests {
     private EncryptionService encryptionService;
 
     @Test
-    public void shouldCreateAesKey() {
+    void shouldCreateAesKey() {
         String data = "data mock";
         // File createdFile = new File(tempDir, "aesKey");
         String aesKeyPath = tempDir.getAbsolutePath() + "aesKey";

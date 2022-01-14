@@ -49,7 +49,7 @@ public class Web2SecretsService extends AbstractSecretService {
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
         ownerAddress = ownerAddress.toLowerCase();
         Optional<Web2Secrets> web2Secrets = getWeb2Secrets(ownerAddress);
-        if (!web2Secrets.isPresent()) {
+        if (web2Secrets.isEmpty()) {
             return Optional.empty();
         }
         Secret secret = web2Secrets.get().getSecret(secretAddress);
