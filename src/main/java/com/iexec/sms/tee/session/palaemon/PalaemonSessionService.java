@@ -250,16 +250,18 @@ public class PalaemonSessionService {
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
 
-        String requesterSecret0 =
-                teeTaskComputeSecretService.getSecret(
-                                OnChainObjectType.APPLICATION,
-                                taskDescription.getAppAddress(),
-                                SecretOwnerRole.REQUESTER,
-                                taskDescription.getRequester(),
-                                secretIndex)
-                        .map(TeeTaskComputeSecret::getValue)
-                        .orElse(EMPTY_YML_VALUE);
-        tokens.put(IEXEC_REQUESTER_SECRET_PREFIX + secretIndex, requesterSecret0);
+        for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
+            String requesterSecret =
+                    teeTaskComputeSecretService.getSecret(
+                                    OnChainObjectType.APPLICATION,
+                                    "",
+                                    SecretOwnerRole.REQUESTER,
+                                    taskDescription.getRequester(),
+                                    Long.parseLong(secretEntry.getValue()))
+                            .map(TeeTaskComputeSecret::getValue)
+                            .orElse(EMPTY_YML_VALUE);
+            tokens.put(IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
+        }
 
         return tokens;
     }
