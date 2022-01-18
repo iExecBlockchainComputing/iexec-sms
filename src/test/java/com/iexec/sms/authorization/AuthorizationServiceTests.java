@@ -106,6 +106,14 @@ class AuthorizationServiceTests {
     }
 
     @Test
+    void getChallengeForSetRequesterAppComputeSecret() {
+        String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
+                "", 0L, "");
+        Assertions.assertEquals("0xc0fdb70946e46bb7ce49790d475b58f08c59a296389af3d8a15779abe1d6dc6d",
+                challenge);
+    }
+
+    @Test
     void getChallengeForSetWeb3Secret() {
         String secretAddress = "0x123";
         String secretValue = "ghijk";
