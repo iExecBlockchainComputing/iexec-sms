@@ -80,6 +80,8 @@ public class PalaemonSessionService {
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
+    // Secrets
+    static final String REQUESTER_SECRETS = "REQUESTER_SECRETS";
     // Env
     private static final String ENV_PROPERTY = "env";
 
@@ -248,6 +250,7 @@ public class PalaemonSessionService {
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
 
+        HashMap<String, String> requesterSecrets = new HashMap<>();
         for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
             String requesterSecret =
                     teeTaskComputeSecretService.getSecret(
@@ -258,8 +261,9 @@ public class PalaemonSessionService {
                                     Long.parseLong(secretEntry.getValue()))
                             .map(TeeTaskComputeSecret::getValue)
                             .orElse(EMPTY_YML_VALUE);
-            tokens.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
+            requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
         }
+        tokens.put(REQUESTER_SECRETS, requesterSecrets);
 
         return tokens;
     }

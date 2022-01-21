@@ -242,8 +242,9 @@ class PalaemonSessionServiceTests {
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                     IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
         assertThat(tokens)
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE)
-                .containsEntry(IEXEC_REQUESTER_SECRET_0, REQUESTER_SECRET_VALUE);
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE);
+        assertThat(tokens.get(REQUESTER_SECRETS))
+                .isEqualTo(Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE));
     }
 
     @Test
@@ -281,8 +282,9 @@ class PalaemonSessionServiceTests {
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
         assertThat(tokens)
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
-                .containsEntry(IEXEC_REQUESTER_SECRET_0, "");
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "");
+        assertThat(tokens.get(REQUESTER_SECRETS))
+                .isEqualTo(Map.of(IEXEC_REQUESTER_SECRET_0, ""));
     }
     @Test
     void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig(){
