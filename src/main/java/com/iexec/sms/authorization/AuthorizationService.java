@@ -130,12 +130,12 @@ public class AuthorizationService {
     }
 
     public String getChallengeForSetAppDeveloperAppComputeSecret(String appAddress,
-                                                                 long secretIndex,
+                                                                 String secretIndex,
                                                                  String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
-                Long.toHexString(secretIndex),
+                Hash.sha3String(secretIndex),
                 Hash.sha3String(secretValue));
     }
 
@@ -150,12 +150,12 @@ public class AuthorizationService {
 
     public String getChallengeForSetRequesterAppComputeSecret(
             String requesterAddress,
-            long secretIndex,
+            String secretKey,
             String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 requesterAddress,
-                Long.toHexString(secretIndex),
+                Hash.sha3String(secretKey),
                 Hash.sha3String(secretValue));
     }
 

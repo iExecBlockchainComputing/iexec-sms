@@ -193,8 +193,8 @@ class PalaemonSessionServiceTests {
     void shouldGetAppPalaemonTokens() {
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
-        final long applicationDeveloperSecretIndex = 0;
-        final long requesterSecretIndex = 2;
+        final String applicationDeveloperSecretIndex = "0";
+        final String requesterSecretKey = "requester-secret-key";
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -209,7 +209,7 @@ class PalaemonSessionServiceTests {
                         .onChainObjectType(OnChainObjectType.APPLICATION)
                         .onChainObjectAddress(APP_ADDRESS)
                         .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
-                        .index(applicationDeveloperSecretIndex)
+                        .key(applicationDeveloperSecretIndex)
                         .value(APP_DEVELOPER_SECRET_VALUE)
                         .build()
                 ));
@@ -218,14 +218,14 @@ class PalaemonSessionServiceTests {
                 "",
                 SecretOwnerRole.REQUESTER,
                 REQUESTER,
-                requesterSecretIndex))
+                requesterSecretKey))
                 .thenReturn(Optional.of(TeeTaskComputeSecret
                         .builder()
                         .onChainObjectType(OnChainObjectType.APPLICATION)
                         .onChainObjectAddress("")
                         .secretOwnerRole(SecretOwnerRole.REQUESTER)
                         .fixedSecretOwner(REQUESTER)
-                        .index(requesterSecretIndex)
+                        .key(requesterSecretKey)
                         .value(REQUESTER_SECRET_VALUE)
                         .build()
                 ));
@@ -251,7 +251,7 @@ class PalaemonSessionServiceTests {
     void shouldGetPalaemonTokensWithoutAppComputeSecret() {
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
-        final int secretIndex = 0;
+        final String secretIndex = "0";
 
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -379,7 +379,7 @@ class PalaemonSessionServiceTests {
                 .isResultEncryption(true)
                 .resultStorageProvider(STORAGE_PROVIDER)
                 .resultStorageProxy(STORAGE_PROXY)
-                .secrets(Map.of("0", "2"))
+                .secrets(Map.of("0", "requester-secret-key"))
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0)

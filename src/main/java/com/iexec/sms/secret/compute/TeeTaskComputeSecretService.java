@@ -46,7 +46,7 @@ public class TeeTaskComputeSecretService {
             String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String secretOwner,
-            long secretIndex) {
+            String secretKey) {
         onChainObjectAddress = onChainObjectAddress.toLowerCase();
         final TeeTaskComputeSecret wantedSecret = TeeTaskComputeSecret
                 .builder()
@@ -54,7 +54,7 @@ public class TeeTaskComputeSecretService {
                 .onChainObjectAddress(onChainObjectAddress)
                 .secretOwnerRole(secretOwnerRole)
                 .fixedSecretOwner(secretOwner)
-                .index(secretIndex)
+                .key(secretKey)
                 .build();
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
                 .withIgnorePaths("value");
@@ -79,13 +79,13 @@ public class TeeTaskComputeSecretService {
                                    String deployedObjectAddress,
                                    SecretOwnerRole secretOwnerRole,
                                    String secretOwner,
-                                   long secretIndex) {
+                                   String secretKey) {
         return getSecret(
                 onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
-                secretIndex
+                secretKey
         ).isPresent();
     }
 
@@ -98,16 +98,16 @@ public class TeeTaskComputeSecretService {
                                         String onChainObjectAddress,
                                         SecretOwnerRole secretOwnerRole,
                                         String secretOwner,
-                                        long secretIndex,
+                                        String secretKey,
                                         String secretValue) {
-        if (isSecretPresent(onChainObjectType, onChainObjectAddress, secretOwnerRole, secretOwner, secretIndex)) {
+        if (isSecretPresent(onChainObjectType, onChainObjectAddress, secretOwnerRole, secretOwner, secretKey)) {
             final TeeTaskComputeSecret secret = TeeTaskComputeSecret
                     .builder()
                     .onChainObjectType(onChainObjectType)
                     .onChainObjectAddress(onChainObjectAddress)
                     .secretOwnerRole(secretOwnerRole)
                     .fixedSecretOwner(secretOwner)
-                    .index(secretIndex)
+                    .key(secretKey)
                     .build();
             log.info("Tee task compute secret already exists, can't update it." +
                     " [secret:{}]", secret);
@@ -120,7 +120,7 @@ public class TeeTaskComputeSecretService {
                 .onChainObjectAddress(onChainObjectAddress)
                 .secretOwnerRole(secretOwnerRole)
                 .fixedSecretOwner(secretOwner)
-                .index(secretIndex)
+                .key(secretKey)
                 .value(encryptionService.encrypt(secretValue))
                 .build();
         log.info("Adding new tee task compute secret" +

@@ -238,7 +238,7 @@ public class PalaemonSessionService {
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
         Map<String, Object> tokens = new HashMap<>();
 
-        final long secretIndex = 0;
+        final String secretIndex = "0";
         String appDeveloperSecret0 =
                 teeTaskComputeSecretService.getSecret(
                                 OnChainObjectType.APPLICATION,
@@ -258,7 +258,7 @@ public class PalaemonSessionService {
                                     "",
                                     SecretOwnerRole.REQUESTER,
                                     taskDescription.getRequester(),
-                                    Long.parseLong(secretEntry.getValue()))
+                                    secretEntry.getValue())
                             .map(TeeTaskComputeSecret::getValue)
                             .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);

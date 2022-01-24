@@ -38,14 +38,14 @@ public class TeeTaskComputeSecret {
     /**
      * Represents the blockchain address of the deployed object
      * (0xapplication, 0xdataset, 0xworkerpool)
-     * <br>
+     * <p>
      * In a future release, it should also handle ENS names.
      */
     private String onChainObjectAddress;
     private OnChainObjectType onChainObjectType;
     private SecretOwnerRole secretOwnerRole;
     private String fixedSecretOwner;  // May be empty if the owner is not fixed
-    private long index;
+    private String key;
     @Column(columnDefinition = "LONGTEXT")
     private String value;
 
@@ -55,13 +55,13 @@ public class TeeTaskComputeSecret {
             String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String fixedSecretOwner,
-            long index,
+            String key,
             String value) {
         this.onChainObjectType = onChainObjectType;
         this.onChainObjectAddress = onChainObjectAddress;
         this.secretOwnerRole = secretOwnerRole;
         this.fixedSecretOwner = fixedSecretOwner;
-        this.index = index;
+        this.key = key;
         this.value = value;
     }
 }

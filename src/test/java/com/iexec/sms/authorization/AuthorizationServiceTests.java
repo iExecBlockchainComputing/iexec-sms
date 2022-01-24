@@ -108,8 +108,8 @@ class AuthorizationServiceTests {
     @Test
     void getChallengeForSetRequesterAppComputeSecret() {
         String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
-                "", 0L, "");
-        Assertions.assertEquals("0xc0fdb70946e46bb7ce49790d475b58f08c59a296389af3d8a15779abe1d6dc6d",
+                "", "0", "");
+        Assertions.assertEquals("0x31991eefc2731228bdd25dbc5a242722eda3869f9b06536dbd96a774e5228509",
                 challenge);
     }
 

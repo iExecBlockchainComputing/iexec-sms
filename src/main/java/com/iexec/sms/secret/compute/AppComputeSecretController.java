@@ -16,7 +16,6 @@
 
 package com.iexec.sms.secret.compute;
 
-import com.iexec.common.utils.BytesUtils;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
 import com.iexec.common.web.ApiResponseBody;
@@ -52,7 +51,7 @@ public class AppComputeSecretController {
                                                                                @PathVariable String appAddress,
 //                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
-        long secretIndex = 0;   // FIXME: remove once functioning has been validated.
+        String secretIndex = "0";   // FIXME: remove once functioning has been validated.
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
             return ResponseEntity
@@ -98,7 +97,7 @@ public class AppComputeSecretController {
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
-                                                                                     @PathVariable long secretIndex) {
+                                                                                     @PathVariable String secretIndex) {
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 appAddress,
@@ -202,14 +201,14 @@ public class AppComputeSecretController {
     // endregion
 
     // region App requester endpoint
-    @PostMapping("/requesters/{requesterAddress}/secrets/{secretIndex}")
+    @PostMapping("/requesters/{requesterAddress}/secrets/{secretKey}")
     public ResponseEntity<ApiResponseBody<String>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                             @PathVariable String requesterAddress,
-                                                                            @PathVariable long secretIndex,
+                                                                            @PathVariable String secretKey,
                                                                             @RequestBody String secretValue) {
         String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
                 requesterAddress,
-                secretIndex,
+                secretKey,
                 secretValue
         );
 
@@ -222,7 +221,7 @@ public class AppComputeSecretController {
                     .body(invalidAuthorizationPayload);
         }
 
-        final List<String> badRequestErrors = validateRequesterAppComputeSecret(requesterAddress, secretIndex, secretValue);
+        final List<String> badRequestErrors = validateRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
         if (!badRequestErrors.isEmpty()) {
             return ResponseEntity
                     .badRequest()
@@ -234,10 +233,10 @@ public class AppComputeSecretController {
                 "",
                 SecretOwnerRole.REQUESTER,
                 requesterAddress,
-                secretIndex)) {
+                secretKey)) {
             log.debug("Can't add requester secret as it already exists" +
                             " [requesterAddress:{}, secretIndex:{}]",
-                    requesterAddress, secretIndex);
+                    requesterAddress, secretKey);
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(createErrorPayload("Secret already exists"));
@@ -248,7 +247,7 @@ public class AppComputeSecretController {
                 "",
                 SecretOwnerRole.REQUESTER,
                 requesterAddress,
-                secretIndex,
+                secretKey,
                 secretValue
         );
         return ResponseEntity.noContent().build();
@@ -256,23 +255,14 @@ public class AppComputeSecretController {
 
     private List<String> validateRequesterAppComputeSecret(
             String requesterAddress,
-            long secretIndex,
+            String secretKey,
             String secretValue) {
         List<String> errors = new ArrayList<>();
-
-        String messageDetails = MessageFormat.format("[requester: {0}, secretIndex: {1}]",
-                requesterAddress, secretIndex);
-
-        if (secretIndex < 0) {
-            final String errorMessage = "Negative index are forbidden for app requester secrets.";
-            log.debug("{} {}", errorMessage, messageDetails);
-            errors.add(errorMessage);
-        }
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
             final String errorMessage = "Secret size should not exceed 4 Kb";
             log.debug("{} [requesterAddress:{}, secretIndex:{}, secretLength:{}]",
-                    errorMessage, requesterAddress, secretIndex, secretValue.length()
+                    errorMessage, requesterAddress, secretKey, secretValue.length()
             );
             errors.add(errorMessage);
         }
@@ -280,20 +270,20 @@ public class AppComputeSecretController {
         return errors;
     }
 
-    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/secrets/{secretIndex}")
+    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/secrets/{secretKey}")
     public ResponseEntity<ApiResponseBody<String>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
-            @PathVariable long secretIndex) {
+            @PathVariable String secretKey) {
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 "",
                 SecretOwnerRole.REQUESTER,
                 requesterAddress,
-                secretIndex
+                secretKey
         );
 
         String messageDetails = MessageFormat.format("[requester: {0}, secretIndex: {1}]",
-                requesterAddress, secretIndex);
+                requesterAddress, secretKey);
         if (isSecretPresent) {
             log.debug("App requester secret found {}", messageDetails);
             return ResponseEntity.noContent().build();
