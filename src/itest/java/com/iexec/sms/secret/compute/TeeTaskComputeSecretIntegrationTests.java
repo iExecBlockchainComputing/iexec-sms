@@ -68,22 +68,23 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void shouldAddNewComputeSecrets() {
-        final long secretIndex = 0;
+        final String appDeveloperSecretIndex = "0";
+        final String requesterSecretKey="secret-key";
         final int requesterSecretCount = 1;
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
         final String ownerAddress = OWNER_ADDRESS;
 
-        addNewAppDeveloperSecret(appAddress, secretIndex, secretValue, ownerAddress);
+        addNewAppDeveloperSecret(appAddress, appDeveloperSecretIndex, secretValue, ownerAddress);
         setRequesterSecretCount(appAddress, requesterSecretCount, ownerAddress);
-        addNewRequesterSecret(requesterAddress, secretIndex, secretValue);
+        addNewRequesterSecret(requesterAddress, requesterSecretKey, secretValue);
 
         // Check the new secrets exists for the API
-        ResponseEntity<ApiResponseBody<String>> appDeveloperSecretExistence = apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
+        ResponseEntity<ApiResponseBody<String>> appDeveloperSecretExistence = apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, appDeveloperSecretIndex);
         Assertions.assertThat(appDeveloperSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-        ResponseEntity<ApiResponseBody<String>> requesterSecretExistence = apiClient.isRequesterAppComputeSecretPresent(requesterAddress, secretIndex);
+        ResponseEntity<ApiResponseBody<String>> requesterSecretExistence = apiClient.isRequesterAppComputeSecretPresent(requesterAddress, requesterSecretKey);
         Assertions.assertThat(requesterSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         // We check the secrets have been added to the database
@@ -95,7 +96,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
                                 .onChainObjectType(OnChainObjectType.APPLICATION)
                                 .onChainObjectAddress(appAddress)
                                 .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
-                                .index(secretIndex)
+                                .key(appDeveloperSecretIndex)
                                 .build(),
                         exampleMatcher
                 )
@@ -108,7 +109,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
         Assertions.assertThat(appDeveloperSecret.get().getId()).isNotBlank();
         Assertions.assertThat(appDeveloperSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
-        Assertions.assertThat(appDeveloperSecret.get().getIndex()).isZero();
+        Assertions.assertThat(appDeveloperSecret.get().getKey()).isEqualTo(appDeveloperSecretIndex);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
@@ -119,7 +120,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
                                 .onChainObjectAddress("")
                                 .secretOwnerRole(SecretOwnerRole.REQUESTER)
                                 .fixedSecretOwner(requesterAddress)
-                                .index(secretIndex)
+                                .key(requesterSecretKey)
                                 .build(),
                         exampleMatcher)
         );
@@ -131,21 +132,21 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
         Assertions.assertThat(requesterSecret.get().getId()).isNotBlank();
         Assertions.assertThat(requesterSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase("");
-        Assertions.assertThat(requesterSecret.get().getIndex()).isZero();
+        Assertions.assertThat(requesterSecret.get().getKey()).isEqualTo(requesterSecretKey);
         Assertions.assertThat(requesterSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(requesterSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
         // We shouldn't be able to add a new secrets to the database with the same IDs
         try {
-            final String authorization = getAuthorizationForAppDeveloper(appAddress, secretIndex, secretValue);
-            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretIndex, secretValue);
+            final String authorization = getAuthorizationForAppDeveloper(appAddress, appDeveloperSecretIndex, secretValue);
+            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, appDeveloperSecretIndex, secretValue);
             Assertions.fail("A second app developer secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
         }
         try {
-            final String authorization = getAuthorizationForRequester(requesterAddress, secretIndex, secretValue);
-            apiClient.addRequesterAppComputeSecret(authorization, requesterAddress, secretIndex, secretValue);
+            final String authorization = getAuthorizationForRequester(requesterAddress, requesterSecretKey, secretValue);
+            apiClient.addRequesterAppComputeSecret(authorization, requesterAddress, requesterSecretKey, secretValue);
             Assertions.fail("A second app requester secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
@@ -156,8 +157,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         try {
             when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
 
-            final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
-            apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretIndex, secretValue);
+            final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, appDeveloperSecretIndex, secretValue);
+            apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, appDeveloperSecretIndex, secretValue);
             Assertions.fail("A second app developer secret with the same index " +
                     "and an app address whose only difference is the case should be rejected.");
         } catch (FeignException.Conflict ignored) {
@@ -170,7 +171,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * and adds a new application developer secret to the database
      */
     @SuppressWarnings("SameParameterValue")
-    private void addNewAppDeveloperSecret(String appAddress, long secretIndex, String secretValue, String ownerAddress) {
+    private void addNewAppDeveloperSecret(String appAddress, String secretIndex, String secretValue, String ownerAddress) {
         when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
 
         final String authorization = getAuthorizationForAppDeveloper(appAddress, secretIndex, secretValue);
@@ -201,13 +202,13 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      */
     @SuppressWarnings("SameParameterValue")
     private void addNewRequesterSecret(String requesterAddress,
-                                       long secretIndex,
+                                       String secretKey,
                                        String secretValue) {
-        final String authorization = getAuthorizationForRequester(requesterAddress, secretIndex, secretValue);
+        final String authorization = getAuthorizationForRequester(requesterAddress, secretKey, secretValue);
 
         // At first, no secret should be in the database
         try {
-            apiClient.isRequesterAppComputeSecretPresent(requesterAddress, secretIndex);
+            apiClient.isRequesterAppComputeSecretPresent(requesterAddress, secretKey);
             Assertions.fail("No application requester secret was expected but one has been retrieved.");
         } catch (FeignException.NotFound ignored) {
             // Having a Not Found exception is what we expect there.
@@ -218,7 +219,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
                 apiClient.addRequesterAppComputeSecret(
                         authorization,
                         requesterAddress,
-                        secretIndex,
+                        secretKey,
                         secretValue
                 );
         Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -230,12 +231,12 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      */
     private String getAuthorizationForAppDeveloper(
             String appAddress,
-            long secretIndex,
+            String secretIndex,
             String secretValue) {
         final String challenge = HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
-                Long.toHexString(secretIndex),
+                Hash.sha3String(secretIndex),
                 Hash.sha3String(secretValue));
         return signMessageHashAndGetSignature(challenge, APP_DEVELOPER_PRIVATE_KEY).getValue();
     }
@@ -260,13 +261,13 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      */
     private String getAuthorizationForRequester(
             String requesterAddress,
-            long secretIndex,
+            String secretKey,
             String secretValue) {
 
         final String challenge = HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 requesterAddress,
-                Long.toHexString(secretIndex),
+                Hash.sha3String(secretKey),
                 Hash.sha3String(secretValue));
         return signMessageHashAndGetSignature(challenge, REQUESTER_PRIVATE_KEY).getValue();
     }

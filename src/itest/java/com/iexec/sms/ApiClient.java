@@ -31,14 +31,14 @@ public interface ApiClient {
     ResponseEntity<ApiResponseBody<String>> addAppDeveloperAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
-            @PathVariable long secretIndex,
+            @PathVariable String secretIndex,
             @RequestBody String secretValue
     );
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(
             @PathVariable String appAddress,
-            @PathVariable long secretIndex
+            @PathVariable String secretIndex
     );
 
     @PostMapping("/apps/{appAddress}/requesters/secrets-count")
@@ -47,17 +47,17 @@ public interface ApiClient {
             @PathVariable String appAddress,
             @RequestBody int secretCount);
 
-    @PostMapping("/requesters/{requesterAddress}/secrets/{secretIndex}")
+    @PostMapping("/requesters/{requesterAddress}/secrets/{secretKey}")
     ResponseEntity<ApiResponseBody<String>> addRequesterAppComputeSecret(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String requesterAddress,
-            @PathVariable long secretIndex,
+            @PathVariable String secretKey,
             @RequestBody String secretValue
     );
 
-    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/secrets/{secretIndex}")
+    @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/secrets/{secretKey}")
     ResponseEntity<ApiResponseBody<String>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
-            @PathVariable long secretIndex
+            @PathVariable String secretKey
     );
 }
