@@ -21,14 +21,27 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
+/**
+ * Define a secret that can be used during the execution of a TEE task.
+ * Currently, only secrets for application developers and requesters are supported.
+ * <p>
+ * In this implementation, a unique constraint has been added on <b>onChainObjectAddress</b>,
+ * <b>fixedSecretOwner</b> and <b>key</b> columns.
+ * This constraint has been defined in such a way because:
+ * <ul>
+ * <li>For application developers, fixedSecretOwner will always be "". Each application developer
+ *     secret is uniquely identified with onChainObjectAddress and key (long parsed as String) values.
+ * <li>For requesters, onChainObjectAddress will always be "". Each requester secret is uniquely
+ *     identified with fixedSecretOwner and key values.
+ * </ul>
+ */
 @Data
 @NoArgsConstructor
 @Entity
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = {"onChainObjectAddress", "fixedSecretOwner", "key"}) })
 public class TeeTaskComputeSecret {
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -41,12 +54,17 @@ public class TeeTaskComputeSecret {
      * <p>
      * In a future release, it should also handle ENS names.
      */
+    @NotNull
     private String onChainObjectAddress;
+    @NotNull
     private OnChainObjectType onChainObjectType;
+    @NotNull
     private SecretOwnerRole secretOwnerRole;
+    @NotNull
     private String fixedSecretOwner;  // May be empty if the owner is not fixed
+    @NotNull
     private String key;
-    @Column(columnDefinition = "LONGTEXT")
+    @NotNull
     private String value;
 
     @Builder

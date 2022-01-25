@@ -16,8 +16,7 @@
 
 package com.iexec.sms.secret.compute;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.QueryByExampleExecutor;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TeeTaskComputeSecretRepository extends CrudRepository<TeeTaskComputeSecret, String>, QueryByExampleExecutor<TeeTaskComputeSecret> {
+public interface TeeTaskComputeSecretRepository extends JpaRepository<TeeTaskComputeSecret, String> {
 }
