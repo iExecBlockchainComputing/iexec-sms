@@ -4,6 +4,7 @@ import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.common.web.ApiResponseBody;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -47,7 +48,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldAddAppDeveloperSecret() {
-        String secretIndex = "0";
+        final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
@@ -74,7 +75,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceNotSignedByOwner() {
-        String secretIndex = "0";
+        final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
@@ -99,7 +100,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretAlreadyExists() {
-        String secretIndex = "0";
+        final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
@@ -125,8 +126,8 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretValueTooLong() {
-        String secretIndex = "0";
-        String secretValue = TOO_LONG_SECRET_VALUE;
+        final String secretIndex = "0";
+        final String secretValue = TOO_LONG_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
@@ -143,16 +144,51 @@ class AppComputeSecretControllerTest {
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(createErrorResponse("Secret size should not exceed 4 Kb")));
 
-        verify(teeTaskComputeSecretService, times(0))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
-        verify(teeTaskComputeSecretService, times(0))
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService, teeTaskComputeSecretService);
+    }
+
+    // TODO enable this test when supporting multiple application developer secrets
+    @Test
+    @Disabled
+    void shouldNotAddAppDeveloperSecretSinceBadSecretIndexFormat() {
+        final String secretIndex = "bad-secret-index";
+        final String secretValue = COMMON_SECRET_VALUE;
+
+        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+                AUTHORIZATION,
+                APP_ADDRESS,
+                //secretIndex, // TODO uncomment this when supporting multiple application developer secrets
+                secretValue
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService, teeTaskComputeSecretService);
+    }
+
+    // TODO enable this test when supporting multiple application developer secrets
+    @Test
+    @Disabled
+    void shouldNotAddAppDeveloperSecretSinceBadSecretValue() {
+        final String secretIndex = "-10";
+        final String secretValue = COMMON_SECRET_VALUE;
+
+        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+                AUTHORIZATION,
+                APP_ADDRESS,
+                //secretIndex, // TODO uncomment this when supporting multiple application developer secrets
+                secretValue
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService, teeTaskComputeSecretService);
     }
 
     @Test
     void shouldAddMaxSizeAppDeveloperSecret() {
-        String secretIndex = "0";
-        String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
+        final String secretIndex = "0";
+        final String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
@@ -181,7 +217,7 @@ class AppComputeSecretControllerTest {
     // region isAppDeveloperAppComputeSecretPresent
     @Test
     void appDeveloperSecretShouldExist() {
-        String secretIndex = "0";
+        final String secretIndex = "0";
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
@@ -191,11 +227,12 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService);
     }
 
     @Test
     void appDeveloperSecretShouldNotExist() {
-        String secretIndex = "0";
+        final String secretIndex = "0";
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
@@ -205,6 +242,27 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Secret not found")));
         verify(teeTaskComputeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService);
+    }
+
+    @Test
+    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexNotANumber() {
+        final String secretIndex = "bad-secret-index";
+        ResponseEntity<ApiResponseBody<String>> result =
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService, teeTaskComputeSecretService);
+    }
+
+    @Test
+    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexLowerThanZero() {
+        final String secretIndex = "-1";
+        ResponseEntity<ApiResponseBody<String>> result =
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretCountService, teeTaskComputeSecretService);
     }
     // endregion
 

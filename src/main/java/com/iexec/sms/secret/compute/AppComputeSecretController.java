@@ -37,6 +37,8 @@ public class AppComputeSecretController {
 
     private static final ApiResponseBody<String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
+    static final String INVALID_SECRET_INDEX_FORMAT_MSG = "Secret index should be a positive number";
+
     public AppComputeSecretController(AuthorizationService authorizationService,
                                       TeeTaskComputeSecretService teeTaskComputeSecretService,
                                       TeeTaskComputeSecretCountService teeTaskComputeSecretCountService) {
@@ -49,9 +51,21 @@ public class AppComputeSecretController {
     @PostMapping("/apps/{appAddress}/secrets/0")
     public ResponseEntity<ApiResponseBody<String>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                                @PathVariable String appAddress,
-//                                                                      @PathVariable long secretIndex,    // FIXME: enable once functioning has been validated
+//                                                                      @PathVariable String secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
         String secretIndex = "0";   // FIXME: remove once functioning has been validated.
+
+        try {
+            int idx = Integer.parseInt(secretIndex);
+            if (idx < 0) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            log.error(INVALID_SECRET_INDEX_FORMAT_MSG, e);
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(INVALID_SECRET_INDEX_FORMAT_MSG));
+        }
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
             return ResponseEntity
@@ -97,7 +111,19 @@ public class AppComputeSecretController {
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
-                                                                                     @PathVariable String secretIndex) {
+                                                                                         @PathVariable String secretIndex) {
+        try {
+            int idx = Integer.parseInt(secretIndex);
+            if (idx < 0) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            log.error(INVALID_SECRET_INDEX_FORMAT_MSG, e);
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(INVALID_SECRET_INDEX_FORMAT_MSG));
+        }
+
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 appAddress,
