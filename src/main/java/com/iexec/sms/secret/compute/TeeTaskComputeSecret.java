@@ -55,13 +55,13 @@ public class TeeTaskComputeSecret {
      * In a future release, it should also handle ENS names.
      */
     @NotNull
-    private String onChainObjectAddress;
+    private String onChainObjectAddress; // Will be empty for a secret belonging to a requester
     @NotNull
     private OnChainObjectType onChainObjectType;
     @NotNull
     private SecretOwnerRole secretOwnerRole;
     @NotNull
-    private String fixedSecretOwner;  // May be empty if the owner is not fixed
+    private String fixedSecretOwner; // Will be empty for a secret belonging to an application developer
     @NotNull
     private String key;
     @NotNull
