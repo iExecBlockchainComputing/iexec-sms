@@ -26,6 +26,8 @@ import feign.FeignException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -33,7 +35,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.Hash;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static org.mockito.Mockito.mock;
@@ -64,6 +68,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
         when(iexecHubService.getOwnableContract(APP_ADDRESS))
                 .thenReturn(appContract);
+        repository.deleteAll();
     }
 
     @Test
@@ -164,6 +169,30 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
         }
+    }
+
+    @Test
+    void addMultipleRequesterSecrets() {
+        List<String> keys = List.of("secret-key-1", "secret-key-2", "secret-key-3");
+        for (String key : keys) {
+            addNewRequesterSecret(REQUESTER_ADDRESS, key, SECRET_VALUE);
+        }
+        Assertions.assertThat(repository.count()).isEqualTo(keys.size());
+        List<TeeTaskComputeSecret> secrets = repository.findAll();
+        Assertions.assertThat(secrets.stream().map(TeeTaskComputeSecret::getKey).collect(Collectors.toList()))
+                .containsExactlyInAnyOrder("secret-key-1", "secret-key-2", "secret-key-3");
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "this-is-a-really-long-key-with-far-too-many-characters-in-its-name",
+            "this-is-a-key-with-invalid-characters:!*~"
+    })
+    void checkInvalidRequesterSecretKey(String secretKey) {
+        Assertions.assertThatThrownBy(() -> addNewRequesterSecret(REQUESTER_ADDRESS, secretKey, SECRET_VALUE))
+                .isInstanceOf(FeignException.BadRequest.class);
+        Assertions.assertThat(repository.count()).isZero();
     }
 
     /**
