@@ -61,6 +61,7 @@ public class AppComputeSecretController {
                                                                                @RequestBody String secretValue) {
         String secretIndex = "0";   // FIXME: remove once functioning has been validated.
 
+        // TODO deduplicate this with isAppDeveloperAppComputeSecretPresent
         try {
             int idx = Integer.parseInt(secretIndex);
             if (idx < 0) {
@@ -118,6 +119,7 @@ public class AppComputeSecretController {
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
                                                                                          @PathVariable String secretIndex) {
+        // TODO deduplicate this with addAppDeveloperAppComputeSecret
         try {
             int idx = Integer.parseInt(secretIndex);
             if (idx < 0) {
