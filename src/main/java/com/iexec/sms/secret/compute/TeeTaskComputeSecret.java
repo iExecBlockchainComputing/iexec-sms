@@ -23,6 +23,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * Define a secret that can be used during the execution of a TEE task.
@@ -37,12 +38,22 @@ import javax.validation.constraints.NotNull;
  * <li>For requesters, onChainObjectAddress will always be "". Each requester secret is uniquely
  *     identified with fixedSecretOwner and key values.
  * </ul>
+ * <p>
+ * The <b>key</b> parameter must be a String compliant with the following constraints:
+ * <ul>
+ * <li>For application developers, it must be a positive number, the characters must be digits [0-9].
+ * <li>For requesters, it must be a String of at most 64 characters from [0-9A-Za-z-_].
+ * </ul>
  */
 @Data
 @NoArgsConstructor
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = {"onChainObjectAddress", "fixedSecretOwner", "key"}) })
 public class TeeTaskComputeSecret {
+
+    public static final int SECRET_KEY_MIN_LENGTH = 1;
+    public static final int SECRET_KEY_MAX_LENGTH = 64;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -63,6 +74,7 @@ public class TeeTaskComputeSecret {
     @NotNull
     private String fixedSecretOwner; // Will be empty for a secret belonging to an application developer
     @NotNull
+    @Size(min = SECRET_KEY_MIN_LENGTH, max = SECRET_KEY_MAX_LENGTH)
     private String key;
     @NotNull
     private String value;

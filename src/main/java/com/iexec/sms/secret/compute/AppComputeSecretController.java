@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Slf4j
 @CrossOrigin
@@ -38,6 +39,11 @@ public class AppComputeSecretController {
     private static final ApiResponseBody<String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
     static final String INVALID_SECRET_INDEX_FORMAT_MSG = "Secret index should be a positive number";
+    static final String INVALID_SECRET_KEY_FORMAT_MSG = "Secret key should contain at most 64 characters from [0-9A-Za-z-_]";
+
+    private static final Pattern secretKeyPattern = Pattern.compile("^[\\p{Alnum}-_]{"
+            + TeeTaskComputeSecret.SECRET_KEY_MIN_LENGTH + ","
+            + TeeTaskComputeSecret.SECRET_KEY_MAX_LENGTH + "}$");
 
     public AppComputeSecretController(AuthorizationService authorizationService,
                                       TeeTaskComputeSecretService teeTaskComputeSecretService,
@@ -232,6 +238,12 @@ public class AppComputeSecretController {
                                                                             @PathVariable String requesterAddress,
                                                                             @PathVariable String secretKey,
                                                                             @RequestBody String secretValue) {
+        if (!secretKeyPattern.matcher(secretKey).matches()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(INVALID_SECRET_KEY_FORMAT_MSG));
+        }
+
         String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
                 requesterAddress,
                 secretKey,
@@ -300,6 +312,12 @@ public class AppComputeSecretController {
     public ResponseEntity<ApiResponseBody<String>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String secretKey) {
+        if (!secretKeyPattern.matcher(secretKey).matches()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(INVALID_SECRET_KEY_FORMAT_MSG));
+        }
+
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 "",

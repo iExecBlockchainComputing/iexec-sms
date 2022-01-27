@@ -6,6 +6,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -493,6 +495,25 @@ class AppComputeSecretControllerTest {
         verifyNoInteractions(teeTaskComputeSecretCountService);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "this-is-a-really-long-key-with-far-too-many-characters-in-its-name",
+            "this-is-a-key-with-invalid-characters:!*~"
+    })
+    void shouldNotAddRequesterSecretSinceInvalidSecretKey(String secretKey) {
+
+        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+                AUTHORIZATION,
+                REQUESTER_ADDRESS,
+                secretKey,
+                COMMON_SECRET_VALUE
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_KEY_FORMAT_MSG)));
+        verifyNoInteractions(teeTaskComputeSecretService);
+    }
+
     @Test
     void shouldNotAddRequesterSecretSinceSecretValueTooLong() {
         String secretKey = "too-long-secret-value";
@@ -582,6 +603,23 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Secret not found")));
         verify(teeTaskComputeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "this-is-a-really-long-key-with-far-too-many-characters-in-its-name",
+            "this-is-a-key-with-invalid-characters:!*~"
+    })
+    void shouldNotReadRequesterSecretSinceInvalidSecretKey(String secretKey) {
+
+        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.isRequesterAppComputeSecretPresent(
+                REQUESTER_ADDRESS,
+                secretKey
+        );
+
+        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_KEY_FORMAT_MSG)));
+        verifyNoInteractions(teeTaskComputeSecretService);
     }
     // endregion
 
