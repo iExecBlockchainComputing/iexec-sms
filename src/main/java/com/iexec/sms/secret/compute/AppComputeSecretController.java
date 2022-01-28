@@ -61,12 +61,8 @@ public class AppComputeSecretController {
                                                                                @RequestBody String secretValue) {
         String secretIndex = "0";   // FIXME: remove once functioning has been validated.
 
-        // TODO deduplicate this with isAppDeveloperAppComputeSecretPresent
         try {
-            int idx = Integer.parseInt(secretIndex);
-            if (idx < 0) {
-                throw new NumberFormatException();
-            }
+            checkSecretIndex(secretIndex);
         } catch (NumberFormatException e) {
             log.error(INVALID_SECRET_INDEX_FORMAT_MSG, e);
             return ResponseEntity
@@ -119,12 +115,8 @@ public class AppComputeSecretController {
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
                                                                                          @PathVariable String secretIndex) {
-        // TODO deduplicate this with addAppDeveloperAppComputeSecret
         try {
-            int idx = Integer.parseInt(secretIndex);
-            if (idx < 0) {
-                throw new NumberFormatException();
-            }
+            checkSecretIndex(secretIndex);
         } catch (NumberFormatException e) {
             log.error(INVALID_SECRET_INDEX_FORMAT_MSG, e);
             return ResponseEntity
@@ -231,6 +223,18 @@ public class AppComputeSecretController {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(createErrorPayload("Secret count not found"));
+    }
+
+    /**
+     * Checks provided application developer index is in a valid range.
+     * A valid index is a positive number.
+     * @param secretIndex Secret index value to check.
+     */
+    private void checkSecretIndex(String secretIndex) {
+        int idx = Integer.parseInt(secretIndex);
+        if (idx < 0) {
+            throw new NumberFormatException();
+        }
     }
     // endregion
 
