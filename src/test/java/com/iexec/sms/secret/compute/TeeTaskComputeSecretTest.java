@@ -1,13 +1,11 @@
 package com.iexec.sms.secret.compute;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,11 +15,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 public class TeeTaskComputeSecretTest {
 
-    @Autowired
-    private EntityManager entityManager;
+    private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
 
-    @Autowired
-    private TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
+    TeeTaskComputeSecretTest(@Autowired TeeTaskComputeSecretRepository teeTaskComputeSecretRepository) {
+        this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
+    }
 
     private TeeTaskComputeSecret getAppDeveloperSecret() {
         return TeeTaskComputeSecret.builder()
@@ -45,18 +43,12 @@ public class TeeTaskComputeSecretTest {
                 .build();
     }
 
-    @BeforeEach
-    void preflight() {
-        teeTaskComputeSecretRepository.deleteAll();
-    }
-
     @Test
     void shouldNotSaveSecretFromDefaultBuilder() {
         log.info("shouldNotSaveEntity");
         TeeTaskComputeSecret secret = TeeTaskComputeSecret.builder().build();
         assertThat(secret).hasAllNullFieldsOrProperties();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -70,8 +62,7 @@ public class TeeTaskComputeSecretTest {
                 .key("")
                 .value("")
                 .build();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -85,8 +76,7 @@ public class TeeTaskComputeSecretTest {
                 .key("")
                 .value("")
                 .build();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -100,8 +90,7 @@ public class TeeTaskComputeSecretTest {
                 .key("")
                 .value("")
                 .build();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -115,8 +104,7 @@ public class TeeTaskComputeSecretTest {
                 .key("")
                 .value("")
                 .build();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -130,8 +118,7 @@ public class TeeTaskComputeSecretTest {
                 //.key("")
                 .value("")
                 .build();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
@@ -145,27 +132,24 @@ public class TeeTaskComputeSecretTest {
                 .key("")
                 //.value("")
                 .build();
-        teeTaskComputeSecretRepository.save(secret);
-        assertThatThrownBy(() -> entityManager.flush())
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
                 .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test
     void shouldFailToSaveSameAppDeveloperSecretTwice() {
         log.info("AppDeveloperSecret");
-        teeTaskComputeSecretRepository.save(getAppDeveloperSecret());
-        teeTaskComputeSecretRepository.save(getAppDeveloperSecret());
-        assertThatThrownBy(() -> entityManager.flush())
-                .isInstanceOf(PersistenceException.class);
+        teeTaskComputeSecretRepository.saveAndFlush(getAppDeveloperSecret());
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(getAppDeveloperSecret()))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     void shouldFailToSaveSameRequesterSecretTwice() {
         log.info("RequesterSecret");
-        teeTaskComputeSecretRepository.save(getRequesterSecret());
-        teeTaskComputeSecretRepository.save(getRequesterSecret());
-        assertThatThrownBy(() -> entityManager.flush())
-                .isInstanceOf(PersistenceException.class);
+        teeTaskComputeSecretRepository.saveAndFlush(getRequesterSecret());
+        assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(getRequesterSecret()))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
