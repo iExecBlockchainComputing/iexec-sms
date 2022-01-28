@@ -260,15 +260,6 @@ public class PalaemonSessionService {
         }
         int maxApplicationSecretIndex = oMaxApplicationSecretIndex.get().getSecretCount();
         for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
-            String requesterSecret =
-                    teeTaskComputeSecretService.getSecret(
-                                    OnChainObjectType.APPLICATION,
-                                    "",
-                                    SecretOwnerRole.REQUESTER,
-                                    taskDescription.getRequester(),
-                                    secretEntry.getValue())
-                            .map(TeeTaskComputeSecret::getValue)
-                            .orElse(EMPTY_YML_VALUE);
             try {
                 int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
                 if (requesterSecretIndex < 0 || maxApplicationSecretIndex <= requesterSecretIndex) {
@@ -283,6 +274,14 @@ public class PalaemonSessionService {
                 log.warn("Invalid entry found in deal parameters secrets map", e);
                 continue;
             }
+            String requesterSecret = teeTaskComputeSecretService.getSecret(
+                            OnChainObjectType.APPLICATION,
+                            "",
+                            SecretOwnerRole.REQUESTER,
+                            taskDescription.getRequester(),
+                            secretEntry.getValue())
+                    .map(TeeTaskComputeSecret::getValue)
+                    .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
         }
         tokens.put(REQUESTER_SECRETS, requesterSecrets);
