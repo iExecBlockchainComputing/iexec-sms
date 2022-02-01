@@ -38,8 +38,7 @@ import static com.iexec.sms.App.DOMAIN;
 @Service
 public class AuthorizationService {
 
-
-    private IexecHubService iexecHubService;
+    private final IexecHubService iexecHubService;
 
     public AuthorizationService(IexecHubService iexecHubService) {
         this.iexecHubService = iexecHubService;
@@ -131,12 +130,12 @@ public class AuthorizationService {
     }
 
     public String getChallengeForSetAppDeveloperAppComputeSecret(String appAddress,
-                                                                 long secretIndex,
+                                                                 String secretIndex,
                                                                  String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
-                Long.toHexString(secretIndex),
+                Hash.sha3String(secretIndex),
                 Hash.sha3String(secretValue));
     }
 
@@ -151,14 +150,12 @@ public class AuthorizationService {
 
     public String getChallengeForSetRequesterAppComputeSecret(
             String requesterAddress,
-            String appAddress,
-            long secretIndex,
+            String secretKey,
             String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 requesterAddress,
-                appAddress,
-                Long.toHexString(secretIndex),
+                Hash.sha3String(secretKey),
                 Hash.sha3String(secretValue));
     }
 

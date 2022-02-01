@@ -21,15 +21,39 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
+/**
+ * Define a secret that can be used during the execution of a TEE task.
+ * Currently, only secrets for application developers and requesters are supported.
+ * <p>
+ * In this implementation, a unique constraint has been added on <b>onChainObjectAddress</b>,
+ * <b>fixedSecretOwner</b> and <b>key</b> columns.
+ * This constraint has been defined in such a way because:
+ * <ul>
+ * <li>For application developers, fixedSecretOwner will always be "". Each application developer
+ *     secret is uniquely identified with onChainObjectAddress and key (long parsed as String) values.
+ * <li>For requesters, onChainObjectAddress will always be "". Each requester secret is uniquely
+ *     identified with fixedSecretOwner and key values.
+ * </ul>
+ * <p>
+ * The <b>key</b> parameter must be a String compliant with the following constraints:
+ * <ul>
+ * <li>For application developers, it must be a positive number, the characters must be digits [0-9].
+ * <li>For requesters, it must be a String of at most 64 characters from [0-9A-Za-z-_].
+ * </ul>
+ */
 @Data
 @NoArgsConstructor
 @Entity
+@Table(uniqueConstraints = { @UniqueConstraint(columnNames = {"onChainObjectAddress", "fixedSecretOwner", "key"}) })
 public class TeeTaskComputeSecret {
+
+    public static final int SECRET_KEY_MIN_LENGTH = 1;
+    public static final int SECRET_KEY_MAX_LENGTH = 64;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -38,15 +62,21 @@ public class TeeTaskComputeSecret {
     /**
      * Represents the blockchain address of the deployed object
      * (0xapplication, 0xdataset, 0xworkerpool)
-     * <br>
+     * <p>
      * In a future release, it should also handle ENS names.
      */
-    private String onChainObjectAddress;
+    @NotNull
+    private String onChainObjectAddress; // Will be empty for a secret belonging to a requester
+    @NotNull
     private OnChainObjectType onChainObjectType;
+    @NotNull
     private SecretOwnerRole secretOwnerRole;
-    private String fixedSecretOwner;  // May be empty if the owner is not fixed
-    private long index;
-    @Column(columnDefinition = "LONGTEXT")
+    @NotNull
+    private String fixedSecretOwner; // Will be empty for a secret belonging to an application developer
+    @NotNull
+    @Size(min = SECRET_KEY_MIN_LENGTH, max = SECRET_KEY_MAX_LENGTH)
+    private String key;
+    @NotNull
     private String value;
 
     @Builder
@@ -55,13 +85,13 @@ public class TeeTaskComputeSecret {
             String onChainObjectAddress,
             SecretOwnerRole secretOwnerRole,
             String fixedSecretOwner,
-            long index,
+            String key,
             String value) {
         this.onChainObjectType = onChainObjectType;
         this.onChainObjectAddress = onChainObjectAddress;
         this.secretOwnerRole = secretOwnerRole;
         this.fixedSecretOwner = fixedSecretOwner;
-        this.index = index;
+        this.key = key;
         this.value = value;
     }
 }

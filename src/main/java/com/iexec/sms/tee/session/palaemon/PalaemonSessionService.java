@@ -22,10 +22,7 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.compute.OnChainObjectType;
-import com.iexec.sms.secret.compute.SecretOwnerRole;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
+import com.iexec.sms.secret.compute.*;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -77,11 +74,11 @@ public class PalaemonSessionService {
     // Compute
     static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     static final String APP_ARGS = "APP_ARGS";
-    static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
-    static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
     // PostCompute
     static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
+    // Secrets
+    static final String REQUESTER_SECRETS = "REQUESTER_SECRETS";
     // Env
     private static final String ENV_PROPERTY = "env";
 
@@ -90,6 +87,7 @@ public class PalaemonSessionService {
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final AttestationSecurityConfig attestationSecurityConfig;
+    private final TeeTaskComputeSecretCountService teeTaskComputeSecretCountService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     @Value("${scone.cas.palaemon}")
@@ -101,12 +99,14 @@ public class PalaemonSessionService {
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
             AttestationSecurityConfig attestationSecurityConfig,
+            TeeTaskComputeSecretCountService teeTaskComputeSecretCountService,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
+        this.teeTaskComputeSecretCountService = teeTaskComputeSecretCountService;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
     }
 
@@ -236,30 +236,55 @@ public class PalaemonSessionService {
     }
 
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
-        Map<String, Object> tokens = new HashMap<>();
+        final Map<String, Object> tokens = new HashMap<>();
+        final String applicationAddress = taskDescription.getAppAddress();
 
-        final long secretIndex = 0;
+        final String secretIndex = "0";
         String appDeveloperSecret0 =
                 teeTaskComputeSecretService.getSecret(
                                 OnChainObjectType.APPLICATION,
-                                taskDescription.getAppAddress(),
+                                applicationAddress,
                                 SecretOwnerRole.APPLICATION_DEVELOPER,
                                 "",
                                 secretIndex)
                         .map(TeeTaskComputeSecret::getValue)
                         .orElse(EMPTY_YML_VALUE);
-        tokens.put(IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+        tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
 
-        String requesterSecret0 =
-                teeTaskComputeSecretService.getSecret(
-                                OnChainObjectType.APPLICATION,
-                                taskDescription.getAppAddress(),
-                                SecretOwnerRole.REQUESTER,
-                                taskDescription.getRequester(),
-                                secretIndex)
-                        .map(TeeTaskComputeSecret::getValue)
-                        .orElse(EMPTY_YML_VALUE);
-        tokens.put(IEXEC_REQUESTER_SECRET_PREFIX + secretIndex, requesterSecret0);
+        final HashMap<String, String> requesterSecrets = new HashMap<>();
+        Optional<TeeTaskComputeSecretCount> oMaxApplicationSecretIndex = teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(applicationAddress, SecretOwnerRole.REQUESTER);
+        if (oMaxApplicationSecretIndex.isEmpty()) {
+            log.info("No requester secrets found for the application {}", applicationAddress);
+            tokens.put(REQUESTER_SECRETS, requesterSecrets);
+            return tokens;
+        }
+        int maxApplicationSecretIndex = oMaxApplicationSecretIndex.get().getSecretCount();
+        for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
+            try {
+                int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
+                if (requesterSecretIndex < 0 || maxApplicationSecretIndex <= requesterSecretIndex) {
+                    String message = "Application secret indices provided in the deal parameters must be positive numbers "
+                            + "between 0 and max secret count for the application [appAddress:" + applicationAddress
+                            + ", maxApplicationSecretIndex:" + maxApplicationSecretIndex
+                            + ", providedApplicationSecretIndex:" + requesterSecretIndex + "]";
+                    log.warn(message);
+                    throw (new NumberFormatException(message));
+                }
+            } catch(NumberFormatException e) {
+                log.warn("Invalid entry found in deal parameters secrets map", e);
+                continue;
+            }
+            String requesterSecret = teeTaskComputeSecretService.getSecret(
+                            OnChainObjectType.APPLICATION,
+                            "",
+                            SecretOwnerRole.REQUESTER,
+                            taskDescription.getRequester(),
+                            secretEntry.getValue())
+                    .map(TeeTaskComputeSecret::getValue)
+                    .orElse(EMPTY_YML_VALUE);
+            requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
+        }
+        tokens.put(REQUESTER_SECRETS, requesterSecrets);
 
         return tokens;
     }

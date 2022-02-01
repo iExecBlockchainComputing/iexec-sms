@@ -19,7 +19,7 @@ class TeeTaskComputeSecretServiceTest {
             .onChainObjectType(OnChainObjectType.APPLICATION)
             .onChainObjectAddress(APP_ADDRESS.toLowerCase())
             .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
-            .index(0)
+            .key("0")
             .value(ENCRYPTED_SECRET_VALUE)
             .build();
 
@@ -45,15 +45,15 @@ class TeeTaskComputeSecretServiceTest {
     @Test
     void shouldAddSecret() {
         doReturn(false).when(teeTaskComputeSecretService)
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0);
+                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
         when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
 
-        teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0, DECRYPTED_SECRET_VALUE);
+        teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
 
         verify(teeTaskComputeSecretRepository, times(1)).save(computeSecretCaptor.capture());
         final TeeTaskComputeSecret savedTeeTaskComputeSecret = computeSecretCaptor.getValue();
-        Assertions.assertThat(savedTeeTaskComputeSecret.getIndex()).isZero();
+        Assertions.assertThat(savedTeeTaskComputeSecret.getKey()).isEqualTo("0");
         Assertions.assertThat(savedTeeTaskComputeSecret.getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(savedTeeTaskComputeSecret.getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
     }
@@ -61,9 +61,9 @@ class TeeTaskComputeSecretServiceTest {
     @Test
     void shouldNotAddSecretSinceAlreadyExist() {
         doReturn(true).when(teeTaskComputeSecretService)
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0);
+                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
-        teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0, DECRYPTED_SECRET_VALUE);
+        teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
 
         verify(teeTaskComputeSecretRepository, times(0)).save(computeSecretCaptor.capture());
     }
@@ -77,9 +77,9 @@ class TeeTaskComputeSecretServiceTest {
         when(encryptionService.decrypt(ENCRYPTED_SECRET_VALUE))
                 .thenReturn(DECRYPTED_SECRET_VALUE);
 
-        Optional<TeeTaskComputeSecret> decryptedSecret = teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0);
+        Optional<TeeTaskComputeSecret> decryptedSecret = teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
         Assertions.assertThat(decryptedSecret).isPresent();
-        Assertions.assertThat(decryptedSecret.get().getIndex()).isZero();
+        Assertions.assertThat(decryptedSecret.get().getKey()).isEqualTo("0");
         Assertions.assertThat(decryptedSecret.get().getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
         verify(encryptionService, Mockito.times(1)).decrypt(any());
@@ -89,20 +89,20 @@ class TeeTaskComputeSecretServiceTest {
     // region isSecretPresent
     @Test
     void secretShouldExist() {
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0))
+        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0"))
                 .thenReturn(Optional.of(COMPUTE_SECRET));
 
-        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0);
+        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
         Assertions.assertThat(isSecretPresent).isTrue();
     }
 
     @Test
     void secretShouldNotExist() {
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0))
+        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0"))
                 .thenReturn(Optional.empty());
 
-        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", 0);
+        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
         Assertions.assertThat(isSecretPresent).isFalse();
     }
