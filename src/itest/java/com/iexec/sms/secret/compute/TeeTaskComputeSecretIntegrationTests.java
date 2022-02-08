@@ -17,12 +17,13 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.common.contract.generated.Ownable;
+import com.iexec.common.utils.FeignBuilder;
 import com.iexec.common.utils.HashUtils;
-import com.iexec.common.web.ApiResponseBody;
-import com.iexec.sms.ApiClient;
 import com.iexec.sms.CommonTestSetup;
+import com.iexec.sms.SmsClient;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
+import feign.Logger;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.Hash;
 
 import java.util.List;
@@ -53,8 +53,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_DEVELOPER_PRIVATE_KEY = "0x2fac4d263f1b20bfc33ea2bcb1cbe1521322dbde81d04b0c454ffff1218f0ed6";
     private static final String REQUESTER_PRIVATE_KEY = "0xb8e97e9e217a50dedbe3c0c4c37b85a85a10d4eb23fca6dbad55162cfbb1c450";
 
-    @Autowired
-    private ApiClient apiClient;
+    private SmsClient apiClient;
 
     @Autowired
     private EncryptionService encryptionService;
@@ -64,6 +63,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @BeforeEach
     private void setUp() {
+        apiClient = FeignBuilder.createBuilder(Logger.Level.FULL)
+                .target(SmsClient.class, "http://localhost:" + randomServerPort);
         final Ownable appContract = mock(Ownable.class);
         when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
         when(iexecHubService.getOwnableContract(APP_ADDRESS))
@@ -86,11 +87,17 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         addNewRequesterSecret(requesterAddress, requesterSecretKey, secretValue);
 
         // Check the new secrets exists for the API
-        ResponseEntity<ApiResponseBody<String>> appDeveloperSecretExistence = apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, appDeveloperSecretIndex);
-        Assertions.assertThat(appDeveloperSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        try {
+            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, appDeveloperSecretIndex);
+        } catch (FeignException e) {
+            Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        }
 
-        ResponseEntity<ApiResponseBody<String>> requesterSecretExistence = apiClient.isRequesterAppComputeSecretPresent(requesterAddress, requesterSecretKey);
-        Assertions.assertThat(requesterSecretExistence.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        try {
+            apiClient.isRequesterAppComputeSecretPresent(requesterAddress, requesterSecretKey);
+        } catch(FeignException e) {
+            Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        }
 
         // We check the secrets have been added to the database
         final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
@@ -214,15 +221,21 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
 
         // Add a new secret to the database
-        final ResponseEntity<ApiResponseBody<String>> secretCreationResult = apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretIndex, secretValue);
-        Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        try {
+            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretIndex, secretValue);
+        } catch(FeignException e) {
+            Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        }
     }
 
     private void setRequesterSecretCount(String appAddress, int secretCount, String ownerAddress) {
         when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
         final String authorization = getAuthorizationForRequesterSecretCount(appAddress, secretCount);
-        final ResponseEntity<ApiResponseBody<String>> result = apiClient.setMaxRequesterSecretCountForAppCompute(authorization, appAddress, secretCount);
-        Assertions.assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        try {
+            apiClient.setMaxRequesterSecretCountForAppCompute(authorization, appAddress, secretCount);
+        } catch(FeignException e) {
+            Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        }
     }
 
     /**
@@ -244,14 +257,11 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
 
         // Add a new secret to the database
-        final ResponseEntity<ApiResponseBody<String>> secretCreationResult =
-                apiClient.addRequesterAppComputeSecret(
-                        authorization,
-                        requesterAddress,
-                        secretKey,
-                        secretValue
-                );
-        Assertions.assertThat(secretCreationResult.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        try {
+            apiClient.addRequesterAppComputeSecret(authorization, requesterAddress, secretKey, secretValue);
+        } catch (FeignException e) {
+            Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        }
     }
 
     /**
