@@ -17,6 +17,7 @@ ext {
 }
 
 allprojects {
+    group = 'com.iexec.sms'
     sourceCompatibility = 11
     targetCompatibility = 11
     if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
