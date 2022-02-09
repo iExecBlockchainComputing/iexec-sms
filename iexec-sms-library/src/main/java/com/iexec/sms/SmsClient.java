@@ -16,6 +16,7 @@
 
 package com.iexec.sms;
 
+import com.iexec.common.chain.WorkerpoolAuthorization;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -82,6 +83,16 @@ public interface SmsClient {
             @Param("authorization") String authorization,
             @Param("secretAddress") String secretAddress,
             String secretValue
+    );
+
+    @RequestLine("POST /tee/challenges/{chainTaskId}")
+    String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
+
+    @RequestLine("POST /tee/sessions")
+    @Headers("Authorization: {authorization}")
+    String generateTeeSessions(
+            @Param("authorization") String authorization,
+            WorkerpoolAuthorization workerpoolAuthorization
     );
 
 }
