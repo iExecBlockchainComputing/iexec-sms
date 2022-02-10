@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms;
+package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import feign.Headers;

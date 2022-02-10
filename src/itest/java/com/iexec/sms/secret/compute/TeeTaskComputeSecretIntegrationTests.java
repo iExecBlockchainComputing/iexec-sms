@@ -17,10 +17,10 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.common.contract.generated.Ownable;
-import com.iexec.common.utils.FeignBuilder;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
-import com.iexec.sms.SmsClient;
+import com.iexec.sms.api.SmsClient;
+import com.iexec.sms.api.SmsClientBuilder;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
 import feign.Logger;
@@ -63,8 +63,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @BeforeEach
     private void setUp() {
-        apiClient = FeignBuilder.createBuilder(Logger.Level.FULL)
-                .target(SmsClient.class, "http://localhost:" + randomServerPort);
+        apiClient = SmsClientBuilder.getInstance(Logger.Level.FULL, "http://localhost:" + randomServerPort);
         final Ownable appContract = mock(Ownable.class);
         when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
         when(iexecHubService.getOwnableContract(APP_ADDRESS))
