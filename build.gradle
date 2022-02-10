@@ -10,27 +10,28 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.iexec.sms'
-sourceCompatibility = 11
-targetCompatibility = 11
-
 ext {
     springCloudVersion = '2021.0.0'
+    openFeignVersion = '11.7'
     gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
-if (gitBranch != 'main' && gitBranch != 'master' && ! (gitBranch ==~ '(release|hotfix|support)/.*')) {
-    version += '-NEXT-SNAPSHOT'
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        url "https://nexus.iex.ec/repository/maven-public/"
+allprojects {
+    group = 'com.iexec.sms'
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
+        version += '-NEXT-SNAPSHOT'
     }
-    maven {
-        url "https://jitpack.io"
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url "https://nexus.iex.ec/repository/maven-public/"
+        }
+        maven {
+            url "https://jitpack.io"
+        }
     }
 }
 
@@ -88,6 +89,9 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.16.0'
     testImplementation 'org.testcontainers:testcontainers:1.16.0'
     testImplementation 'org.testcontainers:mongodb:1.16.0'
+
+    // integration tests
+    integrationTestImplementation project(':iexec-sms-library')
 }
 
 sourceSets {
