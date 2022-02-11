@@ -105,16 +105,20 @@ sourceSets {
     }
 }
 
+springBoot {
+    buildInfo()
+}
+
+test {
+    useJUnitPlatform()
+}
+
 task itest(type:Test) {
     group       'Verification'
     description 'Runs the integration tests.'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false } // run always
-    useJUnitPlatform()
-}
-
-test {
     useJUnitPlatform()
 }
 
