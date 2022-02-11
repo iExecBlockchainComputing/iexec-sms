@@ -105,16 +105,20 @@ sourceSets {
     }
 }
 
+springBoot {
+    buildInfo()
+}
+
+test {
+    useJUnitPlatform()
+}
+
 task itest(type:Test) {
     group       'Verification'
     description 'Runs the integration tests.'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false } // run always
-    useJUnitPlatform()
-}
-
-test {
     useJUnitPlatform()
 }
 
@@ -147,23 +151,6 @@ publishing {
         }
     }
 }
-
-// create the version controller for the core
-task createVersion(type: Copy) {
-    // delete old one
-    delete 'src/main/java/com/iexec/sms/utils/version/Version.java'
-    // use and copy template to the new location
-    from 'src/main/resources/Version.java.template'
-    into 'src/main/java/com/iexec/sms/utils/version/'
-
-    rename { String fileName ->
-        fileName.replace('.template', '')
-    }
-    // replace tokens in the template file
-    filter(ReplaceTokens, tokens: [projectversion: "${version}".toString()])
-}
-// the createVersion task should be called before compileJava or the version service will not work
-compileJava.dependsOn createVersion
 
 ext.bootJarPath    = relativePath(tasks.bootJar.outputs.files.singleFile)
 ext.gitShortCommit = 'git rev-parse --short=8 HEAD'.execute().text.trim()
