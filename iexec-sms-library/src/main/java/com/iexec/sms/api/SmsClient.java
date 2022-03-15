@@ -90,7 +90,7 @@ public interface SmsClient {
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")
-    String generateTeeSessions(
+    String generateTeeSession(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );
