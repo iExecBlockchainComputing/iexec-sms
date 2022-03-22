@@ -2,7 +2,7 @@ FROM openjdk:11.0.7-jre-slim
 
 ARG jar
 
-RUN test -n "jar"
+RUN test -n "$jar"
 
 COPY $jar                                       /app/iexec-sms.jar
 COPY build/resources/main/palaemonTemplate.vm   /app/palaemonTemplate.vm
