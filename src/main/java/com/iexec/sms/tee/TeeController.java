@@ -17,10 +17,14 @@
 package com.iexec.sms.tee;
 
 
+import java.util.Map;
 import java.util.Optional;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import com.iexec.sms.api.ApiResponseBody;
+import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -33,10 +37,22 @@ import org.web3j.crypto.Keys;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import static com.iexec.sms.authorization.AuthorizationError.*;
+
 @Slf4j
 @RestController
 @RequestMapping("/tee")
 public class TeeController {
+    private static final Map<AuthorizationError, TeeSessionGenerationError> authorizationToGenerationError =
+            Map.of(
+                    EMPTY_PARAMS_UNAUTHORIZED, EXECUTION_NOT_AUTHORIZED_EMPTY_PARAMS_UNAUTHORIZED,
+                    NO_MATCH_ONCHAIN_TYPE, EXECUTION_NOT_AUTHORIZED_NO_MATCH_ONCHAIN_TYPE,
+                    GET_CHAIN_TASK_FAILED, EXECUTION_NOT_AUTHORIZED_GET_CHAIN_TASK_FAILED,
+                    TASK_NOT_ACTIVE, EXECUTION_NOT_AUTHORIZED_TASK_NOT_ACTIVE,
+                    GET_CHAIN_DEAL_FAILED, EXECUTION_NOT_AUTHORIZED_GET_CHAIN_DEAL_FAILED,
+                    INVALID_SIGNATURE, EXECUTION_NOT_AUTHORIZED_INVALID_SIGNATURE
+            );
 
     private final AuthorizationService authorizationService;
     private final TeeChallengeService teeChallengeService;
@@ -95,16 +111,35 @@ public class TeeController {
      *      500 INTERNAL_SERVER_ERROR otherwise.
      */
     @PostMapping("/sessions")
-    public ResponseEntity<String> generateTeeSession(
+    public ResponseEntity<ApiResponseBody<String, TeeSessionGenerationError>> generateTeeSession(
             @RequestHeader("Authorization") String authorization,
             @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
         String workerAddress = workerpoolAuthorization.getWorkerWallet();
         String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            final ApiResponseBody<String, TeeSessionGenerationError> body =
+                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+                            .errors(REQUEST_NOT_SIGNED_BY_HIMSELF)
+                            .build();
+
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(body);
         }
-        if (!authorizationService.isAuthorizedOnExecution(workerpoolAuthorization, true)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        final Optional<AuthorizationError> authorizationError =
+                authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true);
+        if (authorizationError.isPresent()) {
+            final TeeSessionGenerationError teeSessionGenerationError =
+                    authorizationToGenerationError.get(authorizationError.get());
+
+            final ApiResponseBody<String, TeeSessionGenerationError> body =
+                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+                            .errors(teeSessionGenerationError)
+                            .build();
+
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(body);
         }
         String taskId = workerpoolAuthorization.getChainTaskId();
         workerAddress = Keys.toChecksumAddress(workerAddress);
@@ -114,13 +149,22 @@ public class TeeController {
         try {
             String sessionId = teeSessionService
                     .generateTeeSession(taskId, workerAddress, attestingEnclave);
-            return sessionId.isEmpty()
-                    ? ResponseEntity.notFound().build()
-                    : ResponseEntity.ok(sessionId);
+
+            if (sessionId.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(ApiResponseBody.<String, TeeSessionGenerationError>builder().data(sessionId).build());
         } catch(Exception e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            final ApiResponseBody<String, TeeSessionGenerationError> body =
+                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+                            .errors(SECURE_SESSION_GENERATION_FAILED)
+                            .build();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(body);
         }
     }
 }

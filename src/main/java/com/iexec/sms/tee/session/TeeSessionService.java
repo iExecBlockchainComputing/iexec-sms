@@ -26,7 +26,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import static java.util.Objects.requireNonNull;
+import static com.iexec.sms.api.TeeSessionGenerationError.GET_SESSION_YML_FAILED;
+import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
 
 @Slf4j
 @Service
@@ -52,12 +53,16 @@ public class TeeSessionService {
     public String generateTeeSession(
             String taskId,
             String workerAddress,
-            String teeChallenge) throws Exception {
+            String teeChallenge) throws TeeSessionGenerationException {
 
         String sessionId = createSessionId(taskId);
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
-        requireNonNull(taskDescription,
-                "Failed to get task description - taskId: " + taskId);
+        if (taskDescription == null) {
+            throw new TeeSessionGenerationException(
+                    GET_TASK_DESCRIPTION_FAILED,
+                    "Failed to get task description - taskId: " + taskId
+            );
+        }
         PalaemonSessionRequest request = PalaemonSessionRequest.builder()
                 .sessionId(sessionId)
                 .taskDescription(taskDescription)
@@ -66,8 +71,10 @@ public class TeeSessionService {
                 .build();
         String sessionYmlAsString = palaemonSessionService.getSessionYml(request);
         if (sessionYmlAsString.isEmpty()) {
-            throw new Exception("Failed to get session yml [taskId:" + taskId + "," +
-                    " workerAddress:" + workerAddress);
+            throw new TeeSessionGenerationException(
+                    GET_SESSION_YML_FAILED,
+                    "Failed to get session yml [taskId:" + taskId + "," +
+                            " workerAddress:" + workerAddress);
         }
         log.info("Session yml is ready [taskId:{}]", taskId);
         if (shouldDisplayDebugSession){
