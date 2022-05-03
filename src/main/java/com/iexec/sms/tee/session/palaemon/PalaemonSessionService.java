@@ -112,7 +112,7 @@ public class PalaemonSessionService {
     }
 
     @PostConstruct
-    void postConstruct() throws Exception {
+    void postConstruct() throws IllegalArgumentException, FileNotFoundException {
         if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
             throw new IllegalArgumentException("Missing palaemon template filepath");
         }
@@ -327,7 +327,7 @@ public class PalaemonSessionService {
             throws TeeSessionGenerationException {
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {
-            throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must no be null");
+            throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
         }
 
         String taskId = taskDescription.getChainTaskId();
@@ -348,6 +348,7 @@ public class PalaemonSessionService {
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         if (encryptionTokens.isEmpty()) {
+            // This branch should never happen
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_UNKNOWN_ISSUE,
                     "Failed to get post-compute encryption tokens - taskId: " + taskId
@@ -357,6 +358,7 @@ public class PalaemonSessionService {
         // storage
         Map<String, String> storageTokens = getPostComputeStorageTokens(request);
         if (storageTokens.isEmpty()) {
+            // This branch should never happen
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_STORAGE_TOKENS_FAILED_UNKNOWN_ISSUE,
                     "Failed to get post-compute storage tokens - taskId: " + taskId
@@ -367,6 +369,7 @@ public class PalaemonSessionService {
         Map<String, String> signTokens = getPostComputeSignTokens(request);
         if (signTokens.isEmpty()) {
             throw new TeeSessionGenerationException(
+                    // This branch should never happen
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_UNKNOWN_ISSUE,
                     "Failed to get post-compute signature tokens - taskId: " + taskId
             );
