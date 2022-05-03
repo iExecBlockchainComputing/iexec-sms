@@ -31,12 +31,12 @@ import feign.RequestLine;
  */
 public interface SmsClient {
 
-    @RequestLine("POST /apps/{appAddress}/secrets/{secretIndex}")
+    @RequestLine("POST /apps/{appAddress}/secrets/0")
     @Headers("Authorization: {authorization}")
     String addAppDeveloperAppComputeSecret(
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
-            @Param("secretIndex") String secretIndex,
+            //@Param("secretIndex") String secretIndex,
             String secretValue
     );
 
