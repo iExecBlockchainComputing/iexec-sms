@@ -26,10 +26,8 @@ import feign.RequestLine;
 /**
  * Interface allowing to instantiate a Feign client targeting SMS REST endpoints.
  * <p>
- * To create the client, call:
- * <pre>FeignBuilder.createBuilder(feignLogLevel)
- *         .target(SmsClient.class, smsUrl)</pre>
- * @see com.iexec.common.utils.FeignBuilder
+ * To create the client, see the related builder.
+ * @see SmsClientBuilder
  */
 public interface SmsClient {
 

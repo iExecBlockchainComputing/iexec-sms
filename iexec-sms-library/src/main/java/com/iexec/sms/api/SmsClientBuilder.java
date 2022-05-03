@@ -20,14 +20,19 @@ import com.iexec.common.utils.FeignBuilder;
 import feign.Logger;
 
 /**
- * Creates a Feign client instance for {@link SmsClient}.
+ * Creates Feign client instances to query REST endpoints described in {@link SmsClient}.
+ * @see FeignBuilder
  */
 public class SmsClientBuilder {
 
-    private static SmsClient smsClient;
-
     private SmsClientBuilder() {}
 
+    /**
+     * Create an unauthenticated feign client to query apis described in {@link SmsClient}.
+     * @param logLevel Feign logging level to configure.
+     * @param url Url targeted by the client.
+     * @return Feign client for {@link SmsClient} apis.
+     */
     public static SmsClient getInstance(Logger.Level logLevel, String url) {
         return FeignBuilder.createBuilder(logLevel)
                 .target(SmsClient.class, url);
