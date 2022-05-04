@@ -53,7 +53,7 @@ import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
-import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import static com.iexec.common.tee.TeeSessionGenerationError.*;
 
 @Slf4j
 @Service

@@ -18,6 +18,7 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
+import com.iexec.common.tee.TeeSessionGenerationError;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.common.web.ApiResponseBody;
 import feign.Headers;

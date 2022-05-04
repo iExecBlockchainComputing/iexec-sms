@@ -17,27 +17,26 @@
 package com.iexec.sms.tee;
 
 
-import java.util.Map;
-import java.util.Optional;
-
 import com.iexec.common.chain.WorkerpoolAuthorization;
+import com.iexec.common.tee.TeeSessionGenerationError;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.common.web.ApiResponseBody;
-import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+import java.util.Optional;
 
-import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import static com.iexec.common.tee.TeeSessionGenerationError.*;
 import static com.iexec.sms.authorization.AuthorizationError.*;
 
 @Slf4j
