@@ -18,7 +18,7 @@ package com.iexec.sms.tee;
 
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeSessionGenerationError;
+import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.authorization.AuthorizationError;
@@ -37,7 +37,7 @@ import org.web3j.crypto.Keys;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.iexec.common.tee.TeeSessionGenerationError.*;
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.authorization.AuthorizationError.*;
 
 @Slf4j

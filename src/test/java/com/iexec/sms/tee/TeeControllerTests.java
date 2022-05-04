@@ -1,7 +1,7 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeSessionGenerationError;
+import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
@@ -24,7 +24,7 @@ import org.web3j.crypto.Keys;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.iexec.common.tee.TeeSessionGenerationError.*;
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.authorization.AuthorizationError.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
