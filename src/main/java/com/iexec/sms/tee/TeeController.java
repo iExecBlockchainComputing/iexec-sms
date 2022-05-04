@@ -25,6 +25,7 @@ import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -154,8 +155,18 @@ public class TeeController {
             }
 
             return ResponseEntity.ok(ApiResponseBody.<String, TeeSessionGenerationError>builder().data(sessionId).build());
-        } catch(Exception e) {
+        } catch(TeeSessionGenerationException e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
+                    taskId, workerAddress, e);
+            final ApiResponseBody<String, TeeSessionGenerationError> body =
+                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+                            .errors(e.getError())
+                            .build();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(body);
+        } catch (Exception e) {
+            log.error("Failed to generate secure session with unknown reason [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
             final ApiResponseBody<String, TeeSessionGenerationError> body =
                     ApiResponseBody.<String, TeeSessionGenerationError>builder()
