@@ -19,6 +19,7 @@ package com.iexec.sms.api;
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import com.iexec.common.web.ApiResponseBody;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -95,7 +96,7 @@ public interface SmsClient {
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")
-    String generateTeeSession(
+    ApiResponseBody<String, TeeSessionGenerationError> generateTeeSession(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );

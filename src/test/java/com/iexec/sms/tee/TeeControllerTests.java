@@ -2,7 +2,6 @@ package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.web.ApiResponseBody;
-import com.iexec.sms.api.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
@@ -26,9 +25,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
-import static com.iexec.sms.api.TeeSessionGenerationError.EXECUTION_NOT_AUTHORIZED_INVALID_SIGNATURE;
 import static com.iexec.sms.authorization.AuthorizationError.*;
-import static com.iexec.sms.authorization.AuthorizationError.GET_CHAIN_DEAL_FAILED;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
