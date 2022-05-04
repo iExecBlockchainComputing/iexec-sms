@@ -218,7 +218,7 @@ class PalaemonSessionServiceTests {
 
     // endregion
 
-    // app
+    // region app
 
     @Test
     void shouldGetAppPalaemonTokens() {
@@ -504,6 +504,7 @@ class PalaemonSessionServiceTests {
 
     // endregion
 
+    // region utils
     private void addApplicationDeveloperSecret() {
         TeeTaskComputeSecret applicationDeveloperSecret = TeeTaskComputeSecret.builder()
                 .onChainObjectType(OnChainObjectType.APPLICATION)
@@ -632,4 +633,5 @@ class PalaemonSessionServiceTests {
             });
         }
     }
+    // endregion
 }
