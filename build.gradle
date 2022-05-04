@@ -49,7 +49,6 @@ dependencyManagement {
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
-    implementation project(':iexec-sms-library')
 
     // spring
     implementation "org.springframework.boot:spring-boot-starter-web"
