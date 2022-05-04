@@ -21,10 +21,6 @@ import com.iexec.sms.api.TeeSessionGenerationError;
 public class TeeSessionGenerationException extends Exception {
     private final TeeSessionGenerationError error;
 
-    public TeeSessionGenerationException(TeeSessionGenerationError error) {
-        this.error = error;
-    }
-
     public TeeSessionGenerationException(TeeSessionGenerationError error, String message) {
         super(message);
         this.error = error;
