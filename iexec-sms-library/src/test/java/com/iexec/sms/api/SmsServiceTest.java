@@ -23,7 +23,6 @@ import com.iexec.common.web.ApiResponseBody;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -43,12 +42,12 @@ public class SmsServiceTest {
     @Mock
     private SmsClient smsClient;
 
-    @InjectMocks
     private SmsService smsService;
 
     @BeforeEach
     public void preflight() {
         MockitoAnnotations.openMocks(this);
+        smsService = new SmsService(smsClient);
     }
 
     @Test
