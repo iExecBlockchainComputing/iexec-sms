@@ -26,8 +26,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import static com.iexec.sms.api.TeeSessionGenerationError.GET_SESSION_YML_FAILED;
-import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
 
 @Slf4j
 @Service
@@ -60,7 +59,7 @@ public class TeeSessionService {
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     GET_TASK_DESCRIPTION_FAILED,
-                    "Failed to get task description - taskId: " + taskId
+                    String.format("Failed to get task description [taskId:%s]", taskId)
             );
         }
         PalaemonSessionRequest request = PalaemonSessionRequest.builder()
@@ -73,8 +72,7 @@ public class TeeSessionService {
         if (sessionYmlAsString.isEmpty()) {
             throw new TeeSessionGenerationException(
                     GET_SESSION_YML_FAILED,
-                    "Failed to get session yml [taskId:" + taskId + "," +
-                            " workerAddress:" + workerAddress);
+                    String.format("Failed to get session yml [taskId:%s, workerAddress:%s]", taskId, workerAddress));
         }
         log.info("Session yml is ready [taskId:{}]", taskId);
         if (shouldDisplayDebugSession){
@@ -85,7 +83,13 @@ public class TeeSessionService {
                 .generateSecureSession(sessionYmlAsString.getBytes())
                 .getStatusCode()
                 .is2xxSuccessful();
-        return isSessionGenerated ? sessionId : "";
+        if (!isSessionGenerated) {
+            throw new TeeSessionGenerationException(
+                    SECURE_SESSION_GENERATION_FAILED,
+                    String.format("Failed to generate secure session [taskId:%s, workerAddress:%s]", taskId, workerAddress)
+            );
+        }
+        return sessionId;
     }
 
     private String createSessionId(String taskId) {
