@@ -20,6 +20,7 @@ import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.common.utils.BytesUtils;
 import feign.FeignException;
+import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -33,6 +34,10 @@ public class SmsService {
 
     public SmsService(SmsClient smsClient) {
         this.smsClient = smsClient;
+    }
+
+    public SmsService(Logger.Level logLevel, String url) {
+        this.smsClient = SmsClientBuilder.getInstance(logLevel, url);
     }
 
     public boolean addAppDeveloperAppComputeSecret(String authorization,
