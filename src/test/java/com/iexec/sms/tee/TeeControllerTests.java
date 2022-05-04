@@ -1,6 +1,7 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
+import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.authorization.AuthorizationError;

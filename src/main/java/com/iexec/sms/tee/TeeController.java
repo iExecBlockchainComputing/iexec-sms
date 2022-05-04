@@ -22,7 +22,7 @@ import java.util.Optional;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
-import com.iexec.sms.api.ApiResponseBody;
+import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
