@@ -18,6 +18,7 @@ package com.iexec.sms.authorization;
 
 import static com.iexec.common.chain.ChainTaskStatus.ACTIVE;
 import static com.iexec.common.chain.ChainTaskStatus.UNSET;
+import static com.iexec.sms.authorization.AuthorizationError.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -50,6 +51,7 @@ class AuthorizationServiceTests {
         MockitoAnnotations.openMocks(this);
     }
 
+    // region isAuthorizedOnExecution
     @Test
     void shouldBeAuthorizedOnExecutionOfTeeTask() {
         ChainDeal chainDeal = TestUtils.getChainDeal();
@@ -104,6 +106,72 @@ class AuthorizationServiceTests {
         boolean isAuth = authorizationService.isAuthorizedOnExecution(auth, true);
         assertThat(isAuth).isFalse();
     }
+    // endregion
+
+    // region isAuthorizedOnExecutionWithDetailedIssue
+    @Test
+    void shouldBeAuthorizedOnExecutionOfTeeTaskWithDetails() {
+        ChainDeal chainDeal = TestUtils.getChainDeal();
+        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
+        when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
+        when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
+
+        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
+        assertThat(isAuth).isEmpty();
+    }
+
+    @Test
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithNullAuthorizationWithDetails() {
+        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(null, true);
+        assertThat(isAuth).isNotEmpty()
+                .get()
+                .isEqualTo(EMPTY_PARAMS_UNAUTHORIZED);
+    }
+
+    @Test
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskTypeNotMatchedOnchainWithDetails() {
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
+        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
+
+        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, false);
+                assertThat(isAuth).isNotEmpty()
+                .get()
+                .isEqualTo(NO_MATCH_ONCHAIN_TYPE);
+    }
+
+    @Test
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActiveWithDetails() {
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        ChainTask chainTask = TestUtils.getChainTask(UNSET);
+        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
+        when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
+
+        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
+                assertThat(isAuth).isNotEmpty()
+                .get()
+                .isEqualTo(TASK_NOT_ACTIVE);
+    }
+
+    @Test
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValidWithDetails() {
+        ChainDeal chainDeal = TestUtils.getChainDeal();
+        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
+
+        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
+        when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
+        when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
+
+        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
+                assertThat(isAuth).isNotEmpty()
+                .get()
+                .isEqualTo(INVALID_SIGNATURE);
+    }
+    // endregion
 
     @Test
     void getChallengeForSetRequesterAppComputeSecret() {

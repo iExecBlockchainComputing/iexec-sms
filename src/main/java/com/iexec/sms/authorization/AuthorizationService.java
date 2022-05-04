@@ -53,10 +53,6 @@ public class AuthorizationService {
      * Checks whether this execution is authorized.
      * If not authorized, return the reason.
      * Otherwise, returns an empty {@link Optional}.
-     *
-     * @param workerpoolAuthorization
-     * @param isTeeTask
-     * @return
      */
     public Optional<AuthorizationError> isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization workerpoolAuthorization, boolean isTeeTask) {
         if (workerpoolAuthorization == null || workerpoolAuthorization.getChainTaskId().isEmpty()) {
