@@ -16,22 +16,28 @@
 
 package com.iexec.sms.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 
 // TODO: merge with Common version
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponseBody<D, E> {
-    private final D data;
-    private final E errors;
+    private D data;
+    private E errors;
 
     /**
      * Return whether this response contains error(s).
-     * In case of a collection of errors, checks whether the collection is empty.
-     * Otherwise, checks whether the object is null.
+     * Checks whether the object is null.
+     * In case of a collection of errors, also checks whether it is empty.
      *
      * @return {@literal false} if {@code errors} is null or empty,
      * {@literal true} otherwise.
