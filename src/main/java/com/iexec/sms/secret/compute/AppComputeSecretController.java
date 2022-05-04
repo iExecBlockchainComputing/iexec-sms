@@ -36,7 +36,7 @@ public class AppComputeSecretController {
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
     private final TeeTaskComputeSecretCountService teeTaskComputeSecretCountService;
 
-    private static final ApiResponseBody<String> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
+    private static final ApiResponseBody<String, List<String>> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
     static final String INVALID_SECRET_INDEX_FORMAT_MSG = "Secret index should be a positive number";
     static final String INVALID_SECRET_KEY_FORMAT_MSG = "Secret key should contain at most 64 characters from [0-9A-Za-z-_]";
@@ -55,7 +55,7 @@ public class AppComputeSecretController {
 
     // region App developer endpoints
     @PostMapping("/apps/{appAddress}/secrets/0")
-    public ResponseEntity<ApiResponseBody<String>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<ApiResponseBody<String, List<String>>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                                @PathVariable String appAddress,
 //                                                                      @PathVariable String secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
@@ -113,7 +113,7 @@ public class AppComputeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<ApiResponseBody<String>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
+    public ResponseEntity<ApiResponseBody<String, List<String>>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
                                                                                          @PathVariable String secretIndex) {
         try {
             checkSecretIndex(secretIndex);
@@ -143,7 +143,7 @@ public class AppComputeSecretController {
     }
 
     @PostMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<ApiResponseBody<String>> setMaxRequesterSecretCountForAppCompute(
+    public ResponseEntity<ApiResponseBody<String, List<String>>> setMaxRequesterSecretCountForAppCompute(
             @RequestHeader("Authorization") String authorization,
             @PathVariable String appAddress,
             @RequestBody int secretCount) {
@@ -206,14 +206,14 @@ public class AppComputeSecretController {
     }
 
     @GetMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<ApiResponseBody<Integer>> getMaxRequesterSecretCountForAppCompute(@PathVariable String appAddress) {
+    public ResponseEntity<ApiResponseBody<Integer, List<String>>> getMaxRequesterSecretCountForAppCompute(@PathVariable String appAddress) {
         final Optional<TeeTaskComputeSecretCount> secretCount =
                 teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(appAddress, SecretOwnerRole.REQUESTER);
         if (secretCount.isPresent()) {
             log.debug("Requester secret count found [appAddress: {}]", appAddress);
             return ResponseEntity.ok(
                     ApiResponseBody
-                            .<Integer>builder()
+                            .<Integer, List<String>>builder()
                             .data(secretCount.get().getSecretCount())
                             .build()
             );
@@ -240,7 +240,7 @@ public class AppComputeSecretController {
 
     // region App requester endpoint
     @PostMapping("/requesters/{requesterAddress}/secrets/{secretKey}")
-    public ResponseEntity<ApiResponseBody<String>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<ApiResponseBody<String, List<String>>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                             @PathVariable String requesterAddress,
                                                                             @PathVariable String secretKey,
                                                                             @RequestBody String secretValue) {
@@ -315,7 +315,7 @@ public class AppComputeSecretController {
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/requesters/{requesterAddress}/secrets/{secretKey}")
-    public ResponseEntity<ApiResponseBody<String>> isRequesterAppComputeSecretPresent(
+    public ResponseEntity<ApiResponseBody<String, List<String>>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String secretKey) {
         if (!secretKeyPattern.matcher(secretKey).matches()) {
@@ -346,13 +346,13 @@ public class AppComputeSecretController {
     }
     // endregion
 
-    private static <T> ApiResponseBody<T> createErrorPayload(String errorMessage) {
+    private static <T> ApiResponseBody<T, List<String>> createErrorPayload(String errorMessage) {
         return createErrorPayload(List.of(errorMessage));
     }
 
-    private static <T> ApiResponseBody<T> createErrorPayload(List<String> errors) {
+    private static <T> ApiResponseBody<T, List<String>> createErrorPayload(List<String> errors) {
         return ApiResponseBody
-                .<T>builder()
+                .<T, List<String>>builder()
                 .errors(errors)
                 .build();
     }
