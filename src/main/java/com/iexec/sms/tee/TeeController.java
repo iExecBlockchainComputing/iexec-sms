@@ -119,7 +119,7 @@ public class TeeController {
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             final ApiResponseBody<String, TeeSessionGenerationError> body =
                     ApiResponseBody.<String, TeeSessionGenerationError>builder()
-                            .errors(REQUEST_NOT_SIGNED_BY_HIMSELF)
+                            .error(REQUEST_NOT_SIGNED_BY_HIMSELF)
                             .build();
 
             return ResponseEntity
@@ -134,7 +134,7 @@ public class TeeController {
 
             final ApiResponseBody<String, TeeSessionGenerationError> body =
                     ApiResponseBody.<String, TeeSessionGenerationError>builder()
-                            .errors(teeSessionGenerationError)
+                            .error(teeSessionGenerationError)
                             .build();
 
             return ResponseEntity
@@ -160,7 +160,7 @@ public class TeeController {
                     taskId, workerAddress, e);
             final ApiResponseBody<String, TeeSessionGenerationError> body =
                     ApiResponseBody.<String, TeeSessionGenerationError>builder()
-                            .errors(e.getError())
+                            .error(e.getError())
                             .build();
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -170,7 +170,7 @@ public class TeeController {
                     taskId, workerAddress, e);
             final ApiResponseBody<String, TeeSessionGenerationError> body =
                     ApiResponseBody.<String, TeeSessionGenerationError>builder()
-                            .errors(SECURE_SESSION_GENERATION_FAILED)
+                            .error(SECURE_SESSION_GENERATION_FAILED)
                             .build();
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)

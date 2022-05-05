@@ -625,7 +625,7 @@ class AppComputeSecretControllerTest {
     // endregion
 
     private static <T> ApiResponseBody<T, List<String>> createErrorResponse(String... errorMessages) {
-        return ApiResponseBody.<T, List<String>>builder().errors(Arrays.asList(errorMessages)).build();
+        return ApiResponseBody.<T, List<String>>builder().error(Arrays.asList(errorMessages)).build();
     }
 
 }

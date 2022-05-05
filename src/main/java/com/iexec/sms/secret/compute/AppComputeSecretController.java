@@ -353,7 +353,7 @@ public class AppComputeSecretController {
     private static <T> ApiResponseBody<T, List<String>> createErrorPayload(List<String> errors) {
         return ApiResponseBody
                 .<T, List<String>>builder()
-                .errors(errors)
+                .error(errors)
                 .build();
     }
 }

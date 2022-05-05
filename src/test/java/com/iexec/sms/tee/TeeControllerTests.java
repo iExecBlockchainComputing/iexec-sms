@@ -75,7 +75,7 @@ class TeeControllerTests {
         assertNotEquals(null, response.getBody());
         assertNotEquals(null, response.getBody().getData());
         assertNotEquals("", response.getBody().getData());
-        assertNull(response.getBody().getErrors());
+        assertNull(response.getBody().getError());
     }
 
     @Test
@@ -95,8 +95,8 @@ class TeeControllerTests {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
-        assertNotEquals(null, response.getBody().getErrors());
-        assertEquals(TeeSessionGenerationError.REQUEST_NOT_SIGNED_BY_HIMSELF, response.getBody().getErrors());
+        assertNotEquals(null, response.getBody().getError());
+        assertEquals(TeeSessionGenerationError.REQUEST_NOT_SIGNED_BY_HIMSELF, response.getBody().getError());
     }
 
     private static Stream<Arguments> notAuthorizedParams() {
@@ -129,8 +129,8 @@ class TeeControllerTests {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
-        assertNotEquals(null, response.getBody().getErrors());
-        assertEquals(consequence, response.getBody().getErrors());
+        assertNotEquals(null, response.getBody().getError());
+        assertEquals(consequence, response.getBody().getError());
     }
 
     @Test
@@ -190,8 +190,8 @@ class TeeControllerTests {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
-        assertNotEquals(null, response.getBody().getErrors());
-        assertEquals(SECURE_SESSION_GENERATION_FAILED, response.getBody().getErrors());
+        assertNotEquals(null, response.getBody().getError());
+        assertEquals(SECURE_SESSION_GENERATION_FAILED, response.getBody().getError());
     }
     // endregion
 }
