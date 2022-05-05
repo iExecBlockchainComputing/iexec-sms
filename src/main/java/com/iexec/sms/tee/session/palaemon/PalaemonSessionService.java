@@ -233,13 +233,13 @@ public class PalaemonSessionService {
         TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
-                    COMPUTE_NO_ENCLAVE_CONFIG,
+                    APP_COMPUTE_NO_ENCLAVE_CONFIG,
                     "Enclave configuration must no be null"
             );
         }
         if (!enclaveConfig.getValidator().isValid()){
             throw new TeeSessionGenerationException(
-                    COMPUTE_INVALID_ENCLAVE_CONFIG,
+                    APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
                     "Invalid enclave configuration: " +
                             enclaveConfig.getValidator().validate().toString()
             );

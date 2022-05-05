@@ -305,7 +305,7 @@ class PalaemonSessionServiceTests {
         when(validator.validate()).thenReturn(Collections.singletonList(validationError));
         TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
                 () -> palaemonSessionService.getAppPalaemonTokens(request));
-        Assertions.assertEquals(TeeSessionGenerationError.COMPUTE_INVALID_ENCLAVE_CONFIG, exception.getError());
+        Assertions.assertEquals(TeeSessionGenerationError.APP_COMPUTE_INVALID_ENCLAVE_CONFIG, exception.getError());
     }
 
     @Test
