@@ -19,6 +19,7 @@ package com.iexec.sms.api;
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import com.iexec.common.web.ApiResponseBody;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -26,19 +27,17 @@ import feign.RequestLine;
 /**
  * Interface allowing to instantiate a Feign client targeting SMS REST endpoints.
  * <p>
- * To create the client, call:
- * <pre>FeignBuilder.createBuilder(feignLogLevel)
- *         .target(SmsClient.class, smsUrl)</pre>
- * @see com.iexec.common.utils.FeignBuilder
+ * To create the client, see the related builder.
+ * @see SmsClientBuilder
  */
 public interface SmsClient {
 
-    @RequestLine("POST /apps/{appAddress}/secrets/{secretIndex}")
+    @RequestLine("POST /apps/{appAddress}/secrets/0")
     @Headers("Authorization: {authorization}")
     String addAppDeveloperAppComputeSecret(
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
-            @Param("secretIndex") String secretIndex,
+            //@Param("secretIndex") String secretIndex,
             String secretValue
     );
 
@@ -54,6 +53,9 @@ public interface SmsClient {
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
             int secretCount);
+
+    @RequestLine("GET /apps/{appAddress}/requesters/secrets-count")
+    ApiResponseBody<Integer> getMaxRequesterSecretCountForAppCompute(@Param("appAddress") String appAddress);
 
     @RequestLine("GET /cas/url")
     String getSconeCasUrl();
