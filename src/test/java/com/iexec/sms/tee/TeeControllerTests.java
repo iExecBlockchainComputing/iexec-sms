@@ -96,7 +96,7 @@ class TeeControllerTests {
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
         assertNotEquals(null, response.getBody().getError());
-        assertEquals(TeeSessionGenerationError.REQUEST_NOT_SIGNED_BY_HIMSELF, response.getBody().getError());
+        assertEquals(TeeSessionGenerationError.INVALID_AUTHORIZATION, response.getBody().getError());
     }
 
     private static Stream<Arguments> notAuthorizedParams() {

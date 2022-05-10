@@ -119,7 +119,7 @@ public class TeeController {
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             final ApiResponseBody<String, TeeSessionGenerationError> body =
                     ApiResponseBody.<String, TeeSessionGenerationError>builder()
-                            .error(REQUEST_NOT_SIGNED_BY_HIMSELF)
+                            .error(INVALID_AUTHORIZATION)
                             .build();
 
             return ResponseEntity
