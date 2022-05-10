@@ -85,7 +85,7 @@ public class TeeSessionService {
                 .is2xxSuccessful();
         if (!isSessionGenerated) {
             throw new TeeSessionGenerationException(
-                    SECURE_SESSION_GENERATION_FAILED,
+                    SECURE_SESSION_CAS_CALL_FAILED,
                     String.format("Failed to generate secure session [taskId:%s, workerAddress:%s]", taskId, workerAddress)
             );
         }

@@ -81,7 +81,7 @@ class TeeSessionServiceTests {
         when(casClient.generateSecureSession(sessionYmlAsString.getBytes())).thenReturn(ResponseEntity.notFound().build());
 
         final TeeSessionGenerationException teeSessionGenerationException = assertThrows(TeeSessionGenerationException.class, () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(SECURE_SESSION_GENERATION_FAILED, teeSessionGenerationException.getError());
+        assertEquals(SECURE_SESSION_CAS_CALL_FAILED, teeSessionGenerationException.getError());
         assertEquals(String.format("Failed to generate secure session [taskId:%s, workerAddress:%s]", TASK_ID, WORKER_ADDRESS), teeSessionGenerationException.getMessage());
     }
 }
