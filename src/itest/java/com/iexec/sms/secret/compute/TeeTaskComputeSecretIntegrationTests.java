@@ -150,7 +150,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         // We shouldn't be able to add a new secrets to the database with the same IDs
         try {
             final String authorization = getAuthorizationForAppDeveloper(appAddress, appDeveloperSecretIndex, secretValue);
-            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, appDeveloperSecretIndex, secretValue);
+            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretValue);
             Assertions.fail("A second app developer secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
             // Having a Conflict exception is what we expect there.
@@ -169,7 +169,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
 
             final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, appDeveloperSecretIndex, secretValue);
-            apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, appDeveloperSecretIndex, secretValue);
+            apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretValue);
             Assertions.fail("A second app developer secret with the same index " +
                     "and an app address whose only difference is the case should be rejected.");
         } catch (FeignException.Conflict ignored) {
@@ -221,7 +221,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
         // Add a new secret to the database
         try {
-            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretIndex, secretValue);
+            apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretValue);
         } catch(FeignException e) {
             Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
         }
