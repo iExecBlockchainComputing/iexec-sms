@@ -36,7 +36,7 @@ public interface SmsClient {
 
     @RequestLine("POST /apps/{appAddress}/secrets/0")
     @Headers("Authorization: {authorization}")
-    String addAppDeveloperAppComputeSecret(
+    ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
             //@Param("secretIndex") String secretIndex,
@@ -44,14 +44,14 @@ public interface SmsClient {
     );
 
     @RequestLine("HEAD /apps/{appAddress}/secrets/{secretIndex}")
-    String isAppDeveloperAppComputeSecretPresent(
+    ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
             @Param("appAddress") String appAddress,
             @Param("secretIndex") String secretIndex
     );
 
     @RequestLine("POST /apps/{appAddress}/requesters/secrets-count")
     @Headers("Authorization: {authorization}")
-    String setMaxRequesterSecretCountForAppCompute(
+    ApiResponseBody<String, List<String>> setMaxRequesterSecretCountForAppCompute(
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
             int secretCount);
@@ -64,7 +64,7 @@ public interface SmsClient {
 
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")
     @Headers("Authorization: {authorization}")
-    String addRequesterAppComputeSecret(
+    ApiResponseBody<String, List<String>> addRequesterAppComputeSecret(
             @Param("authorization") String authorization,
             @Param("requesterAddress") String requesterAddress,
             @Param("secretKey") String secretKey,
@@ -72,7 +72,7 @@ public interface SmsClient {
     );
 
     @RequestLine("HEAD /requesters/{requesterAddress}/secrets/{secretKey}")
-    String isRequesterAppComputeSecretPresent(
+    ApiResponseBody<String, List<String>> isRequesterAppComputeSecretPresent(
             @Param("requesterAddress") String requesterAddress,
             @Param("secretKey") String secretKey
     );
