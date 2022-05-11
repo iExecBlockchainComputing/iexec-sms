@@ -24,6 +24,8 @@ import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 
+import java.util.List;
+
 /**
  * Interface allowing to instantiate a Feign client targeting SMS REST endpoints.
  * <p>
@@ -55,7 +57,7 @@ public interface SmsClient {
             int secretCount);
 
     @RequestLine("GET /apps/{appAddress}/requesters/secrets-count")
-    ApiResponseBody<Integer> getMaxRequesterSecretCountForAppCompute(@Param("appAddress") String appAddress);
+    ApiResponseBody<Integer, List<String>> getMaxRequesterSecretCountForAppCompute(@Param("appAddress") String appAddress);
 
     @RequestLine("GET /cas/url")
     String getSconeCasUrl();
