@@ -139,6 +139,7 @@ class PalaemonSessionServiceTests {
         when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
     }
 
+    //region getSessionYml
     @Test
     void shouldGetSessionYml() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
@@ -159,9 +160,9 @@ class PalaemonSessionServiceTests {
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
         assertRecursively(expectedYmlMap, actualYmlMap);
     }
+    //endregion
 
-    // pre-compute
-
+    //region getPreComputePalaemonTokens
     @Test
     void shouldGetPreComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
@@ -187,9 +188,9 @@ class PalaemonSessionServiceTests {
                     IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
                     IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2));
     }
+    //endregion
 
-    // app
-
+    //region getAppPalaemonTokens
     @Test
     void shouldGetAppPalaemonTokens() {
         PalaemonSessionRequest request = createSessionRequest();
@@ -361,9 +362,9 @@ class PalaemonSessionServiceTests {
         assertThat(tokens.get(REQUESTER_SECRETS))
                 .isEqualTo(Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1));
     }
+    //endregion
 
-    // post-compute
-
+    //region getPostComputePalaemonTokens
     @Test
     void shouldGetPostComputePalaemonTokens() throws Exception {
         PalaemonSessionRequest request = createSessionRequest();
@@ -417,6 +418,7 @@ class PalaemonSessionServiceTests {
         assertThat(tokens.get(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY))
                 .isEqualTo(challenge.getCredentials().getPrivateKey());
     }
+    //endregion
 
     private void addApplicationDeveloperSecret() {
         TeeTaskComputeSecret applicationDeveloperSecret = TeeTaskComputeSecret.builder()
