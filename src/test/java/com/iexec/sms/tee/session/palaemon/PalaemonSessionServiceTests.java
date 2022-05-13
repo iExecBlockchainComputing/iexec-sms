@@ -143,7 +143,7 @@ class PalaemonSessionServiceTests {
     //region getSessionYml
     @Test
     void shouldGetSessionYml() throws Exception {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         doReturn(getPreComputeTokens()).when(palaemonSessionService)
                 .getPreComputePalaemonTokens(request);
         doReturn(getAppTokens()).when(palaemonSessionService)
@@ -166,7 +166,7 @@ class PalaemonSessionServiceTests {
     //region getPreComputePalaemonTokens
     @Test
     void shouldGetPreComputePalaemonTokens() throws Exception {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         when(teeWorkflowConfig.getPreComputeFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
         when(teeWorkflowConfig.getPreComputeEntrypoint())
@@ -193,8 +193,8 @@ class PalaemonSessionServiceTests {
 
     //region getAppPalaemonTokens
     @Test
-    void shouldGetAppPalaemonTokens() {
-        PalaemonSessionRequest request = createSessionRequest();
+    void shouldGetAppPalaemonTokensForAdvancedTaskDescription() {
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -209,26 +209,40 @@ class PalaemonSessionServiceTests {
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
 
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.APP_MRENCLAVE))
-                .isEqualTo(APP_FINGERPRINT);
-        assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
-                .isEqualTo(APP_ENTRYPOINT + " " + ARGS);
-        assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
-                .isEqualTo(Map.of(
-                    IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
-                    IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
         assertThat(tokens)
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE);
-        assertThat(tokens.get(REQUESTER_SECRETS))
-                .isEqualTo(Map.of(
-                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
-                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
-                ));
+                .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
+                .containsEntry(APP_ARGS, APP_ENTRYPOINT + " " + ARGS)
+                .containsEntry(INPUT_FILE_NAMES,
+                        Map.of(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"))
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE)
+                .containsEntry(REQUESTER_SECRETS,
+                        Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
+                                IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2));
     }
 
     @Test
-    void shouldGetPalaemonTokensWithoutAppComputeSecret() {
-        PalaemonSessionRequest request = createSessionRequest();
+    void shouldGetPalaemonTokensForBasicTaskDescription() {
+        TaskDescription taskDescription = TaskDescription.builder()
+                .appEnclaveConfiguration(enclaveConfig)
+                .build();
+        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
+        when(enclaveConfig.getValidator()).thenReturn(validator);
+        when(validator.isValid()).thenReturn(true);
+        PalaemonSessionRequest request = createSessionRequest(taskDescription);
+        Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
+        assertThat(tokens).isNotEmpty();
+        assertThat(tokens)
+                .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
+                .containsEntry(APP_ARGS, APP_ENTRYPOINT)
+                .containsEntry(INPUT_FILE_NAMES, Collections.emptyMap())
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
+                .containsEntry(REQUESTER_SECRETS, Collections.emptyMap());
+    }
+
+    @Test
+    void shouldGetPalaemonTokensWithEmptyAppComputeSecretWhenSecretsDoNotExist() {
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -239,13 +253,6 @@ class PalaemonSessionServiceTests {
                 "",
                 APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(Optional.empty());
-        when(teeTaskComputeSecretService.getSecret(
-                OnChainObjectType.APPLICATION,
-                "",
-                SecretOwnerRole.REQUESTER,
-                REQUESTER,
-                REQUESTER_SECRET_KEY_1))
-                .thenReturn(Optional.empty());
 
         Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
         verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(APP_ADDRESS), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
@@ -253,25 +260,21 @@ class PalaemonSessionServiceTests {
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
 
         assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.APP_MRENCLAVE))
-                .isEqualTo(APP_FINGERPRINT);
-        assertThat(tokens.get(PalaemonSessionService.APP_ARGS))
-                .isEqualTo(APP_ENTRYPOINT + " " + ARGS);
-        assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_NAMES))
-                .isEqualTo(Map.of(
-                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
-                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"));
         assertThat(tokens)
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "");
-        assertThat(tokens.get(REQUESTER_SECRETS)).isEqualTo(Map.of(
-                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", "",
-                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", ""
-                ));
+                .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
+                .containsEntry(APP_ARGS, APP_ENTRYPOINT + " " + ARGS)
+                .containsEntry(INPUT_FILE_NAMES,
+                        Map.of(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"))
+                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
+                .containsEntry(REQUESTER_SECRETS,
+                        Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", "",
+                                IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", ""));
     }
 
     @Test
     void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig() {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
         String validationError = "validation error";
@@ -283,7 +286,7 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldAddMultipleRequesterSecrets() {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -303,7 +306,7 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldFilterRequesterSecretIndexLowerThanZero() {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         request.getTaskDescription().setSecrets(Map.of("0", REQUESTER_SECRET_KEY_1, "-1", "out-of-bound-requester-secret"));
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
@@ -319,7 +322,7 @@ class PalaemonSessionServiceTests {
     //region getPostComputePalaemonTokens
     @Test
     void shouldGetPostComputePalaemonTokens() throws Exception {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
         when(teeWorkflowConfig.getPostComputeFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
@@ -397,12 +400,12 @@ class PalaemonSessionServiceTests {
                 .thenReturn(Optional.of(requesterSecret));
     }
 
-    private PalaemonSessionRequest createSessionRequest() {
+    private PalaemonSessionRequest createSessionRequest(TaskDescription taskDescription) {
         return PalaemonSessionRequest.builder()
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
-                .taskDescription(createTaskDescription())
+                .taskDescription(taskDescription)
                 .build();
     }
 

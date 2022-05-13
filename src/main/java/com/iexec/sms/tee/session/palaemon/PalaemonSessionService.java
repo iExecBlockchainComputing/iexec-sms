@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -247,6 +248,11 @@ public class PalaemonSessionService {
                         .map(TeeTaskComputeSecret::getValue)
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+
+        if (taskDescription.getSecrets() == null) {
+            tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
+            return tokens;
+        }
 
         final HashMap<String, String> requesterSecrets = new HashMap<>();
         for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
