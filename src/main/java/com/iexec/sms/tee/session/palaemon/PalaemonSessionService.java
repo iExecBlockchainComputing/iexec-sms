@@ -254,7 +254,7 @@ public class PalaemonSessionService {
                 int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
                 if (requesterSecretIndex < 0) {
                     String message = "Application secret indices provided in the deal parameters must be positive numbers"
-                            + ", providedApplicationSecretIndex:" + requesterSecretIndex + "]";
+                            + " [providedApplicationSecretIndex:" + requesterSecretIndex + "]";
                     log.warn(message);
                     throw (new NumberFormatException(message));
                 }
