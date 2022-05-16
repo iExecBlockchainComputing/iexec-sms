@@ -254,7 +254,7 @@ class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         PalaemonSessionRequest request = createSessionRequest(taskDescription);
-        Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
+        Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         assertThat(tokens).isNotEmpty();
         assertThat(tokens)
                 .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
@@ -316,7 +316,7 @@ class PalaemonSessionServiceTests {
         when(validator.isValid()).thenReturn(true);
         addRequesterSecret(REQUESTER_SECRET_KEY_1, REQUESTER_SECRET_VALUE_1);
         addRequesterSecret(REQUESTER_SECRET_KEY_2, REQUESTER_SECRET_VALUE_2);
-        Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
+        Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService, times(2))
                 .getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
@@ -406,7 +406,7 @@ class PalaemonSessionServiceTests {
     //region getPostComputeEncryptionTokens
     @Test
     void shouldGetPostComputeEncryptionTokensWithEncryption() {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
 
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
         when(web2SecretsService.getSecret(
@@ -423,7 +423,7 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldGetPostComputeEncryptionTokensWithoutEncryption() {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
         request.getTaskDescription().setResultEncryption(false);
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
@@ -434,7 +434,7 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldNotGetPostComputeEncryptionTokensSinceEmptyBeneficiaryKey() {
-        PalaemonSessionRequest request = createSessionRequest();
+        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
 
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
