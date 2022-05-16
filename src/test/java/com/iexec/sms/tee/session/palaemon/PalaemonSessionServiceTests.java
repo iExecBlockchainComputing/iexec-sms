@@ -53,8 +53,6 @@ import java.security.GeneralSecurityException;
 import java.util.*;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
-import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
-import static com.iexec.common.precompute.PreComputeUtils.*;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
@@ -211,14 +209,19 @@ class PalaemonSessionServiceTests {
 
         Map<String, Object> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT)
-                .containsEntry(PreComputeUtils.IEXEC_DATASET_KEY, secret.getTrimmedValue())
-                .containsEntry(PalaemonSessionService.INPUT_FILE_URLS,
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
-                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+                                PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
+                                PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
+                                PreComputeUtils.IEXEC_DATASET_KEY, secret.getTrimmedValue(),
+                                PreComputeUtils.IS_DATASET_REQUIRED, true,
+                                PalaemonSessionService.INPUT_FILE_URLS,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+
+                        )
                 );
     }
 
@@ -241,13 +244,18 @@ class PalaemonSessionServiceTests {
         Map<String, Object> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
         assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT)
-                .containsEntry(PreComputeUtils.IEXEC_DATASET_KEY, "")
-                .containsEntry(PalaemonSessionService.INPUT_FILE_URLS,
+                .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
-                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+                                PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
+                                PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
+                                PreComputeUtils.IEXEC_DATASET_KEY, "",
+                                PreComputeUtils.IS_DATASET_REQUIRED, false,
+                                PalaemonSessionService.INPUT_FILE_URLS,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+
+                        )
                 );
     }
 
@@ -272,20 +280,23 @@ class PalaemonSessionServiceTests {
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
 
-        assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.APP_MRENCLAVE, APP_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.APP_ARGS, APP_ENTRYPOINT + " " + ARGS)
-                .containsEntry(PalaemonSessionService.INPUT_FILE_NAMES,
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
-                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
-                        )
-                )
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE)
-                .containsEntry(REQUESTER_SECRETS,
-                        Map.of(
-                                IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
-                                IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
+                                PalaemonSessionService.APP_MRENCLAVE, APP_FINGERPRINT,
+                                PalaemonSessionService.APP_ARGS, APP_ENTRYPOINT + " " + ARGS,
+                                PalaemonSessionService.INPUT_FILE_NAMES,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
+                                ),
+                                IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE,
+                                REQUESTER_SECRETS,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
+                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
+                                )
+
                         )
                 );
     }
@@ -318,17 +329,20 @@ class PalaemonSessionServiceTests {
         verify(teeTaskComputeSecretCountService).getMaxAppComputeSecretCount(any(), any());
         verify(teeTaskComputeSecretService, never()).getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
 
-        assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.APP_MRENCLAVE, APP_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.APP_ARGS, APP_ENTRYPOINT + " " + ARGS)
-                .containsEntry(PalaemonSessionService.INPUT_FILE_NAMES,
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
-                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
+                                PalaemonSessionService.APP_MRENCLAVE, APP_FINGERPRINT,
+                                PalaemonSessionService.APP_ARGS, APP_ENTRYPOINT + " " + ARGS,
+                                PalaemonSessionService.INPUT_FILE_NAMES,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
+                                ),
+                                IEXEC_APP_DEVELOPER_SECRET_0, "",
+                                REQUESTER_SECRETS, Collections.emptyMap()
                         )
-                )
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
-                .containsEntry(REQUESTER_SECRETS, Collections.emptyMap());
+                );
     }
 
     @Test
@@ -482,21 +496,24 @@ class PalaemonSessionServiceTests {
 
         Map<String, String> tokens =
                 palaemonSessionService.getPostComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT, POST_COMPUTE_ENTRYPOINT)
-                // encryption tokens
-                .containsEntry(ResultUtils.RESULT_ENCRYPTION, "yes")
-                .containsEntry(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY)
-                // storage tokens
-                .containsEntry(ResultUtils.RESULT_STORAGE_CALLBACK, "no")
-                .containsEntry(ResultUtils.RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER)
-                .containsEntry(ResultUtils.RESULT_STORAGE_PROXY, STORAGE_PROXY)
-                .containsEntry(ResultUtils.RESULT_STORAGE_TOKEN, STORAGE_TOKEN)
-                // sign tokens
-                .containsEntry(ResultUtils.RESULT_TASK_ID, TASK_ID)
-                .containsEntry(ResultUtils.RESULT_SIGN_WORKER_ADDRESS, WORKER_ADDRESS)
-                .containsEntry(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, challenge.getCredentials().getPrivateKey());
+
+        final Map<String, String> expectedTokens = new HashMap<>();
+        expectedTokens.put(PalaemonSessionService.POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT);
+        expectedTokens.put(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT, POST_COMPUTE_ENTRYPOINT);
+        // encryption tokens
+        expectedTokens.put(ResultUtils.RESULT_ENCRYPTION, "yes");
+        expectedTokens.put(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+        // storage tokens
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_CALLBACK, "no");
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER);
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_PROXY, STORAGE_PROXY);
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_TOKEN, STORAGE_TOKEN);
+        // sign tokens
+        expectedTokens.put(ResultUtils.RESULT_TASK_ID, TASK_ID);
+        expectedTokens.put(ResultUtils.RESULT_SIGN_WORKER_ADDRESS, WORKER_ADDRESS);
+        expectedTokens.put(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, challenge.getCredentials().getPrivateKey());
+
+        assertThat(tokens).containsExactlyEntriesOf(expectedTokens);
     }
 
     @Test
@@ -520,10 +537,14 @@ class PalaemonSessionServiceTests {
                 () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
 
         assertThat(tokens)
-                .containsEntry(RESULT_STORAGE_CALLBACK, "yes")
-                .containsEntry(RESULT_STORAGE_PROVIDER, EMPTY_YML_VALUE)
-                .containsEntry(RESULT_STORAGE_PROXY, EMPTY_YML_VALUE)
-                .containsEntry(RESULT_STORAGE_TOKEN, EMPTY_YML_VALUE);
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_STORAGE_CALLBACK, "yes",
+                                RESULT_STORAGE_PROVIDER, EMPTY_YML_VALUE,
+                                RESULT_STORAGE_PROXY, EMPTY_YML_VALUE,
+                                RESULT_STORAGE_TOKEN, EMPTY_YML_VALUE
+                        )
+                );
     }
 
     @Test
@@ -539,10 +560,14 @@ class PalaemonSessionServiceTests {
                 () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
 
         assertThat(tokens)
-                .containsEntry(RESULT_STORAGE_CALLBACK, "no")
-                .containsEntry(RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER)
-                .containsEntry(RESULT_STORAGE_PROXY, STORAGE_PROXY)
-                .containsEntry(RESULT_STORAGE_TOKEN, secretValue);
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_STORAGE_CALLBACK, "no",
+                                RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER,
+                                RESULT_STORAGE_PROXY, STORAGE_PROXY,
+                                RESULT_STORAGE_TOKEN, secretValue
+                        )
+                );
     }
 
     @Test
@@ -559,10 +584,14 @@ class PalaemonSessionServiceTests {
                 () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
 
         assertThat(tokens)
-                .containsEntry(RESULT_STORAGE_CALLBACK, "no")
-                .containsEntry(RESULT_STORAGE_PROVIDER, DROPBOX_RESULT_STORAGE_PROVIDER)
-                .containsEntry(RESULT_STORAGE_PROXY, STORAGE_PROXY)
-                .containsEntry(RESULT_STORAGE_TOKEN, secretValue);
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_STORAGE_CALLBACK, "no",
+                                RESULT_STORAGE_PROVIDER, DROPBOX_RESULT_STORAGE_PROVIDER,
+                                RESULT_STORAGE_PROXY, STORAGE_PROXY,
+                                RESULT_STORAGE_TOKEN, secretValue
+                        )
+                );
     }
 
     @Test
@@ -594,9 +623,13 @@ class PalaemonSessionServiceTests {
         final Map<String, String> tokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeSignTokens(sessionRequest));
 
         assertThat(tokens)
-                .containsEntry(RESULT_TASK_ID, taskId)
-                .containsEntry(RESULT_SIGN_WORKER_ADDRESS, sessionRequest.getWorkerAddress())
-                .containsEntry(RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, credentials.getPrivateKey());
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_TASK_ID, taskId,
+                                RESULT_SIGN_WORKER_ADDRESS, sessionRequest.getWorkerAddress(),
+                                RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, credentials.getPrivateKey()
+                        )
+                );
     }
 
     @ParameterizedTest
@@ -701,8 +734,12 @@ class PalaemonSessionServiceTests {
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
         assertThat(encryptionTokens)
-                .containsEntry(RESULT_ENCRYPTION, "yes")
-                .containsEntry(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_ENCRYPTION, "yes",
+                                RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY
+                        )
+                );
     }
 
     @Test
@@ -712,8 +749,12 @@ class PalaemonSessionServiceTests {
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
         assertThat(encryptionTokens)
-                .containsEntry(RESULT_ENCRYPTION, "no")
-                .containsEntry(RESULT_ENCRYPTION_PUBLIC_KEY, "");
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_ENCRYPTION, "no",
+                                RESULT_ENCRYPTION_PUBLIC_KEY, ""
+                        )
+                );
     }
 
     @Test
@@ -808,8 +849,8 @@ class PalaemonSessionServiceTests {
         return Map.of(
                 PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
                 PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
-                IS_DATASET_REQUIRED, true,
-                IEXEC_DATASET_KEY, DATASET_KEY.trim(),
+                PreComputeUtils.IS_DATASET_REQUIRED, true,
+                PreComputeUtils.IEXEC_DATASET_KEY, DATASET_KEY.trim(),
                 INPUT_FILE_URLS, Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
                     IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2));
