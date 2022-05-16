@@ -24,6 +24,7 @@ import com.iexec.common.tee.TeeEnclaveConfigurationValidator;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
+import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -34,6 +35,7 @@ import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
@@ -51,11 +53,13 @@ import java.util.*;
 
 import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
 import static com.iexec.common.precompute.PreComputeUtils.*;
+import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.INPUT_FILE_NAMES;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Slf4j
@@ -161,6 +165,28 @@ class PalaemonSessionServiceTests {
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
         assertRecursively(expectedYmlMap, actualYmlMap);
     }
+
+    @Test
+    void shouldNotGetSessionYmlSinceRequestIsNull() {
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getSessionYml(null)
+        );
+        assertEquals(NO_SESSION_REQUEST, exception.getError());
+        assertEquals("Session request must not be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldNotGetSessionYmlSinceTaskDescriptionIsMissing() {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder().build();
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getSessionYml(request)
+        );
+        assertEquals(NO_TASK_DESCRIPTION, exception.getError());
+        assertEquals("Task description must not be null", exception.getMessage());
+    }
     //endregion
 
     //region getPreComputePalaemonTokens
@@ -177,17 +203,15 @@ class PalaemonSessionServiceTests {
 
         Map<String, Object> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE))
-                .isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        assertThat(tokens.get(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT))
-                .isEqualTo(PRE_COMPUTE_ENTRYPOINT);
-        assertThat(tokens.get(PreComputeUtils.IEXEC_DATASET_KEY))
-                .isEqualTo(secret.getTrimmedValue());
-        assertThat(tokens.get(PalaemonSessionService.INPUT_FILE_URLS))
-                .isEqualTo(Map.of(
-                    IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
-                    IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2));
+        assertThat(tokens).isNotEmpty()
+                .containsEntry(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT)
+                .containsEntry(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT)
+                .containsEntry(PreComputeUtils.IEXEC_DATASET_KEY, secret.getTrimmedValue())
+                .containsEntry(PalaemonSessionService.INPUT_FILE_URLS,
+                        Map.of(
+                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+                );
     }
     //endregion
 
@@ -202,7 +226,7 @@ class PalaemonSessionServiceTests {
         addRequesterSecret(REQUESTER_SECRET_KEY_1, REQUESTER_SECRET_VALUE_1);
         addRequesterSecret(REQUESTER_SECRET_KEY_2, REQUESTER_SECRET_VALUE_2);
 
-        Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
+        Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
 
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX);
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
@@ -254,7 +278,7 @@ class PalaemonSessionServiceTests {
                 APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(Optional.empty());
 
-        Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
+        Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(APP_ADDRESS), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
@@ -279,9 +303,9 @@ class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         String validationError = "validation error";
         when(validator.validate()).thenReturn(Collections.singletonList(validationError));
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
                 () -> palaemonSessionService.getAppPalaemonTokens(request));
-        Assertions.assertTrue(exception.getMessage().contains(validationError));
+        Assertions.assertEquals(TeeSessionGenerationError.APP_COMPUTE_INVALID_ENCLAVE_CONFIG, exception.getError());
     }
 
     @Test
@@ -297,8 +321,8 @@ class PalaemonSessionServiceTests {
                 .getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
-        assertThat(tokens.get(REQUESTER_SECRETS))
-                .isEqualTo(Map.of(
+        assertThat(tokens).containsEntry(REQUESTER_SECRETS,
+                Map.of(
                         IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
                         IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
                 ));
@@ -312,10 +336,10 @@ class PalaemonSessionServiceTests {
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
         addRequesterSecret(REQUESTER_SECRET_KEY_1, REQUESTER_SECRET_VALUE_1);
-        Map<String, Object> tokens = palaemonSessionService.getAppPalaemonTokens(request);
+        Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
-        assertThat(tokens.get(REQUESTER_SECRETS))
-                .isEqualTo(Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1));
+        assertThat(tokens).containsEntry(REQUESTER_SECRETS,
+                Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1));
     }
     //endregion
 
@@ -349,32 +373,86 @@ class PalaemonSessionServiceTests {
 
         Map<String, String> tokens =
                 palaemonSessionService.getPostComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty();
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_MRENCLAVE))
-                .isEqualTo(POST_COMPUTE_FINGERPRINT);
-        assertThat(tokens.get(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT))
-                .isEqualTo(POST_COMPUTE_ENTRYPOINT);
-        // encryption tokens
-        assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION)).isEqualTo("yes") ;
-        assertThat(tokens.get(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY))
-                .isEqualTo(ENCRYPTION_PUBLIC_KEY);
-        // storage tokens
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_CALLBACK)).isEqualTo("no");
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_PROVIDER))
-                .isEqualTo(STORAGE_PROVIDER);
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_PROXY))
-                .isEqualTo(STORAGE_PROXY);
-        assertThat(tokens.get(ResultUtils.RESULT_STORAGE_TOKEN))
-                .isEqualTo(STORAGE_TOKEN);
-        // sign tokens
-        assertThat(tokens.get(ResultUtils.RESULT_TASK_ID)).isEqualTo(TASK_ID);
-        assertThat(tokens.get(ResultUtils.RESULT_SIGN_WORKER_ADDRESS))
-                .isEqualTo(WORKER_ADDRESS);
-        assertThat(tokens.get(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY))
-                .isEqualTo(challenge.getCredentials().getPrivateKey());
+        assertThat(tokens).isNotEmpty()
+                .containsEntry(PalaemonSessionService.POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT)
+                .containsEntry(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT, POST_COMPUTE_ENTRYPOINT)
+                // encryption tokens
+                .containsEntry(ResultUtils.RESULT_ENCRYPTION, "yes")
+                .containsEntry(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY)
+                // storage tokens
+                .containsEntry(ResultUtils.RESULT_STORAGE_CALLBACK, "no")
+                .containsEntry(ResultUtils.RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER)
+                .containsEntry(ResultUtils.RESULT_STORAGE_PROXY, STORAGE_PROXY)
+                .containsEntry(ResultUtils.RESULT_STORAGE_TOKEN, STORAGE_TOKEN)
+                // sign tokens
+                .containsEntry(ResultUtils.RESULT_TASK_ID, TASK_ID)
+                .containsEntry(ResultUtils.RESULT_SIGN_WORKER_ADDRESS, WORKER_ADDRESS)
+                .containsEntry(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, challenge.getCredentials().getPrivateKey());
+    }
+
+    @Test
+    void shouldNotGetPostComputePalaemonTokensSinceTaskDescriptionMissing() {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder().build();
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputePalaemonTokens(request)
+        );
+        assertEquals(NO_TASK_DESCRIPTION, exception.getError());
+        assertEquals("Task description must not be null", exception.getMessage());
     }
     //endregion
 
+    //region getPostComputeEncryptionTokens
+    @Test
+    void shouldGetPostComputeEncryptionTokensWithEncryption() {
+        PalaemonSessionRequest request = createSessionRequest();
+
+        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
+        when(web2SecretsService.getSecret(
+                request.getTaskDescription().getBeneficiary(),
+                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
+                true))
+                .thenReturn(Optional.of(publicKeySecret));
+
+        final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
+        assertThat(encryptionTokens)
+                .containsEntry(RESULT_ENCRYPTION, "yes")
+                .containsEntry(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+    }
+
+    @Test
+    void shouldGetPostComputeEncryptionTokensWithoutEncryption() {
+        PalaemonSessionRequest request = createSessionRequest();
+        request.getTaskDescription().setResultEncryption(false);
+
+        final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
+        assertThat(encryptionTokens)
+                .containsEntry(RESULT_ENCRYPTION, "no")
+                .containsEntry(RESULT_ENCRYPTION_PUBLIC_KEY, "");
+    }
+
+    @Test
+    void shouldNotGetPostComputeEncryptionTokensSinceEmptyBeneficiaryKey() {
+        PalaemonSessionRequest request = createSessionRequest();
+
+        when(web2SecretsService.getSecret(
+                request.getTaskDescription().getBeneficiary(),
+                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
+                true))
+                .thenReturn(Optional.empty());
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeEncryptionTokens(request)
+        );
+        assertEquals(POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY, exception.getError());
+        assertEquals("Empty beneficiary encryption key - taskId: taskId", exception.getMessage());
+    }
+
+    //endregion
+
+    //region utils
     private void addApplicationDeveloperSecret() {
         TeeTaskComputeSecret applicationDeveloperSecret = TeeTaskComputeSecret.builder()
                 .onChainObjectType(OnChainObjectType.APPLICATION)
@@ -493,4 +571,5 @@ class PalaemonSessionServiceTests {
             });
         }
     }
+    //endregion
 }

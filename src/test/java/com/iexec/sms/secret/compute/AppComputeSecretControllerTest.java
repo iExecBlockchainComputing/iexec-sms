@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
@@ -27,7 +28,7 @@ class AppComputeSecretControllerTest {
     private static final String EXACT_MAX_SIZE_SECRET_VALUE = new String(new byte[4096]);
     private static final String TOO_LONG_SECRET_VALUE = new String(new byte[4097]);
     private static final String CHALLENGE = "challenge";
-    private static final ApiResponseBody<String> INVALID_AUTHORIZATION_PAYLOAD = createErrorResponse("Invalid authorization");
+    private static final ApiResponseBody<String, List<String>> INVALID_AUTHORIZATION_PAYLOAD = createErrorResponse("Invalid authorization");
 
     @Mock
     TeeTaskComputeSecretService teeTaskComputeSecretService;
@@ -62,7 +63,7 @@ class AppComputeSecretControllerTest {
         doReturn(true).when(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -86,7 +87,7 @@ class AppComputeSecretControllerTest {
                 .thenReturn(false);
 
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -112,7 +113,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -138,7 +139,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -156,7 +157,7 @@ class AppComputeSecretControllerTest {
         final String secretIndex = "bad-secret-index";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 //secretIndex, // TODO uncomment this when supporting multiple application developer secrets
@@ -175,7 +176,7 @@ class AppComputeSecretControllerTest {
         final String secretIndex = "-10";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 //secretIndex, // TODO uncomment this when supporting multiple application developer secrets
@@ -201,7 +202,7 @@ class AppComputeSecretControllerTest {
         doReturn(true).when(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretValue
@@ -223,7 +224,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
-        ResponseEntity<ApiResponseBody<String>> result =
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
@@ -238,7 +239,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String>> result =
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Secret not found")));
@@ -250,7 +251,7 @@ class AppComputeSecretControllerTest {
     @Test
     void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexNotANumber() {
         final String secretIndex = "bad-secret-index";
-        ResponseEntity<ApiResponseBody<String>> result =
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
                 .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
@@ -260,7 +261,7 @@ class AppComputeSecretControllerTest {
     @Test
     void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexLowerThanZero() {
         final String secretIndex = "-1";
-        ResponseEntity<ApiResponseBody<String>> result =
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
                 .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
@@ -282,7 +283,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretCountService.setMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER, secretCount))
                 .thenReturn(true);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -304,7 +305,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretCountService.isMaxAppComputeSecretCountPresent(APP_ADDRESS, SecretOwnerRole.REQUESTER))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -327,7 +328,7 @@ class AppComputeSecretControllerTest {
                 .thenReturn(true);
 
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -343,7 +344,7 @@ class AppComputeSecretControllerTest {
     void shouldNotSetRequestersComputeSecretCountSinceNotSecretCountIsNegative() {
         int secretCount = -1;
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.setMaxRequesterSecretCountForAppCompute(
                 AUTHORIZATION,
                 APP_ADDRESS,
                 secretCount
@@ -378,7 +379,7 @@ class AppComputeSecretControllerTest {
                         .build())
                 );
 
-        final ResponseEntity<ApiResponseBody<Integer>> result =
+        final ResponseEntity<ApiResponseBody<Integer, List<String>>> result =
                 appComputeSecretController.getMaxRequesterSecretCountForAppCompute(APP_ADDRESS);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity
@@ -392,7 +393,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(APP_ADDRESS, SecretOwnerRole.REQUESTER))
                 .thenReturn(Optional.empty());
 
-        final ResponseEntity<ApiResponseBody<Integer>> result =
+        final ResponseEntity<ApiResponseBody<Integer, List<String>>> result =
                 appComputeSecretController.getMaxRequesterSecretCountForAppCompute(APP_ADDRESS);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity
@@ -418,7 +419,7 @@ class AppComputeSecretControllerTest {
         doReturn(true).when(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
                 secretKey,
@@ -447,7 +448,7 @@ class AppComputeSecretControllerTest {
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
                 secretKey,
@@ -475,7 +476,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
                 .thenReturn(true);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
                 secretKey,
@@ -502,7 +503,7 @@ class AppComputeSecretControllerTest {
     })
     void shouldNotAddRequesterSecretSinceInvalidSecretKey(String secretKey) {
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
                 secretKey,
@@ -526,7 +527,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
                 secretKey,
@@ -556,7 +557,7 @@ class AppComputeSecretControllerTest {
         doReturn(true).when(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.addRequesterAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
                 REQUESTER_ADDRESS,
                 secretKey,
@@ -583,7 +584,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
                 .thenReturn(true);
 
-        ResponseEntity<ApiResponseBody<String>> result =
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isRequesterAppComputeSecretPresent(REQUESTER_ADDRESS, secretKey);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
@@ -597,7 +598,7 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String>> result =
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isRequesterAppComputeSecretPresent(REQUESTER_ADDRESS, secretKey);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Secret not found")));
@@ -612,7 +613,7 @@ class AppComputeSecretControllerTest {
     })
     void shouldNotReadRequesterSecretSinceInvalidSecretKey(String secretKey) {
 
-        ResponseEntity<ApiResponseBody<String>> result = appComputeSecretController.isRequesterAppComputeSecretPresent(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.isRequesterAppComputeSecretPresent(
                 REQUESTER_ADDRESS,
                 secretKey
         );
@@ -623,8 +624,8 @@ class AppComputeSecretControllerTest {
     }
     // endregion
 
-    private static <T> ApiResponseBody<T> createErrorResponse(String... errorMessages) {
-        return ApiResponseBody.<T>builder().errors(Arrays.asList(errorMessages)).build();
+    private static <T> ApiResponseBody<T, List<String>> createErrorResponse(String... errorMessages) {
+        return ApiResponseBody.<T, List<String>>builder().error(Arrays.asList(errorMessages)).build();
     }
 
 }

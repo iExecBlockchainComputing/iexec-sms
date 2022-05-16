@@ -24,6 +24,8 @@ import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 
+import java.util.List;
+
 /**
  * Interface allowing to instantiate a Feign client targeting SMS REST endpoints.
  * <p>
@@ -34,7 +36,7 @@ public interface SmsClient {
 
     @RequestLine("POST /apps/{appAddress}/secrets/0")
     @Headers("Authorization: {authorization}")
-    String addAppDeveloperAppComputeSecret(
+    ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
             //@Param("secretIndex") String secretIndex,
@@ -42,27 +44,27 @@ public interface SmsClient {
     );
 
     @RequestLine("HEAD /apps/{appAddress}/secrets/{secretIndex}")
-    String isAppDeveloperAppComputeSecretPresent(
+    ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
             @Param("appAddress") String appAddress,
             @Param("secretIndex") String secretIndex
     );
 
     @RequestLine("POST /apps/{appAddress}/requesters/secrets-count")
     @Headers("Authorization: {authorization}")
-    String setMaxRequesterSecretCountForAppCompute(
+    ApiResponseBody<String, List<String>> setMaxRequesterSecretCountForAppCompute(
             @Param("authorization") String authorization,
             @Param("appAddress") String appAddress,
             int secretCount);
 
     @RequestLine("GET /apps/{appAddress}/requesters/secrets-count")
-    ApiResponseBody<Integer> getMaxRequesterSecretCountForAppCompute(@Param("appAddress") String appAddress);
+    ApiResponseBody<Integer, List<String>> getMaxRequesterSecretCountForAppCompute(@Param("appAddress") String appAddress);
 
     @RequestLine("GET /cas/url")
     String getSconeCasUrl();
 
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")
     @Headers("Authorization: {authorization}")
-    String addRequesterAppComputeSecret(
+    ApiResponseBody<String, List<String>> addRequesterAppComputeSecret(
             @Param("authorization") String authorization,
             @Param("requesterAddress") String requesterAddress,
             @Param("secretKey") String secretKey,
@@ -70,7 +72,7 @@ public interface SmsClient {
     );
 
     @RequestLine("HEAD /requesters/{requesterAddress}/secrets/{secretKey}")
-    String isRequesterAppComputeSecretPresent(
+    ApiResponseBody<String, List<String>> isRequesterAppComputeSecretPresent(
             @Param("requesterAddress") String requesterAddress,
             @Param("secretKey") String secretKey
     );
@@ -97,7 +99,7 @@ public interface SmsClient {
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")
-    String generateTeeSession(
+    ApiResponseBody<String, TeeSessionGenerationError> generateTeeSession(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );
