@@ -41,15 +41,21 @@ import org.apache.commons.lang3.ClassUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.yaml.snakeyaml.Yaml;
 
+import java.security.GeneralSecurityException;
 import java.util.*;
 
+import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
 import static com.iexec.common.precompute.PreComputeUtils.*;
+import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
@@ -216,6 +222,35 @@ class PalaemonSessionServiceTests {
                 );
     }
 
+    @Test
+    void shouldGetPreComputePalaemonTokensWithoutDataset() throws Exception {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .sessionId(SESSION_ID)
+                .workerAddress(WORKER_ADDRESS)
+                .enclaveChallenge(ENCLAVE_CHALLENGE)
+                .taskDescription(TaskDescription.builder()
+                        .chainTaskId(TASK_ID)
+                        .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
+                        .build())
+                .build();
+        when(teeWorkflowConfig.getPreComputeFingerprint())
+                .thenReturn(PRE_COMPUTE_FINGERPRINT);
+        when(teeWorkflowConfig.getPreComputeEntrypoint())
+                .thenReturn(PRE_COMPUTE_ENTRYPOINT);
+
+        Map<String, Object> tokens =
+                palaemonSessionService.getPreComputePalaemonTokens(request);
+        assertThat(tokens).isNotEmpty()
+                .containsEntry(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT)
+                .containsEntry(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT)
+                .containsEntry(PreComputeUtils.IEXEC_DATASET_KEY, "")
+                .containsEntry(PalaemonSessionService.INPUT_FILE_URLS,
+                        Map.of(
+                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+                );
+    }
+
     // endregion
 
     // region app
@@ -297,7 +332,31 @@ class PalaemonSessionServiceTests {
     }
 
     @Test
-    void shouldFailToGetAppPalaemonTokensInvalidEnclaveConfig() {
+    void shouldFailToGetAppPalaemonTokensSinceNoTaskDescription() {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .build();
+        TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getAppPalaemonTokens(request));
+        Assertions.assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
+        Assertions.assertEquals("Task description must no be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldFailToGetAppPalaemonTokensSinceNoEnclaveConfig() {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .sessionId(SESSION_ID)
+                .workerAddress(WORKER_ADDRESS)
+                .enclaveChallenge(ENCLAVE_CHALLENGE)
+                .taskDescription(TaskDescription.builder().build())
+                .build();
+        TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getAppPalaemonTokens(request));
+        Assertions.assertEquals(TeeSessionGenerationError.APP_COMPUTE_NO_ENCLAVE_CONFIG, exception.getError());
+        Assertions.assertEquals("Enclave configuration must no be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldFailToGetAppPalaemonTokensSinceInvalidEnclaveConfig() {
         PalaemonSessionRequest request = createSessionRequest();
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
@@ -450,6 +509,179 @@ class PalaemonSessionServiceTests {
         );
         assertEquals(NO_TASK_DESCRIPTION, exception.getError());
         assertEquals("Task description must not be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldGetPostComputeStorageTokensWithCallback() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        sessionRequest.getTaskDescription().setCallback("callback");
+
+        final Map<String, String> tokens = assertDoesNotThrow(
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsEntry(RESULT_STORAGE_CALLBACK, "yes")
+                .containsEntry(RESULT_STORAGE_PROVIDER, EMPTY_YML_VALUE)
+                .containsEntry(RESULT_STORAGE_PROXY, EMPTY_YML_VALUE)
+                .containsEntry(RESULT_STORAGE_TOKEN, EMPTY_YML_VALUE);
+    }
+
+    @Test
+    void shouldGetPostComputeStorageTokensOnIpfs() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+
+        final String secretValue = "Secret value";
+        when(web2SecretsService.getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
+                .thenReturn(Optional.of(new Secret(null, secretValue)));
+
+        final Map<String, String> tokens = assertDoesNotThrow(
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsEntry(RESULT_STORAGE_CALLBACK, "no")
+                .containsEntry(RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER)
+                .containsEntry(RESULT_STORAGE_PROXY, STORAGE_PROXY)
+                .containsEntry(RESULT_STORAGE_TOKEN, secretValue);
+    }
+
+    @Test
+    void shouldGetPostComputeStorageTokensOnDropbox() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+        taskDescription.setResultStorageProvider(DROPBOX_RESULT_STORAGE_PROVIDER);
+
+        final String secretValue = "Secret value";
+        when(web2SecretsService.getSecret(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN, true))
+                .thenReturn(Optional.of(new Secret(null, secretValue)));
+
+        final Map<String, String> tokens = assertDoesNotThrow(
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsEntry(RESULT_STORAGE_CALLBACK, "no")
+                .containsEntry(RESULT_STORAGE_PROVIDER, DROPBOX_RESULT_STORAGE_PROVIDER)
+                .containsEntry(RESULT_STORAGE_PROXY, STORAGE_PROXY)
+                .containsEntry(RESULT_STORAGE_TOKEN, secretValue);
+    }
+
+    @Test
+    void shouldNotGetPostComputeStorageTokensSinceNoSecret() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+
+        when(web2SecretsService.getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
+                .thenReturn(Optional.empty());
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_STORAGE_TOKENS_FAILED);
+        assertThat(exception.getMessage()).isEqualTo("Empty requester storage token - taskId: " + taskDescription.getChainTaskId());
+    }
+
+    @Test
+    void shouldGetPostComputeSignTokens() throws GeneralSecurityException {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+        final String taskId = taskDescription.getChainTaskId();
+        final EthereumCredentials credentials = EthereumCredentials.generate();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.of(TeeChallenge.builder().credentials(credentials).build()));
+
+        final Map<String, String> tokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeSignTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsEntry(RESULT_TASK_ID, taskId)
+                .containsEntry(RESULT_SIGN_WORKER_ADDRESS, sessionRequest.getWorkerAddress())
+                .containsEntry(RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, credentials.getPrivateKey());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+        sessionRequest.setWorkerAddress(emptyWorkerAddress);
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
+        assertThat(exception.getMessage()).isEqualTo("Empty worker address - taskId: " + taskId);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+        sessionRequest.setEnclaveChallenge(emptyEnclaveChallenge);
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
+        assertThat(exception.getMessage()).isEqualTo("Empty public enclave challenge - taskId: " + taskId);
+    }
+
+    @Test
+    void shouldNotGetPostComputeSignTokensSinceNoTeeChallenge() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.empty());
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
+        assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge  - taskId: " + taskId);
+    }
+
+    @Test
+    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentials() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.of(TeeChallenge.builder().credentials(null).build()));
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+        assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
+    }
+
+    @Test
+    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentialsPrivateKey() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest();
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.of(TeeChallenge.builder().credentials(new EthereumCredentials("", "", false, "")).build()));
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+        assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
 
     // endregion

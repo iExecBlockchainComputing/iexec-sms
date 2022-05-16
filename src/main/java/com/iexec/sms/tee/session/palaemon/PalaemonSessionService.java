@@ -112,7 +112,7 @@ public class PalaemonSessionService {
     }
 
     @PostConstruct
-    void postConstruct() throws IllegalArgumentException, FileNotFoundException {
+    void postConstruct() throws FileNotFoundException {
         if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
             throw new IllegalArgumentException("Missing palaemon template filepath");
         }
