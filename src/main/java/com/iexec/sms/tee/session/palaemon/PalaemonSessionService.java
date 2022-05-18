@@ -347,33 +347,12 @@ public class PalaemonSessionService {
         tokens.put(POST_COMPUTE_ENTRYPOINT, entrypoint);
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
-        if (encryptionTokens.isEmpty()) {
-            // This branch should never happen
-            throw new TeeSessionGenerationException(
-                    POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_UNKNOWN_ISSUE,
-                    "Failed to get post-compute encryption tokens - taskId: " + taskId
-            );
-        }
         tokens.putAll(encryptionTokens);
         // storage
         Map<String, String> storageTokens = getPostComputeStorageTokens(request);
-        if (storageTokens.isEmpty()) {
-            // This branch should never happen
-            throw new TeeSessionGenerationException(
-                    POST_COMPUTE_GET_STORAGE_TOKENS_FAILED_UNKNOWN_ISSUE,
-                    "Failed to get post-compute storage tokens - taskId: " + taskId
-            );
-        }
         tokens.putAll(storageTokens);
         // enclave signature
         Map<String, String> signTokens = getPostComputeSignTokens(request);
-        if (signTokens.isEmpty()) {
-            throw new TeeSessionGenerationException(
-                    // This branch should never happen
-                    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_UNKNOWN_ISSUE,
-                    "Failed to get post-compute signature tokens - taskId: " + taskId
-            );
-        }
         tokens.putAll(signTokens);
         return tokens;
     }
