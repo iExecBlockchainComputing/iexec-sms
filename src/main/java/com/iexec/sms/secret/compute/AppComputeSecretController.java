@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 public class AppComputeSecretController {
     private final AuthorizationService authorizationService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
-    private final TeeTaskComputeSecretCountService teeTaskComputeSecretCountService;
 
     private static final ApiResponseBody<String, List<String>> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
@@ -46,11 +45,9 @@ public class AppComputeSecretController {
             + TeeTaskComputeSecret.SECRET_KEY_MAX_LENGTH + "}$");
 
     public AppComputeSecretController(AuthorizationService authorizationService,
-                                      TeeTaskComputeSecretService teeTaskComputeSecretService,
-                                      TeeTaskComputeSecretCountService teeTaskComputeSecretCountService) {
+                                      TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.authorizationService = authorizationService;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
-        this.teeTaskComputeSecretCountService = teeTaskComputeSecretCountService;
     }
 
     // region App developer endpoints
@@ -140,89 +137,6 @@ public class AppComputeSecretController {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(createErrorPayload("Secret not found"));
-    }
-
-    @PostMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<ApiResponseBody<String, List<String>>> setMaxRequesterSecretCountForAppCompute(
-            @RequestHeader("Authorization") String authorization,
-            @PathVariable String appAddress,
-            @RequestBody int secretCount) {
-        if (secretCount < 0) {
-            log.debug("Can't add app requester app secret count as it should not be negative"
-                            + " [appAddress:{}, secretCount:{}]",
-                    appAddress, secretCount);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload(
-                            "Secret count should be positive. " +
-                                    "Can't accept value " + secretCount
-                    ));
-        }
-
-        String challenge = authorizationService
-                .getChallengeForSetRequesterAppComputeSecretCount(
-                        appAddress,
-                        secretCount
-                );
-
-        if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to setRequesterSecretCountForAppCompute" +
-                            " [appAddress: {}, expectedChallenge: {}]",
-                    appAddress, challenge);
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(invalidAuthorizationPayload);
-        }
-
-        final boolean isCountAlreadyPresent = teeTaskComputeSecretCountService
-                .isMaxAppComputeSecretCountPresent(
-                        appAddress,
-                        SecretOwnerRole.REQUESTER
-                );
-        if (isCountAlreadyPresent) {
-            log.debug("Can't add app requester app secret count as it already exist"
-                    + " [appAddress:{}]", appAddress);
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(createErrorPayload("Secret count already exists"));
-        }
-
-        final boolean hasBeenInserted = teeTaskComputeSecretCountService.setMaxAppComputeSecretCount(
-                appAddress,
-                SecretOwnerRole.REQUESTER,
-                secretCount
-        );
-
-        if (!hasBeenInserted) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload(
-                            "Secret count should be positive. " +
-                            "Can't accept value " + secretCount
-                    ));
-        }
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/apps/{appAddress}/requesters/secrets-count")
-    public ResponseEntity<ApiResponseBody<Integer, List<String>>> getMaxRequesterSecretCountForAppCompute(@PathVariable String appAddress) {
-        final Optional<TeeTaskComputeSecretCount> secretCount =
-                teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(appAddress, SecretOwnerRole.REQUESTER);
-        if (secretCount.isPresent()) {
-            log.debug("Requester secret count found [appAddress: {}]", appAddress);
-            return ResponseEntity.ok(
-                    ApiResponseBody
-                            .<Integer, List<String>>builder()
-                            .data(secretCount.get().getSecretCount())
-                            .build()
-            );
-        }
-
-        log.debug("Requester secret count not found [appAddress: {}]", appAddress);
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(createErrorPayload("Secret count not found"));
     }
 
     /**
