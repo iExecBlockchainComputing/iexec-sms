@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -88,7 +89,6 @@ public class PalaemonSessionService {
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final AttestationSecurityConfig attestationSecurityConfig;
-    private final TeeTaskComputeSecretCountService teeTaskComputeSecretCountService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     @Value("${scone.cas.palaemon}")
@@ -100,14 +100,12 @@ public class PalaemonSessionService {
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
             AttestationSecurityConfig attestationSecurityConfig,
-            TeeTaskComputeSecretCountService teeTaskComputeSecretCountService,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
-        this.teeTaskComputeSecretCountService = teeTaskComputeSecretCountService;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
     }
 
@@ -282,22 +280,18 @@ public class PalaemonSessionService {
                         .orElse(EMPTY_YML_VALUE);
         tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
 
-        final HashMap<String, String> requesterSecrets = new HashMap<>();
-        Optional<TeeTaskComputeSecretCount> oMaxApplicationSecretIndex = teeTaskComputeSecretCountService.getMaxAppComputeSecretCount(applicationAddress, SecretOwnerRole.REQUESTER);
-        if (oMaxApplicationSecretIndex.isEmpty()) {
-            log.info("No requester secrets found for the application {}", applicationAddress);
-            tokens.put(REQUESTER_SECRETS, requesterSecrets);
+        if (taskDescription.getSecrets() == null) {
+            tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
             return tokens;
         }
-        int maxApplicationSecretIndex = oMaxApplicationSecretIndex.get().getSecretCount();
+
+        final HashMap<String, String> requesterSecrets = new HashMap<>();
         for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
             try {
                 int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
-                if (requesterSecretIndex < 0 || maxApplicationSecretIndex <= requesterSecretIndex) {
-                    String message = "Application secret indices provided in the deal parameters must be positive numbers "
-                            + "between 0 and max secret count for the application [appAddress:" + applicationAddress
-                            + ", maxApplicationSecretIndex:" + maxApplicationSecretIndex
-                            + ", providedApplicationSecretIndex:" + requesterSecretIndex + "]";
+                if (requesterSecretIndex < 0) {
+                    String message = "Application secret indices provided in the deal parameters must be positive numbers"
+                            + " [providedApplicationSecretIndex:" + requesterSecretIndex + "]";
                     log.warn(message);
                     throw (new NumberFormatException(message));
                 }
