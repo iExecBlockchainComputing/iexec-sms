@@ -49,16 +49,6 @@ public interface SmsClient {
             @Param("secretIndex") String secretIndex
     );
 
-    @RequestLine("POST /apps/{appAddress}/requesters/secrets-count")
-    @Headers("Authorization: {authorization}")
-    ApiResponseBody<String, List<String>> setMaxRequesterSecretCountForAppCompute(
-            @Param("authorization") String authorization,
-            @Param("appAddress") String appAddress,
-            int secretCount);
-
-    @RequestLine("GET /apps/{appAddress}/requesters/secrets-count")
-    ApiResponseBody<Integer, List<String>> getMaxRequesterSecretCountForAppCompute(@Param("appAddress") String appAddress);
-
     @RequestLine("GET /cas/url")
     String getSconeCasUrl();
 

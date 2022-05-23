@@ -75,14 +75,12 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     void shouldAddNewComputeSecrets() {
         final String appDeveloperSecretIndex = "0";
         final String requesterSecretKey="secret-key";
-        final int requesterSecretCount = 1;
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
         final String ownerAddress = OWNER_ADDRESS;
 
         addNewAppDeveloperSecret(appAddress, appDeveloperSecretIndex, secretValue, ownerAddress);
-        setRequesterSecretCount(appAddress, requesterSecretCount, ownerAddress);
         addNewRequesterSecret(requesterAddress, requesterSecretKey, secretValue);
 
         // Check the new secrets exists for the API
@@ -227,16 +225,6 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
     }
 
-    private void setRequesterSecretCount(String appAddress, int secretCount, String ownerAddress) {
-        when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
-        final String authorization = getAuthorizationForRequesterSecretCount(appAddress, secretCount);
-        try {
-            apiClient.setMaxRequesterSecretCountForAppCompute(authorization, appAddress, secretCount);
-        } catch(FeignException e) {
-            Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
-        }
-    }
-
     /**
      * Checks no requester secret already exists with given appAddress/index couple
      * and adds a new requester secret to the database
@@ -276,20 +264,6 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
                 appAddress,
                 Hash.sha3String(secretIndex),
                 Hash.sha3String(secretValue));
-        return signMessageHashAndGetSignature(challenge, APP_DEVELOPER_PRIVATE_KEY).getValue();
-    }
-
-    /**
-     * Forges an authorization that'll permit adding
-     * a requester secret count to database.
-     */
-    private String getAuthorizationForRequesterSecretCount(
-            String appAddress,
-            int secretCount) {
-        final String challenge = HashUtils.concatenateAndHash(
-                Hash.sha3String(DOMAIN),
-                appAddress,
-                Long.toHexString(secretCount));
         return signMessageHashAndGetSignature(challenge, APP_DEVELOPER_PRIVATE_KEY).getValue();
     }
 
