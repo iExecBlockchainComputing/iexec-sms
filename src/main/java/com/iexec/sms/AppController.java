@@ -27,7 +27,7 @@ import java.util.Date;
 public class AppController {
 
     @GetMapping(value = "/up")
-    public static ResponseEntity<String> isUp() {
+    public ResponseEntity<String> isUp() {
         String message = String.format("Up! (%s)", new Date());
         return ResponseEntity.ok(message);
     }
