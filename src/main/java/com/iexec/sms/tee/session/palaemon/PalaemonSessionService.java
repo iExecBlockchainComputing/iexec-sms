@@ -324,7 +324,6 @@ public class PalaemonSessionService {
             throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
         }
 
-        String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
         String teePostComputeFingerprint = teeWorkflowConfig.getPostComputeFingerprint();
         // ###############################################################################
