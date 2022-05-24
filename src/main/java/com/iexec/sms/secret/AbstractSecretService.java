@@ -18,14 +18,13 @@ package com.iexec.sms.secret;
 
 import com.iexec.sms.encryption.EncryptionService;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
-@NoArgsConstructor
-@AllArgsConstructor
 public abstract class AbstractSecretService {
 
-    public EncryptionService encryptionService;
+    private final EncryptionService encryptionService;
+
+    public AbstractSecretService(EncryptionService encryptionService) {
+        this.encryptionService = encryptionService;
+    }
 
     public Secret encryptSecret(Secret secret) {
         if (!secret.isEncryptedValue()) {

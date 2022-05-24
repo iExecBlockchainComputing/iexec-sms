@@ -29,7 +29,7 @@ import java.util.Optional;
 @Service
 public class Web2SecretsService extends AbstractSecretService {
 
-    private Web2SecretsRepository web2SecretsRepository;
+    private final Web2SecretsRepository web2SecretsRepository;
 
     public Web2SecretsService(Web2SecretsRepository web2SecretsRepository,
                               EncryptionService encryptionService) {
