@@ -44,15 +44,19 @@ import org.apache.commons.lang3.ClassUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.yaml.snakeyaml.Yaml;
 
+import java.security.GeneralSecurityException;
 import java.util.*;
 
-import static com.iexec.common.precompute.PreComputeUtils.INPUT_FILE_URLS;
-import static com.iexec.common.precompute.PreComputeUtils.*;
+import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
+import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
@@ -203,14 +207,53 @@ class PalaemonSessionServiceTests {
 
         Map<String, Object> tokens =
                 palaemonSessionService.getPreComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT)
-                .containsEntry(PreComputeUtils.IEXEC_DATASET_KEY, secret.getTrimmedValue())
-                .containsEntry(PalaemonSessionService.INPUT_FILE_URLS,
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
-                                IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+                                PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
+                                PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
+                                PreComputeUtils.IEXEC_DATASET_KEY, secret.getTrimmedValue(),
+                                PreComputeUtils.IS_DATASET_REQUIRED, true,
+                                PalaemonSessionService.INPUT_FILE_URLS,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+
+                        )
+                );
+    }
+
+    @Test
+    void shouldGetPreComputePalaemonTokensWithoutDataset() throws Exception {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .sessionId(SESSION_ID)
+                .workerAddress(WORKER_ADDRESS)
+                .enclaveChallenge(ENCLAVE_CHALLENGE)
+                .taskDescription(TaskDescription.builder()
+                        .chainTaskId(TASK_ID)
+                        .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
+                        .build())
+                .build();
+        when(teeWorkflowConfig.getPreComputeFingerprint())
+                .thenReturn(PRE_COMPUTE_FINGERPRINT);
+        when(teeWorkflowConfig.getPreComputeEntrypoint())
+                .thenReturn(PRE_COMPUTE_ENTRYPOINT);
+
+        Map<String, Object> tokens =
+                palaemonSessionService.getPreComputePalaemonTokens(request);
+        assertThat(tokens).isNotEmpty()
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                PalaemonSessionService.PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
+                                PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
+                                PreComputeUtils.IEXEC_DATASET_KEY, "",
+                                PreComputeUtils.IS_DATASET_REQUIRED, false,
+                                PalaemonSessionService.INPUT_FILE_URLS,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2)
+
+                        )
                 );
     }
     //endregion
@@ -232,41 +275,49 @@ class PalaemonSessionServiceTests {
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
 
-        assertThat(tokens).isNotEmpty();
         assertThat(tokens)
-                .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
-                .containsEntry(APP_ARGS, APP_ENTRYPOINT + " " + ARGS)
-                .containsEntry(INPUT_FILE_NAMES,
-                        Map.of(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
-                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"))
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE)
-                .containsEntry(REQUESTER_SECRETS,
-                        Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
-                                IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2));
-    }
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                PalaemonSessionService.APP_MRENCLAVE, APP_FINGERPRINT,
+                                PalaemonSessionService.APP_ARGS, APP_ENTRYPOINT + " " + ARGS,
+                                PalaemonSessionService.INPUT_FILE_NAMES,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
+                                ),
+                                IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE,
+                                REQUESTER_SECRETS,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
+                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
+                                )
 
-    @Test
-    void shouldGetPalaemonTokensForBasicTaskDescription() {
-        TaskDescription taskDescription = TaskDescription.builder()
-                .appEnclaveConfiguration(enclaveConfig)
-                .build();
-        TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
-        when(enclaveConfig.getValidator()).thenReturn(validator);
-        when(validator.isValid()).thenReturn(true);
-        PalaemonSessionRequest request = createSessionRequest(taskDescription);
-        Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
-        assertThat(tokens).isNotEmpty();
-        assertThat(tokens)
-                .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
-                .containsEntry(APP_ARGS, APP_ENTRYPOINT)
-                .containsEntry(INPUT_FILE_NAMES, Collections.emptyMap())
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
-                .containsEntry(REQUESTER_SECRETS, Collections.emptyMap());
+                        )
+                );
     }
 
     @Test
     void shouldGetPalaemonTokensWithEmptyAppComputeSecretWhenSecretsDoNotExist() {
-        PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
+        final TaskDescription taskDescription = TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .appUri(APP_URI)
+                .appAddress(APP_ADDRESS)
+                .appEnclaveConfiguration(enclaveConfig)
+                .datasetAddress(DATASET_ADDRESS)
+                .datasetUri(DATASET_URL)
+                .datasetName(DATASET_NAME)
+                .datasetChecksum(DATASET_CHECKSUM)
+                .requester(REQUESTER)
+                .cmd(ARGS)
+                .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
+                .isResultEncryption(true)
+                .resultStorageProvider(STORAGE_PROVIDER)
+                .resultStorageProxy(STORAGE_PROXY)
+                .botSize(1)
+                .botFirstIndex(0)
+                .botIndex(0)
+                .build();
+        PalaemonSessionRequest request = createSessionRequest(taskDescription);
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -280,20 +331,46 @@ class PalaemonSessionServiceTests {
 
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(APP_ADDRESS), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
+        verify(teeTaskComputeSecretService, never()).getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
 
-        assertThat(tokens).isNotEmpty();
         assertThat(tokens)
-                .containsEntry(APP_MRENCLAVE, APP_FINGERPRINT)
-                .containsEntry(APP_ARGS, APP_ENTRYPOINT + " " + ARGS)
-                .containsEntry(INPUT_FILE_NAMES,
-                        Map.of(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
-                                IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"))
-                .containsEntry(IEXEC_APP_DEVELOPER_SECRET_0, "")
-                .containsEntry(REQUESTER_SECRETS,
-                        Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", "",
-                                IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", ""));
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                PalaemonSessionService.APP_MRENCLAVE, APP_FINGERPRINT,
+                                PalaemonSessionService.APP_ARGS, APP_ENTRYPOINT + " " + ARGS,
+                                PalaemonSessionService.INPUT_FILE_NAMES,
+                                Map.of(
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
+                                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
+                                ),
+                                IEXEC_APP_DEVELOPER_SECRET_0, "",
+                                REQUESTER_SECRETS, Collections.emptyMap()
+                        )
+                );
+    }
+
+    @Test
+    void shouldFailToGetAppPalaemonTokensSinceNoTaskDescription() {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .build();
+        TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getAppPalaemonTokens(request));
+        Assertions.assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
+        Assertions.assertEquals("Task description must no be null", exception.getMessage());
+    }
+
+    @Test
+    void shouldFailToGetAppPalaemonTokensSinceNoEnclaveConfig() {
+        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+                .sessionId(SESSION_ID)
+                .workerAddress(WORKER_ADDRESS)
+                .enclaveChallenge(ENCLAVE_CHALLENGE)
+                .taskDescription(TaskDescription.builder().build())
+                .build();
+        TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getAppPalaemonTokens(request));
+        Assertions.assertEquals(TeeSessionGenerationError.APP_COMPUTE_NO_ENCLAVE_CONFIG, exception.getError());
+        Assertions.assertEquals("Enclave configuration must no be null", exception.getMessage());
     }
 
     @Test
@@ -373,21 +450,24 @@ class PalaemonSessionServiceTests {
 
         Map<String, String> tokens =
                 palaemonSessionService.getPostComputePalaemonTokens(request);
-        assertThat(tokens).isNotEmpty()
-                .containsEntry(PalaemonSessionService.POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT)
-                .containsEntry(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT, POST_COMPUTE_ENTRYPOINT)
-                // encryption tokens
-                .containsEntry(ResultUtils.RESULT_ENCRYPTION, "yes")
-                .containsEntry(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY)
-                // storage tokens
-                .containsEntry(ResultUtils.RESULT_STORAGE_CALLBACK, "no")
-                .containsEntry(ResultUtils.RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER)
-                .containsEntry(ResultUtils.RESULT_STORAGE_PROXY, STORAGE_PROXY)
-                .containsEntry(ResultUtils.RESULT_STORAGE_TOKEN, STORAGE_TOKEN)
-                // sign tokens
-                .containsEntry(ResultUtils.RESULT_TASK_ID, TASK_ID)
-                .containsEntry(ResultUtils.RESULT_SIGN_WORKER_ADDRESS, WORKER_ADDRESS)
-                .containsEntry(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, challenge.getCredentials().getPrivateKey());
+
+        final Map<String, String> expectedTokens = new HashMap<>();
+        expectedTokens.put(PalaemonSessionService.POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT);
+        expectedTokens.put(PalaemonSessionService.POST_COMPUTE_ENTRYPOINT, POST_COMPUTE_ENTRYPOINT);
+        // encryption tokens
+        expectedTokens.put(ResultUtils.RESULT_ENCRYPTION, "yes");
+        expectedTokens.put(ResultUtils.RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+        // storage tokens
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_CALLBACK, "no");
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER);
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_PROXY, STORAGE_PROXY);
+        expectedTokens.put(ResultUtils.RESULT_STORAGE_TOKEN, STORAGE_TOKEN);
+        // sign tokens
+        expectedTokens.put(ResultUtils.RESULT_TASK_ID, TASK_ID);
+        expectedTokens.put(ResultUtils.RESULT_SIGN_WORKER_ADDRESS, WORKER_ADDRESS);
+        expectedTokens.put(ResultUtils.RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, challenge.getCredentials().getPrivateKey());
+
+        assertThat(tokens).containsExactlyEntriesOf(expectedTokens);
     }
 
     @Test
@@ -405,6 +485,197 @@ class PalaemonSessionServiceTests {
 
     //region getPostComputeEncryptionTokens
     @Test
+    void shouldGetPostComputeStorageTokensWithCallback() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        sessionRequest.getTaskDescription().setCallback("callback");
+
+        final Map<String, String> tokens = assertDoesNotThrow(
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_STORAGE_CALLBACK, "yes",
+                                RESULT_STORAGE_PROVIDER, EMPTY_YML_VALUE,
+                                RESULT_STORAGE_PROXY, EMPTY_YML_VALUE,
+                                RESULT_STORAGE_TOKEN, EMPTY_YML_VALUE
+                        )
+                );
+    }
+
+    @Test
+    void shouldGetPostComputeStorageTokensOnIpfs() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+
+        final String secretValue = "Secret value";
+        when(web2SecretsService.getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
+                .thenReturn(Optional.of(new Secret(null, secretValue)));
+
+        final Map<String, String> tokens = assertDoesNotThrow(
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_STORAGE_CALLBACK, "no",
+                                RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER,
+                                RESULT_STORAGE_PROXY, STORAGE_PROXY,
+                                RESULT_STORAGE_TOKEN, secretValue
+                        )
+                );
+    }
+
+    @Test
+    void shouldGetPostComputeStorageTokensOnDropbox() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+        taskDescription.setResultStorageProvider(DROPBOX_RESULT_STORAGE_PROVIDER);
+
+        final String secretValue = "Secret value";
+        when(web2SecretsService.getSecret(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN, true))
+                .thenReturn(Optional.of(new Secret(null, secretValue)));
+
+        final Map<String, String> tokens = assertDoesNotThrow(
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_STORAGE_CALLBACK, "no",
+                                RESULT_STORAGE_PROVIDER, DROPBOX_RESULT_STORAGE_PROVIDER,
+                                RESULT_STORAGE_PROXY, STORAGE_PROXY,
+                                RESULT_STORAGE_TOKEN, secretValue
+                        )
+                );
+    }
+
+    @Test
+    void shouldNotGetPostComputeStorageTokensSinceNoSecret() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+
+        when(web2SecretsService.getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
+                .thenReturn(Optional.empty());
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeStorageTokens(sessionRequest));
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_STORAGE_TOKENS_FAILED);
+        assertThat(exception.getMessage()).isEqualTo("Empty requester storage token - taskId: " + taskDescription.getChainTaskId());
+    }
+
+    @Test
+    void shouldGetPostComputeSignTokens() throws GeneralSecurityException {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+        final String taskId = taskDescription.getChainTaskId();
+        final EthereumCredentials credentials = EthereumCredentials.generate();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.of(TeeChallenge.builder().credentials(credentials).build()));
+
+        final Map<String, String> tokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeSignTokens(sessionRequest));
+
+        assertThat(tokens)
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_TASK_ID, taskId,
+                                RESULT_SIGN_WORKER_ADDRESS, sessionRequest.getWorkerAddress(),
+                                RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, credentials.getPrivateKey()
+                        )
+                );
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+        sessionRequest.setWorkerAddress(emptyWorkerAddress);
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
+        assertThat(exception.getMessage()).isEqualTo("Empty worker address - taskId: " + taskId);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+        sessionRequest.setEnclaveChallenge(emptyEnclaveChallenge);
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
+        assertThat(exception.getMessage()).isEqualTo("Empty public enclave challenge - taskId: " + taskId);
+    }
+
+    @Test
+    void shouldNotGetPostComputeSignTokensSinceNoTeeChallenge() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.empty());
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
+        assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge  - taskId: " + taskId);
+    }
+
+    @Test
+    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentials() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.of(TeeChallenge.builder().credentials(null).build()));
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+        assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
+    }
+
+    @Test
+    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentialsPrivateKey() {
+        final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
+        final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
+
+        when(teeChallengeService.getOrCreate(taskId, true))
+                .thenReturn(Optional.of(TeeChallenge.builder().credentials(new EthereumCredentials("", "", false, "")).build()));
+
+        final TeeSessionGenerationException exception = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> palaemonSessionService.getPostComputeSignTokens(sessionRequest)
+        );
+
+        assertThat(exception.getError()).isEqualTo(POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+        assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
+    }
+
+    // endregion
+
+    @Test
     void shouldGetPostComputeEncryptionTokensWithEncryption() {
         PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
 
@@ -417,8 +688,12 @@ class PalaemonSessionServiceTests {
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
         assertThat(encryptionTokens)
-                .containsEntry(RESULT_ENCRYPTION, "yes")
-                .containsEntry(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_ENCRYPTION, "yes",
+                                RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY
+                        )
+                );
     }
 
     @Test
@@ -428,8 +703,12 @@ class PalaemonSessionServiceTests {
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(() -> palaemonSessionService.getPostComputeEncryptionTokens(request));
         assertThat(encryptionTokens)
-                .containsEntry(RESULT_ENCRYPTION, "no")
-                .containsEntry(RESULT_ENCRYPTION_PUBLIC_KEY, "");
+                .containsExactlyInAnyOrderEntriesOf(
+                        Map.of(
+                                RESULT_ENCRYPTION, "no",
+                                RESULT_ENCRYPTION_PUBLIC_KEY, ""
+                        )
+                );
     }
 
     @Test
@@ -514,8 +793,8 @@ class PalaemonSessionServiceTests {
         return Map.of(
                 PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
                 PalaemonSessionService.PRE_COMPUTE_ENTRYPOINT, PRE_COMPUTE_ENTRYPOINT,
-                IS_DATASET_REQUIRED, true,
-                IEXEC_DATASET_KEY, DATASET_KEY.trim(),
+                PreComputeUtils.IS_DATASET_REQUIRED, true,
+                PreComputeUtils.IEXEC_DATASET_KEY, DATASET_KEY.trim(),
                 INPUT_FILE_URLS, Map.of(
                     IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
                     IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2));
