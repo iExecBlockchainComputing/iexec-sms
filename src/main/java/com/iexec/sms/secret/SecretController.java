@@ -37,9 +37,9 @@ import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignatu
 @RequestMapping("/secrets")
 public class SecretController {
 
-    private AuthorizationService authorizationService;
-    private Web3SecretService web3SecretService;
-    private Web2SecretsService web2SecretsService;
+    private final AuthorizationService authorizationService;
+    private final Web3SecretService web3SecretService;
+    private final Web2SecretsService web2SecretsService;
 
     public SecretController(AuthorizationService authorizationService,
                             Web2SecretsService web2SecretsService,
@@ -169,7 +169,7 @@ public class SecretController {
      * Server-side signature of a messageHash
      * */
     @PostMapping("/delegate/signature")
-    private ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
+    public ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
                                                        @RequestBody String privateKey) {
         Signature signature = signMessageHashAndGetSignature(messageHash, privateKey);
 

@@ -28,7 +28,7 @@ import java.util.Optional;
 @Service
 public class Web3SecretService extends AbstractSecretService {
 
-    private Web3SecretRepository web3SecretRepository;
+    private final Web3SecretRepository web3SecretRepository;
 
     public Web3SecretService(Web3SecretRepository web3SecretRepository,
                              EncryptionService encryptionService) {
