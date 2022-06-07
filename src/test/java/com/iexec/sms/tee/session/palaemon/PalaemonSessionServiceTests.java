@@ -50,6 +50,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.web3j.crypto.Keys;
 import org.yaml.snakeyaml.Yaml;
 
 import java.security.GeneralSecurityException;
@@ -59,8 +60,8 @@ import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
+import static com.iexec.sms.Web3jUtils.getEthereumAddress;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
-import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.INPUT_FILE_NAMES;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -104,7 +105,6 @@ class PalaemonSessionServiceTests {
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
-    private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String STORAGE_PROVIDER = "ipfs";
     private static final String STORAGE_PROXY = "storageProxy";
     private static final String STORAGE_TOKEN = "storageToken";
@@ -115,6 +115,11 @@ class PalaemonSessionServiceTests {
     private static final String INPUT_FILE_NAME_1 = "file1";
     private static final String INPUT_FILE_URL_2 = "http://host/file2";
     private static final String INPUT_FILE_NAME_2 = "file2";
+
+    private String appAddress;
+    private String checksumAppAddress;
+    private String requesterAddress;
+    private String checksumRequesterAddress;
 
     @Mock
     private Web3SecretService web3SecretService;
@@ -271,9 +276,9 @@ class PalaemonSessionServiceTests {
 
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
 
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, REQUESTER_SECRET_KEY_1);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, REQUESTER_SECRET_KEY_2);
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
@@ -298,16 +303,18 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldGetPalaemonTokensWithEmptyAppComputeSecretWhenSecretsDoNotExist() {
+        final String appAddress = Keys.toChecksumAddress(getEthereumAddress());
+        final String requesterAddress = Keys.toChecksumAddress(getEthereumAddress());
         final TaskDescription taskDescription = TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
-                .appAddress(APP_ADDRESS)
+                .appAddress(appAddress)
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
                 .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
-                .requester(REQUESTER)
+                .requester(requesterAddress)
                 .cmd(ARGS)
                 .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                 .isResultEncryption(true)
@@ -323,14 +330,14 @@ class PalaemonSessionServiceTests {
         when(validator.isValid()).thenReturn(true);
         when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
-                APP_ADDRESS,
+                appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
                 APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(Optional.empty());
 
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
-        verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(APP_ADDRESS), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
+        verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(appAddress), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
         verify(teeTaskComputeSecretService, never()).getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
 
         assertThat(tokens)
@@ -396,8 +403,8 @@ class PalaemonSessionServiceTests {
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService, times(2))
                 .getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, REQUESTER_SECRET_KEY_1);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, REQUESTER_SECRET_KEY_2);
         assertThat(tokens).containsEntry(REQUESTER_SECRETS,
                 Map.of(
                         IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
@@ -436,7 +443,7 @@ class PalaemonSessionServiceTests {
                 .thenReturn(Optional.of(publicKeySecret));
         Secret storageSecret = new Secret("address", STORAGE_TOKEN);
         when(web2SecretsService.getSecret(
-                REQUESTER,
+                requesterAddress,
                 ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN,
                 true))
                 .thenReturn(Optional.of(storageSecret));
@@ -735,12 +742,12 @@ class PalaemonSessionServiceTests {
     private void addApplicationDeveloperSecret() {
         TeeTaskComputeSecret applicationDeveloperSecret = TeeTaskComputeSecret.builder()
                 .onChainObjectType(OnChainObjectType.APPLICATION)
-                .onChainObjectAddress(APP_ADDRESS)
+                .onChainObjectAddress(checksumAppAddress)
                 .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
                 .key(APP_DEVELOPER_SECRET_INDEX)
                 .value(APP_DEVELOPER_SECRET_VALUE)
                 .build();
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX))
+        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(Optional.of(applicationDeveloperSecret));
     }
 
@@ -749,11 +756,11 @@ class PalaemonSessionServiceTests {
                 .onChainObjectType(OnChainObjectType.APPLICATION)
                 .onChainObjectAddress("")
                 .secretOwnerRole(SecretOwnerRole.REQUESTER)
-                .fixedSecretOwner(REQUESTER)
+                .fixedSecretOwner(checksumRequesterAddress)
                 .key(secretKey)
                 .value(secretValue)
                 .build();
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, secretKey))
+        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey))
                 .thenReturn(Optional.of(requesterSecret));
     }
 
@@ -767,16 +774,20 @@ class PalaemonSessionServiceTests {
     }
 
     private TaskDescription createTaskDescription() {
+        appAddress = getEthereumAddress();
+        checksumAppAddress = Keys.toChecksumAddress(appAddress);
+        requesterAddress = getEthereumAddress();
+        checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
         return TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
-                .appAddress(APP_ADDRESS)
+                .appAddress(appAddress)
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
                 .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
-                .requester(REQUESTER)
+                .requester(requesterAddress)
                 .cmd(ARGS)
                 .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                 .isResultEncryption(true)

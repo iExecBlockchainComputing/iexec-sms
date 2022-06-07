@@ -13,16 +13,16 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.web3j.crypto.Keys;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static com.iexec.sms.Web3jUtils.getEthereumAddress;
 import static org.mockito.Mockito.*;
 
 class AppComputeSecretControllerTest {
     private static final String AUTHORIZATION = "authorization";
-    private static final String APP_ADDRESS = "appAddress";
-    private static final String REQUESTER_ADDRESS = "requesterAddress";
     private static final String COMMON_SECRET_VALUE = "I'm a secret.";
     private static final String EXACT_MAX_SIZE_SECRET_VALUE = new String(new byte[4096]);
     private static final String TOO_LONG_SECRET_VALUE = new String(new byte[4097]);
@@ -47,97 +47,105 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldAddAppDeveloperSecret() {
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
         final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(checksumAppAddress, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
+        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, checksumAppAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
         doReturn(true).when(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+                .isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
         verify(teeTaskComputeSecretService, times(1))
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
     }
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceNotSignedByOwner() {
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
         final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(checksumAppAddress, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
+        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, checksumAppAddress))
                 .thenReturn(false);
 
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(INVALID_AUTHORIZATION_PAYLOAD));
 
-        verify(teeTaskComputeSecretService, times(0))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
-        verify(teeTaskComputeSecretService, times(0))
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+        verify(teeTaskComputeSecretService, never())
+                .isSecretPresent(any(), any(), any(), any(), any());
+        verify(teeTaskComputeSecretService, never())
+                .encryptAndSaveSecret(any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretAlreadyExists() {
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
         final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(checksumAppAddress, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
+        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, checksumAppAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).body(createErrorResponse("Secret already exists")));
 
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
-        verify(teeTaskComputeSecretService, times(0))
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+                .isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+        verify(teeTaskComputeSecretService, never())
+                .encryptAndSaveSecret(any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretValueTooLong() {
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
         final String secretIndex = "0";
         final String secretValue = TOO_LONG_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(checksumAppAddress, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
+        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, checksumAppAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 secretValue
         );
 
@@ -150,12 +158,13 @@ class AppComputeSecretControllerTest {
     @Test
     @Disabled
     void shouldNotAddAppDeveloperSecretSinceBadSecretIndexFormat() {
+        final String appAddress = getEthereumAddress();
         final String secretIndex = "bad-secret-index";
         final String secretValue = COMMON_SECRET_VALUE;
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 //secretIndex, // TODO uncomment this when supporting multiple application developer secrets
                 secretValue
         );
@@ -169,12 +178,13 @@ class AppComputeSecretControllerTest {
     @Test
     @Disabled
     void shouldNotAddAppDeveloperSecretSinceBadSecretValue() {
+        final String appAddress = getEthereumAddress();
         final String secretIndex = "-10";
         final String secretValue = COMMON_SECRET_VALUE;
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 //secretIndex, // TODO uncomment this when supporting multiple application developer secrets
                 secretValue
         );
@@ -186,29 +196,31 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldAddMaxSizeAppDeveloperSecret() {
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
         final String secretIndex = "0";
         final String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(APP_ADDRESS, secretIndex, secretValue))
+        when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(checksumAppAddress, secretIndex, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, APP_ADDRESS))
+        when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, checksumAppAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
         doReturn(true).when(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
                 AUTHORIZATION,
-                APP_ADDRESS,
+                appAddress,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+                .isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
         verify(teeTaskComputeSecretService, times(1))
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex, secretValue);
     }
 
     // endregion
@@ -217,38 +229,43 @@ class AppComputeSecretControllerTest {
     @Test
     void appDeveloperSecretShouldExist() {
         final String secretIndex = "0";
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+                .isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
         verifyNoInteractions(authorizationService);
     }
 
     @Test
     void appDeveloperSecretShouldNotExist() {
         final String secretIndex = "0";
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
+        final String appAddress = getEthereumAddress();
+        final String checksumAppAddress = Keys.toChecksumAddress(appAddress);
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Secret not found")));
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
+                .isSecretPresent(OnChainObjectType.APPLICATION, checksumAppAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex);
         verifyNoInteractions(authorizationService);
     }
 
     @Test
     void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexNotANumber() {
         final String secretIndex = "bad-secret-index";
+        final String appAddress = getEthereumAddress();
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
                 .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
         verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
@@ -257,8 +274,9 @@ class AppComputeSecretControllerTest {
     @Test
     void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexLowerThanZero() {
         final String secretIndex = "-1";
+        final String appAddress = getEthereumAddress();
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(APP_ADDRESS, secretIndex);
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
                 .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
         verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
@@ -268,49 +286,53 @@ class AppComputeSecretControllerTest {
     // region addRequesterAppComputeSecret
     @Test
     void shouldAddRequesterSecret() {
-        String secretKey = "valid-requester-secret";
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "valid-requester-secret";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue))
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey))
                 .thenReturn(false);
-        doReturn(true).when(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
+       when(teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey, secretValue))
+               .thenReturn(true);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(authorizationService)
-                .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue);
+                .getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue);
         verify(authorizationService)
-                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress);
         verify(teeTaskComputeSecretService)
-                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey);
+                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey);
         verify(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey, secretValue);
     }
 
     @Test
     void shouldNotAddRequesterSecretSinceNotSignedByRequester() {
-        String secretKey = "not-signed-secret";
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "not-signed-secret";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue))
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress))
                 .thenReturn(false);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey,
                 secretValue
         );
@@ -318,27 +340,29 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(INVALID_AUTHORIZATION_PAYLOAD));
 
         verify(authorizationService)
-                .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue);
+                .getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue);
         verify(authorizationService)
-                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress);
         verifyNoInteractions(teeTaskComputeSecretService);
     }
 
     @Test
     void shouldNotAddRequesterSecretSinceSecretAlreadyExists() {
-        String secretKey = "secret-already-exists";
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "secret-already-exists";
         final String secretValue = COMMON_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue))
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey))
                 .thenReturn(true);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey,
                 secretValue
         );
@@ -346,13 +370,13 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).body(createErrorResponse("Secret already exists")));
 
         verify(authorizationService)
-                .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue);
+                .getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue);
         verify(authorizationService)
-                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress);
         verify(teeTaskComputeSecretService)
-                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey);
+                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey);
         verify(teeTaskComputeSecretService, never())
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
+                .encryptAndSaveSecret(any(), any(), any(), any(), any(), any());
     }
 
     @ParameterizedTest
@@ -361,10 +385,11 @@ class AppComputeSecretControllerTest {
             "this-is-a-key-with-invalid-characters:!*~"
     })
     void shouldNotAddRequesterSecretSinceInvalidSecretKey(String secretKey) {
+        final String requesterAddress = getEthereumAddress();
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey,
                 COMMON_SECRET_VALUE
         );
@@ -376,19 +401,19 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddRequesterSecretSinceSecretValueTooLong() {
-        String secretKey = "too-long-secret-value";
-        String secretValue = TOO_LONG_SECRET_VALUE;
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "too-long-secret-value";
+        final String secretValue = TOO_LONG_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue))
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
-                .thenReturn(false);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey,
                 secretValue
         );
@@ -396,72 +421,79 @@ class AppComputeSecretControllerTest {
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest().body(createErrorResponse("Secret size should not exceed 4 Kb")));
 
         verify(authorizationService)
-                .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue);
+                .getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue);
         verify(authorizationService)
-                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress);
         verifyNoInteractions(teeTaskComputeSecretService);
     }
 
     @Test
     void shouldAddMaxSizeRequesterSecret() {
-        String secretKey = "max-size-secret-value";
-        String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "max-size-secret-value";
+        final String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
-        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue))
+        when(authorizationService.getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue))
                 .thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS))
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress))
                 .thenReturn(true);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey))
                 .thenReturn(false);
-        doReturn(true).when(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
+        when(teeTaskComputeSecretService
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey, secretValue))
+                .thenReturn(true);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey,
                 secretValue
         );
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(authorizationService)
-                .getChallengeForSetRequesterAppComputeSecret(REQUESTER_ADDRESS, secretKey, secretValue);
+                .getChallengeForSetRequesterAppComputeSecret(checksumRequesterAddress, secretKey, secretValue);
         verify(authorizationService)
-                .isSignedByHimself(CHALLENGE, AUTHORIZATION, REQUESTER_ADDRESS);
+                .isSignedByHimself(CHALLENGE, AUTHORIZATION, checksumRequesterAddress);
         verify(teeTaskComputeSecretService)
-                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey);
+                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey);
         verify(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey, secretValue);
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey, secretValue);
     }
     // endregion
 
     // region isRequesterAppComputeSecretPresent
     @Test
     void requesterSecretShouldExist() {
-        String secretKey = "exist";
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "exist";
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey))
                 .thenReturn(true);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isRequesterAppComputeSecretPresent(REQUESTER_ADDRESS, secretKey);
+                appComputeSecretController.isRequesterAppComputeSecretPresent(requesterAddress, secretKey);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey);
+                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey);
     }
 
     @Test
     void requesterSecretShouldNotExist() {
-        String secretKey = "empty";
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey))
+        final String requesterAddress = getEthereumAddress();
+        final String checksumRequesterAddress = Keys.toChecksumAddress(requesterAddress);
+        final String secretKey = "empty";
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey))
                 .thenReturn(false);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isRequesterAppComputeSecretPresent(REQUESTER_ADDRESS, secretKey);
+                appComputeSecretController.isRequesterAppComputeSecretPresent(checksumRequesterAddress, secretKey);
 
         Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse("Secret not found")));
         verify(teeTaskComputeSecretService, times(1))
-                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER_ADDRESS, secretKey);
+                .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, checksumRequesterAddress, secretKey);
     }
 
     @ParameterizedTest
@@ -470,9 +502,9 @@ class AppComputeSecretControllerTest {
             "this-is-a-key-with-invalid-characters:!*~"
     })
     void shouldNotReadRequesterSecretSinceInvalidSecretKey(String secretKey) {
-
+        final String requesterAddress = getEthereumAddress();
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.isRequesterAppComputeSecretPresent(
-                REQUESTER_ADDRESS,
+                requesterAddress,
                 secretKey
         );
 
