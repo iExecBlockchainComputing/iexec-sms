@@ -38,6 +38,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.Keys;
 
 import javax.annotation.PostConstruct;
 import java.io.FileNotFoundException;
@@ -266,7 +267,7 @@ public class PalaemonSessionService {
 
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
         final Map<String, Object> tokens = new HashMap<>();
-        final String applicationAddress = taskDescription.getAppAddress();
+        final String applicationAddress = Keys.toChecksumAddress(taskDescription.getAppAddress());
 
         final String secretIndex = "0";
         String appDeveloperSecret0 =
@@ -303,7 +304,7 @@ public class PalaemonSessionService {
                             OnChainObjectType.APPLICATION,
                             "",
                             SecretOwnerRole.REQUESTER,
-                            taskDescription.getRequester(),
+                            Keys.toChecksumAddress(taskDescription.getRequester()),
                             secretEntry.getValue())
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
