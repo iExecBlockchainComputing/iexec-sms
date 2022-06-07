@@ -149,15 +149,6 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetRequesterAppComputeSecretCount(
-            String appAddress,
-            Integer secretCount) {
-        return HashUtils.concatenateAndHash(
-                Hash.sha3String(DOMAIN),
-                appAddress,
-                Long.toHexString(secretCount));
-    }
-
     public String getChallengeForSetRequesterAppComputeSecret(
             String requesterAddress,
             String secretKey,
