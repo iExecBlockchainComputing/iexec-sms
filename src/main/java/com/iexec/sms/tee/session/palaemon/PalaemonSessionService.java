@@ -269,21 +269,23 @@ public class PalaemonSessionService {
 
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
         final Map<String, Object> tokens = new HashMap<>();
-        final String applicationAddress = taskDescription.getAppAddress().toLowerCase();
+        final String applicationAddress = taskDescription.getAppAddress();
 
-        final String secretIndex = "0";
-        String appDeveloperSecret0 =
-                teeTaskComputeSecretService.getSecret(
-                                OnChainObjectType.APPLICATION,
-                                applicationAddress,
-                                SecretOwnerRole.APPLICATION_DEVELOPER,
-                                "",
-                                secretIndex)
-                        .map(TeeTaskComputeSecret::getValue)
-                        .orElse(EMPTY_YML_VALUE);
-        tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+        if (applicationAddress != null) {
+            final String secretIndex = "0";
+            String appDeveloperSecret0 =
+                    teeTaskComputeSecretService.getSecret(
+                                    OnChainObjectType.APPLICATION,
+                                    applicationAddress.toLowerCase(),
+                                    SecretOwnerRole.APPLICATION_DEVELOPER,
+                                    "",
+                                    secretIndex)
+                            .map(TeeTaskComputeSecret::getValue)
+                            .orElse(EMPTY_YML_VALUE);
+            tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+        }
 
-        if (taskDescription.getSecrets() == null) {
+        if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
             tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
             return tokens;
         }
