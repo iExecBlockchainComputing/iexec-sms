@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.web3j.crypto.Keys;
 
 import java.util.Optional;
 
@@ -54,7 +53,6 @@ public class SecretController {
 
     @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
     public ResponseEntity<?> isWeb3SecretSet(@RequestParam String secretAddress) {
-        secretAddress = Keys.toChecksumAddress(secretAddress);
         Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -63,7 +61,6 @@ public class SecretController {
     public ResponseEntity<Web3Secret> getWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                     @RequestParam String secretAddress,
                                                     @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
-        secretAddress = Keys.toChecksumAddress(secretAddress);
         String challenge = authorizationService.getChallengeForGetWeb3Secret(secretAddress);
 
         //TODO: also isAuthorizedOnExecution(..)
@@ -80,8 +77,6 @@ public class SecretController {
     public ResponseEntity<String> addWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                 @RequestParam String secretAddress,
                                                 @RequestBody String secretValue) {
-        secretAddress = Keys.toChecksumAddress(secretAddress);
-
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
@@ -106,7 +101,6 @@ public class SecretController {
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
     public ResponseEntity<?> isWeb2SecretSet(@RequestParam String ownerAddress,
                                           @RequestParam String secretName) {
-        ownerAddress = Keys.toChecksumAddress(ownerAddress);
         Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, false);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -116,7 +110,6 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
-        ownerAddress = Keys.toChecksumAddress(ownerAddress);
         String challenge = authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretName);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
@@ -133,8 +126,6 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestBody String secretValue) {
-        ownerAddress = Keys.toChecksumAddress(ownerAddress);
-
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
@@ -159,7 +150,6 @@ public class SecretController {
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
-        ownerAddress = Keys.toChecksumAddress(ownerAddress);
         String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
