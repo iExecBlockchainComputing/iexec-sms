@@ -59,7 +59,7 @@ import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
-import static com.iexec.sms.Web3jUtils.getEthereumAddress;
+import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -298,8 +298,8 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldGetPalaemonTokensWithEmptyAppComputeSecretWhenSecretsDoNotExist() {
-        final String appAddress = getEthereumAddress();
-        final String requesterAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final TaskDescription taskDescription = TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
@@ -769,8 +769,8 @@ class PalaemonSessionServiceTests {
     }
 
     private TaskDescription createTaskDescription() {
-        appAddress = getEthereumAddress();
-        requesterAddress = getEthereumAddress();
+        appAddress = createEthereumAddress();
+        requesterAddress = createEthereumAddress();
         return TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)

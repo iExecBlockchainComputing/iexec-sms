@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.iexec.sms.Web3jUtils.getEthereumAddress;
+import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 import static org.mockito.Mockito.*;
 
 class AppComputeSecretControllerTest {
@@ -46,7 +46,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldAddAppDeveloperSecret() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -74,7 +74,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceNotSignedByOwner() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -100,7 +100,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretAlreadyExists() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -127,7 +127,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretValueTooLong() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
         final String secretValue = TOO_LONG_SECRET_VALUE;
 
@@ -153,7 +153,7 @@ class AppComputeSecretControllerTest {
     @Test
     @Disabled
     void shouldNotAddAppDeveloperSecretSinceBadSecretIndexFormat() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "bad-secret-index";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -173,7 +173,7 @@ class AppComputeSecretControllerTest {
     @Test
     @Disabled
     void shouldNotAddAppDeveloperSecretSinceBadSecretValue() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "-10";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -191,7 +191,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldAddMaxSizeAppDeveloperSecret() {
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
         final String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
@@ -222,8 +222,8 @@ class AppComputeSecretControllerTest {
     // region isAppDeveloperAppComputeSecretPresent
     @Test
     void appDeveloperSecretShouldExist() {
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
-        final String appAddress = getEthereumAddress();
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
@@ -238,8 +238,8 @@ class AppComputeSecretControllerTest {
 
     @Test
     void appDeveloperSecretShouldNotExist() {
+        final String appAddress = createEthereumAddress();
         final String secretIndex = "0";
-        final String appAddress = getEthereumAddress();
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
@@ -255,7 +255,7 @@ class AppComputeSecretControllerTest {
     @Test
     void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexNotANumber() {
         final String secretIndex = "bad-secret-index";
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
@@ -266,7 +266,7 @@ class AppComputeSecretControllerTest {
     @Test
     void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexLowerThanZero() {
         final String secretIndex = "-1";
-        final String appAddress = getEthereumAddress();
+        final String appAddress = createEthereumAddress();
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
         Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
@@ -278,7 +278,7 @@ class AppComputeSecretControllerTest {
     // region addRequesterAppComputeSecret
     @Test
     void shouldAddRequesterSecret() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "valid-requester-secret";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -311,7 +311,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddRequesterSecretSinceNotSignedByRequester() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "not-signed-secret";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -338,7 +338,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddRequesterSecretSinceSecretAlreadyExists() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "secret-already-exists";
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -374,7 +374,7 @@ class AppComputeSecretControllerTest {
             "this-is-a-key-with-invalid-characters:!*~"
     })
     void shouldNotAddRequesterSecretSinceInvalidSecretKey(String secretKey) {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addRequesterAppComputeSecret(
                 AUTHORIZATION,
@@ -390,7 +390,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldNotAddRequesterSecretSinceSecretValueTooLong() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "too-long-secret-value";
         final String secretValue = TOO_LONG_SECRET_VALUE;
 
@@ -417,7 +417,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void shouldAddMaxSizeRequesterSecret() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "max-size-secret-value";
         final String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
@@ -453,7 +453,7 @@ class AppComputeSecretControllerTest {
     // region isRequesterAppComputeSecretPresent
     @Test
     void requesterSecretShouldExist() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "exist";
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, secretKey))
                 .thenReturn(true);
@@ -468,7 +468,7 @@ class AppComputeSecretControllerTest {
 
     @Test
     void requesterSecretShouldNotExist() {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final String secretKey = "empty";
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, secretKey))
                 .thenReturn(false);
@@ -487,7 +487,7 @@ class AppComputeSecretControllerTest {
             "this-is-a-key-with-invalid-characters:!*~"
     })
     void shouldNotReadRequesterSecretSinceInvalidSecretKey(String secretKey) {
-        final String requesterAddress = getEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.isRequesterAppComputeSecretPresent(
                 requesterAddress,
                 secretKey

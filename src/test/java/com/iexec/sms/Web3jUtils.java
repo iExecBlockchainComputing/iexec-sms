@@ -24,7 +24,7 @@ public class Web3jUtils {
 
     private Web3jUtils() {}
 
-    public static String getEthereumAddress() {
+    public static String createEthereumAddress() {
         try {
             ECKeyPair ecKeyPair = Keys.createEcKeyPair();
             return Credentials.create(ecKeyPair).getAddress();
