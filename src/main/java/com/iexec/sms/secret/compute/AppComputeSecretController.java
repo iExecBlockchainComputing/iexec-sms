@@ -16,17 +16,17 @@
 
 package com.iexec.sms.secret.compute;
 
+import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
-import com.iexec.common.web.ApiResponseBody;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.web3j.crypto.Keys;
 
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -57,7 +57,7 @@ public class AppComputeSecretController {
                                                                                @PathVariable String appAddress,
 //                                                                      @PathVariable String secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
-        appAddress = Keys.toChecksumAddress(appAddress);
+        appAddress = appAddress.toLowerCase();
         String secretIndex = "0";   // FIXME: remove once functioning has been validated.
 
         try {
@@ -114,7 +114,7 @@ public class AppComputeSecretController {
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String, List<String>>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
                                                                                          @PathVariable String secretIndex) {
-        appAddress = Keys.toChecksumAddress(appAddress);
+        appAddress = appAddress.toLowerCase();
         try {
             checkSecretIndex(secretIndex);
         } catch (NumberFormatException e) {
@@ -161,7 +161,7 @@ public class AppComputeSecretController {
                                                                             @PathVariable String requesterAddress,
                                                                             @PathVariable String secretKey,
                                                                             @RequestBody String secretValue) {
-        requesterAddress = Keys.toChecksumAddress(requesterAddress);
+        requesterAddress = requesterAddress.toLowerCase();
         if (!secretKeyPattern.matcher(secretKey).matches()) {
             return ResponseEntity
                     .badRequest()
@@ -236,7 +236,7 @@ public class AppComputeSecretController {
     public ResponseEntity<ApiResponseBody<String, List<String>>> isRequesterAppComputeSecretPresent(
             @PathVariable String requesterAddress,
             @PathVariable String secretKey) {
-        requesterAddress = Keys.toChecksumAddress(requesterAddress);
+        requesterAddress = requesterAddress.toLowerCase();
 
         if (!secretKeyPattern.matcher(secretKey).matches()) {
             return ResponseEntity
