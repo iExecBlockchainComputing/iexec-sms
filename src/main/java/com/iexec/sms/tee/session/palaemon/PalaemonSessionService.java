@@ -22,7 +22,10 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.compute.*;
+import com.iexec.sms.secret.compute.OnChainObjectType;
+import com.iexec.sms.secret.compute.SecretOwnerRole;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -38,7 +41,6 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.web3j.crypto.Keys;
 
 import javax.annotation.PostConstruct;
 import java.io.FileNotFoundException;
@@ -267,7 +269,7 @@ public class PalaemonSessionService {
 
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
         final Map<String, Object> tokens = new HashMap<>();
-        final String applicationAddress = Keys.toChecksumAddress(taskDescription.getAppAddress());
+        final String applicationAddress = taskDescription.getAppAddress().toLowerCase();
 
         final String secretIndex = "0";
         String appDeveloperSecret0 =
@@ -304,7 +306,7 @@ public class PalaemonSessionService {
                             OnChainObjectType.APPLICATION,
                             "",
                             SecretOwnerRole.REQUESTER,
-                            Keys.toChecksumAddress(taskDescription.getRequester()),
+                            taskDescription.getRequester().toLowerCase(),
                             secretEntry.getValue())
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
