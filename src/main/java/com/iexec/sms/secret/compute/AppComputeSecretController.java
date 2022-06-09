@@ -52,13 +52,12 @@ public class AppComputeSecretController {
     }
 
     // region App developer endpoints
-    @PostMapping("/apps/{appAddress}/secrets/0")
+    @PostMapping("/apps/{appAddress}/secrets/1")
     public ResponseEntity<ApiResponseBody<String, List<String>>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                                @PathVariable String appAddress,
-//                                                                      @PathVariable String secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
         appAddress = appAddress.toLowerCase();
-        String secretIndex = "0";   // FIXME: remove once functioning has been validated.
+        String secretIndex = "1";
 
         try {
             checkSecretIndex(secretIndex);
@@ -149,7 +148,7 @@ public class AppComputeSecretController {
      */
     private void checkSecretIndex(String secretIndex) {
         int idx = Integer.parseInt(secretIndex);
-        if (idx < 0) {
+        if (idx <= 0) {
             throw new NumberFormatException();
         }
     }

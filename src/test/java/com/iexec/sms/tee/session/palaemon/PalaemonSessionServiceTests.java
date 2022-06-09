@@ -86,7 +86,7 @@ class PalaemonSessionServiceTests {
     // keys with leading/trailing \n should not break the workflow
     private static final String DATASET_KEY = "\ndatasetKey\n";
     // app
-    private static final String APP_DEVELOPER_SECRET_INDEX = "0";
+    private static final String APP_DEVELOPER_SECRET_INDEX = "1";
     private static final String APP_DEVELOPER_SECRET_VALUE = "appDeveloperSecretValue";
     private static final String REQUESTER_SECRET_KEY_1 = "requesterSecretKey1";
     private static final String REQUESTER_SECRET_VALUE_1 = "requesterSecretValue1";
@@ -98,7 +98,7 @@ class PalaemonSessionServiceTests {
     private static final TeeEnclaveConfiguration enclaveConfig =
             mock(TeeEnclaveConfiguration.class);
     private static final String ARGS = "args";
-    private static final String IEXEC_APP_DEVELOPER_SECRET_0 = "IEXEC_APP_DEVELOPER_SECRET_0";
+    private static final String IEXEC_APP_DEVELOPER_SECRET_1 = "IEXEC_APP_DEVELOPER_SECRET_1";
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
@@ -285,11 +285,11 @@ class PalaemonSessionServiceTests {
                                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
                                 ),
-                                IEXEC_APP_DEVELOPER_SECRET_0, APP_DEVELOPER_SECRET_VALUE,
+                                IEXEC_APP_DEVELOPER_SECRET_1, APP_DEVELOPER_SECRET_VALUE,
                                 REQUESTER_SECRETS,
                                 Map.of(
-                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
-                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
+                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_1,
+                                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "2", REQUESTER_SECRET_VALUE_2
                                 )
 
                         )
@@ -345,7 +345,7 @@ class PalaemonSessionServiceTests {
                                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", "file1",
                                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", "file2"
                                 ),
-                                IEXEC_APP_DEVELOPER_SECRET_0, "",
+                                IEXEC_APP_DEVELOPER_SECRET_1, "",
                                 REQUESTER_SECRETS, Collections.emptyMap()
                         )
                 );
@@ -402,15 +402,15 @@ class PalaemonSessionServiceTests {
         verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, REQUESTER_SECRET_KEY_2);
         assertThat(tokens).containsEntry(REQUESTER_SECRETS,
                 Map.of(
-                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
-                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_2
+                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_1,
+                        IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "2", REQUESTER_SECRET_VALUE_2
                 ));
     }
 
     @Test
     void shouldFilterRequesterSecretIndexLowerThanZero() {
         PalaemonSessionRequest request = createSessionRequest(createTaskDescription());
-        request.getTaskDescription().setSecrets(Map.of("0", REQUESTER_SECRET_KEY_1, "-1", "out-of-bound-requester-secret"));
+        request.getTaskDescription().setSecrets(Map.of("1", REQUESTER_SECRET_KEY_1, "-1", "out-of-bound-requester-secret"));
         TeeEnclaveConfigurationValidator validator = mock(TeeEnclaveConfigurationValidator.class);
         when(enclaveConfig.getValidator()).thenReturn(validator);
         when(validator.isValid()).thenReturn(true);
@@ -418,7 +418,7 @@ class PalaemonSessionServiceTests {
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
         assertThat(tokens).containsEntry(REQUESTER_SECRETS,
-                Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1));
+                Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_1));
     }
     //endregion
 
@@ -786,7 +786,7 @@ class PalaemonSessionServiceTests {
                 .isResultEncryption(true)
                 .resultStorageProvider(STORAGE_PROVIDER)
                 .resultStorageProxy(STORAGE_PROXY)
-                .secrets(Map.of("0", REQUESTER_SECRET_KEY_1, "1", REQUESTER_SECRET_KEY_2))
+                .secrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2))
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0)

@@ -47,7 +47,7 @@ class AppComputeSecretControllerTest {
     @Test
     void shouldAddAppDeveloperSecret() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         final String secretValue = COMMON_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue))
@@ -75,7 +75,7 @@ class AppComputeSecretControllerTest {
     @Test
     void shouldNotAddAppDeveloperSecretSinceNotSignedByOwner() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         final String secretValue = COMMON_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue))
@@ -101,7 +101,7 @@ class AppComputeSecretControllerTest {
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretAlreadyExists() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         final String secretValue = COMMON_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue))
@@ -128,7 +128,7 @@ class AppComputeSecretControllerTest {
     @Test
     void shouldNotAddAppDeveloperSecretSinceSecretValueTooLong() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         final String secretValue = TOO_LONG_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue))
@@ -192,7 +192,7 @@ class AppComputeSecretControllerTest {
     @Test
     void shouldAddMaxSizeAppDeveloperSecret() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         final String secretValue = EXACT_MAX_SIZE_SECRET_VALUE;
 
         when(authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue))
@@ -223,7 +223,7 @@ class AppComputeSecretControllerTest {
     @Test
     void appDeveloperSecretShouldExist() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(true);
 
@@ -239,7 +239,7 @@ class AppComputeSecretControllerTest {
     @Test
     void appDeveloperSecretShouldNotExist() {
         final String appAddress = createEthereumAddress();
-        final String secretIndex = "0";
+        final String secretIndex = "1";
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", secretIndex))
                 .thenReturn(false);
 
