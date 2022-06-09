@@ -59,8 +59,8 @@ import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.worker.result.ResultUtils.*;
+import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
-import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.INPUT_FILE_NAMES;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -76,7 +76,6 @@ class PalaemonSessionServiceTests {
     private static final String SESSION_ID = "sessionId";
     private static final String WORKER_ADDRESS = "workerAddress";
     private static final String ENCLAVE_CHALLENGE = "enclaveChallenge";
-    private static final String REQUESTER = "requester";
     // pre-compute
     private static final String PRE_COMPUTE_FINGERPRINT = "mrEnclave1";
     private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
@@ -94,7 +93,6 @@ class PalaemonSessionServiceTests {
     private static final String REQUESTER_SECRET_KEY_2 = "requesterSecretKey2";
     private static final String REQUESTER_SECRET_VALUE_2 = "requesterSecretValue2";
     private static final String APP_URI = "appUri";
-    private static final String APP_ADDRESS = "appAddress";
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
     private static final TeeEnclaveConfiguration enclaveConfig =
@@ -104,7 +102,6 @@ class PalaemonSessionServiceTests {
     // post-compute
     private static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
-    private static final String POST_COMPUTE_IMAGE = "postComputeImage";
     private static final String STORAGE_PROVIDER = "ipfs";
     private static final String STORAGE_PROXY = "storageProxy";
     private static final String STORAGE_TOKEN = "storageToken";
@@ -115,6 +112,9 @@ class PalaemonSessionServiceTests {
     private static final String INPUT_FILE_NAME_1 = "file1";
     private static final String INPUT_FILE_URL_2 = "http://host/file2";
     private static final String INPUT_FILE_NAME_2 = "file2";
+
+    private String appAddress;
+    private String requesterAddress;
 
     @Mock
     private Web3SecretService web3SecretService;
@@ -271,9 +271,9 @@ class PalaemonSessionServiceTests {
 
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
 
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, REQUESTER_SECRET_KEY_1);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, REQUESTER_SECRET_KEY_2);
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
@@ -298,16 +298,18 @@ class PalaemonSessionServiceTests {
 
     @Test
     void shouldGetPalaemonTokensWithEmptyAppComputeSecretWhenSecretsDoNotExist() {
+        final String appAddress = createEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
         final TaskDescription taskDescription = TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
-                .appAddress(APP_ADDRESS)
+                .appAddress(appAddress)
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
                 .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
-                .requester(REQUESTER)
+                .requester(requesterAddress)
                 .cmd(ARGS)
                 .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                 .isResultEncryption(true)
@@ -323,14 +325,14 @@ class PalaemonSessionServiceTests {
         when(validator.isValid()).thenReturn(true);
         when(teeTaskComputeSecretService.getSecret(
                 OnChainObjectType.APPLICATION,
-                APP_ADDRESS,
+                appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
                 APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(Optional.empty());
 
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
-        verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(APP_ADDRESS), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
+        verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(appAddress), eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
         verify(teeTaskComputeSecretService, never()).getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
 
         assertThat(tokens)
@@ -396,8 +398,8 @@ class PalaemonSessionServiceTests {
         Map<String, Object> tokens = assertDoesNotThrow(() -> palaemonSessionService.getAppPalaemonTokens(request));
         verify(teeTaskComputeSecretService, times(2))
                 .getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, REQUESTER_SECRET_KEY_2);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, REQUESTER_SECRET_KEY_1);
+        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, REQUESTER_SECRET_KEY_2);
         assertThat(tokens).containsEntry(REQUESTER_SECRETS,
                 Map.of(
                         IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "0", REQUESTER_SECRET_VALUE_1,
@@ -436,7 +438,7 @@ class PalaemonSessionServiceTests {
                 .thenReturn(Optional.of(publicKeySecret));
         Secret storageSecret = new Secret("address", STORAGE_TOKEN);
         when(web2SecretsService.getSecret(
-                REQUESTER,
+                requesterAddress,
                 ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN,
                 true))
                 .thenReturn(Optional.of(storageSecret));
@@ -735,12 +737,12 @@ class PalaemonSessionServiceTests {
     private void addApplicationDeveloperSecret() {
         TeeTaskComputeSecret applicationDeveloperSecret = TeeTaskComputeSecret.builder()
                 .onChainObjectType(OnChainObjectType.APPLICATION)
-                .onChainObjectAddress(APP_ADDRESS)
+                .onChainObjectAddress(appAddress)
                 .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
                 .key(APP_DEVELOPER_SECRET_INDEX)
                 .value(APP_DEVELOPER_SECRET_VALUE)
                 .build();
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX))
+        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(Optional.of(applicationDeveloperSecret));
     }
 
@@ -749,11 +751,11 @@ class PalaemonSessionServiceTests {
                 .onChainObjectType(OnChainObjectType.APPLICATION)
                 .onChainObjectAddress("")
                 .secretOwnerRole(SecretOwnerRole.REQUESTER)
-                .fixedSecretOwner(REQUESTER)
+                .fixedSecretOwner(requesterAddress)
                 .key(secretKey)
                 .value(secretValue)
                 .build();
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, REQUESTER, secretKey))
+        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, secretKey))
                 .thenReturn(Optional.of(requesterSecret));
     }
 
@@ -767,16 +769,18 @@ class PalaemonSessionServiceTests {
     }
 
     private TaskDescription createTaskDescription() {
+        appAddress = createEthereumAddress();
+        requesterAddress = createEthereumAddress();
         return TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
-                .appAddress(APP_ADDRESS)
+                .appAddress(appAddress)
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
                 .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
-                .requester(REQUESTER)
+                .requester(requesterAddress)
                 .cmd(ARGS)
                 .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                 .isResultEncryption(true)

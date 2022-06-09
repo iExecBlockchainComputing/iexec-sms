@@ -22,7 +22,10 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.compute.*;
+import com.iexec.sms.secret.compute.OnChainObjectType;
+import com.iexec.sms.secret.compute.SecretOwnerRole;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -268,19 +271,21 @@ public class PalaemonSessionService {
         final Map<String, Object> tokens = new HashMap<>();
         final String applicationAddress = taskDescription.getAppAddress();
 
-        final String secretIndex = "0";
-        String appDeveloperSecret0 =
-                teeTaskComputeSecretService.getSecret(
-                                OnChainObjectType.APPLICATION,
-                                applicationAddress,
-                                SecretOwnerRole.APPLICATION_DEVELOPER,
-                                "",
-                                secretIndex)
-                        .map(TeeTaskComputeSecret::getValue)
-                        .orElse(EMPTY_YML_VALUE);
-        tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+        if (applicationAddress != null) {
+            final String secretIndex = "0";
+            String appDeveloperSecret0 =
+                    teeTaskComputeSecretService.getSecret(
+                                    OnChainObjectType.APPLICATION,
+                                    applicationAddress.toLowerCase(),
+                                    SecretOwnerRole.APPLICATION_DEVELOPER,
+                                    "",
+                                    secretIndex)
+                            .map(TeeTaskComputeSecret::getValue)
+                            .orElse(EMPTY_YML_VALUE);
+            tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+        }
 
-        if (taskDescription.getSecrets() == null) {
+        if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
             tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
             return tokens;
         }
@@ -303,7 +308,7 @@ public class PalaemonSessionService {
                             OnChainObjectType.APPLICATION,
                             "",
                             SecretOwnerRole.REQUESTER,
-                            taskDescription.getRequester(),
+                            taskDescription.getRequester().toLowerCase(),
                             secretEntry.getValue())
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
