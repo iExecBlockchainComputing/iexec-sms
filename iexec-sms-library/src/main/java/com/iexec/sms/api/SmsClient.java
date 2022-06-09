@@ -34,7 +34,7 @@ import java.util.List;
  */
 public interface SmsClient {
 
-    @RequestLine("POST /apps/{appAddress}/secrets/0")
+    @RequestLine("POST /apps/{appAddress}/secrets/1")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
             @Param("authorization") String authorization,

@@ -272,8 +272,8 @@ public class PalaemonSessionService {
         final String applicationAddress = taskDescription.getAppAddress();
 
         if (applicationAddress != null) {
-            final String secretIndex = "0";
-            String appDeveloperSecret0 =
+            final String secretIndex = "1";
+            String appDeveloperSecret =
                     teeTaskComputeSecretService.getSecret(
                                     OnChainObjectType.APPLICATION,
                                     applicationAddress.toLowerCase(),
@@ -282,7 +282,7 @@ public class PalaemonSessionService {
                                     secretIndex)
                             .map(TeeTaskComputeSecret::getValue)
                             .orElse(EMPTY_YML_VALUE);
-            tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret0);
+            tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret);
         }
 
         if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
@@ -294,11 +294,11 @@ public class PalaemonSessionService {
         for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
             try {
                 int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
-                if (requesterSecretIndex < 0) {
+                if (requesterSecretIndex <= 0) {
                     String message = "Application secret indices provided in the deal parameters must be positive numbers"
                             + " [providedApplicationSecretIndex:" + requesterSecretIndex + "]";
                     log.warn(message);
-                    throw (new NumberFormatException(message));
+                    throw new NumberFormatException(message);
                 }
             } catch(NumberFormatException e) {
                 log.warn("Invalid entry found in deal parameters secrets map", e);
