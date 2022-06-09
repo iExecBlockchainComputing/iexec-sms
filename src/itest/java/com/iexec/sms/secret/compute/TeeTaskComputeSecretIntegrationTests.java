@@ -73,7 +73,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void shouldAddNewComputeSecrets() {
-        final String appDeveloperSecretIndex = "0";
+        final String appDeveloperSecretIndex = "1";
         final String requesterSecretKey="secret-key";
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
@@ -128,7 +128,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
                                 .onChainObjectType(OnChainObjectType.APPLICATION)
                                 .onChainObjectAddress("")
                                 .secretOwnerRole(SecretOwnerRole.REQUESTER)
-                                .fixedSecretOwner(requesterAddress)
+                                .fixedSecretOwner(requesterAddress.toLowerCase())
                                 .key(requesterSecretKey)
                                 .build(),
                         exampleMatcher)
