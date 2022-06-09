@@ -55,10 +55,9 @@ public class AppComputeSecretController {
     @PostMapping("/apps/{appAddress}/secrets/1")
     public ResponseEntity<ApiResponseBody<String, List<String>>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
                                                                                @PathVariable String appAddress,
-//                                                                      @PathVariable String secretIndex,    // FIXME: enable once functioning has been validated
                                                                                @RequestBody String secretValue) {
         appAddress = appAddress.toLowerCase();
-        String secretIndex = "1";   // FIXME: remove once functioning has been validated.
+        String secretIndex = "1";
 
         try {
             checkSecretIndex(secretIndex);
