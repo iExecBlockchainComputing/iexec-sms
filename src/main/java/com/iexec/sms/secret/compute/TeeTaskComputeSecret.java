@@ -79,7 +79,7 @@ public class TeeTaskComputeSecret {
     private String key;
     @NotNull
     /*
-     * Expected behaviour of AES encryption it to not expand the data very much.
+     * Expected behavior of AES encryption is to not expand the data very much.
      * Final size might be padded to the next block, plus another padding might
      * be necessary for the IV (https://stackoverflow.com/a/93463).
      * In addition to that, it is worth mentioning that current implementation
@@ -87,7 +87,7 @@ public class TeeTaskComputeSecret {
      * database) which causes an overhead of ~33%
      * (https://en.wikipedia.org/wiki/Base64).
      * <p>
-     * For theses reasons and simplicity purposes, we reserve twice the size
+     * For these reasons and for simplicity purposes, we reserve twice the size
      * of `SECRET_MAX_SIZE` in storage.
      */
     @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
