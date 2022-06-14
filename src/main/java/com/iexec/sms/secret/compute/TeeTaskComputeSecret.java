@@ -87,7 +87,7 @@ public class TeeTaskComputeSecret {
      * database) which causes an overhead of ~33%
      * (https://en.wikipedia.org/wiki/Base64).
      * <p>
-     * For theses reasons and simplicity purposes, we reserve twice the size
+     * For these reasons and for simplicity purposes, we reserve twice the size
      * of `SECRET_MAX_SIZE` in storage.
      */
     @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
