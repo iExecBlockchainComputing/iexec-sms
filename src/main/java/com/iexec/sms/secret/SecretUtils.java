@@ -22,7 +22,7 @@ public abstract class SecretUtils {
     /**
      * Max size (in kBs) a secret can have.
      */
-    private static final long SECRET_MAX_SIZE = 4096;
+    public static final int SECRET_MAX_SIZE = 4096;
 
     public static boolean isSecretSizeValid(String secretValue) {
         return secretValue.getBytes(StandardCharsets.UTF_8).length <= SECRET_MAX_SIZE;

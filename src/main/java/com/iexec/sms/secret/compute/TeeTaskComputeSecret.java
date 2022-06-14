@@ -16,6 +16,7 @@
 
 package com.iexec.sms.secret.compute;
 
+import com.iexec.sms.secret.SecretUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -77,6 +78,19 @@ public class TeeTaskComputeSecret {
     @Size(min = SECRET_KEY_MIN_LENGTH, max = SECRET_KEY_MAX_LENGTH)
     private String key;
     @NotNull
+    /*
+     * Expected behavior of AES encryption is to not expand the data very much.
+     * Final size might be padded to the next block, plus another padding might
+     * be necessary for the IV (https://stackoverflow.com/a/93463).
+     * In addition to that, it is worth mentioning that current implementation
+     * encrypts the input and produces a Base64 result (stored as-is in
+     * database) which causes an overhead of ~33%
+     * (https://en.wikipedia.org/wiki/Base64).
+     * <p>
+     * For these reasons and for simplicity purposes, we reserve twice the size
+     * of `SECRET_MAX_SIZE` in storage.
+     */
+    @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
     private String value;
 
     @Builder
