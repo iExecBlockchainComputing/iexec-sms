@@ -24,6 +24,7 @@ import com.iexec.sms.api.SmsClientBuilder;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
 import feign.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,18 +37,21 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.web3j.crypto.Hash;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Slf4j
 public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS = "0xABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
-    private static final String SECRET_VALUE = RandomStringUtils.randomAscii(4096);
+    private static final String SECRET_VALUE = generateRandomAscii(4096);
     private static final String OWNER_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String REQUESTER_ADDRESS = "0x123790ae4E14865B972ee04a5f9FD5fB153Cd5e7";
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";
@@ -62,6 +66,22 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @Autowired
     private TeeTaskComputeSecretRepository repository;
 
+    /*
+     * Generate random ASCII from seed for re-testability.
+     * See also {@link org.apache.commons.lang3.RandomStringUtils#randomAscii(int)}
+     * */
+    private static String generateRandomAscii(int count) {
+        long seed = new Date().getTime();
+        log.info("Generating random ascii from seed: {}", seed);
+        return RandomStringUtils.random(count,
+                32,
+                127,
+                false,
+                false,
+                null,
+                new Random(seed));
+    }
+
     @BeforeEach
     private void setUp() {
         apiClient = SmsClientBuilder.getInstance(Logger.Level.FULL, "http://localhost:" + randomServerPort);
@@ -75,7 +95,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @Test
     void shouldAddNewComputeSecrets() {
         final String appDeveloperSecretIndex = "1";
-        final String requesterSecretKey="secret-key";
+        final String requesterSecretKey = "secret-key";
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
@@ -93,7 +113,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
         try {
             apiClient.isRequesterAppComputeSecretPresent(requesterAddress, requesterSecretKey);
-        } catch(FeignException e) {
+        } catch (FeignException e) {
             Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
         }
 
@@ -221,7 +241,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         // Add a new secret to the database
         try {
             apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretValue);
-        } catch(FeignException e) {
+        } catch (FeignException e) {
             Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
         }
     }
