@@ -18,6 +18,7 @@ package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
@@ -65,9 +66,10 @@ public class TeeTaskComputeSecretService {
         }
         final TeeTaskComputeSecret secret = oSecret.get();
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
-        secret.setValue(decryptedValue);
-
-        return oSecret;
+        // deep copy to avoid altering original object
+        TeeTaskComputeSecret decryptedSecret = SerializationUtils.clone(secret);
+        decryptedSecret.setValue(decryptedValue);
+        return Optional.of(decryptedSecret);
     }
 
     /**

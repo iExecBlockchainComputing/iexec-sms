@@ -25,6 +25,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 /**
  * Define a secret that can be used during the execution of a TEE task.
@@ -50,7 +51,7 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @Entity
 @Table(uniqueConstraints = { @UniqueConstraint(columnNames = {"onChainObjectAddress", "fixedSecretOwner", "key"}) })
-public class TeeTaskComputeSecret {
+public class TeeTaskComputeSecret implements Serializable {
 
     public static final int SECRET_KEY_MIN_LENGTH = 1;
     public static final int SECRET_KEY_MAX_LENGTH = 64;
