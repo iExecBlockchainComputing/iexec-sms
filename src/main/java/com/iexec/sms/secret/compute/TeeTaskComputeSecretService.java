@@ -67,6 +67,7 @@ public class TeeTaskComputeSecretService {
         final TeeTaskComputeSecret secret = oSecret.get();
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
         // deep copy to avoid altering original object
+        //TODO: Improve this out-of-the box cloning to get better performances
         TeeTaskComputeSecret decryptedSecret = SerializationUtils.clone(secret);
         decryptedSecret.setValue(decryptedValue);
         return Optional.of(decryptedSecret);
