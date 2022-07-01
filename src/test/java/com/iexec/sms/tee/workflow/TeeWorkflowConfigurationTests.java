@@ -8,7 +8,7 @@ import org.springframework.util.unit.DataSize;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TeeWorkflowConfigurationTests {
+class TeeWorkflowConfigurationTests {
 
     private static final String LAS_IMAGE = "lasImage";
     private static final String PRE_COMPUTE_IMAGE = "preComputeImage";
@@ -36,7 +36,7 @@ public class TeeWorkflowConfigurationTests {
     }
 
     @Test
-    public void shouldGetPublicConfiguration() {
+    void shouldGetPublicConfiguration() {
         assertThat(teeWorkflowConfiguration.getSharedConfiguration())
                 .isEqualTo(TeeWorkflowSharedConfiguration.builder()
                 .lasImage(LAS_IMAGE)

@@ -29,7 +29,7 @@ import java.util.Optional;
 @Service
 public class Web2SecretsService extends AbstractSecretService {
 
-    private Web2SecretsRepository web2SecretsRepository;
+    private final Web2SecretsRepository web2SecretsRepository;
 
     public Web2SecretsService(Web2SecretsRepository web2SecretsRepository,
                               EncryptionService encryptionService) {
@@ -43,14 +43,13 @@ public class Web2SecretsService extends AbstractSecretService {
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress) {
-        ownerAddress = ownerAddress.toLowerCase();
         return getSecret(ownerAddress, secretAddress, false);
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
         ownerAddress = ownerAddress.toLowerCase();
         Optional<Web2Secrets> web2Secrets = getWeb2Secrets(ownerAddress);
-        if (!web2Secrets.isPresent()) {
+        if (web2Secrets.isEmpty()) {
             return Optional.empty();
         }
         Secret secret = web2Secrets.get().getSecret(secretAddress);
@@ -73,7 +72,7 @@ public class Web2SecretsService extends AbstractSecretService {
 
         Secret secret = new Secret(secretAddress, secretValue);
         encryptSecret(secret);
-        log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, secretValueHash:{}]",
+        log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, encryptedSecretValue:{}]",
                 ownerAddress, secretAddress, secret.getValue());
         web2Secrets.getSecrets().add(secret);
         web2SecretsRepository.save(web2Secrets);
@@ -91,7 +90,7 @@ public class Web2SecretsService extends AbstractSecretService {
             return;
         }
 
-        log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldSecretValueHash:{}, newSecretValueHash:{}]",
+        log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldEncryptedSecretValue:{}, newEncryptedSecretValue:{}]",
                 ownerAddress, secretAddress, existingSecret.getValue(), newSecret.getValue());
         existingSecret.setValue(newSecret.getValue(), true);
         web2SecretsRepository.save(web2Secrets.get());

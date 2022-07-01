@@ -22,7 +22,6 @@ import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
-import com.iexec.sms.utils.version.VersionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,16 +37,13 @@ import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignatu
 @RequestMapping("/secrets")
 public class SecretController {
 
-    private AuthorizationService authorizationService;
-    private Web3SecretService web3SecretService;
-    private VersionService versionService;
-    private Web2SecretsService web2SecretsService;
+    private final AuthorizationService authorizationService;
+    private final Web3SecretService web3SecretService;
+    private final Web2SecretsService web2SecretsService;
 
-    public SecretController(VersionService versionService,
-                            AuthorizationService authorizationService,
+    public SecretController(AuthorizationService authorizationService,
                             Web2SecretsService web2SecretsService,
                             Web3SecretService web3SecretService) {
-        this.versionService = versionService;
         this.web2SecretsService = web2SecretsService;
         this.authorizationService = authorizationService;
         this.web3SecretService = web3SecretService;
@@ -65,14 +61,12 @@ public class SecretController {
     public ResponseEntity<Web3Secret> getWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                     @RequestParam String secretAddress,
                                                     @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
-        if (isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForGetWeb3Secret(secretAddress);
+        String challenge = authorizationService.getChallengeForGetWeb3Secret(secretAddress);
 
-            //TODO: also isAuthorizedOnExecution(..)
-            if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
-                log.error("Unauthorized to getWeb3Secret [expectedChallenge:{}]", challenge);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        //TODO: also isAuthorizedOnExecution(..)
+        if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
+            log.error("Unauthorized to getWeb3Secret [expectedChallenge:{}]", challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress, shouldDecryptSecret);
@@ -83,13 +77,15 @@ public class SecretController {
     public ResponseEntity<String> addWeb3Secret(@RequestHeader("Authorization") String authorization,
                                                 @RequestParam String secretAddress,
                                                 @RequestBody String secretValue) {
-        if (isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
 
-            if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
-                log.error("Unauthorized to addWeb3Secret [expectedChallenge:{}]", challenge);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
+
+        if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
+            log.error("Unauthorized to addWeb3Secret [expectedChallenge:{}]", challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (web3SecretService.getSecret(secretAddress).isPresent()) {
@@ -114,13 +110,11 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
-        if (isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretName);
+        String challenge = authorizationService.getChallengeForGetWeb2Secret(ownerAddress, secretName);
 
-            if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
-                log.error("Unauthorized to getWeb2Secret [expectedChallenge:{}]", challenge);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
+            log.error("Unauthorized to getWeb2Secret [expectedChallenge:{}]", challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, shouldDecryptSecret);
@@ -132,13 +126,15 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestBody String secretValue) {
-        if (isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, secretValue);
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
 
-            if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
-                log.error("Unauthorized to addWeb2Secret [expectedChallenge:{}]", challenge);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, secretValue);
+
+        if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
+            log.error("Unauthorized to addWeb2Secret [expectedChallenge:{}]", challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (web2SecretsService.getSecret(ownerAddress, secretName).isPresent()) {
@@ -154,13 +150,11 @@ public class SecretController {
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
-        if (isInProduction(authorization)) {
-            String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
+        String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
 
-            if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
-                log.error("Unauthorized to updateWeb2Secret [expectedChallenge:{}]", challenge);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+        if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
+            log.error("Unauthorized to updateWeb2Secret [expectedChallenge:{}]", challenge);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         if (web2SecretsService.getSecret(ownerAddress, secretName).isEmpty()) {
@@ -175,7 +169,7 @@ public class SecretController {
      * Server-side signature of a messageHash
      * */
     @PostMapping("/delegate/signature")
-    private ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
+    public ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
                                                        @RequestBody String privateKey) {
         Signature signature = signMessageHashAndGetSignature(messageHash, privateKey);
 
@@ -185,11 +179,5 @@ public class SecretController {
 
         return ResponseEntity.ok(signature.getValue());
     }
-
-    private boolean isInProduction(String authorization) {
-        boolean canAvoidAuthorization = versionService.isSnapshot() && authorization.equals("*");
-        return !canAvoidAuthorization;
-    }
-
 }
 

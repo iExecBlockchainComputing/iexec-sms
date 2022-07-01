@@ -2,34 +2,42 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'java'
-    id 'maven'
-    id 'jacoco'
-    id 'org.springframework.boot' version '2.4.3'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'io.freefair.lombok' version '5.3.0'
+    id 'org.springframework.boot' version '2.6.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'jacoco'
+    id 'org.sonarqube' version '3.3'
+    id 'maven-publish'
 }
 
-group = 'com.iexec.sms'
-sourceCompatibility = 11
-targetCompatibility = 11
+ext {
+    springCloudVersion = '2021.0.0'
+    openFeignVersion = '11.7'
+    gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+}
 
-repositories {
-    mavenCentral()
-    jcenter()
-    maven {
-        url "https://nexus.iex.ec/repository/maven-public/"
+allprojects {
+    group = 'com.iexec.sms'
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
+        version += '-NEXT-SNAPSHOT'
     }
-    maven {
-        url "https://jitpack.io"
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url "https://nexus.intra.iex.ec/repository/maven-public/"
+        }
+        maven {
+            url "https://jitpack.io"
+        }
     }
 }
 
 configurations {
-    deployerJars
-}
-
-ext {
-    springCloudVersion = '2020.0.1'
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom runtimeOnly
 }
 
 dependencyManagement {
@@ -41,7 +49,7 @@ dependencyManagement {
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
+    implementation project(':iexec-sms-library')
 
     // spring
     implementation "org.springframework.boot:spring-boot-starter-web"
@@ -51,11 +59,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     // H2
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtime 'com.h2database:h2:1.4.200'
+    runtimeOnly 'com.h2database:h2:1.4.200'
 
-    // swagger
-    implementation "io.springfox:springfox-swagger2:2.9.2"
-    implementation "io.springfox:springfox-swagger-ui:2.9.2"
+    // Spring Doc
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.3'
 
     //ssl
     implementation 'org.apache.httpcomponents:httpclient:4.5.9'
@@ -78,84 +85,81 @@ dependencies {
     }
     testImplementation 'org.springframework.security:spring-security-test'
     // testImplementation 'org.mockito:mockito-inline:2.13.0' // activates mocking final classes/methods
+
+    // test containers
+    testImplementation 'org.testcontainers:junit-jupiter:1.16.0'
+    testImplementation 'org.testcontainers:testcontainers:1.16.0'
+    testImplementation 'org.testcontainers:mongodb:1.16.0'
+}
+
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+            srcDir 'src/itest/java'
+        }
+        resources.srcDir 'src/itest/resources'
+    }
+}
+
+springBoot {
+    buildInfo()
 }
 
 test {
     useJUnitPlatform()
 }
 
-jacoco {
-    toolVersion = "0.8.3"
+task itest(type:Test) {
+    group       'Verification'
+    description 'Runs the integration tests.'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false } // run always
+    useJUnitPlatform()
 }
-build.dependsOn jacocoTestReport
 
-def gitBranch = 'git name-rev --name-only HEAD'.execute().text.trim()
-def isMasterBranch = gitBranch == "master"
-def isDevelopBranch = gitBranch == "develop"
-def canUploadArchives = (isMasterBranch || isDevelopBranch ) && project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")
-def gitShortCommit = 'git rev-parse --short HEAD'.execute().text.trim()
-def isSnapshotVersion = project.version.contains("SNAPSHOT")
-
-project.ext.getNexusMaven = {
-    def nexusMavenBase = "https://nexus.iex.ec/repository"
-    if (isSnapshotVersion) {
-        return nexusMavenBase + "/maven-snapshots/"
-    } else {
-        return nexusMavenBase + "/maven-releases/"
+jacoco {
+    toolVersion = "0.8.7"
+}
+// sonarqube code coverage requires jacoco XML report
+jacocoTestReport {
+    reports {
+        xml.enabled true
     }
 }
+tasks.test.finalizedBy    tasks.jacocoTestReport
+tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
-uploadArchives {
-    repositories.mavenDeployer {
-        configuration = configurations.deployerJars
-        repository(url: getNexusMaven()) {
-            authentication(userName: project.nexusUser, password: project.nexusPassword)
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact bootJar
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username project.hasProperty('nexusUser') ? nexusUser : ''
+                password project.hasProperty('nexusPassword') ? nexusPassword : ''
+            }
+            url project.hasProperty('nexusUrl') ? nexusUrl : ''
         }
     }
 }
-uploadArchives.enabled = canUploadArchives
 
-// create the version controller for the core
-task createVersion(type: Copy) {
-    // delete old one
-    delete 'src/main/java/com/iexec/sms/utils/version/Version.java'
-    // use and copy template to the new location
-    from 'src/main/resources/Version.java.template'
-    into 'src/main/java/com/iexec/sms/utils/version/'
-
-    rename { String fileName ->
-        fileName.replace('.template', '')
-    }
-    // replace tokens in the template file
-    filter(ReplaceTokens, tokens: [projectversion: "${version}".toString()])
-}
-// the createVersion task should be called before compileJava or the version service will not work
-compileJava.dependsOn createVersion
-
-def imageName = "nexus.iex.ec/iexec-sms"
-def trustedDockerfileName = "Dockerfile"
-def untrustedDockerfileName = "Dockerfile.untrusted"
-def jarName = "iexec-sms-${version}.jar"
-
-project.ext.getDockerImageNameFull = {
-    def imageNameWithVersion = imageName + ":${version}"
-    if (isSnapshotVersion) {
-        return imageNameWithVersion + "-" + gitShortCommit
-    } else {
-        return imageNameWithVersion
-    }
-}
-
-project.ext.getDockerImageNameShortCommit = {
-    return imageName + ":" + gitShortCommit
-}
+ext.jarPathForOCI  = relativePath(tasks.bootJar.outputs.files.singleFile)
+ext.gitShortCommit = 'git rev-parse --short=8 HEAD'.execute().text.trim()
+ext.ociImageName   = 'local/' + ['bash', '-c', 'basename $(git config --get remote.origin.url) .git'].execute().text.trim()
 
 task buildImage(type: Exec) {
-    description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c",
-            "docker image build -f build/resources/main/${untrustedDockerfileName}" + 
-            " -t ${getDockerImageNameFull()} --build-arg JAR_NAME=${jarName} . &&" +
-            "docker tag ${getDockerImageNameFull()} ${imageName}:dev")
+    group       'Build'
+    description 'Builds an OCI image from a Dockerfile.'
+    dependsOn   bootJar
+    commandLine ("sh", "-c", "docker build -f build/resources/main/Dockerfile.untrusted --build-arg jar=$jarPathForOCI"
+            + " -t $ociImageName:$gitShortCommit . && docker tag $ociImageName:$gitShortCommit $ociImageName:dev")
     standardOutput = new ByteArrayOutputStream()
 
     ext.output = {
@@ -165,12 +169,11 @@ task buildImage(type: Exec) {
 }
 
 task buildTrustedImage(type: Exec) {
-    def trustedImageName = getDockerImageNameFull() + "-trusted"
-    description 'Building iexec-sms Docker image'
-    commandLine("sh", "-c",
-            "docker image build -f build/resources/main/${trustedDockerfileName} " + 
-            "-t ${trustedImageName} --build-arg JAR_NAME=${jarName} --no-cache . && " +
-            "docker tag ${trustedImageName} ${imageName}:dev-trusted")
+    group       'Build'
+    description 'Builds a trusted OCI image from a trusted Dockerfile.'
+    dependsOn   bootJar
+    commandLine ("sh", "-c", "docker image build -f build/resources/main/Dockerfile --build-arg jar=$jarPathForOCI"
+            + " -t $ociImageName:$gitShortCommit-trusted --no-cache . && docker tag $ociImageName:$gitShortCommit-trusted $ociImageName:dev-trusted")
 }
 
 task templatePalaemon {
@@ -219,17 +222,3 @@ task templatePalaemon {
 }
 //templatePalaemon.dependsOn buildImage
 //buildImage.finalizedBy templatePalaemon
-
-task pushImage(type: Exec) {
-    if (project.hasProperty("nexusUser") && project.hasProperty("nexusPassword")) {
-        commandLine("sh", "-c", "docker login -u " + project.nexusUser + " -p " + project.nexusPassword + " nexus.iex.ec && " +
-                "docker push " + getDockerImageNameFull() + " && " +
-                "docker tag " + getDockerImageNameFull() + " " + getDockerImageNameShortCommit() + " && " +
-                "docker push " + getDockerImageNameShortCommit() + " && " +
-                "docker logout")
-    } else {
-        println "Credentials for DockerHub are missing, the images cannot be pushed"
-    }
-}
-pushImage.dependsOn buildImage
-pushImage.enabled = canUploadArchives

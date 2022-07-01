@@ -26,7 +26,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
 import java.util.Objects;
 
 @Data
@@ -71,6 +70,16 @@ public class Secret {
     public String getTrimmedValue() {
         Objects.requireNonNull(this.value, "Secret value must not be null");
         return this.value.trim();
+    }
+
+    @Override
+    public String toString() {
+        return "Secret{" +
+                "id='" + id + '\'' +
+                ", address='" + address + '\'' +
+                ", value='" + (isEncryptedValue ? value : "<plain text value>") + '\'' +
+                ", isEncryptedValue=" + isEncryptedValue +
+                '}';
     }
 }
 

@@ -1,44 +1,13 @@
-pipeline {
-
-    agent {
-        label 'jenkins-agent-machine-1'
-    }
-
-    stages {
-
-        stage('Build') {
-            steps {
-                sh './gradlew build --refresh-dependencies --no-daemon'
-            }
-        }
-
-        stage('Upload Jars') {
-            when {
-                anyOf{
-                    branch 'master'
-                    branch 'develop'
-                }
-            }
-            steps {
-                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD']]) {
-                    sh './gradlew -PnexusUser=$NEXUS_USER -PnexusPassword=$NEXUS_PASSWORD uploadArchives --no-daemon'
-                }
-            }
-        }
-
-        stage('Build/Upload Docker image') {
-            when {
-                anyOf{
-                    branch 'master'
-                    branch 'develop'
-                }
-            }
-            steps {
-                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'nexus', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASSWORD']]) {
-                    sh './gradlew -PnexusUser=$NEXUS_USER -PnexusPassword=$NEXUS_PASSWORD pushImage --no-daemon'
-                }
-            }
-        }
-    }
-
-}
+@Library('global-jenkins-library@2.0.1') _
+buildJavaProject(
+        buildInfo: getBuildInfo(),
+        integrationTestsEnvVars: [],
+        shouldPublishJars: true,
+        shouldPublishDockerImages: true,
+        dockerfileDir: 'build/resources/main',
+        dockerfileFilename: 'Dockerfile.untrusted',
+        buildContext: '.',
+        preDevelopVisibility: 'iex.ec',
+        developVisibility: 'iex.ec',
+        preProductionVisibility: 'docker.io',
+        productionVisibility: 'docker.io')

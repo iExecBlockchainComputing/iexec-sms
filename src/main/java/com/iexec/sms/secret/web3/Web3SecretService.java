@@ -28,7 +28,7 @@ import java.util.Optional;
 @Service
 public class Web3SecretService extends AbstractSecretService {
 
-    private Web3SecretRepository web3SecretRepository;
+    private final Web3SecretRepository web3SecretRepository;
 
     public Web3SecretService(Web3SecretRepository web3SecretRepository,
                              EncryptionService encryptionService) {
@@ -45,11 +45,10 @@ public class Web3SecretService extends AbstractSecretService {
         if (shouldDecryptValue) {
             decryptSecret(secret.get());
         }
-        return Optional.of(secret.get());
+        return secret;
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress) {
-        secretAddress = secretAddress.toLowerCase();
         return getSecret(secretAddress, false);
     }
 
@@ -61,7 +60,7 @@ public class Web3SecretService extends AbstractSecretService {
         secretAddress = secretAddress.toLowerCase();
         Web3Secret web3Secret = new Web3Secret(secretAddress, secretValue);
         encryptSecret(web3Secret);
-        log.info("Adding new web3 secret [secretAddress:{}, secretValueHash:{}]",
+        log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
                 secretAddress, web3Secret.getValue());
         web3SecretRepository.save(web3Secret);
     }

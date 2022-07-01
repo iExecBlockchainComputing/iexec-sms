@@ -34,7 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class TeeChallengeServiceTests {
+class TeeChallengeServiceTests {
 
     private final static String TASK_ID = "0x123";
     private final static String PLAIN_PRIVATE = "plainPrivate";
@@ -50,7 +50,7 @@ public class TeeChallengeServiceTests {
     private TeeChallengeService teeChallengeService;
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 
@@ -61,7 +61,7 @@ public class TeeChallengeServiceTests {
     }
 
     @Test
-    public void shouldGetExistingChallengeWithoutDecryptingKeys() throws Exception {
+    void shouldGetExistingChallengeWithoutDecryptingKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.of(encryptedTeeChallengeStub));
 
@@ -72,7 +72,7 @@ public class TeeChallengeServiceTests {
     }
 
     @Test
-    public void shouldGetExistingChallengeAndDecryptKeys() throws Exception {
+    void shouldGetExistingChallengeAndDecryptKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.of(encryptedTeeChallengeStub));
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
@@ -84,7 +84,7 @@ public class TeeChallengeServiceTests {
     }
 
     @Test
-    public void shouldCreateNewChallengeWithoutDecryptingKeys() throws Exception {
+    void shouldCreateNewChallengeWithoutDecryptingKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.empty());
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
@@ -97,7 +97,7 @@ public class TeeChallengeServiceTests {
     }
 
     @Test
-    public void shouldCreateNewChallengeAndDecryptKeys() throws Exception {
+    void shouldCreateNewChallengeAndDecryptKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.empty());
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
@@ -110,7 +110,7 @@ public class TeeChallengeServiceTests {
     }
 
     @Test
-    public void shouldEncryptChallengeKeys() throws Exception {
+    void shouldEncryptChallengeKeys() throws Exception {
         TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
         teeChallengeService.encryptChallengeKeys(teeChallenge);
@@ -119,7 +119,7 @@ public class TeeChallengeServiceTests {
     }
 
     @Test
-    public void shouldDecryptChallengeKeys() throws Exception {
+    void shouldDecryptChallengeKeys() throws Exception {
         TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
         teeChallenge.getCredentials().setEncrypted(true);
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);

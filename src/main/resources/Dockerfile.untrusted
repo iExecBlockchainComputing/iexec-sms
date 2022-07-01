@@ -1,8 +1,10 @@
-FROM openjdk:11.0.7-jre-slim
+FROM openjdk:11.0.15-jre-slim
 
-ARG JAR_NAME
+ARG jar
 
-COPY build/libs/$JAR_NAME                       /app/iexec-sms.jar
+RUN test -n "$jar"
+
+COPY $jar                                       /app/iexec-sms.jar
 COPY build/resources/main/palaemonTemplate.vm   /app/palaemonTemplate.vm
 COPY src/main/resources/ssl-keystore-dev.p12    /app/ssl-keystore-dev.p12
 

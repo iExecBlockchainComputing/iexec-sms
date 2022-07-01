@@ -1,10 +1,12 @@
 FROM nexus.iex.ec/sconecuratedimages-apps-java:jdk-alpine-scone3.0
 
-ARG JAR_NAME
+ARG jar
 
-COPY build/libs/$JAR_NAME /app/iexec-sms.jar
-COPY build/resources/main/palaemonTemplate.vm /app/palaemonTemplate.vm
-COPY src/main/resources/ssl-keystore-dev.p12 /app/ssl-keystore-dev.p12
+RUN test -n "$jar"
+
+COPY $jar                                       /app/iexec-sms.jar
+COPY build/resources/main/palaemonTemplate.vm   /app/palaemonTemplate.vm
+COPY src/main/resources/ssl-keystore-dev.p12    /app/ssl-keystore-dev.p12
 
 # #### Docker ENV vars should be placed in palaemon conf for Scone ###
 
