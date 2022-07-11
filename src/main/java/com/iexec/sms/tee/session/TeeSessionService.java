@@ -19,7 +19,6 @@ package com.iexec.sms.tee.session;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
-import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionRequest;
 import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -62,7 +61,7 @@ public class TeeSessionService {
                     String.format("Failed to get task description [taskId:%s]", taskId)
             );
         }
-        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+        TeeSecretsSessionRequest request = TeeSecretsSessionRequest.builder()
                 .sessionId(sessionId)
                 .taskDescription(taskDescription)
                 .workerAddress(workerAddress)

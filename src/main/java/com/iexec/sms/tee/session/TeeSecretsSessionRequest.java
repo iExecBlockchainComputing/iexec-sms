@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone.palaemon;
+package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PalaemonSessionRequest {
+public class TeeSecretsSessionRequest {
 
     private String sessionId;
     private TaskDescription taskDescription;
