@@ -52,6 +52,9 @@ public interface SmsClient {
     @RequestLine("GET /cas/url")
     String getSconeCasUrl();
 
+    @RequestLine("GET /sps/url")
+    String getGramineSpsUrl();
+
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addRequesterAppComputeSecret(
