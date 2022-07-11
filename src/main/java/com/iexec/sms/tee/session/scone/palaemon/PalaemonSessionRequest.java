@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.palaemon;
+package com.iexec.sms.tee.session.scone.palaemon;
 
 import com.iexec.common.task.TaskDescription;
 import lombok.AllArgsConstructor;

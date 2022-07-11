@@ -18,9 +18,9 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.tee.session.cas.CasClient;
-import com.iexec.sms.tee.session.palaemon.PalaemonSessionRequest;
-import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
+import com.iexec.sms.tee.session.scone.cas.CasClient;
+import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionRequest;
+import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;

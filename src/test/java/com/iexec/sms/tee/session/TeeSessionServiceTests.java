@@ -2,8 +2,8 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.tee.session.cas.CasClient;
-import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
+import com.iexec.sms.tee.session.scone.cas.CasClient;
+import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

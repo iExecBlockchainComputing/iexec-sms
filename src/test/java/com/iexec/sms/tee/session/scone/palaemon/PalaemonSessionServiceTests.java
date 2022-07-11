@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.palaemon;
+package com.iexec.sms.tee.session.scone.palaemon;
 
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
@@ -36,7 +36,9 @@ import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionGenerationException;
-import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.session.scone.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionRequest;
+import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +63,7 @@ import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENC
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
-import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
+import static com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

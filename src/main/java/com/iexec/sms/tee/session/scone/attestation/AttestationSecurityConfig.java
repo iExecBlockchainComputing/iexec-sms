@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.attestation;
+package com.iexec.sms.tee.session.scone.attestation;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

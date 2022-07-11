@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.cas;
+package com.iexec.sms.tee.session.scone.cas;
 
 import com.iexec.sms.ssl.TwoWaySslClient;
 import org.springframework.http.HttpEntity;
