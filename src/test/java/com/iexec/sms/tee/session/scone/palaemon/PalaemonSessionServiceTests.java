@@ -76,7 +76,7 @@ import static org.mockito.Mockito.*;
 class PalaemonSessionServiceTests {
 
     private static final String TEMPLATE_SESSION_FILE = "src/main/resources/palaemonTemplate.vm";
-    private static final String EXPECTED_SESSION_FILE = "src/test/resources/tee-session.yml";
+    private static final String EXPECTED_SESSION_FILE = "src/test/resources/palaemon-tee-session.yml";
     private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";

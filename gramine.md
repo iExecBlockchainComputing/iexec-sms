@@ -2,7 +2,9 @@
 
 ## Architecture
 
-- Move `com.iexec.sms.tee.session.[attestation|cas|palaemon]` package to `com.iexec.sms.tee.session.scone`.
+- ✅ Move `com.iexec.sms.tee.session.[attestation|cas|palaemon]` package to `com.iexec.sms.tee.session.scone`.
+- ✅ Add a `gramineSessionTemplate.json.vm` file
+- ✅ Rename `PalaemonSessionRequest` into `TeeSecretsSessionRequest`
 
 ## Code
 ### `TeeController` class
@@ -19,7 +21,7 @@
 
 ### `PalaemonSessionService` class
 
-- Should be generified to provide a single secret filler service
+- ✅ Should be generified to provide a single secret filler service
 
 ### `TeeWorkflowConfiguration` class
 
