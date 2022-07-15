@@ -38,14 +38,18 @@ public class SpsClient implements TeeSessionStorageClient {
         String url = spsConfiguration.getWebUrl() + "/api/session";
         HttpHeaders httpHeaders = new HttpHeaders();
 
-        httpHeaders.add(HttpHeaders.AUTHORIZATION, HttpHeaders.encodeBasicAuth(
-                spsConfiguration.getWebLogin(),
-                spsConfiguration.getWebPassword(),
-                Charset.defaultCharset()));
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Basic " +
+                HttpHeaders.encodeBasicAuth(
+                        spsConfiguration.getWebLogin(),
+                        spsConfiguration.getWebPassword(),
+                        Charset.defaultCharset()));
 
         HttpEntity<byte[]> request = new HttpEntity<>(sessionFile, httpHeaders);
-        return new RestTemplate()
+        return createRestTemplate()
                 .postForEntity(url, request, String.class);
     }
 
+    RestTemplate createRestTemplate() {
+        return new RestTemplate();
+    }
 }
