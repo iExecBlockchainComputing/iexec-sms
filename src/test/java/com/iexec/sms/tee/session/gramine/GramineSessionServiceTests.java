@@ -2,7 +2,7 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.TeeSecretsService;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +66,7 @@ class GramineSessionServiceTests {
         when(teeWorkflowConfig.getPreComputeEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
         when(teeWorkflowConfig.getPostComputeEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
 
-        String actualJsonString = gramineSessionService.getSessionJson(request);
+        String actualJsonString = gramineSessionService.generateSession(request);
         log.info(actualJsonString);
 
         Map<String, Object> actualJsonMap = new Yaml().load(actualJsonString);

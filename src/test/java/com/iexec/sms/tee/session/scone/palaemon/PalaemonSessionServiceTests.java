@@ -16,39 +16,15 @@
 
 package com.iexec.sms.tee.session.scone.palaemon;
 
-import com.iexec.common.precompute.PreComputeUtils;
-import com.iexec.common.sms.secret.ReservedSecretKeyName;
-import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
-import com.iexec.common.tee.TeeEnclaveConfigurationValidator;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.common.utils.IexecEnvUtils;
-import com.iexec.common.worker.result.ResultUtils;
-import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.secret.Secret;
-import com.iexec.sms.secret.compute.OnChainObjectType;
-import com.iexec.sms.secret.compute.SecretOwnerRole;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
-import com.iexec.sms.secret.web2.Web2SecretsService;
-import com.iexec.sms.secret.web3.Web3Secret;
-import com.iexec.sms.secret.web3.Web3SecretService;
-import com.iexec.sms.tee.challenge.TeeChallenge;
-import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.TeeSecretsService;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import com.iexec.sms.tee.session.scone.attestation.AttestationSecurityConfig;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
-import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ClassUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -56,20 +32,10 @@ import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.yaml.snakeyaml.Yaml;
 
-import java.security.GeneralSecurityException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
-import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
-import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN;
-import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
-import static com.iexec.common.worker.result.ResultUtils.*;
-import static com.iexec.sms.Web3jUtils.createEthereumAddress;
-import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static com.iexec.sms.tee.session.TeeSessionTestUtils.APP_ENTRYPOINT;
-import static com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Slf4j
@@ -131,7 +97,7 @@ class PalaemonSessionServiceTests {
         when(attestationSecurityConfig.getIgnoredSgxAdvisories())
                 .thenReturn(List.of("INTEL-SA-00161", "INTEL-SA-00289"));
 
-        String actualYmlString = palaemonSessionService.getSessionYml(request);
+        String actualYmlString = palaemonSessionService.generateSession(request);
         Map<String, Object> actualYmlMap = new Yaml().load(actualYmlString);
         String expectedYamlString = FileHelper.readFile(EXPECTED_SESSION_FILE);
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);

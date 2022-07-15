@@ -17,12 +17,13 @@
 package com.iexec.sms.tee.session.scone.cas;
 
 import com.iexec.sms.ssl.TwoWaySslClient;
+import com.iexec.sms.tee.session.generic.TeeSessionStorageClient;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CasClient {
+public class CasClient implements TeeSessionStorageClient {
 
     private final CasConfiguration casConfiguration;
     private final TwoWaySslClient twoWaySslClient;
@@ -36,7 +37,7 @@ public class CasClient {
     /*
      * POST /session of CAS requires 2-way SSL authentication
      * */
-    public ResponseEntity<String> generateSecureSession(byte[] palaemonFile) {
+    public ResponseEntity<String> postSession(byte[] palaemonFile) {
         String url = casConfiguration.getUrl() + "/session";
         HttpEntity<byte[]> request = new HttpEntity<>(palaemonFile);
         return twoWaySslClient

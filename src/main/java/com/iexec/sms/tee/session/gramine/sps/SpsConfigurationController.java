@@ -36,7 +36,8 @@ public class SpsConfigurationController {
      * @return SPS url
      */
     @GetMapping("/url")
-    public String getGramineSpsUrl() {
-        return spsConfiguration.getUrl();
+    public String getGramineSpsEnclaveUrl() {
+        return spsConfiguration.getEnclaveUrl();
     }
+
 }

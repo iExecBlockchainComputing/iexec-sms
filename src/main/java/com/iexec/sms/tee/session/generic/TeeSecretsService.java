@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.generic;
 
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
@@ -29,9 +29,10 @@ import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -57,18 +58,18 @@ public class TeeSecretsService {
     public static final String EMPTY_YML_VALUE = "";
 
     // Generic
-    static final String SESSION_ID = "SESSION_ID";
-    static final String INPUT_FILE_URLS = "INPUT_FILE_URLS";
-    static final String INPUT_FILE_NAMES = "INPUT_FILE_NAMES";
+    public static final String SESSION_ID = "SESSION_ID";
+    public static final String INPUT_FILE_URLS = "INPUT_FILE_URLS";
+    public static final String INPUT_FILE_NAMES = "INPUT_FILE_NAMES";
     // PreCompute
-    static final String IS_PRE_COMPUTE_REQUIRED = "IS_PRE_COMPUTE_REQUIRED";
-    static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
+    public static final String IS_PRE_COMPUTE_REQUIRED = "IS_PRE_COMPUTE_REQUIRED";
+    public static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
     // Compute
-    static final String APP_MRENCLAVE = "APP_MRENCLAVE";
+    public static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     // PostCompute
-    static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
+    public static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     // Secrets
-    static final String REQUESTER_SECRETS = "REQUESTER_SECRETS";
+    public static final String REQUESTER_SECRETS = "REQUESTER_SECRETS";
     // Env
     private static final String ENV_PROPERTY = "env";
 

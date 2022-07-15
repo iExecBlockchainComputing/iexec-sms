@@ -23,13 +23,29 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Getter
 public class SpsConfiguration {
-    @Value("${gramine.session.host}")
-    private String host;
+    @Value("${gramine.sps.web.host}")
+    private String webHost;
 
-    @Value("${gramine.session.port}")
-    private String port;
+    @Value("${gramine.sps.web.port}")
+    private String webPort;
 
-    public String getUrl() {
-        return "https://" + host + ":" + port;
+    @Value("${gramine.sps.web.login}")
+    private String webLogin;
+
+    @Value("${gramine.sps.web.password}")
+    private String webPassword;
+
+    @Value("${gramine.sps.enclave.host}")
+    private String enclaveHost;
+
+    @Value("${gramine.sps.enclave.port}")
+    private String enclavePort;
+
+    public String getWebUrl() {
+        return "https://" + webHost + ":" + webPort;
+    }
+
+    public String getEnclaveUrl() {
+        return "https://" + enclaveHost + ":" + enclavePort;
     }
 }

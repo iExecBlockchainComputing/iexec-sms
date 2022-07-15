@@ -61,9 +61,15 @@ scone:
     ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270
 
 gramine:
-  session:
-    host: ${IEXEC_GRAMINE_SPS_HOST:localhost}
-    port: ${IEXEC_GRAMINE_SPS_PORT:8082}
+  sps:
+    web:
+      host: ${IEXEC_GRAPHENE_SPS_WEB_HOST:localhost}
+      port: ${IEXEC_GRAPHENE_SPS_WEB_POST:8080}
+      login: ${IEXEC_GRAPHENE_SPS_WEB_LOGIN:admin}
+      password: ${IEXEC_GRAPHENE_SPS_WEB_PASSWORD:admin}
+    enclave:
+      host: ${IEXEC_GRAPHENE_SPS_ENCLAVE_HOST:localhost}
+      port: ${IEXEC_GRAPHENE_SPS_ENCLAVE_PORT:4443}
     templateFile: ${IEXEC_GRAMINE_TEMPLATE:./src/main/resources/gramineSessionTemplate.json.vm}
 
 # TODO /!\ remove the option of env variable for releases.

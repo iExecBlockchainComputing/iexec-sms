@@ -19,9 +19,10 @@ package com.iexec.sms.tee.session.scone.palaemon;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.TeeSecretsService;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionProviderService;
 import com.iexec.sms.tee.session.scone.attestation.AttestationSecurityConfig;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class PalaemonSessionService {
+public class PalaemonSessionService implements TeeSessionProviderService {
 
     // Internal values required for setting up a palaemon session
     // Generic
@@ -90,7 +91,8 @@ public class PalaemonSessionService {
      * @param request session request details
      * @return session config in yaml string format
      */
-    public String getSessionYml(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
+    @Override
+    public String generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
         Map<String, Object> tokens = teeSecretsService.getSecretsTokens(request);
         tokens.putAll(getSpecificPalaemonTokens(request));
         // Merge template with tokens and return the result

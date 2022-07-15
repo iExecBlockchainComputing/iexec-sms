@@ -17,9 +17,10 @@
 package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.TeeSecretsService;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionProviderService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -33,11 +34,11 @@ import java.io.StringWriter;
 import java.util.Map;
 
 @Service
-public class GramineSessionService {
+public class GramineSessionService implements TeeSessionProviderService {
 
     private final TeeSecretsService teeSecretsService;
 
-    @Value("${gramine.session.templateFile}")
+    @Value("${gramine.sps.templateFile}")
     private String gramineTemplateFilePath;
 
     public GramineSessionService(TeeSecretsService teeSecretsService) {
@@ -61,7 +62,8 @@ public class GramineSessionService {
      * @param request session request details
      * @return session config in json string format
      */
-    public String getSessionJson(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
+    @Override
+    public String generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
         Map<String, Object> tokens = teeSecretsService.getSecretsTokens(request);
         // Merge template with tokens and return the result
         return getFilledGramineTemplate(this.gramineTemplateFilePath, tokens);

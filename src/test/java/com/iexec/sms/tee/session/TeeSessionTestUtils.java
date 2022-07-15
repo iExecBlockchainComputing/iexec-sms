@@ -32,7 +32,7 @@ import java.util.Map;
 
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
-import static com.iexec.sms.tee.session.TeeSecretsService.*;
+import static com.iexec.sms.tee.session.generic.TeeSecretsService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j

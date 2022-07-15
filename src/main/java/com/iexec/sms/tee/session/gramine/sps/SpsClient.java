@@ -16,13 +16,17 @@
 
 package com.iexec.sms.tee.session.gramine.sps;
 
+import com.iexec.sms.tee.session.generic.TeeSessionStorageClient;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.Charset;
+
 @Service
-public class SpsClient {
+public class SpsClient implements TeeSessionStorageClient {
 
     private final SpsConfiguration spsConfiguration;
 
@@ -30,9 +34,16 @@ public class SpsClient {
         this.spsConfiguration = spsConfiguration;
     }
 
-    public ResponseEntity<String> generateSecureSession(byte[] sessionFile) {
-        String url = spsConfiguration.getUrl() + "/api/session";
-        HttpEntity<byte[]> request = new HttpEntity<>(sessionFile);
+    public ResponseEntity<String> postSession(byte[] sessionFile) {
+        String url = spsConfiguration.getWebUrl() + "/api/session";
+        HttpHeaders httpHeaders = new HttpHeaders();
+
+        httpHeaders.add(HttpHeaders.AUTHORIZATION, HttpHeaders.encodeBasicAuth(
+                spsConfiguration.getWebLogin(),
+                spsConfiguration.getWebPassword(),
+                Charset.defaultCharset()));
+
+        HttpEntity<byte[]> request = new HttpEntity<>(sessionFile, httpHeaders);
         return new RestTemplate()
                 .postForEntity(url, request, String.class);
     }
