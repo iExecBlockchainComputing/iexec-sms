@@ -1,7 +1,3 @@
-/* 
- *  This is the default license template.
- *  
- *  File: GramineSessionHandlerService.GHIJ
 /*
  * Copyright 2022 IEXEC BLOCKCHAIN TECH
  *
