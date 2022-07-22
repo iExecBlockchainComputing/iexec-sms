@@ -16,11 +16,13 @@
 
 package com.iexec.sms.tee.session.gramine;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.generic.TeeSecretsService;
+import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.TeeSessionGenerationException;
-import com.iexec.sms.tee.session.generic.TeeSessionProviderService;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
+import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -29,19 +31,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.util.Map;
 
 @Service
-public class GramineSessionService implements TeeSessionProviderService {
+public class GramineSessionMakerService {
 
     private final TeeSecretsService teeSecretsService;
 
     @Value("${gramine.sps.templateFile}")
     private String gramineTemplateFilePath;
 
-    public GramineSessionService(TeeSecretsService teeSecretsService) {
+    public GramineSessionMakerService(TeeSecretsService teeSecretsService) {
         this.teeSecretsService = teeSecretsService;
     }
 
@@ -60,13 +63,19 @@ public class GramineSessionService implements TeeSessionProviderService {
      * and build the JSON config of the TEE session.
      *
      * @param request session request details
-     * @return session config in json string format
+     * @return session config
      */
-    @Override
-    public String generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
+    public SpsSession generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
         Map<String, Object> tokens = teeSecretsService.getSecretsTokens(request);
-        // Merge template with tokens and return the result
-        return getFilledGramineTemplate(this.gramineTemplateFilePath, tokens);
+        // Merge template with tokens
+        String sessionJsonAsString = getFilledGramineTemplate(this.gramineTemplateFilePath, tokens);
+        try {
+            return new ObjectMapper().readValue(sessionJsonAsString, SpsSession.class);
+        } catch (Exception e) {
+            throw new TeeSessionGenerationException(
+                    TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED,
+                    "Failed to parse SPS session:" + e.getMessage());
+        }
     }
 
     private String getFilledGramineTemplate(String templatePath, Map<String, Object> tokens) {

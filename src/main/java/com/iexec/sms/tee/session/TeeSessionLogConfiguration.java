@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.generic;
+package com.iexec.sms.tee.session;
 
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-public interface TeeSessionProviderService {
-    String generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException;
+import lombok.Getter;
+
+@Getter
+@Component
+public class TeeSessionLogConfiguration {
+
+    @Value("${logging.tee.display-debug-session}")
+    boolean displayDebugSessionEnabled;
 }

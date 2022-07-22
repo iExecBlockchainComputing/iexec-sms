@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone;
+package com.iexec.sms.tee.session.gramine.sps;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.tee.session.generic.TeeSessionStack;
-import com.iexec.sms.tee.session.scone.cas.CasClient;
-import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
-import org.springframework.stereotype.Component;
+import feign.RequestLine;
 
-@Component
-public class SconeStack extends TeeSessionStack {
-    public SconeStack(PalaemonSessionService sessionService, CasClient client) {
-        super(TeeEnclaveProvider.SCONE, sessionService, client);
-    }
+public interface SpsApiClient {
+
+    @RequestLine("POST /api/session")
+    String postSession(SpsSession spsSession);
+
 }

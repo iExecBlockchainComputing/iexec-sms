@@ -9,25 +9,21 @@
           "IEXEC_TASK_ID": "$env.get('IEXEC_TASK_ID')",
           "IEXEC_IN": "$env.get('IEXEC_IN')",
           "IEXEC_OUT": "$env.get('IEXEC_OUT')",
-
           "IEXEC_DATASET_ADDRESS": "$env.get('IEXEC_DATASET_ADDRESS')",
           "IEXEC_DATASET_FILENAME": "$env.get('IEXEC_DATASET_FILENAME')",
-
           "IEXEC_BOT_SIZE": "$env.get('IEXEC_BOT_SIZE')",
           "IEXEC_BOT_FIRST_INDEX": "$env.get('IEXEC_BOT_FIRST_INDEX')",
           "IEXEC_BOT_TASK_INDEX": "$env.get('IEXEC_BOT_TASK_INDEX')",
-
           "IEXEC_INPUT_FILES_FOLDER": "$env.get('IEXEC_INPUT_FILES_FOLDER')",
           "IEXEC_INPUT_FILES_NUMBER": "$env.get('IEXEC_INPUT_FILES_NUMBER')",
           #foreach($key in $INPUT_FILE_NAMES.keySet())
           "$key": "$INPUT_FILE_NAMES.get($key)",
           #end
-
-          "IEXEC_APP_DEVELOPER_SECRET": "$IEXEC_APP_DEVELOPER_SECRET_1",
-          "IEXEC_APP_DEVELOPER_SECRET_1": "$IEXEC_APP_DEVELOPER_SECRET_1",
           #foreach($key in $REQUESTER_SECRETS.keySet())
           "$key": "$REQUESTER_SECRETS.get($key)",
           #end
+          "IEXEC_APP_DEVELOPER_SECRET": "$IEXEC_APP_DEVELOPER_SECRET_1",
+          "IEXEC_APP_DEVELOPER_SECRET_1": "$IEXEC_APP_DEVELOPER_SECRET_1"
       },
       "volumes": [
         "$env.get('IEXEC_IN')",

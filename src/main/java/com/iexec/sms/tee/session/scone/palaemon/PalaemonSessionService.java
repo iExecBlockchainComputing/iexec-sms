@@ -19,10 +19,9 @@ package com.iexec.sms.tee.session.scone.palaemon;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.TeeSessionGenerationException;
-import com.iexec.sms.tee.session.generic.TeeSessionProviderService;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import com.iexec.sms.tee.session.scone.attestation.AttestationSecurityConfig;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -34,14 +33,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO Rename and move
 @Slf4j
 @Service
-public class PalaemonSessionService implements TeeSessionProviderService {
+public class PalaemonSessionService {
 
     // Internal values required for setting up a palaemon session
     // Generic
@@ -91,7 +92,6 @@ public class PalaemonSessionService implements TeeSessionProviderService {
      * @param request session request details
      * @return session config in yaml string format
      */
-    @Override
     public String generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
         Map<String, Object> tokens = teeSecretsService.getSecretsTokens(request);
         tokens.putAll(getSpecificPalaemonTokens(request));

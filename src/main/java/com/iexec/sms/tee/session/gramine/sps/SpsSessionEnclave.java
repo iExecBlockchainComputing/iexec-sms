@@ -14,10 +14,30 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.generic;
+package com.iexec.sms.tee.session.gramine.sps;
 
-import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-public interface TeeSessionStorageClient {
-    ResponseEntity<String> postSession(byte[] sessionFile);
+import java.util.List;
+import java.util.Map;
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class SpsSessionEnclave {
+
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("mrenclave")
+    private String mrenclave;
+    @JsonProperty("command")
+    private String command;
+    @JsonProperty("environment")
+    private Map<String, Object> environment;
+    @JsonProperty("volumes")
+    private List<String> volumes;
+
 }

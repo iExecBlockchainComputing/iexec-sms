@@ -19,12 +19,11 @@ package com.iexec.sms.tee.session;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.tee.session.generic.TeeSessionStack;
-import com.iexec.sms.tee.session.gramine.GramineStack;
-import com.iexec.sms.tee.session.scone.SconeStack;
+import com.iexec.sms.tee.session.generic.TeeSessionHandler;
+import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
+import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -35,38 +34,30 @@ import static com.iexec.sms.api.TeeSessionGenerationError.*;
 @Service
 public class TeeSessionService {
 
-
     private final IexecHubService iexecHubService;
-    private final boolean shouldDisplayDebugSession;
 
-    private final Map<TeeEnclaveProvider, TeeSessionStack> teeSessionConfigurations;
+    private final Map<TeeEnclaveProvider, TeeSessionHandler> teeSessionConfigurations;
 
     public TeeSessionService(
             IexecHubService iexecService,
-            SconeStack sconeStack,
-            GramineStack gramineStack,
-            @Value("${logging.tee.display-debug-session}") boolean shouldDisplayDebugSession) {
+            SconeSessionHandlerService sconeService,
+            GramineSessionHandlerService gramineService) {
         this.iexecHubService = iexecService;
-        this.shouldDisplayDebugSession = shouldDisplayDebugSession;
-
         this.teeSessionConfigurations = Map.of(
-                TeeEnclaveProvider.SCONE, sconeStack,
-                TeeEnclaveProvider.GRAMINE, gramineStack
-        );
+                TeeEnclaveProvider.SCONE, sconeService,
+                TeeEnclaveProvider.GRAMINE, gramineService);
     }
 
     public String generateTeeSession(
             String taskId,
             String workerAddress,
             String teeChallenge) throws TeeSessionGenerationException {
-
         String sessionId = createSessionId(taskId);
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     GET_TASK_DESCRIPTION_FAILED,
-                    String.format("Failed to get task description [taskId:%s]", taskId)
-            );
+                    String.format("Failed to get task description [taskId:%s]", taskId));
         }
         TeeSecretsSessionRequest request = TeeSecretsSessionRequest.builder()
                 .sessionId(sessionId)
@@ -82,37 +73,15 @@ public class TeeSessionService {
                     String.format("TEE provider can't be null [taskId:%s]", taskId));
         }
 
-        final TeeSessionStack teeSessionStack =
-                teeSessionConfigurations.get(teeEnclaveProvider);
-        if (teeSessionStack == null) {
+        final TeeSessionHandler teeSessionHandler = teeSessionConfigurations.get(teeEnclaveProvider);
+        if (teeSessionHandler == null) {
             throw new TeeSessionGenerationException(
                     SECURE_SESSION_UNKNOWN_TEE_PROVIDER,
                     String.format("Unknown TEE provider [taskId:%s, teeProvider:%s]", taskId, teeEnclaveProvider));
         }
 
-        String sessionAsString = teeSessionStack.generateSession(request);
-        if (sessionAsString.isEmpty()) {
-            throw new TeeSessionGenerationException(
-                    GET_SESSION_FAILED,
-                    String.format("Failed to get session [taskId:%s, workerAddress:%s, enclaveProvider:%s]",
-                            taskId, workerAddress, teeEnclaveProvider));
-        }
-        log.info("Session is ready [taskId:{}]", taskId);
-        if (shouldDisplayDebugSession){
-            log.info("Session content [taskId:{}]\n{}", taskId, sessionAsString);
-        }
         // /!\ TODO clean expired tasks sessions
-        boolean isSessionGenerated = teeSessionStack
-                .postSession(sessionAsString.getBytes())
-                .getStatusCode()
-                .is2xxSuccessful();
-        if (!isSessionGenerated) {
-            throw new TeeSessionGenerationException(
-                    SECURE_SESSION_STORAGE_CALL_FAILED,
-                    String.format("Failed to generate secure session [taskId:%s, workerAddress:%s, enclaveProvider:%s]",
-                            taskId, workerAddress, teeEnclaveProvider)
-            );
-        }
+        teeSessionHandler.buildAndPostSession(request);
         return sessionId;
     }
 
@@ -120,4 +89,5 @@ public class TeeSessionService {
         String randomString = RandomStringUtils.randomAlphanumeric(10);
         return String.format("%s0000%s", randomString, taskId);
     }
+
 }

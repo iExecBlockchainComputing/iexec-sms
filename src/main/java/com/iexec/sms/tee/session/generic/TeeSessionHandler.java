@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.gramine;
+package com.iexec.sms.tee.session.generic;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.tee.session.generic.TeeSessionStack;
-import com.iexec.sms.tee.session.gramine.sps.SpsClient;
-import org.springframework.stereotype.Component;
+import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.TeeSessionGenerationException;
 
-@Component
-public class GramineStack extends TeeSessionStack {
-    public GramineStack(GramineSessionService sessionService, SpsClient client) {
-        super(TeeEnclaveProvider.GRAMINE, sessionService, client);
-    }
+public interface TeeSessionHandler {
+
+    void buildAndPostSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException;
+
 }

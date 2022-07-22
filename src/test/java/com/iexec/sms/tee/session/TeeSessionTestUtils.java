@@ -20,15 +20,12 @@ import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
-import com.iexec.sms.secret.compute.OnChainObjectType;
-import com.iexec.sms.secret.compute.SecretOwnerRole;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
+import com.iexec.sms.secret.compute.*;
+import com.iexec.sms.tee.session.generic.TeeSecretsService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
@@ -144,8 +141,8 @@ public class TeeSessionTestUtils {
 
     public static Map<String, Object> getAppTokens() {
         return Map.of(
-                APP_MRENCLAVE, APP_FINGERPRINT,
-                INPUT_FILE_NAMES, Map.of(
+            APP_MRENCLAVE, APP_FINGERPRINT,
+            TeeSecretsService.INPUT_FILE_NAMES, Map.of(
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));
     }
