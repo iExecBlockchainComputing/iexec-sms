@@ -1,30 +1,12 @@
-/*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package com.iexec.sms.tee.session.gramine;
+package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
-import com.iexec.sms.tee.session.gramine.sps.SpsApiClient;
-import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
-import com.iexec.sms.tee.session.gramine.sps.SpsSession;
-import feign.FeignException;
+import com.iexec.sms.tee.session.scone.cas.CasClient;
+import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -41,16 +24,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(OutputCaptureExtension.class)
-public class GramineSessionHandlerServiceTests {
+public class SconeSessionHandlerServiceTests {
 
     @Mock
-    private GramineSessionMakerService sessionService;
+    private PalaemonSessionService sessionService;
     @Mock
-    private SpsConfiguration spsConfiguration;
+    private CasClient apiClient;
     @Mock
     private TeeSessionLogConfiguration teeSessionLogConfiguration;
     @InjectMocks
-    private GramineSessionHandlerService sessionHandlerService;
+    private SconeSessionHandlerService sessionHandlerService;
 
     @BeforeEach
     void beforeEach() {
@@ -62,13 +45,10 @@ public class GramineSessionHandlerServiceTests {
         TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        SpsSession spsSession = mock(SpsSession.class);
-        when(spsSession.toString()).thenReturn("sessionContent");
-        when(sessionService.generateSession(request)).thenReturn(spsSession);
+        String casSession = "sessionContent";
+        when(sessionService.generateSession(request)).thenReturn(casSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
-        SpsApiClient spsClient = mock(SpsApiClient.class);
-        when(spsClient.postSession(spsSession)).thenReturn("sessionId");
-        when(spsConfiguration.getInstanceWithBasicAuth()).thenReturn(spsClient);
+        when(apiClient.postSession(casSession)).thenReturn(ResponseEntity.ok("sessionId"));
 
         assertDoesNotThrow(() -> sessionHandlerService.buildAndPostSession(request));
         // Testing output here since it reflects a business feature (ability to catch a
@@ -94,17 +74,12 @@ public class GramineSessionHandlerServiceTests {
         TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        SpsSession spsSession = mock(SpsSession.class);
-        when(spsSession.toString()).thenReturn("sessionContent");
-        when(sessionService.generateSession(request)).thenReturn(spsSession);
+        String casSession = "sessionContent";
+        when(sessionService.generateSession(request)).thenReturn(casSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
-        SpsApiClient spsClient = mock(SpsApiClient.class);
-        when(spsConfiguration.getInstanceWithBasicAuth()).thenReturn(spsClient);
-        FeignException apiClientException = mock(FeignException.class);
-        when(spsClient.postSession(spsSession)).thenThrow(apiClientException);
+        when(apiClient.postSession(casSession)).thenReturn(ResponseEntity.internalServerError().build());
 
         assertThrows(TeeSessionGenerationException.class,
                 () -> sessionHandlerService.buildAndPostSession(request));
     }
-
 }

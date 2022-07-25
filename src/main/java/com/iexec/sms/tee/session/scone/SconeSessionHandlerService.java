@@ -17,7 +17,9 @@
 package com.iexec.sms.tee.session.scone;
 
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.*;
+import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
@@ -29,14 +31,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class SconeSessionHandlerService implements TeeSessionHandler {
     private PalaemonSessionService sessionService;
-    private CasClient client;
+    private CasClient apiClient;
     private TeeSessionLogConfiguration teeSessionLogConfiguration;
 
     public SconeSessionHandlerService(PalaemonSessionService sessionService,
-            CasClient client,
+            CasClient apiClient,
             TeeSessionLogConfiguration teeSessionLogConfiguration) {
         this.sessionService = sessionService;
-        this.client = client;
+        this.apiClient = apiClient;
         this.teeSessionLogConfiguration = teeSessionLogConfiguration;
     }
 
@@ -49,7 +51,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
             log.info("Session content [taskId:{}]\n{}",
                     request.getTaskDescription().getChainTaskId(), session);
         }
-        ResponseEntity<String> postSession = client.postSession(session);
+        ResponseEntity<String> postSession = apiClient.postSession(session);
         int httpCode = postSession != null ? postSession.getStatusCodeValue() : null;
         if (httpCode != 200) {
             throw new TeeSessionGenerationException(
