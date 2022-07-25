@@ -17,10 +17,12 @@
 package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.*;
+import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
-import com.iexec.sms.tee.session.gramine.sps.*;
-import feign.Logger.Level;
+import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
+import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -28,15 +30,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class GramineSessionHandlerService implements TeeSessionHandler {
     private GramineSessionMakerService sessionService;
-    private SpsApiClient spsClient;
+    private SpsConfiguration spsConfiguration;
     private TeeSessionLogConfiguration teeSessionLogConfiguration;
 
     public GramineSessionHandlerService(GramineSessionMakerService sessionService,
             SpsConfiguration spsConfiguration,
             TeeSessionLogConfiguration teeSessionLogConfiguration) {
         this.sessionService = sessionService;
+        this.spsConfiguration = spsConfiguration;
         this.teeSessionLogConfiguration = teeSessionLogConfiguration;
-        this.spsClient = spsConfiguration.getInstanceWithBasicAuth(Level.FULL);
     }
 
     public void buildAndPostSession(TeeSecretsSessionRequest request)
@@ -49,7 +51,7 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
         }
 
         try {
-            spsClient.postSession(session);
+            spsConfiguration.getInstanceWithBasicAuth().postSession(session);
         } catch (Exception e) {
             throw new TeeSessionGenerationException(
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,

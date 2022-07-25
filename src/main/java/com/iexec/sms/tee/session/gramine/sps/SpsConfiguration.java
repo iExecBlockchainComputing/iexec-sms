@@ -17,7 +17,7 @@
 package com.iexec.sms.tee.session.gramine.sps;
 
 import com.iexec.common.utils.FeignBuilder;
-import feign.Logger;
+import feign.Logger.Level;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +43,8 @@ public class SpsConfiguration {
     @Value("${gramine.sps.enclave.port}")
     private String enclavePort;
 
+    private SpsApiClient spsApiClient;
+
     public String getWebUrl() {
         return "http://" + webHost + ":" + webPort;
     }
@@ -51,9 +53,13 @@ public class SpsConfiguration {
         return "https://" + enclaveHost + ":" + enclavePort;
     }
 
-    public SpsApiClient getInstanceWithBasicAuth(Logger.Level logLevel) {
-        return FeignBuilder.createBuilderWithBasicAuth(logLevel, webLogin, webPassword)
-                .target(SpsApiClient.class, getWebUrl());
+    public SpsApiClient getInstanceWithBasicAuth() {
+        if (spsApiClient == null) {
+            spsApiClient = FeignBuilder.createBuilderWithBasicAuth(Level.FULL,
+                    webLogin, webPassword)
+                    .target(SpsApiClient.class, getWebUrl());
+        }
+        return spsApiClient;
     }
 
 }
