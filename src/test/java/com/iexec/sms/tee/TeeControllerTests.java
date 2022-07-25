@@ -1,13 +1,13 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionService;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,14 +1,17 @@
 package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.generic.TeeSecretsService;
+import com.iexec.sms.tee.session.TeeSecretsService;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;

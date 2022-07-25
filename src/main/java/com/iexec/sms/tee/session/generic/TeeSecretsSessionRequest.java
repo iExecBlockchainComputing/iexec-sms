@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.generic;
 
-import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.common.task.TaskDescription;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public class TeeSessionGenerationException extends Exception {
-    private final TeeSessionGenerationError error;
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TeeSecretsSessionRequest {
 
-    public TeeSessionGenerationException(TeeSessionGenerationError error, String message) {
-        super(message);
-        this.error = error;
-    }
-
-    public TeeSessionGenerationError getError() {
-        return error;
-    }
+    private String sessionId;
+    private TaskDescription taskDescription;
+    private String workerAddress;
+    private String enclaveChallenge;
 }

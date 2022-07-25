@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone.attestation;
+package com.iexec.sms.tee.session.scone;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 @Configuration
-public class AttestationSecurityConfig {
+public class SconeSessionSecurityConfig {
 
     @Value("${scone.attestation.tolerated-insecure-options}")
     @Getter

@@ -16,9 +16,6 @@
 
 package com.iexec.sms.tee.session.generic;
 
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
-
 public interface TeeSessionHandler {
 
     void buildAndPostSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException;

@@ -17,12 +17,11 @@
 package com.iexec.sms.tee.session.scone;
 
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
-import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -30,11 +29,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class SconeSessionHandlerService implements TeeSessionHandler {
-    private PalaemonSessionService sessionService;
+    private SconeSessionMakerService sessionService;
     private CasClient apiClient;
     private TeeSessionLogConfiguration teeSessionLogConfiguration;
 
-    public SconeSessionHandlerService(PalaemonSessionService sessionService,
+    public SconeSessionHandlerService(SconeSessionMakerService sessionService,
             CasClient apiClient,
             TeeSessionLogConfiguration teeSessionLogConfiguration) {
         this.sessionService = sessionService;

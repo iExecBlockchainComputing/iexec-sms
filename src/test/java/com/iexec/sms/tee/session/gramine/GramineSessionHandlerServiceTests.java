@@ -18,9 +18,9 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.gramine.sps.SpsApiClient;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;

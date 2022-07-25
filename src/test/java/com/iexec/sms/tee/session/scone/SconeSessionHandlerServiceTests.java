@@ -2,11 +2,10 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
-import com.iexec.sms.tee.session.scone.palaemon.PalaemonSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.when;
 public class SconeSessionHandlerServiceTests {
 
     @Mock
-    private PalaemonSessionService sessionService;
+    private SconeSessionMakerService sessionService;
     @Mock
     private CasClient apiClient;
     @Mock

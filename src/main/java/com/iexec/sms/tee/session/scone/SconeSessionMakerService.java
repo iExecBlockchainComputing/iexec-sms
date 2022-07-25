@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone.palaemon;
+package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
-import com.iexec.sms.tee.session.generic.TeeSecretsService;
-import com.iexec.sms.tee.session.scone.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.session.TeeSecretsService;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +41,7 @@ import java.util.Map;
 //TODO Rename and move
 @Slf4j
 @Service
-public class PalaemonSessionService {
+public class SconeSessionMakerService {
 
     // Internal values required for setting up a palaemon session
     // Generic
@@ -57,15 +56,15 @@ public class PalaemonSessionService {
 
     private final TeeSecretsService teeSecretsService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
-    private final AttestationSecurityConfig attestationSecurityConfig;
+    private final SconeSessionSecurityConfig attestationSecurityConfig;
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
 
-    public PalaemonSessionService(
+    public SconeSessionMakerService(
             TeeSecretsService teeSecretsService,
             TeeWorkflowConfiguration teeWorkflowConfig,
-            AttestationSecurityConfig attestationSecurityConfig) {
+            SconeSessionSecurityConfig attestationSecurityConfig) {
         this.teeSecretsService = teeSecretsService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;

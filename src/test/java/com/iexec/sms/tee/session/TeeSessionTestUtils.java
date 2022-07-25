@@ -20,16 +20,20 @@ import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
-import com.iexec.sms.secret.compute.*;
-import com.iexec.sms.tee.session.generic.TeeSecretsService;
+import com.iexec.sms.secret.compute.OnChainObjectType;
+import com.iexec.sms.secret.compute.SecretOwnerRole;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
-import static com.iexec.sms.tee.session.generic.TeeSecretsService.*;
+import static com.iexec.sms.tee.session.TeeSecretsService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j

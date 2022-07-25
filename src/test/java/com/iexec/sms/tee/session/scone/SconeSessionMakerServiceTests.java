@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone.palaemon;
+package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.TeeSecretsSessionRequest;
-import com.iexec.sms.tee.session.generic.TeeSecretsService;
-import com.iexec.sms.tee.session.scone.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.session.TeeSecretsService;
+import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.yaml.snakeyaml.Yaml;
 
@@ -36,7 +38,7 @@ import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-class PalaemonSessionServiceTests {
+class SconeSessionMakerServiceTests {
 
     private static final String TEMPLATE_SESSION_FILE = "src/main/resources/palaemonTemplate.vm";
     private static final String EXPECTED_SESSION_FILE = "src/test/resources/palaemon-tee-session.yml";
@@ -54,14 +56,14 @@ class PalaemonSessionServiceTests {
     @InjectMocks
     private TeeSecretsService teeSecretsService;
     @Mock
-    private AttestationSecurityConfig attestationSecurityConfig;
+    private SconeSessionSecurityConfig attestationSecurityConfig;
 
-    private PalaemonSessionService palaemonSessionService;
+    private SconeSessionMakerService palaemonSessionService;
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        palaemonSessionService = spy(new PalaemonSessionService(teeSecretsService, teeWorkflowConfig, attestationSecurityConfig));
+        palaemonSessionService = spy(new SconeSessionMakerService(teeSecretsService, teeWorkflowConfig, attestationSecurityConfig));
         ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
 
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
