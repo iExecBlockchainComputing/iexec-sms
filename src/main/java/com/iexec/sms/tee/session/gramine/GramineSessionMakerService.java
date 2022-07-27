@@ -16,13 +16,16 @@
 
 package com.iexec.sms.tee.session.gramine;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.tee.session.EnclaveEnvironment;
+import com.iexec.sms.tee.session.EnclaveEnvironments;
 import com.iexec.sms.tee.session.TeeSecretsService;
 import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
+import com.iexec.sms.tee.session.gramine.sps.SpsSession.SpsSessionBuilder;
+import com.iexec.sms.tee.session.gramine.sps.SpsSessionEnclave;
+import com.iexec.sms.tee.session.gramine.sps.SpsSessionEnclave.SpsSessionEnclaveBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -34,6 +37,7 @@ import javax.annotation.PostConstruct;
 
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Map;
 
 @Service
@@ -66,9 +70,18 @@ public class GramineSessionMakerService {
      * @return session config
      */
     public SpsSession generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
-        Map<String, Object> tokens = teeSecretsService.getSecretsTokens(request);
+        EnclaveEnvironments enclaveEnvironments = teeSecretsService.getSecretsTokens(request);
         // Merge template with tokens
-        String sessionJsonAsString = getFilledGramineTemplate(this.gramineTemplateFilePath, tokens);
+        //String sessionJsonAsString = getFilledGramineTemplate(this.gramineTemplateFilePath, enclaveEnvironments);
+        SpsSessionBuilder sessionBuilder = SpsSession.builder();
+        sessionBuilder.session(request.getSessionId());
+        sessionBuilder.enclaves(Arrays.asList(
+            toSpsSessionEnclave(enclaveEnvironments.getPreCompute()),
+            toSpsSessionEnclave(enclaveEnvironments.getAppCompute()),
+            toSpsSessionEnclave(enclaveEnvironments.getPostCompute())
+        ));
+        return sessionBuilder.build();
+        /*
         try {
             return new ObjectMapper().readValue(sessionJsonAsString, SpsSession.class);
         } catch (Exception e) {
@@ -76,6 +89,15 @@ public class GramineSessionMakerService {
                     TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED,
                     "Failed to parse SPS session:" + e.getMessage());
         }
+        */
+    }
+
+    private SpsSessionEnclave toSpsSessionEnclave(EnclaveEnvironment preCompute) {
+        SpsSessionEnclaveBuilder enclavebuilder = SpsSessionEnclave.builder();
+        enclavebuilder.name(preCompute.getName());
+        enclavebuilder.mrenclave(preCompute.getMrenclave());
+        enclavebuilder.environment(preCompute.getEnvironment());
+        return enclavebuilder.build();
     }
 
     private String getFilledGramineTemplate(String templatePath, Map<String, Object> tokens) {

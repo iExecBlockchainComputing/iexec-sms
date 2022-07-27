@@ -22,6 +22,7 @@ import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
+import com.iexec.sms.tee.session.scone.cas.CasSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -44,13 +45,13 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
     @Override
     public void buildAndPostSession(TeeSecretsSessionRequest request)
             throws TeeSessionGenerationException {
-        String session = sessionService.generateSession(request);
+        CasSession session = sessionService.generateSession(request);
         if (session != null
                 && teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
             log.info("Session content [taskId:{}]\n{}",
-                    request.getTaskDescription().getChainTaskId(), session);
+                    request.getTaskDescription().getChainTaskId(), session.toString());
         }
-        ResponseEntity<String> postSession = apiClient.postSession(session);
+        ResponseEntity<String> postSession = apiClient.postSession(session.toString());
         int httpCode = postSession != null ? postSession.getStatusCodeValue() : null;
         if (httpCode != 200) {
             throw new TeeSessionGenerationException(

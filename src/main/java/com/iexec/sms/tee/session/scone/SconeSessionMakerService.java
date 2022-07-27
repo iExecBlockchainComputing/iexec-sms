@@ -19,9 +19,17 @@ package com.iexec.sms.tee.session.scone;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
+import com.iexec.sms.tee.session.EnclaveEnvironment;
+import com.iexec.sms.tee.session.EnclaveEnvironments;
 import com.iexec.sms.tee.session.TeeSecretsService;
 import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.scone.cas.CasSession;
+import com.iexec.sms.tee.session.scone.cas.CasSession.AccessPolicy;
+import com.iexec.sms.tee.session.scone.cas.CasSession.Image.Volume;
+import com.iexec.sms.tee.session.scone.cas.CasSession.Security;
+import com.iexec.sms.tee.session.scone.cas.CasSession.Volumes;
+import com.iexec.sms.tee.session.scone.cas.CasSessionEnclave;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +43,9 @@ import javax.annotation.PostConstruct;
 
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //TODO Rename and move
@@ -60,6 +70,8 @@ public class SconeSessionMakerService {
 
     @Value("${scone.cas.palaemon}")
     private String palaemonTemplateFilePath;
+    // Generic
+    public static final String SESSION_ID = "SESSION_ID";
 
     public SconeSessionMakerService(
             TeeSecretsService teeSecretsService,
@@ -91,11 +103,73 @@ public class SconeSessionMakerService {
      * @param request session request details
      * @return session config in yaml string format
      */
-    public String generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
-        Map<String, Object> tokens = teeSecretsService.getSecretsTokens(request);
-        tokens.putAll(getSpecificPalaemonTokens(request));
+    public CasSession generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
+        EnclaveEnvironments enclaveEnvironments = teeSecretsService.getSecretsTokens(request);
+
+        CasSessionEnclave preEnclave = toCasSessionEnclave(enclaveEnvironments.getPreCompute());
+        preEnclave.setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
+        CasSessionEnclave appEnclave = toCasSessionEnclave(enclaveEnvironments.getAppCompute());
+        appEnclave.setCommand(getAppCommand(request.getTaskDescription()));
+        CasSessionEnclave postEnclave = toCasSessionEnclave(enclaveEnvironments.getPostCompute());
+        postEnclave.setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
+
+        addJavaEnvVars(preEnclave);
+        addJavaEnvVars(postEnclave);
+
+        List<String> policy = Arrays.asList("CREATOR");
+
+        CasSession casSession = CasSession.builder()
+                .name(request.getSessionId())
+                .version("0.3")
+                .accessPolicy(new AccessPolicy(policy, policy))
+                .services(Arrays.asList(preEnclave, appEnclave, postEnclave))
+                .security(new Security(attestationSecurityConfig.getToleratedInsecureOptions(),
+                attestationSecurityConfig.getIgnoredSgxAdvisories()))
+                .build();
+
+        Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
+        Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
+        Volume postComputeTmpVolume = new Volume("post-compute-tmp", "/post-compute-tmp");
+
+        casSession.setVolumes(Arrays.asList(
+            new Volumes(iexecInVolume.getName()),
+            new Volumes(iexecOutVolume.getName()),
+            new Volumes(postComputeTmpVolume.getName())
+        ));        
+
+        casSession.setImages(Arrays.asList(
+                new CasSession.Image(preEnclave.getImageName(), Arrays.asList(iexecInVolume)),
+                new CasSession.Image(appEnclave.getImageName(), Arrays.asList(iexecInVolume, iexecOutVolume)),
+                new CasSession.Image(postEnclave.getImageName(), Arrays.asList(iexecOutVolume, postComputeTmpVolume))
+
+        ));
+
+        return casSession;
+
+        //enclaveEnvironments.putAll(getSpecificPalaemonTokens(request));
         // Merge template with tokens and return the result
-        return getFilledPalaemonTemplate(this.palaemonTemplateFilePath, tokens);
+        //return getFilledPalaemonTemplate(this.palaemonTemplateFilePath, enclaveEnvironments);
+    }
+
+    private void addJavaEnvVars(CasSessionEnclave casSessionEnclave) {
+        Map<String, String> additionalJavaEnv = 
+        Map.of("LD_LIBRARY_PATH", "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib",
+        "JAVA_TOOL_OPTIONS", "-Xmx256m");
+        HashMap<String, Object> newEnvironment = new HashMap<>();
+        newEnvironment.putAll(casSessionEnclave.getEnvironment());
+        newEnvironment.putAll(additionalJavaEnv);
+        casSessionEnclave.setEnvironment(newEnvironment);
+    }
+
+    private CasSessionEnclave toCasSessionEnclave(EnclaveEnvironment enclaveEnvironment) {
+        return CasSessionEnclave.builder()
+                .name(enclaveEnvironment.getName())
+                .imageName(enclaveEnvironment.getName() + "-image")
+                .mrenclaves(Arrays.asList(enclaveEnvironment.getMrenclave()))
+                .pwd("/")
+                // TODO .command(command)
+                .environment(enclaveEnvironment.getEnvironment())
+                .build();
     }
 
     Map<String, Object> getSpecificPalaemonTokens(TeeSecretsSessionRequest request) {
@@ -106,23 +180,26 @@ public class SconeSessionMakerService {
         tokens.put(POST_COMPUTE_ENTRYPOINT, teeWorkflowConfig.getPostComputeEntrypoint());
 
         // Add attestation security config
-        String toleratedInsecureOptions =
-                String.join(",", attestationSecurityConfig.getToleratedInsecureOptions());
-        String ignoredSgxAdvisories =
-                String.join(",", attestationSecurityConfig.getIgnoredSgxAdvisories());
-        tokens.put(TOLERATED_INSECURE_OPTIONS, toleratedInsecureOptions);
-        tokens.put(IGNORED_SGX_ADVISORIES, ignoredSgxAdvisories);
+        // String toleratedInsecureOptions =
+        // String.join(",", attestationSecurityConfig.getToleratedInsecureOptions());
+        // String ignoredSgxAdvisories =
+        // String.join(",", attestationSecurityConfig.getIgnoredSgxAdvisories());
+        // tokens.put(TOLERATED_INSECURE_OPTIONS, toleratedInsecureOptions);
+        // tokens.put(IGNORED_SGX_ADVISORIES, ignoredSgxAdvisories);
 
+        
+
+        return tokens;
+    }
+
+    private String getAppCommand(TaskDescription taskDescription) {
         // Add app args
-        TaskDescription taskDescription = request.getTaskDescription();
         TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
         String appArgs = enclaveConfig.getEntrypoint();
         if (!StringUtils.isEmpty(taskDescription.getCmd())) {
             appArgs = appArgs + " " + taskDescription.getCmd();
         }
-        tokens.put(APP_ARGS, appArgs);
-
-        return tokens;
+        return appArgs;
     }
 
     private String getFilledPalaemonTemplate(String templatePath, Map<String, Object> tokens) {

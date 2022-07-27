@@ -18,8 +18,11 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
+import com.iexec.sms.tee.session.EnclaveEnvironment;
+import com.iexec.sms.tee.session.EnclaveEnvironments;
 import com.iexec.sms.tee.session.TeeSecretsService;
 import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.scone.cas.CasSession;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,80 +30,124 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 class SconeSessionMakerServiceTests {
 
-    private static final String TEMPLATE_SESSION_FILE = "src/main/resources/palaemonTemplate.vm";
-    private static final String EXPECTED_SESSION_FILE = "src/test/resources/palaemon-tee-session.yml";
     private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
-    private static final TeeEnclaveConfiguration enclaveConfig =
-            mock(TeeEnclaveConfiguration.class);
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
 
     @Mock
     private TeeWorkflowConfiguration teeWorkflowConfig;
-
-    @Spy
-    @InjectMocks
+    @Mock
     private TeeSecretsService teeSecretsService;
     @Mock
     private SconeSessionSecurityConfig attestationSecurityConfig;
 
+    @InjectMocks
     private SconeSessionMakerService palaemonSessionService;
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        palaemonSessionService = spy(new SconeSessionMakerService(teeSecretsService, teeWorkflowConfig, attestationSecurityConfig));
-        ReflectionTestUtils.setField(palaemonSessionService, "palaemonTemplateFilePath", TEMPLATE_SESSION_FILE);
-
-        when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
-        when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
     }
 
-    //region getSessionYml
-    /**
-     * FIXME
-     * This is currently not a unit test.
-     * It relies on {@link TeeSecretsService} implementation to work.
-     * This should be fixed.
-     */
+    // region getSessionYml
     @Test
     void shouldGetSessionYml() throws Exception {
+        TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
         TeeSecretsSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
-
-        doReturn(getPreComputeTokens()).when(teeSecretsService)
-                .getPreComputeTokens(request);
-        doReturn(getAppTokens()).when(teeSecretsService)
-                .getAppTokens(request);
-        doReturn(getPostComputeTokens()).when(teeSecretsService)
-                .getPostComputeTokens(request);
 
         when(teeWorkflowConfig.getPreComputeEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
         when(teeWorkflowConfig.getPostComputeEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
+        when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
+        when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
+
+        EnclaveEnvironment preCompute = EnclaveEnvironment.builder()
+                .name("pre-compute")
+                .mrenclave("mrEnclave1")
+                .environment(Map.ofEntries( // Map of until 10
+                        // Keeping these test env vars for now
+                        // (could be less but keeping same resource file for now)
+                        Map.entry("IEXEC_TASK_ID", "taskId"),
+                        Map.entry("IEXEC_PRE_COMPUTE_OUT", "/iexec_in"),
+                        Map.entry("IS_DATASET_REQUIRED", "true"),
+                        Map.entry("IEXEC_DATASET_KEY", "datasetKey"),
+                        Map.entry("IEXEC_DATASET_URL", "http://datasetUrl"),
+                        Map.entry("IEXEC_DATASET_FILENAME", "datasetName"),
+                        Map.entry("IEXEC_DATASET_CHECKSUM", "datasetChecksum"),
+                        Map.entry("IEXEC_INPUT_FILES_FOLDER", "/iexec_in"),
+                        Map.entry("IEXEC_INPUT_FILES_NUMBER", "2"),
+                        Map.entry("IEXEC_INPUT_FILE_URL_1", "http://host/file1"),
+                        Map.entry("IEXEC_INPUT_FILE_URL_2", "http://host/file2")))
+                .build();
+        EnclaveEnvironment appCompute = EnclaveEnvironment.builder()
+                .name("app")
+                .mrenclave(APP_FINGERPRINT)
+                .environment(Map.ofEntries(
+                        Map.entry("IEXEC_TASK_ID", "taskId"),
+                        Map.entry("IEXEC_IN", "/iexec_in"),
+                        Map.entry("IEXEC_OUT", "/iexec_out"),
+                        Map.entry("IEXEC_DATASET_ADDRESS", "0xDatasetAddress"),
+                        Map.entry("IEXEC_DATASET_FILENAME", "datasetName"),
+                        Map.entry("IEXEC_BOT_SIZE", "1"),
+                        Map.entry("IEXEC_BOT_FIRST_INDEX", "0"),
+                        Map.entry("IEXEC_BOT_TASK_INDEX", "0"),
+                        Map.entry("IEXEC_INPUT_FILES_FOLDER", "/iexec_in"),
+                        Map.entry("IEXEC_INPUT_FILES_NUMBER", "2"),
+                        Map.entry("IEXEC_INPUT_FILE_NAME_1", "file1"),
+                        Map.entry("IEXEC_INPUT_FILE_NAME_2", "file2")))
+                .build();
+        EnclaveEnvironment postCompute = EnclaveEnvironment.builder()
+                .name("post-compute")
+                .mrenclave("mrEnclave3")
+                .environment(Map.ofEntries(
+                        Map.entry("RESULT_TASK_ID", "taskId"),
+                        Map.entry("RESULT_ENCRYPTION", "yes"),
+                        Map.entry("RESULT_ENCRYPTION_PUBLIC_KEY", "encryptionPublicKey"),
+                        Map.entry("RESULT_STORAGE_PROVIDER", "ipfs"),
+                        Map.entry("RESULT_STORAGE_PROXY", "storageProxy"),
+                        Map.entry("RESULT_STORAGE_TOKEN", "storageToken"),
+                        Map.entry("RESULT_STORAGE_CALLBACK", "no"),
+                        Map.entry("RESULT_SIGN_WORKER_ADDRESS", "workerAddress"),
+                        Map.entry("RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY", "teeChallengePrivateKey")))
+                .build();
+
+        when(teeSecretsService.getSecretsTokens(request))
+                .thenReturn(EnclaveEnvironments.builder()
+                        .preCompute(preCompute)
+                        .appCompute(appCompute)
+                        .postCompute(postCompute)
+                        .build());
 
         when(attestationSecurityConfig.getToleratedInsecureOptions())
                 .thenReturn(List.of("hyperthreading", "debug-mode"));
         when(attestationSecurityConfig.getIgnoredSgxAdvisories())
                 .thenReturn(List.of("INTEL-SA-00161", "INTEL-SA-00289"));
 
-        String actualYmlString = palaemonSessionService.generateSession(request);
-        Map<String, Object> actualYmlMap = new Yaml().load(actualYmlString);
-        String expectedYamlString = FileHelper.readFile(EXPECTED_SESSION_FILE);
+        when(teeSecretsService.getSecretsTokens(request))
+                .thenReturn(EnclaveEnvironments.builder()
+                        .preCompute(preCompute)
+                        .appCompute(appCompute)
+                        .postCompute(postCompute)
+                        .build());
+
+        CasSession actualCasSession = palaemonSessionService.generateSession(request);
+        System.out.println(actualCasSession.toString());
+        Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+        String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
         assertRecursively(expectedYmlMap, actualYmlMap);
     }
-    //endregion
+    // endregion
 }

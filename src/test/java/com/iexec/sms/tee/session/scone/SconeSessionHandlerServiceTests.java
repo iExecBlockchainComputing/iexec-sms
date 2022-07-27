@@ -6,6 +6,7 @@ import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
+import com.iexec.sms.tee.session.scone.cas.CasSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,10 +45,11 @@ public class SconeSessionHandlerServiceTests {
         TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        String casSession = "sessionContent";
+        CasSession casSession = mock(CasSession.class);
+        when(casSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(casSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
-        when(apiClient.postSession(casSession)).thenReturn(ResponseEntity.ok("sessionId"));
+        when(apiClient.postSession(casSession.toString())).thenReturn(ResponseEntity.ok("sessionId"));
 
         assertDoesNotThrow(() -> sessionHandlerService.buildAndPostSession(request));
         // Testing output here since it reflects a business feature (ability to catch a
@@ -73,10 +75,10 @@ public class SconeSessionHandlerServiceTests {
         TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        String casSession = "sessionContent";
+        CasSession casSession = mock(CasSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
-        when(apiClient.postSession(casSession)).thenReturn(ResponseEntity.internalServerError().build());
+        when(apiClient.postSession(casSession.toString())).thenReturn(ResponseEntity.internalServerError().build());
 
         assertThrows(TeeSessionGenerationException.class,
                 () -> sessionHandlerService.buildAndPostSession(request));
