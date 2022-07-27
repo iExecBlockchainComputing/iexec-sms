@@ -55,7 +55,6 @@ scone:
     port: ${IEXEC_SCONE_CAS_PORT:8081}
     public-host: ${IEXEC_SCONE_CAS_PUBLIC_HOST:localhost}
     enclave-port: ${IEXEC_SCONE_CAS_ENCLAVE_PORT:18765}
-    palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
   attestation:
     tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:} # e.g.: hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode
     ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270
@@ -70,7 +69,6 @@ gramine:
     enclave:
       host: ${IEXEC_GRAPHENE_SPS_ENCLAVE_HOST:localhost}
       port: ${IEXEC_GRAPHENE_SPS_ENCLAVE_PORT:4443}
-    templateFile: ${IEXEC_GRAMINE_TEMPLATE:./src/main/resources/gramineSessionTemplate.json.vm}
 
 # TODO /!\ remove the option of env variable for releases.
 tee.workflow:

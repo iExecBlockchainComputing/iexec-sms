@@ -16,7 +16,6 @@
 
 package com.iexec.sms.tee.session.gramine;
 
-import com.iexec.common.utils.FileHelper;
 import com.iexec.sms.tee.session.EnclaveEnvironment;
 import com.iexec.sms.tee.session.EnclaveEnvironments;
 import com.iexec.sms.tee.session.TeeSecretsService;
@@ -26,40 +25,22 @@ import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession.SpsSessionBuilder;
 import com.iexec.sms.tee.session.gramine.sps.SpsSessionEnclave;
 import com.iexec.sms.tee.session.gramine.sps.SpsSessionEnclave.SpsSessionEnclaveBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.springframework.beans.factory.annotation.Value;
+import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-
-import java.io.FileNotFoundException;
-import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 @Service
 public class GramineSessionMakerService {
 
     private final TeeSecretsService teeSecretsService;
+    private TeeWorkflowConfiguration teeWorkflowConfiguration;
 
-    @Value("${gramine.sps.templateFile}")
-    private String gramineTemplateFilePath;
-
-    public GramineSessionMakerService(TeeSecretsService teeSecretsService) {
+    public GramineSessionMakerService(TeeSecretsService teeSecretsService,
+            TeeWorkflowConfiguration teeWorkflowConfiguration) {
         this.teeSecretsService = teeSecretsService;
-    }
-
-    @PostConstruct
-    void postConstruct() throws FileNotFoundException {
-        if (StringUtils.isEmpty(gramineTemplateFilePath)) {
-            throw new IllegalArgumentException("Missing gramine template filepath");
-        }
-        if (!FileHelper.exists(gramineTemplateFilePath)) {
-            throw new FileNotFoundException("Missing gramine template file");
-        }
+        this.teeWorkflowConfiguration = teeWorkflowConfiguration;
     }
 
     /**
@@ -71,43 +52,31 @@ public class GramineSessionMakerService {
      */
     public SpsSession generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
         EnclaveEnvironments enclaveEnvironments = teeSecretsService.getSecretsTokens(request);
-        // Merge template with tokens
-        //String sessionJsonAsString = getFilledGramineTemplate(this.gramineTemplateFilePath, enclaveEnvironments);
         SpsSessionBuilder sessionBuilder = SpsSession.builder();
         sessionBuilder.session(request.getSessionId());
+        SpsSessionEnclave appSessionEnclave = toSpsSessionEnclave(enclaveEnvironments.getAppCompute());
+        appSessionEnclave.setCommand(request.getTaskDescription().getAppCommand());
+        SpsSessionEnclave postSessionEnclave = toSpsSessionEnclave(enclaveEnvironments.getPostCompute());
+        postSessionEnclave.setMrenclave(teeWorkflowConfiguration.getPreComputeFingerprint());
+        postSessionEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
+
+        //TODO: Remove useless volumes when SPS is ready
+        appSessionEnclave.setVolumes(List.of());
+        postSessionEnclave.setVolumes(List.of());
+
         sessionBuilder.enclaves(Arrays.asList(
-            toSpsSessionEnclave(enclaveEnvironments.getPreCompute()),
-            toSpsSessionEnclave(enclaveEnvironments.getAppCompute()),
-            toSpsSessionEnclave(enclaveEnvironments.getPostCompute())
-        ));
+                // No pre-compute for now
+                appSessionEnclave,
+                postSessionEnclave));
         return sessionBuilder.build();
-        /*
-        try {
-            return new ObjectMapper().readValue(sessionJsonAsString, SpsSession.class);
-        } catch (Exception e) {
-            throw new TeeSessionGenerationException(
-                    TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED,
-                    "Failed to parse SPS session:" + e.getMessage());
-        }
-        */
     }
 
-    private SpsSessionEnclave toSpsSessionEnclave(EnclaveEnvironment preCompute) {
+    private SpsSessionEnclave toSpsSessionEnclave(EnclaveEnvironment enclaveEnvironment) {
         SpsSessionEnclaveBuilder enclavebuilder = SpsSessionEnclave.builder();
-        enclavebuilder.name(preCompute.getName());
-        enclavebuilder.mrenclave(preCompute.getMrenclave());
-        enclavebuilder.environment(preCompute.getEnvironment());
+        enclavebuilder.name(enclaveEnvironment.getName());
+        enclavebuilder.mrenclave(enclaveEnvironment.getMrenclave());
+        enclavebuilder.environment(enclaveEnvironment.getEnvironment());
         return enclavebuilder.build();
     }
 
-    private String getFilledGramineTemplate(String templatePath, Map<String, Object> tokens) {
-        VelocityEngine ve = new VelocityEngine();
-        ve.init();
-        Template template = ve.getTemplate(templatePath);
-        VelocityContext context = new VelocityContext();
-        tokens.forEach(context::put); // copy all data from the tokens into context
-        StringWriter writer = new StringWriter();
-        template.merge(context, writer);
-        return writer.toString();
-    }
 }

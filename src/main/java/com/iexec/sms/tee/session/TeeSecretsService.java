@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -224,10 +223,15 @@ public class TeeSecretsService {
                 .stream()
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        environmentVariables.put(INPUT_FILE_NAMES, inputFileNames);
+        if(inputFileNames.size() > 0){
+            environmentVariables.put(INPUT_FILE_NAMES, inputFileNames);
+        }
 
         final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);
         environmentVariables.putAll(computeSecrets);
+       // trusted env variables (not confidential)
+        Map<String, String> env = IexecEnvUtils.getAllIexecEnv(taskDescription);
+        environmentVariables.putAll(env);
         environmentBuilder.environment(environmentVariables);
         return environmentBuilder.build();
     }
@@ -251,7 +255,7 @@ public class TeeSecretsService {
         }
 
         if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
-            tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
+            //tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
             return tokens;
         }
 
@@ -279,7 +283,9 @@ public class TeeSecretsService {
                     .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
         }
-        tokens.put(REQUESTER_SECRETS, requesterSecrets);
+        if(requesterSecrets.size() > 0){
+            tokens.put(REQUESTER_SECRETS, requesterSecrets);
+        }
 
         return tokens;
     }
