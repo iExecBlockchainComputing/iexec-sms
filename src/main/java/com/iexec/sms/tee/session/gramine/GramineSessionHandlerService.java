@@ -41,7 +41,15 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
         this.teeSessionLogConfiguration = teeSessionLogConfiguration;
     }
 
-    public void buildAndPostSession(TeeSecretsSessionRequest request)
+    /**
+     * Build and post secret session on secret provisioning service.
+     * 
+     * @param request tee session generation request
+     * @return String secret provisioning service url
+     * @throws TeeSessionGenerationException
+     */
+    @Override
+    public String buildAndPostSession(TeeSecretsSessionRequest request)
             throws TeeSessionGenerationException {
         SpsSession session = sessionService.generateSession(request);
         if (session != null
@@ -52,6 +60,7 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
 
         try {
             spsConfiguration.getInstanceWithBasicAuth().postSession(session);
+            return spsConfiguration.getEnclaveUrl();
         } catch (Exception e) {
             throw new TeeSessionGenerationException(
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,

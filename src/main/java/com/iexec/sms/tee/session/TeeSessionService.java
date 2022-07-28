@@ -18,6 +18,7 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -50,7 +51,7 @@ public class TeeSessionService {
                 TeeEnclaveProvider.GRAMINE, gramineService);
     }
 
-    public String generateTeeSession(
+    public TeeSessionGenerationResponse generateTeeSession(
             String taskId,
             String workerAddress,
             String teeChallenge) throws TeeSessionGenerationException {
@@ -83,8 +84,8 @@ public class TeeSessionService {
         }
 
         // /!\ TODO clean expired tasks sessions
-        teeSessionHandler.buildAndPostSession(request);
-        return sessionId;
+        String secretProvisioningUrl = teeSessionHandler.buildAndPostSession(request);
+        return new TeeSessionGenerationResponse(sessionId, secretProvisioningUrl);
     }
 
     private String createSessionId(String taskId) {

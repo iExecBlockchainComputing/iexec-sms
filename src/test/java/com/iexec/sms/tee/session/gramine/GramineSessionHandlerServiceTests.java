@@ -35,7 +35,7 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(OutputCaptureExtension.class)
 public class GramineSessionHandlerServiceTests {
 
+    private static String SPS_URL = "spsUrl";
     @Mock
     private GramineSessionMakerService sessionService;
     @Mock
@@ -55,6 +56,7 @@ public class GramineSessionHandlerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        when(spsConfiguration.getEnclaveUrl()).thenReturn(SPS_URL);
     }
 
     @Test
@@ -70,7 +72,7 @@ public class GramineSessionHandlerServiceTests {
         when(spsClient.postSession(spsSession)).thenReturn("sessionId");
         when(spsConfiguration.getInstanceWithBasicAuth()).thenReturn(spsClient);
 
-        assertDoesNotThrow(() -> sessionHandlerService.buildAndPostSession(request));
+        assertEquals(SPS_URL, sessionHandlerService.buildAndPostSession(request));
         // Testing output here since it reflects a business feature (ability to catch a
         // session in debug mode)
         assertTrue(output.getOut().contains("Session content [taskId:null]\nsessionContent\n"));

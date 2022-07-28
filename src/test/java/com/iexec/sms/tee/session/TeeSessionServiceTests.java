@@ -3,6 +3,7 @@ package com.iexec.sms.tee.session;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
@@ -27,6 +28,7 @@ class TeeSessionServiceTests {
     private final static String TASK_ID = "0x0";
     private final static String WORKER_ADDRESS = "0x1";
     private final static String TEE_CHALLENGE = "0x2";
+    private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
     @Mock
     private SconeSessionHandlerService sconeService;
     @Mock
@@ -60,12 +62,15 @@ class TeeSessionServiceTests {
                 .teeEnclaveProvider(teeEnclaveProvider)
                 .build();
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
+        TeeSessionHandler teeProviderSessionHandler = getTeeSessionHandler(teeEnclaveProvider);
+        when(teeProviderSessionHandler.buildAndPostSession(any())).thenReturn(SECRET_PROVISIONING_URL);
 
-        final String teeSession = assertDoesNotThrow(
+        final TeeSessionGenerationResponse teeSessionReponse = assertDoesNotThrow(
                 () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        verify(getTeeSessionHandler(teeEnclaveProvider), times(1))
+        verify(teeProviderSessionHandler, times(1))
                 .buildAndPostSession(any());
-        assertNotNull(teeSession);
+        assertFalse(teeSessionReponse.getSessionId().isEmpty());
+        assertEquals(SECRET_PROVISIONING_URL, teeSessionReponse.getSecretProvisioningUrl());
     }
 
     @Test

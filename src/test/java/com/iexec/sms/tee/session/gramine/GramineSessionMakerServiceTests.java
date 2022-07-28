@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-class GramineSessionServiceTests {
+class GramineSessionMakerServiceTests {
     @Mock
     private TeeWorkflowConfiguration teeWorkflowConfig;
     @Mock
@@ -36,12 +36,13 @@ class GramineSessionServiceTests {
         MockitoAnnotations.openMocks(this);
     }
 
-    //region getSessionYml
+    // region getSessionYml
     @Test
     void shouldGetSessionJson() throws Exception {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
         TeeSecretsSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
+        when(teeWorkflowConfig.getPostComputeFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
         when(teeWorkflowConfig.getPostComputeEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn("/apploader.sh");
@@ -78,12 +79,11 @@ class GramineSessionServiceTests {
                         Map.entry("RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY", "teeChallengePrivateKey")))
                 .build();
 
-                when(teeSecretsService.getSecretsTokens(request))
+        when(teeSecretsService.getSecretsTokens(request))
                 .thenReturn(EnclaveEnvironments.builder()
                         .appCompute(appCompute)
                         .postCompute(postCompute)
                         .build());
-
 
         SpsSession actualSpsSession = gramineSessionService.generateSession(request);
         log.info(actualSpsSession.toString());
@@ -92,5 +92,5 @@ class GramineSessionServiceTests {
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedJsonString);
         assertRecursively(expectedYmlMap, actualJsonMap);
     }
-    //endregion
+    // endregion
 }

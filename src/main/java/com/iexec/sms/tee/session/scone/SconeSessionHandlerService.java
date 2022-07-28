@@ -22,6 +22,7 @@ import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
+import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.CasSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -33,17 +34,27 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
     private SconeSessionMakerService sessionService;
     private CasClient apiClient;
     private TeeSessionLogConfiguration teeSessionLogConfiguration;
+    private CasConfiguration casConfiguration;
 
     public SconeSessionHandlerService(SconeSessionMakerService sessionService,
             CasClient apiClient,
-            TeeSessionLogConfiguration teeSessionLogConfiguration) {
+            TeeSessionLogConfiguration teeSessionLogConfiguration,
+            CasConfiguration casConfiguration) {
         this.sessionService = sessionService;
         this.apiClient = apiClient;
         this.teeSessionLogConfiguration = teeSessionLogConfiguration;
+        this.casConfiguration = casConfiguration;
     }
 
+    /**
+     * Build and post secret session on secret provisioning service.
+     * 
+     * @param request tee session generation request
+     * @return String secret provisioning service url
+     * @throws TeeSessionGenerationException
+     */
     @Override
-    public void buildAndPostSession(TeeSecretsSessionRequest request)
+    public String buildAndPostSession(TeeSecretsSessionRequest request)
             throws TeeSessionGenerationException {
         CasSession session = sessionService.generateSession(request);
         if (session != null
@@ -58,6 +69,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
                     "Failed to post session: " + httpCode);
         }
+        return casConfiguration.getEnclaveUrl();
     }
 
 }

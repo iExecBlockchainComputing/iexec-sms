@@ -57,7 +57,7 @@ public class GramineSessionMakerService {
         SpsSessionEnclave appSessionEnclave = toSpsSessionEnclave(enclaveEnvironments.getAppCompute());
         appSessionEnclave.setCommand(request.getTaskDescription().getAppCommand());
         SpsSessionEnclave postSessionEnclave = toSpsSessionEnclave(enclaveEnvironments.getPostCompute());
-        postSessionEnclave.setMrenclave(teeWorkflowConfiguration.getPreComputeFingerprint());
+        postSessionEnclave.setMrenclave(teeWorkflowConfiguration.getPostComputeFingerprint());
         postSessionEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
 
         //TODO: Remove useless volumes when SPS is ready
