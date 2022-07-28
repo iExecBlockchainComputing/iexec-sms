@@ -40,12 +40,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
-import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
@@ -69,8 +69,7 @@ public class TeeSecretsService {
     public static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
     // Secrets
     public static final String REQUESTER_SECRETS = "REQUESTER_SECRETS";
-    // Env
-    private static final String ENV_PROPERTY = "env";
+
 
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
@@ -101,43 +100,25 @@ public class TeeSecretsService {
         if (request == null) {
             throw new TeeSessionGenerationException(
                     NO_SESSION_REQUEST,
-                    "Session request must not be null"
-            );
+                    "Session request must not be null");
         }
         if (request.getTaskDescription() == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must not be null"
-            );
+                    "Task description must not be null");
         }
         EnclaveEnvironmentsBuilder enclaveEnvironmentsBuilder = EnclaveEnvironments.builder();
         TaskDescription taskDescription = request.getTaskDescription();
-        //tokens.put(SESSION_ID, request.getSessionId());
-        //enclaveEnvironmentsBuilder.sessionId(request.getSessionId());
-
-        //Map<String, Object> secretsTokens = new HashMap<>();
-        //secretsTokens.put(SESSION_ID, request.getSessionId());
         // pre-compute
         boolean isPreComputeRequired = taskDescription.containsDataset() ||
                 !taskDescription.getInputFiles().isEmpty();
-        //secretsTokens.put(IS_PRE_COMPUTE_REQUIRED, isPreComputeRequired);
         if (isPreComputeRequired) {
-            //secretsTokens.putAll(getPreComputeTokens(request));
             enclaveEnvironmentsBuilder.preCompute(getPreComputeTokens(request));
         }
         // app
-        //secretsTokens.putAll(getAppTokens(request));
         enclaveEnvironmentsBuilder.appCompute(getAppTokens(request));
         // post compute
-        //secretsTokens.putAll(getPostComputeTokens(request));
         enclaveEnvironmentsBuilder.postCompute(getPostComputeTokens(request));
-        // env variables
-        //TODO: Required?
-        //Map<String, String> env = IexecEnvUtils.getAllIexecEnv(taskDescription);
-        // Null value should be replaced by an empty string.
-        //env.forEach((key, value) -> env.replace(key, null, EMPTY_YML_VALUE));
-        //secretsTokens.put(ENV_PROPERTY, env);
-
         return enclaveEnvironmentsBuilder.build();
     }
 
@@ -151,25 +132,38 @@ public class TeeSecretsService {
             throws TeeSessionGenerationException {
         EnclaveEnvironmentBuilder environmentBuilder = EnclaveEnvironment.builder();
         environmentBuilder.name("pre-compute");
-        Map<String, Object> environmentVariables = new HashMap<>();
+        Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
         String fingerprint = teeWorkflowConfig.getPreComputeFingerprint();
         environmentBuilder.mrenclave(fingerprint);
-        environmentVariables.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
-        environmentVariables.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
+        tokens.put("IEXEC_PRE_COMPUTE_OUT", "/iexec_in");
+        // `IS_DATASET_REQUIRED` still meaningful?
+        tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
         if (taskDescription.containsDataset()) {
             String datasetKey = web3SecretService
                     .getSecret(taskDescription.getDatasetAddress(), true)
                     .orElseThrow(() -> new TeeSessionGenerationException(
                             PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
-                            "Empty dataset secret - taskId: " + taskId
-                    ))
+                            "Empty dataset secret - taskId: " + taskId))
                     .getTrimmedValue();
-            environmentVariables.put(IEXEC_DATASET_KEY, datasetKey);
+            tokens.put("IEXEC_DATASET_KEY", datasetKey);
         } else {
             log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
+        List<String> toInclude = List.of(
+                IexecEnvUtils.IEXEC_TASK_ID,
+                IexecEnvUtils.IEXEC_DATASET_URL,
+                IexecEnvUtils.IEXEC_DATASET_FILENAME,
+                IexecEnvUtils.IEXEC_DATASET_CHECKSUM,
+                IexecEnvUtils.IEXEC_INPUT_FILES_FOLDER,
+                IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER);
+        Map<String, String> sharedEnvVars = IexecEnvUtils.getAllIexecEnv(taskDescription)
+                .entrySet()
+                .stream()
+                .filter(e -> toInclude.contains(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        tokens.putAll(sharedEnvVars);
         // extract <IEXEC_INPUT_FILE_URL_N, url>
         // this map will be empty (not null) if no input file is found
         Map<String, String> inputFileUrls = IexecEnvUtils.getAllIexecEnv(taskDescription)
@@ -177,8 +171,8 @@ public class TeeSecretsService {
                 .stream()
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        environmentVariables.put(INPUT_FILE_URLS, inputFileUrls);
-        environmentBuilder.environment(environmentVariables);
+        tokens.putAll(inputFileUrls);
+        environmentBuilder.environment(tokens);
         return environmentBuilder.build();
     }
 
@@ -186,35 +180,30 @@ public class TeeSecretsService {
      * Compute (App)
      */
     public EnclaveEnvironment getAppTokens(TeeSecretsSessionRequest request)
-            throws TeeSessionGenerationException{
+            throws TeeSessionGenerationException {
         EnclaveEnvironmentBuilder environmentBuilder = EnclaveEnvironment.builder();
         environmentBuilder.name("app");
-        Map<String, Object> environmentVariables = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must no be null"
-            );
+                    "Task description must no be null");
         }
 
-        //Map<String, Object> tokens = new HashMap<>();
+        Map<String, Object> tokens = new HashMap<>();
         TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
-                    "Enclave configuration must no be null"
-            );
+                    "Enclave configuration must no be null");
         }
-        if (!enclaveConfig.getValidator().isValid()){
+        if (!enclaveConfig.getValidator().isValid()) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
                     "Invalid enclave configuration: " +
-                            enclaveConfig.getValidator().validate().toString()
-            );
+                            enclaveConfig.getValidator().validate().toString());
         }
 
-        //tokens.put(APP_MRENCLAVE, enclaveConfig.getFingerprint());
         environmentBuilder.mrenclave(enclaveConfig.getFingerprint());
         // extract <IEXEC_INPUT_FILE_NAME_N, name>
         // this map will be empty (not null) if no input file is found
@@ -223,16 +212,14 @@ public class TeeSecretsService {
                 .stream()
                 .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        if(inputFileNames.size() > 0){
-            environmentVariables.put(INPUT_FILE_NAMES, inputFileNames);
-        }
+        tokens.putAll(inputFileNames);
 
         final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);
-        environmentVariables.putAll(computeSecrets);
-       // trusted env variables (not confidential)
-        Map<String, String> env = IexecEnvUtils.getAllIexecEnv(taskDescription);
-        environmentVariables.putAll(env);
-        environmentBuilder.environment(environmentVariables);
+        tokens.putAll(computeSecrets);
+        // trusted env variables (not confidential)
+        Map<String, String> env = IexecEnvUtils.getComputeStageEnvMap(taskDescription);
+        tokens.putAll(env);
+        environmentBuilder.environment(tokens);
         return environmentBuilder.build();
     }
 
@@ -242,25 +229,23 @@ public class TeeSecretsService {
 
         if (applicationAddress != null) {
             final String secretIndex = "1";
-            String appDeveloperSecret =
-                    teeTaskComputeSecretService.getSecret(
-                                    OnChainObjectType.APPLICATION,
-                                    applicationAddress.toLowerCase(),
-                                    SecretOwnerRole.APPLICATION_DEVELOPER,
-                                    "",
-                                    secretIndex)
-                            .map(TeeTaskComputeSecret::getValue)
-                            .orElse(EMPTY_YML_VALUE);
+            String appDeveloperSecret = teeTaskComputeSecretService.getSecret(
+                    OnChainObjectType.APPLICATION,
+                    applicationAddress.toLowerCase(),
+                    SecretOwnerRole.APPLICATION_DEVELOPER,
+                    "",
+                    secretIndex)
+                    .map(TeeTaskComputeSecret::getValue)
+                    .orElse(EMPTY_YML_VALUE);
             tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret);
         }
 
         if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
-            //tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
             return tokens;
         }
 
         final HashMap<String, String> requesterSecrets = new HashMap<>();
-        for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
+        for (Map.Entry<String, String> secretEntry : taskDescription.getSecrets().entrySet()) {
             try {
                 int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
                 if (requesterSecretIndex <= 0) {
@@ -269,24 +254,21 @@ public class TeeSecretsService {
                     log.warn(message);
                     throw new NumberFormatException(message);
                 }
-            } catch(NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 log.warn("Invalid entry found in deal parameters secrets map", e);
                 continue;
             }
             String requesterSecret = teeTaskComputeSecretService.getSecret(
-                            OnChainObjectType.APPLICATION,
-                            "",
-                            SecretOwnerRole.REQUESTER,
-                            taskDescription.getRequester().toLowerCase(),
-                            secretEntry.getValue())
+                    OnChainObjectType.APPLICATION,
+                    "",
+                    SecretOwnerRole.REQUESTER,
+                    taskDescription.getRequester().toLowerCase(),
+                    secretEntry.getValue())
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
         }
-        if(requesterSecrets.size() > 0){
-            tokens.put(REQUESTER_SECRETS, requesterSecrets);
-        }
-
+        tokens.putAll(requesterSecrets);
         return tokens;
     }
 
@@ -305,13 +287,14 @@ public class TeeSecretsService {
         String teePostComputeFingerprint = teeWorkflowConfig.getPostComputeFingerprint();
         // ###############################################################################
         // TODO: activate this when user specific post-compute is properly
-        // supported. See https://github.com/iExecBlockchainComputing/iexec-sms/issues/52.
+        // supported. See
+        // https://github.com/iExecBlockchainComputing/iexec-sms/issues/52.
         // ###############################################################################
         // // Use specific post-compute image if requested.
-        //if (taskDescription.containsPostCompute()) {
-        //    teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
-        //    //add entrypoint too
-        //}
+        // if (taskDescription.containsPostCompute()) {
+        // teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
+        // //add entrypoint too
+        // }
         environmentVariables.put(POST_COMPUTE_MRENCLAVE, teePostComputeFingerprint);
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
@@ -345,8 +328,7 @@ public class TeeSecretsService {
         if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
-                    "Empty beneficiary encryption key - taskId: " + taskId
-            );
+                    "Empty beneficiary encryption key - taskId: " + taskId);
         }
         String publicKeyValue = beneficiaryResultEncryptionKeySecret.get().getTrimmedValue();
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, publicKeyValue); // base64 encoded by client
@@ -375,8 +357,8 @@ public class TeeSecretsService {
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN
                 : ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<Secret> requesterStorageTokenSecret =
-                web2SecretsService.getSecret(taskDescription.getRequester(), keyName, true);
+        Optional<Secret> requesterStorageTokenSecret = web2SecretsService.getSecret(taskDescription.getRequester(),
+                keyName, true);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());
@@ -399,28 +381,24 @@ public class TeeSecretsService {
         if (StringUtils.isEmpty(workerAddress)) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
-                    "Empty worker address - taskId: " + taskId
-            );
+                    "Empty worker address - taskId: " + taskId);
         }
         if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
-                    "Empty public enclave challenge - taskId: " + taskId
-            );
+                    "Empty public enclave challenge - taskId: " + taskId);
         }
         Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
         if (teeChallenge.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
-                    "Empty TEE challenge  - taskId: " + taskId
-            );
+                    "Empty TEE challenge  - taskId: " + taskId);
         }
         EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
         if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
-                    "Empty TEE challenge credentials - taskId: " + taskId
-            );
+                    "Empty TEE challenge credentials - taskId: " + taskId);
         }
         tokens.put(RESULT_TASK_ID, taskId);
         tokens.put(RESULT_SIGN_WORKER_ADDRESS, workerAddress);
