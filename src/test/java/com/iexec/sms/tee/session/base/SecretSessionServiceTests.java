@@ -1,4 +1,4 @@
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.base;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
@@ -16,7 +16,7 @@ import static com.iexec.sms.tee.session.TeeSessionTestUtils.APP_ENTRYPOINT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class TeeSecretsServiceTests {
+class SecretSessionServiceTests {
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
 
     private static final TeeEnclaveConfiguration enclaveConfig =
@@ -34,7 +34,7 @@ class TeeSecretsServiceTests {
 
     @Spy
     @InjectMocks
-    private TeeSecretsService teeSecretsService;
+    private SecretSessionBaseService teeSecretsService;
 
     @BeforeEach
     void beforeEach() {

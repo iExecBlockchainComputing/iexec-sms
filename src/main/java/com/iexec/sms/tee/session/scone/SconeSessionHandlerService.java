@@ -18,9 +18,9 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.CasSession;
@@ -54,7 +54,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
      * @throws TeeSessionGenerationException
      */
     @Override
-    public String buildAndPostSession(TeeSecretsSessionRequest request)
+    public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         CasSession session = sessionService.generateSession(request);
         if (session != null

@@ -14,19 +14,30 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.tee.session.gramine.sps;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+
+import java.util.List;
+import java.util.Map;
 
 @Builder
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class EnclaveEnvironments {
+public class SpsEnclave {
 
-    private EnclaveEnvironment preCompute;
-    private EnclaveEnvironment appCompute;
-    private EnclaveEnvironment postCompute;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("mrenclave")
+    private String mrenclave;
+    @JsonProperty("command")
+    private String command;
+    @JsonProperty("environment")
+    private Map<String, Object> environment;
+    @JsonProperty("volumes")
+    private List<String> volumes;
 
 }

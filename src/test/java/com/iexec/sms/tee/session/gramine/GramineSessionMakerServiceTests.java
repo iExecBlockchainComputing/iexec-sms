@@ -2,10 +2,10 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.EnclaveEnvironment;
-import com.iexec.sms.tee.session.EnclaveEnvironments;
-import com.iexec.sms.tee.session.TeeSecretsService;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.base.SecretEnclaveBase;
+import com.iexec.sms.tee.session.base.SecretSessionBase;
+import com.iexec.sms.tee.session.base.SecretSessionBaseService;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ class GramineSessionMakerServiceTests {
     @Mock
     private TeeWorkflowConfiguration teeWorkflowConfig;
     @Mock
-    private TeeSecretsService teeSecretsService;
+    private SecretSessionBaseService teeSecretsService;
     @InjectMocks
     private GramineSessionMakerService gramineSessionService;
 
@@ -40,14 +40,14 @@ class GramineSessionMakerServiceTests {
     @Test
     void shouldGetSessionJson() throws Exception {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
-        TeeSecretsSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
+        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
         when(teeWorkflowConfig.getPostComputeFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
         when(teeWorkflowConfig.getPostComputeEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn("/apploader.sh");
 
-        EnclaveEnvironment appCompute = EnclaveEnvironment.builder()
+        SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
                 .name("app")
                 .mrenclave(APP_FINGERPRINT)
                 .environment(Map.ofEntries(
@@ -64,7 +64,7 @@ class GramineSessionMakerServiceTests {
                         Map.entry("IEXEC_INPUT_FILE_NAME_1", "file1"),
                         Map.entry("IEXEC_INPUT_FILE_NAME_2", "file2")))
                 .build();
-        EnclaveEnvironment postCompute = EnclaveEnvironment.builder()
+        SecretEnclaveBase postCompute = SecretEnclaveBase.builder()
                 .name("post-compute")
                 .mrenclave("mrEnclave3")
                 .environment(Map.ofEntries(
@@ -80,7 +80,7 @@ class GramineSessionMakerServiceTests {
                 .build();
 
         when(teeSecretsService.getSecretsTokens(request))
-                .thenReturn(EnclaveEnvironments.builder()
+                .thenReturn(SecretSessionBase.builder()
                         .appCompute(appCompute)
                         .postCompute(postCompute)
                         .build());

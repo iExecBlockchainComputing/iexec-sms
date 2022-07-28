@@ -20,9 +20,9 @@ import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ public class TeeSessionService {
                     GET_TASK_DESCRIPTION_FAILED,
                     String.format("Failed to get task description [taskId:%s]", taskId));
         }
-        TeeSecretsSessionRequest request = TeeSecretsSessionRequest.builder()
+        TeeSessionRequest request = TeeSessionRequest.builder()
                 .sessionId(sessionId)
                 .taskDescription(taskDescription)
                 .workerAddress(workerAddress)

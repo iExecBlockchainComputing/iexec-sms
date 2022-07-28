@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.generic;
+package com.iexec.sms.tee.session.base;
 
-import com.iexec.common.task.TaskDescription;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-@Data
+import java.util.Map;
+
 @Builder
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
-public class TeeSecretsSessionRequest {
+@NoArgsConstructor
+public class SecretEnclaveBase {
 
-    private String sessionId;
-    private TaskDescription taskDescription;
-    private String workerAddress;
-    private String enclaveChallenge;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("mrenclave")
+    private String mrenclave;
+    @JsonProperty("environment")
+    private Map<String, Object> environment;
+
 }

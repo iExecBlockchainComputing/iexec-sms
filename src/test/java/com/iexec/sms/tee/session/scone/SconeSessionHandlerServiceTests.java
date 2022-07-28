@@ -3,8 +3,8 @@ package com.iexec.sms.tee.session.scone;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.CasSession;
@@ -47,7 +47,7 @@ public class SconeSessionHandlerServiceTests {
 
     @Test
     void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
-        TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
+        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         CasSession casSession = mock(CasSession.class);
@@ -65,7 +65,7 @@ public class SconeSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSinceBuildSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
+        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TeeSessionGenerationException teeSessionGenerationException = new TeeSessionGenerationException(
                 TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED, "some error");
         when(sessionService.generateSession(request)).thenThrow(teeSessionGenerationException);
@@ -77,7 +77,7 @@ public class SconeSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSincePostSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
+        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         CasSession casSession = mock(CasSession.class);

@@ -23,7 +23,8 @@ import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.base.SecretSessionBaseService;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
 
@@ -33,7 +34,7 @@ import java.util.Map;
 
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
-import static com.iexec.sms.tee.session.TeeSecretsService.*;
+import static com.iexec.sms.tee.session.base.SecretSessionBaseService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -99,8 +100,8 @@ public class TeeSessionTestUtils {
                 .build();
     }
 
-    public static TeeSecretsSessionRequest createSessionRequest(TaskDescription taskDescription) {
-        return TeeSecretsSessionRequest.builder()
+    public static TeeSessionRequest createSessionRequest(TaskDescription taskDescription) {
+        return TeeSessionRequest.builder()
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
@@ -146,7 +147,7 @@ public class TeeSessionTestUtils {
     public static Map<String, Object> getAppTokens() {
         return Map.of(
             APP_MRENCLAVE, APP_FINGERPRINT,
-            TeeSecretsService.INPUT_FILE_NAMES, Map.of(
+            SecretSessionBaseService.INPUT_FILE_NAMES, Map.of(
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
                         IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));
     }

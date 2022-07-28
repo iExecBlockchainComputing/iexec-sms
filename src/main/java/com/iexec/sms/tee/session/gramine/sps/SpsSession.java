@@ -35,7 +35,7 @@ public class SpsSession {
   @JsonProperty("session")
   private String session;
   @JsonProperty("enclaves")
-  private List<SpsSessionEnclave> enclaves;
+  private List<SpsEnclave> enclaves;
 
   @Override
   public String toString() {

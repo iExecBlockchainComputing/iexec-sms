@@ -16,15 +16,15 @@
 
 package com.iexec.sms.tee.session.gramine;
 
-import com.iexec.sms.tee.session.EnclaveEnvironment;
-import com.iexec.sms.tee.session.EnclaveEnvironments;
-import com.iexec.sms.tee.session.TeeSecretsService;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.base.SecretEnclaveBase;
+import com.iexec.sms.tee.session.base.SecretSessionBase;
+import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.gramine.sps.SpsEnclave;
+import com.iexec.sms.tee.session.gramine.sps.SpsEnclave.SpsEnclaveBuilder;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession.SpsSessionBuilder;
-import com.iexec.sms.tee.session.gramine.sps.SpsSessionEnclave;
-import com.iexec.sms.tee.session.gramine.sps.SpsSessionEnclave.SpsSessionEnclaveBuilder;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import org.springframework.stereotype.Service;
 
@@ -34,12 +34,12 @@ import java.util.List;
 @Service
 public class GramineSessionMakerService {
 
-    private final TeeSecretsService teeSecretsService;
+    private final SecretSessionBaseService secretSessionBaseService;
     private TeeWorkflowConfiguration teeWorkflowConfiguration;
 
-    public GramineSessionMakerService(TeeSecretsService teeSecretsService,
+    public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService,
             TeeWorkflowConfiguration teeWorkflowConfiguration) {
-        this.teeSecretsService = teeSecretsService;
+        this.secretSessionBaseService = secretSessionBaseService;
         this.teeWorkflowConfiguration = teeWorkflowConfiguration;
     }
 
@@ -50,33 +50,33 @@ public class GramineSessionMakerService {
      * @param request session request details
      * @return session config
      */
-    public SpsSession generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
-        EnclaveEnvironments enclaveEnvironments = teeSecretsService.getSecretsTokens(request);
-        SpsSessionBuilder sessionBuilder = SpsSession.builder();
-        sessionBuilder.session(request.getSessionId());
-        SpsSessionEnclave appSessionEnclave = toSpsSessionEnclave(enclaveEnvironments.getAppCompute());
-        appSessionEnclave.setCommand(request.getTaskDescription().getAppCommand());
-        SpsSessionEnclave postSessionEnclave = toSpsSessionEnclave(enclaveEnvironments.getPostCompute());
-        postSessionEnclave.setMrenclave(teeWorkflowConfiguration.getPostComputeFingerprint());
-        postSessionEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
+    public SpsSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
+        SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
+        SpsSessionBuilder spsSession = SpsSession.builder();
+        spsSession.session(request.getSessionId());
+        SpsEnclave spsAppEnclave = toSpsSessionEnclave(baseSession.getAppCompute());
+        spsAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
+        SpsEnclave spsPostEnclave = toSpsSessionEnclave(baseSession.getPostCompute());
+        spsPostEnclave.setMrenclave(teeWorkflowConfiguration.getPostComputeFingerprint());
+        spsPostEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
 
-        //TODO: Remove useless volumes when SPS is ready
-        appSessionEnclave.setVolumes(List.of());
-        postSessionEnclave.setVolumes(List.of());
+        // TODO: Remove useless volumes when SPS is ready
+        spsAppEnclave.setVolumes(List.of());
+        spsPostEnclave.setVolumes(List.of());
 
-        sessionBuilder.enclaves(Arrays.asList(
+        spsSession.enclaves(Arrays.asList(
                 // No pre-compute for now
-                appSessionEnclave,
-                postSessionEnclave));
-        return sessionBuilder.build();
+                spsAppEnclave,
+                spsPostEnclave));
+        return spsSession.build();
     }
 
-    private SpsSessionEnclave toSpsSessionEnclave(EnclaveEnvironment enclaveEnvironment) {
-        SpsSessionEnclaveBuilder enclavebuilder = SpsSessionEnclave.builder();
-        enclavebuilder.name(enclaveEnvironment.getName());
-        enclavebuilder.mrenclave(enclaveEnvironment.getMrenclave());
-        enclavebuilder.environment(enclaveEnvironment.getEnvironment());
-        return enclavebuilder.build();
+    private SpsEnclave toSpsSessionEnclave(SecretEnclaveBase enclaveBase) {
+        SpsEnclaveBuilder spsEnclave = SpsEnclave.builder();
+        spsEnclave.name(enclaveBase.getName());
+        spsEnclave.mrenclave(enclaveBase.getMrenclave());
+        spsEnclave.environment(enclaveBase.getEnvironment());
+        return spsEnclave.build();
     }
 
 }

@@ -39,7 +39,7 @@ public class CasSession {
     @JsonProperty("access_policy")
     private AccessPolicy accessPolicy;
     @JsonProperty("services")
-    private List<CasSessionEnclave> services;
+    private List<CasEnclave> services;
     @JsonProperty("images")
     private List<Image> images;
     @JsonProperty("volumes")

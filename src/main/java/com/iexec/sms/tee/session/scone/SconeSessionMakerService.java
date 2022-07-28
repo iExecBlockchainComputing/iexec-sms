@@ -16,17 +16,17 @@
 
 package com.iexec.sms.tee.session.scone;
 
-import com.iexec.sms.tee.session.EnclaveEnvironment;
-import com.iexec.sms.tee.session.EnclaveEnvironments;
-import com.iexec.sms.tee.session.TeeSecretsService;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.base.SecretEnclaveBase;
+import com.iexec.sms.tee.session.base.SecretSessionBase;
+import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.scone.cas.CasEnclave;
 import com.iexec.sms.tee.session.scone.cas.CasSession;
 import com.iexec.sms.tee.session.scone.cas.CasSession.AccessPolicy;
 import com.iexec.sms.tee.session.scone.cas.CasSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.CasSession.Security;
 import com.iexec.sms.tee.session.scone.cas.CasSession.Volumes;
-import com.iexec.sms.tee.session.scone.cas.CasSessionEnclave;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -52,15 +52,15 @@ public class SconeSessionMakerService {
     // PostCompute
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
 
-    private final TeeSecretsService teeSecretsService;
+    private final SecretSessionBaseService secretSessionBaseService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
 
     public SconeSessionMakerService(
-            TeeSecretsService teeSecretsService,
+            SecretSessionBaseService secretSessionBaseService,
             TeeWorkflowConfiguration teeWorkflowConfig,
             SconeSessionSecurityConfig attestationSecurityConfig) {
-        this.teeSecretsService = teeSecretsService;
+        this.secretSessionBaseService = secretSessionBaseService;
         this.teeWorkflowConfig = teeWorkflowConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
     }
@@ -76,18 +76,18 @@ public class SconeSessionMakerService {
      * @param request session request details
      * @return session config in yaml string format
      */
-    public CasSession generateSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException {
-        EnclaveEnvironments enclaveEnvironments = teeSecretsService.getSecretsTokens(request);
+    public CasSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
+        SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
 
-        CasSessionEnclave preEnclave = toCasSessionEnclave(enclaveEnvironments.getPreCompute());
-        preEnclave.setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
-        CasSessionEnclave appEnclave = toCasSessionEnclave(enclaveEnvironments.getAppCompute());
-        appEnclave.setCommand(request.getTaskDescription().getAppCommand());
-        CasSessionEnclave postEnclave = toCasSessionEnclave(enclaveEnvironments.getPostCompute());
-        postEnclave.setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
+        CasEnclave casPreEnclave = toCasSessionEnclave(baseSession.getPreCompute());
+        casPreEnclave.setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
+        CasEnclave casAppEnclave = toCasSessionEnclave(baseSession.getAppCompute());
+        casAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
+        CasEnclave casPostEnclave = toCasSessionEnclave(baseSession.getPostCompute());
+        casPostEnclave.setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
 
-        addJavaEnvVars(preEnclave);
-        addJavaEnvVars(postEnclave);
+        addJavaEnvVars(casPreEnclave);
+        addJavaEnvVars(casPostEnclave);
 
         List<String> policy = Arrays.asList("CREATOR");
 
@@ -95,7 +95,7 @@ public class SconeSessionMakerService {
                 .name(request.getSessionId())
                 .version("0.3")
                 .accessPolicy(new AccessPolicy(policy, policy))
-                .services(Arrays.asList(preEnclave, appEnclave, postEnclave))
+                .services(Arrays.asList(casPreEnclave, casAppEnclave, casPostEnclave))
                 .security(new Security(attestationSecurityConfig.getToleratedInsecureOptions(),
                         attestationSecurityConfig.getIgnoredSgxAdvisories()))
                 .build();
@@ -110,16 +110,16 @@ public class SconeSessionMakerService {
                 new Volumes(postComputeTmpVolume.getName())));
 
         casSession.setImages(Arrays.asList(
-                new CasSession.Image(preEnclave.getImageName(), Arrays.asList(iexecInVolume)),
-                new CasSession.Image(appEnclave.getImageName(), Arrays.asList(iexecInVolume, iexecOutVolume)),
-                new CasSession.Image(postEnclave.getImageName(), Arrays.asList(iexecOutVolume, postComputeTmpVolume))
+                new CasSession.Image(casPreEnclave.getImageName(), Arrays.asList(iexecInVolume)),
+                new CasSession.Image(casAppEnclave.getImageName(), Arrays.asList(iexecInVolume, iexecOutVolume)),
+                new CasSession.Image(casPostEnclave.getImageName(), Arrays.asList(iexecOutVolume, postComputeTmpVolume))
 
         ));
 
         return casSession;
     }
 
-    private void addJavaEnvVars(CasSessionEnclave casSessionEnclave) {
+    private void addJavaEnvVars(CasEnclave casSessionEnclave) {
         Map<String, String> additionalJavaEnv = Map.of("LD_LIBRARY_PATH",
                 "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib",
                 "JAVA_TOOL_OPTIONS", "-Xmx256m");
@@ -129,14 +129,14 @@ public class SconeSessionMakerService {
         casSessionEnclave.setEnvironment(newEnvironment);
     }
 
-    private CasSessionEnclave toCasSessionEnclave(EnclaveEnvironment enclaveEnvironment) {
-        return CasSessionEnclave.builder()
-                .name(enclaveEnvironment.getName())
-                .imageName(enclaveEnvironment.getName() + "-image")
-                .mrenclaves(Arrays.asList(enclaveEnvironment.getMrenclave()))
+    private CasEnclave toCasSessionEnclave(SecretEnclaveBase enclaveBase) {
+        return CasEnclave.builder()
+                .name(enclaveBase.getName())
+                .imageName(enclaveBase.getName() + "-image")
+                .mrenclaves(Arrays.asList(enclaveBase.getMrenclave()))
                 .pwd("/")
                 // TODO .command(command)
-                .environment(enclaveEnvironment.getEnvironment())
+                .environment(enclaveBase.getEnvironment())
                 .build();
     }
 

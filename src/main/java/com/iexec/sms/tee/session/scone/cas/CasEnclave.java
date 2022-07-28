@@ -31,7 +31,7 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CasSessionEnclave {
+public class CasEnclave {
 
     @JsonProperty("name")
     private String name;

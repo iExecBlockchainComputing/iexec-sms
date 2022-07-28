@@ -25,6 +25,6 @@ public interface TeeSessionHandler {
      * @return String secret provisioning service url
      * @throws TeeSessionGenerationException
      */
-    String buildAndPostSession(TeeSecretsSessionRequest request) throws TeeSessionGenerationException;
+    String buildAndPostSession(TeeSessionRequest request) throws TeeSessionGenerationException;
 
 }

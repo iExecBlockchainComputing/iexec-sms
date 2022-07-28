@@ -19,8 +19,8 @@ package com.iexec.sms.tee.session.gramine;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.SpsApiClient;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
@@ -61,7 +61,7 @@ public class GramineSessionHandlerServiceTests {
 
     @Test
     void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
-        TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
+        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SpsSession spsSession = mock(SpsSession.class);
@@ -81,7 +81,7 @@ public class GramineSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSinceBuildSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
+        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TeeSessionGenerationException teeSessionGenerationException = new TeeSessionGenerationException(
                 TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED, "some error");
         when(sessionService.generateSession(request)).thenThrow(teeSessionGenerationException);
@@ -93,7 +93,7 @@ public class GramineSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSincePostSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSecretsSessionRequest request = mock(TeeSecretsSessionRequest.class);
+        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SpsSession spsSession = mock(SpsSession.class);

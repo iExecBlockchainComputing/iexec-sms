@@ -18,10 +18,10 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.tee.session.EnclaveEnvironment;
-import com.iexec.sms.tee.session.EnclaveEnvironments;
-import com.iexec.sms.tee.session.TeeSecretsService;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
+import com.iexec.sms.tee.session.base.SecretEnclaveBase;
+import com.iexec.sms.tee.session.base.SecretSessionBase;
+import com.iexec.sms.tee.session.base.SecretSessionBaseService;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasSession;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ class SconeSessionMakerServiceTests {
     @Mock
     private TeeWorkflowConfiguration teeWorkflowConfig;
     @Mock
-    private TeeSecretsService teeSecretsService;
+    private SecretSessionBaseService teeSecretsService;
     @Mock
     private SconeSessionSecurityConfig attestationSecurityConfig;
 
@@ -66,14 +66,14 @@ class SconeSessionMakerServiceTests {
     @Test
     void shouldGetSessionYml() throws Exception {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
-        TeeSecretsSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
+        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
         when(teeWorkflowConfig.getPreComputeEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
         when(teeWorkflowConfig.getPostComputeEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
 
-        EnclaveEnvironment preCompute = EnclaveEnvironment.builder()
+        SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")
                 .mrenclave("mrEnclave1")
                 .environment(Map.ofEntries( // Map of until 10
@@ -91,7 +91,7 @@ class SconeSessionMakerServiceTests {
                         Map.entry("IEXEC_INPUT_FILE_URL_1", "http://host/file1"),
                         Map.entry("IEXEC_INPUT_FILE_URL_2", "http://host/file2")))
                 .build();
-        EnclaveEnvironment appCompute = EnclaveEnvironment.builder()
+        SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
                 .name("app")
                 .mrenclave(APP_FINGERPRINT)
                 .environment(Map.ofEntries(
@@ -108,7 +108,7 @@ class SconeSessionMakerServiceTests {
                         Map.entry("IEXEC_INPUT_FILE_NAME_1", "file1"),
                         Map.entry("IEXEC_INPUT_FILE_NAME_2", "file2")))
                 .build();
-        EnclaveEnvironment postCompute = EnclaveEnvironment.builder()
+        SecretEnclaveBase postCompute = SecretEnclaveBase.builder()
                 .name("post-compute")
                 .mrenclave("mrEnclave3")
                 .environment(Map.ofEntries(
@@ -124,7 +124,7 @@ class SconeSessionMakerServiceTests {
                 .build();
 
         when(teeSecretsService.getSecretsTokens(request))
-                .thenReturn(EnclaveEnvironments.builder()
+                .thenReturn(SecretSessionBase.builder()
                         .preCompute(preCompute)
                         .appCompute(appCompute)
                         .postCompute(postCompute)
@@ -136,7 +136,7 @@ class SconeSessionMakerServiceTests {
                 .thenReturn(List.of("INTEL-SA-00161", "INTEL-SA-00289"));
 
         when(teeSecretsService.getSecretsTokens(request))
-                .thenReturn(EnclaveEnvironments.builder()
+                .thenReturn(SecretSessionBase.builder()
                         .preCompute(preCompute)
                         .appCompute(appCompute)
                         .postCompute(postCompute)

@@ -18,9 +18,9 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
-import com.iexec.sms.tee.session.generic.TeeSecretsSessionRequest;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
      * @throws TeeSessionGenerationException
      */
     @Override
-    public String buildAndPostSession(TeeSecretsSessionRequest request)
+    public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         SpsSession session = sessionService.generateSession(request);
         if (session != null
