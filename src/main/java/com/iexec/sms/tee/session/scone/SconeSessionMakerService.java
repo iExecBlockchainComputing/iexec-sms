@@ -79,11 +79,11 @@ public class SconeSessionMakerService {
     public CasSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
         SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
 
-        CasEnclave casPreEnclave = toCasSessionEnclave(baseSession.getPreCompute());
+        CasEnclave casPreEnclave = toCasEnclave(baseSession.getPreCompute());
         casPreEnclave.setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
-        CasEnclave casAppEnclave = toCasSessionEnclave(baseSession.getAppCompute());
+        CasEnclave casAppEnclave = toCasEnclave(baseSession.getAppCompute());
         casAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
-        CasEnclave casPostEnclave = toCasSessionEnclave(baseSession.getPostCompute());
+        CasEnclave casPostEnclave = toCasEnclave(baseSession.getPostCompute());
         casPostEnclave.setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
 
         addJavaEnvVars(casPreEnclave);
@@ -129,7 +129,7 @@ public class SconeSessionMakerService {
         casSessionEnclave.setEnvironment(newEnvironment);
     }
 
-    private CasEnclave toCasSessionEnclave(SecretEnclaveBase enclaveBase) {
+    private CasEnclave toCasEnclave(SecretEnclaveBase enclaveBase) {
         return CasEnclave.builder()
                 .name(enclaveBase.getName())
                 .imageName(enclaveBase.getName() + "-image")

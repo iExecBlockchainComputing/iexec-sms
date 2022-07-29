@@ -70,7 +70,7 @@ public class GramineSessionHandlerServiceTests {
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
         SpsApiClient spsClient = mock(SpsApiClient.class);
         when(spsClient.postSession(spsSession)).thenReturn("sessionId");
-        when(spsConfiguration.getInstanceWithBasicAuth()).thenReturn(spsClient);
+        when(spsConfiguration.getInstance()).thenReturn(spsClient);
 
         assertEquals(SPS_URL, sessionHandlerService.buildAndPostSession(request));
         // Testing output here since it reflects a business feature (ability to catch a
@@ -101,7 +101,7 @@ public class GramineSessionHandlerServiceTests {
         when(sessionService.generateSession(request)).thenReturn(spsSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
         SpsApiClient spsClient = mock(SpsApiClient.class);
-        when(spsConfiguration.getInstanceWithBasicAuth()).thenReturn(spsClient);
+        when(spsConfiguration.getInstance()).thenReturn(spsClient);
         FeignException apiClientException = mock(FeignException.class);
         when(spsClient.postSession(spsSession)).thenThrow(apiClientException);
 

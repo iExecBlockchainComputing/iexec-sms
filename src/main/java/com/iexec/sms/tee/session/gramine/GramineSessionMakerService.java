@@ -22,13 +22,11 @@ import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.SpsEnclave;
-import com.iexec.sms.tee.session.gramine.sps.SpsEnclave.SpsEnclaveBuilder;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsSession.SpsSessionBuilder;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -52,31 +50,30 @@ public class GramineSessionMakerService {
      */
     public SpsSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
         SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
-        SpsSessionBuilder spsSession = SpsSession.builder();
-        spsSession.session(request.getSessionId());
-        SpsEnclave spsAppEnclave = toSpsSessionEnclave(baseSession.getAppCompute());
+        SpsSessionBuilder spsSession = SpsSession.builder()
+                .session(request.getSessionId());
+        SpsEnclave spsAppEnclave = toSpsEnclave(baseSession.getAppCompute());
         spsAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
-        SpsEnclave spsPostEnclave = toSpsSessionEnclave(baseSession.getPostCompute());
-        spsPostEnclave.setMrenclave(teeWorkflowConfiguration.getPostComputeFingerprint());
+        SpsEnclave spsPostEnclave = toSpsEnclave(baseSession.getPostCompute());
         spsPostEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
 
         // TODO: Remove useless volumes when SPS is ready
         spsAppEnclave.setVolumes(List.of());
         spsPostEnclave.setVolumes(List.of());
 
-        spsSession.enclaves(Arrays.asList(
+        return spsSession.enclaves(List.of(
                 // No pre-compute for now
                 spsAppEnclave,
-                spsPostEnclave));
-        return spsSession.build();
+                spsPostEnclave))
+                .build();
     }
 
-    private SpsEnclave toSpsSessionEnclave(SecretEnclaveBase enclaveBase) {
-        SpsEnclaveBuilder spsEnclave = SpsEnclave.builder();
-        spsEnclave.name(enclaveBase.getName());
-        spsEnclave.mrenclave(enclaveBase.getMrenclave());
-        spsEnclave.environment(enclaveBase.getEnvironment());
-        return spsEnclave.build();
+    private SpsEnclave toSpsEnclave(SecretEnclaveBase enclaveBase) {
+        return SpsEnclave.builder()
+                .name(enclaveBase.getName())
+                .mrenclave(enclaveBase.getMrenclave())
+                .environment(enclaveBase.getEnvironment())
+                .build();
     }
 
 }

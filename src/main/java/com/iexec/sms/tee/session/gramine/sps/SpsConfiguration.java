@@ -53,7 +53,7 @@ public class SpsConfiguration {
         return "https://" + enclaveHost + ":" + enclavePort;
     }
 
-    public SpsApiClient getInstanceWithBasicAuth() {
+    public SpsApiClient getInstance() {
         if (spsApiClient == null) {
             spsApiClient = FeignBuilder.createBuilderWithBasicAuth(Level.FULL,
                     webLogin, webPassword)

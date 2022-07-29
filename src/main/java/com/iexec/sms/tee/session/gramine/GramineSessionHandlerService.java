@@ -59,7 +59,7 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
         }
 
         try {
-            spsConfiguration.getInstanceWithBasicAuth().postSession(session);
+            spsConfiguration.getInstance().postSession(session);
             return spsConfiguration.getEnclaveUrl();
         } catch (Exception e) {
             throw new TeeSessionGenerationException(

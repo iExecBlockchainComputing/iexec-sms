@@ -76,7 +76,7 @@ class SconeSessionMakerServiceTests {
         SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")
                 .mrenclave("mrEnclave1")
-                .environment(Map.ofEntries( // Map of until 10
+                .environment(Map.ofEntries(
                         // Keeping these test env vars for now
                         // (could be less but keeping same resource file for now)
                         Map.entry("IEXEC_TASK_ID", "taskId"),
