@@ -40,10 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
@@ -139,6 +136,8 @@ public class SecretSessionBaseService {
         tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
+
+        List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
             String datasetKey = web3SecretService
                     .getSecret(taskDescription.getDatasetAddress(), true)
@@ -147,22 +146,23 @@ public class SecretSessionBaseService {
                             "Empty dataset secret - taskId: " + taskId))
                     .getTrimmedValue();
             tokens.put(IEXEC_DATASET_KEY, datasetKey);
+            trustedEnv.addAll(List.of(
+                    IexecEnvUtils.IEXEC_DATASET_URL,
+                    IexecEnvUtils.IEXEC_DATASET_FILENAME,
+                    IexecEnvUtils.IEXEC_DATASET_CHECKSUM));
         } else {
             log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
-        List<String> trustedKeys = List.of(
+        trustedEnv.addAll(List.of(
                 IexecEnvUtils.IEXEC_TASK_ID,
-                IexecEnvUtils.IEXEC_DATASET_URL,
-                IexecEnvUtils.IEXEC_DATASET_FILENAME,
-                IexecEnvUtils.IEXEC_DATASET_CHECKSUM,
                 IexecEnvUtils.IEXEC_INPUT_FILES_FOLDER,
-                IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER);
+                IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER));
         Map<String, String> trustedEnvVars = IexecEnvUtils.getAllIexecEnv(taskDescription)
                 .entrySet()
                 .stream()
                 .filter(e ->
                 // extract trusted en vars to include
-                trustedKeys.contains(e.getKey())
+                trustedEnv.contains(e.getKey())
                         // extract <IEXEC_INPUT_FILE_URL_N, url>
                         || e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -233,7 +233,10 @@ public class SecretSessionBaseService {
                     secretIndex)
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
-            tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret);
+            if (!StringUtils.isEmpty(appDeveloperSecret)) {
+                tokens.put("IEXEC_APP_DEVELOPER_SECRET", appDeveloperSecret);
+                tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret);
+            }
         }
 
         if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
@@ -273,14 +276,14 @@ public class SecretSessionBaseService {
      */
     public SecretEnclaveBase getPostComputeTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
-        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
-        enclaveBase.name("post-compute");
+        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
+                .name("post-compute")
+                .mrenclave(teeWorkflowConfig.getPostComputeFingerprint());
         Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
         }
-        String teePostComputeFingerprint = teeWorkflowConfig.getPostComputeFingerprint();
         // ###############################################################################
         // TODO: activate this when user specific post-compute is properly
         // supported. See
@@ -291,7 +294,6 @@ public class SecretSessionBaseService {
         // teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
         // //add entrypoint too
         // }
-        tokens.put(POST_COMPUTE_MRENCLAVE, teePostComputeFingerprint);
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         tokens.putAll(encryptionTokens);
