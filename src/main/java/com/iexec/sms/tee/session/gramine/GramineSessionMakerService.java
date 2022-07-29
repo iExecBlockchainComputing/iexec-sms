@@ -21,9 +21,9 @@ import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.session.gramine.sps.SpsEnclave;
-import com.iexec.sms.tee.session.gramine.sps.SpsSession;
-import com.iexec.sms.tee.session.gramine.sps.SpsSession.SpsSessionBuilder;
+import com.iexec.sms.tee.session.gramine.sps.GramineEnclave;
+import com.iexec.sms.tee.session.gramine.sps.GramineSession;
+import com.iexec.sms.tee.session.gramine.sps.GramineSession.GramineSessionBuilder;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import org.springframework.stereotype.Service;
 
@@ -48,28 +48,28 @@ public class GramineSessionMakerService {
      * @param request session request details
      * @return session config
      */
-    public SpsSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
+    public GramineSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
         SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
-        SpsSessionBuilder spsSession = SpsSession.builder()
+        GramineSessionBuilder gramineSession = GramineSession.builder()
                 .session(request.getSessionId());
-        SpsEnclave spsAppEnclave = toSpsEnclave(baseSession.getAppCompute());
-        spsAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
-        SpsEnclave spsPostEnclave = toSpsEnclave(baseSession.getPostCompute());
-        spsPostEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
+        GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
+        gramineAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
+        GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
+        graminePostEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
 
         // TODO: Remove useless volumes when SPS is ready
-        spsAppEnclave.setVolumes(List.of());
-        spsPostEnclave.setVolumes(List.of());
+        gramineAppEnclave.setVolumes(List.of());
+        graminePostEnclave.setVolumes(List.of());
 
-        return spsSession.enclaves(List.of(
+        return gramineSession.enclaves(List.of(
                 // No pre-compute for now
-                spsAppEnclave,
-                spsPostEnclave))
+                gramineAppEnclave,
+                graminePostEnclave))
                 .build();
     }
 
-    private SpsEnclave toSpsEnclave(SecretEnclaveBase enclaveBase) {
-        return SpsEnclave.builder()
+    private GramineEnclave toGramineEnclave(SecretEnclaveBase enclaveBase) {
+        return GramineEnclave.builder()
                 .name(enclaveBase.getName())
                 .mrenclave(enclaveBase.getMrenclave())
                 .environment(enclaveBase.getEnvironment())

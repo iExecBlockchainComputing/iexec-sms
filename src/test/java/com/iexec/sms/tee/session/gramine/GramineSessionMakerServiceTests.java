@@ -6,7 +6,7 @@ import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.session.gramine.sps.SpsSession;
+import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,7 +85,7 @@ class GramineSessionMakerServiceTests {
                         .postCompute(postCompute)
                         .build());
 
-        SpsSession actualSpsSession = gramineSessionService.generateSession(request);
+        GramineSession actualSpsSession = gramineSessionService.generateSession(request);
         log.info(actualSpsSession.toString());
         Map<String, Object> actualJsonMap = new Yaml().load(actualSpsSession.toString());
         String expectedJsonString = FileHelper.readFile("src/test/resources/gramine-tee-session.json");

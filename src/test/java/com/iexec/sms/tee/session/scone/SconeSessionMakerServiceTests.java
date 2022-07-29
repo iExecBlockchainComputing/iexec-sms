@@ -22,7 +22,7 @@ import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.session.scone.cas.CasSession;
+import com.iexec.sms.tee.session.scone.cas.SconeSession;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -142,7 +142,7 @@ class SconeSessionMakerServiceTests {
                         .postCompute(postCompute)
                         .build());
 
-        CasSession actualCasSession = palaemonSessionService.generateSession(request);
+        SconeSession actualCasSession = palaemonSessionService.generateSession(request);
         System.out.println(actualCasSession.toString());
         Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
         String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");

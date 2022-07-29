@@ -21,6 +21,6 @@ import feign.RequestLine;
 public interface SpsApiClient {
 
     @RequestLine("POST /api/session")
-    String postSession(SpsSession spsSession);
+    String postSession(GramineSession spsSession);
 
 }

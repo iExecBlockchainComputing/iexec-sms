@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.gramine.sps;
+package com.iexec.sms.tee.session.scone.cas;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +23,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Builder
@@ -30,19 +31,27 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SpsSession {
+public class SconeEnclave {
 
-  @JsonProperty("session")
-  private String session;
-  @JsonProperty("enclaves")
-  private List<SpsEnclave> enclaves;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("image_name")
+    private String imageName;
+    @JsonProperty("mrenclaves")
+    private List<String> mrenclaves;
+    @JsonProperty("pwd")
+    private String pwd;
+    @JsonProperty("command")
+    private String command;
+    @JsonProperty("environment")
+    private Map<String, Object> environment;
 
   @Override
   public String toString() {
     try {
       return new ObjectMapper().writeValueAsString(this);
     } catch (JsonProcessingException e) {
-      log.error("Failed to write SPS session as string [session:{}]", session, e);
+      log.error("Failed to write CAS session as string [session:{}]", name, e);
       return "";
     }
   }

@@ -30,7 +30,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CasSession {
+public class SconeSession {
 
     @JsonProperty("name")
     private String name;
@@ -39,7 +39,7 @@ public class CasSession {
     @JsonProperty("access_policy")
     private AccessPolicy accessPolicy;
     @JsonProperty("services")
-    private List<CasEnclave> services;
+    private List<SconeEnclave> services;
     @JsonProperty("images")
     private List<Image> images;
     @JsonProperty("volumes")

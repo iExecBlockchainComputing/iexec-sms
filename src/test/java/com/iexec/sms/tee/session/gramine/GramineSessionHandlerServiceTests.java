@@ -21,9 +21,9 @@ import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsApiClient;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
-import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +64,7 @@ public class GramineSessionHandlerServiceTests {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        SpsSession spsSession = mock(SpsSession.class);
+        GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(spsSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
@@ -96,7 +96,7 @@ public class GramineSessionHandlerServiceTests {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        SpsSession spsSession = mock(SpsSession.class);
+        GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(spsSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);

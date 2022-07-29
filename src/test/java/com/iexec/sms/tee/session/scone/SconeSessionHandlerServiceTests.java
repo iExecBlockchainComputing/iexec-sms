@@ -7,7 +7,7 @@ import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
-import com.iexec.sms.tee.session.scone.cas.CasSession;
+import com.iexec.sms.tee.session.scone.cas.SconeSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +50,7 @@ public class SconeSessionHandlerServiceTests {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        CasSession casSession = mock(CasSession.class);
+        SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(casSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
@@ -80,7 +80,7 @@ public class SconeSessionHandlerServiceTests {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
-        CasSession casSession = mock(CasSession.class);
+        SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
         when(apiClient.postSession(casSession.toString())).thenReturn(ResponseEntity.internalServerError().build());

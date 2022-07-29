@@ -27,7 +27,7 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SpsEnclave {
+public class GramineEnclave {
 
     @JsonProperty("name")
     private String name;

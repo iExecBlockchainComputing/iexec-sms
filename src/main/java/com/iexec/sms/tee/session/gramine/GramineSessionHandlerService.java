@@ -21,8 +21,8 @@ import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
-import com.iexec.sms.tee.session.gramine.sps.SpsSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +51,7 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
     @Override
     public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
-        SpsSession session = sessionService.generateSession(request);
+        GramineSession session = sessionService.generateSession(request);
         if (session != null
                 && teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
             log.info("Session content [taskId:{}]\n{}",
