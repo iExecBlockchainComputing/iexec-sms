@@ -24,6 +24,7 @@ import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.worker.result.ResultUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.secret.ReservedSecretKeyName;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -58,7 +59,6 @@ import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
-import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 import static com.iexec.sms.tee.session.palaemon.PalaemonSessionService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -431,13 +431,13 @@ class PalaemonSessionServiceTests {
                 .thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
-                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true))
                 .thenReturn(Optional.of(publicKeySecret));
         Secret storageSecret = new Secret("address", STORAGE_TOKEN);
         when(web2SecretsService.getSecret(
                 requesterAddress,
-                IEXEC_RESULT_IEXEC_IPFS_TOKEN,
+                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN,
                 true))
                 .thenReturn(Optional.of(storageSecret));
         
@@ -509,7 +509,8 @@ class PalaemonSessionServiceTests {
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
         final String secretValue = "Secret value";
-        when(web2SecretsService.getSecret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
+        when(web2SecretsService
+                .getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
                 .thenReturn(Optional.of(new Secret(null, secretValue)));
 
         final Map<String, String> tokens = assertDoesNotThrow(
@@ -533,7 +534,8 @@ class PalaemonSessionServiceTests {
         taskDescription.setResultStorageProvider(DROPBOX_RESULT_STORAGE_PROVIDER);
 
         final String secretValue = "Secret value";
-        when(web2SecretsService.getSecret(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN, true))
+        when(web2SecretsService
+                .getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN, true))
                 .thenReturn(Optional.of(new Secret(null, secretValue)));
 
         final Map<String, String> tokens = assertDoesNotThrow(
@@ -555,7 +557,8 @@ class PalaemonSessionServiceTests {
         final PalaemonSessionRequest sessionRequest = createSessionRequest(createTaskDescription());
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
-        when(web2SecretsService.getSecret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
+        when(web2SecretsService
+                .getSecret(taskDescription.getRequester(), ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
                 .thenReturn(Optional.empty());
 
         final TeeSessionGenerationException exception = assertThrows(
@@ -682,7 +685,7 @@ class PalaemonSessionServiceTests {
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
-                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true))
                 .thenReturn(Optional.of(publicKeySecret));
 
@@ -717,7 +720,7 @@ class PalaemonSessionServiceTests {
 
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
-                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true))
                 .thenReturn(Optional.empty());
 
