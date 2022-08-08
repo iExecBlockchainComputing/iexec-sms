@@ -41,7 +41,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
@@ -157,7 +156,7 @@ public class SecretSessionBaseService {
                 IexecEnvUtils.IEXEC_TASK_ID,
                 IexecEnvUtils.IEXEC_INPUT_FILES_FOLDER,
                 IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER));
-        Map<String, String> trustedEnvVars = IexecEnvUtils.getAllIexecEnv(taskDescription)
+        IexecEnvUtils.getAllIexecEnv(taskDescription)
                 .entrySet()
                 .stream()
                 .filter(e ->
@@ -165,8 +164,7 @@ public class SecretSessionBaseService {
                 trustedEnv.contains(e.getKey())
                         // extract <IEXEC_INPUT_FILE_URL_N, url>
                         || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        tokens.putAll(trustedEnvVars);
+                .forEach(e -> tokens.put(e.getKey(), e.getValue()));
         return enclaveBase
                 .environment(tokens)
                 .build();
@@ -203,12 +201,11 @@ public class SecretSessionBaseService {
         enclaveBase.mrenclave(enclaveConfig.getFingerprint());
         // extract <IEXEC_INPUT_FILE_NAME_N, name>
         // this map will be empty (not null) if no input file is found
-        Map<String, String> inputFileNames = IexecEnvUtils.getComputeStageEnvMap(taskDescription)
+        IexecEnvUtils.getComputeStageEnvMap(taskDescription)
                 .entrySet()
                 .stream()
                 .filter(e -> e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        tokens.putAll(inputFileNames);
+                .forEach(e -> tokens.put(e.getKey(), e.getValue()));
 
         final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);
         tokens.putAll(computeSecrets);
