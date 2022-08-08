@@ -314,7 +314,7 @@ class SecretSessionBaseServiceTests {
         TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
                 () -> teeSecretsService.getAppTokens(request));
         Assertions.assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
-        Assertions.assertEquals("Task description must no be null", exception.getMessage());
+        Assertions.assertEquals("Task description must not be null", exception.getMessage());
     }
 
     @Test
@@ -328,7 +328,7 @@ class SecretSessionBaseServiceTests {
         TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
                 () -> teeSecretsService.getAppTokens(request));
         Assertions.assertEquals(TeeSessionGenerationError.APP_COMPUTE_NO_ENCLAVE_CONFIG, exception.getError());
-        Assertions.assertEquals("Enclave configuration must no be null", exception.getMessage());
+        Assertions.assertEquals("Enclave configuration must not be null", exception.getMessage());
     }
 
     @Test

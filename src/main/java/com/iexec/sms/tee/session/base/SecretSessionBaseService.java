@@ -164,7 +164,7 @@ public class SecretSessionBaseService {
                 // extract trusted en vars to include
                 trustedEnv.contains(e.getKey())
                         // extract <IEXEC_INPUT_FILE_URL_N, url>
-                        || e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
+                        || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         tokens.putAll(trustedEnvVars);
         return enclaveBase
@@ -183,7 +183,7 @@ public class SecretSessionBaseService {
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must no be null");
+                    "Task description must not be null");
         }
 
         Map<String, Object> tokens = new HashMap<>();
@@ -191,7 +191,7 @@ public class SecretSessionBaseService {
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
-                    "Enclave configuration must no be null");
+                    "Enclave configuration must not be null");
         }
         if (!enclaveConfig.getValidator().isValid()) {
             throw new TeeSessionGenerationException(
@@ -206,7 +206,7 @@ public class SecretSessionBaseService {
         Map<String, String> inputFileNames = IexecEnvUtils.getComputeStageEnvMap(taskDescription)
                 .entrySet()
                 .stream()
-                .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
+                .filter(e -> e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         tokens.putAll(inputFileNames);
 
