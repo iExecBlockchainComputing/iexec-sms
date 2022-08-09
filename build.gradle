@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '5.3.0'
@@ -27,17 +25,17 @@ allprojects {
         mavenLocal()
         mavenCentral()
         maven {
-            url "https://docker-regis-adm.iex.ec/repository/maven-public/"
+            url 'https://docker-regis-adm.iex.ec/repository/maven-public/'
             credentials {
                 username nexusUser
                 password nexusPassword
             }
         }
         maven {
-            url "https://nexus.intra.iex.ec/repository/maven-public/"
+            url 'https://nexus.intra.iex.ec/repository/maven-public/'
         }
         maven {
-            url "https://jitpack.io"
+            url 'https://jitpack.io'
         }
     }
 }
@@ -59,10 +57,10 @@ dependencies {
     implementation project(':iexec-sms-library')
 
     // spring
-    implementation "org.springframework.boot:spring-boot-starter-web"
-    implementation "org.springframework.cloud:spring-cloud-starter-openfeign"
-    implementation "org.springframework.retry:spring-retry"
-    implementation "org.springframework.cloud:spring-cloud-starter-openfeign"
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     // H2
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -97,6 +95,11 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter:1.16.0'
     testImplementation 'org.testcontainers:testcontainers:1.16.0'
     testImplementation 'org.testcontainers:mongodb:1.16.0'
+
+    // feign
+    implementation "io.github.openfeign:feign-core:$openFeignVersion"
+    implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
+    implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
 }
 
 sourceSets {
@@ -128,7 +131,7 @@ task itest(type:Test) {
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = '0.8.7'
 }
 // sonarqube code coverage requires jacoco XML report
 jacocoTestReport {
@@ -165,7 +168,7 @@ task buildImage(type: Exec) {
     group       'Build'
     description 'Builds an OCI image from a Dockerfile.'
     dependsOn   bootJar
-    commandLine ("sh", "-c", "docker build -f build/resources/main/Dockerfile.untrusted --build-arg jar=$jarPathForOCI"
+    commandLine ('sh', '-c', "docker build -f build/resources/main/Dockerfile.untrusted --build-arg jar=$jarPathForOCI"
             + " -t $ociImageName:$gitShortCommit . && docker tag $ociImageName:$gitShortCommit $ociImageName:dev")
     standardOutput = new ByteArrayOutputStream()
 
@@ -179,7 +182,7 @@ task buildTrustedImage(type: Exec) {
     group       'Build'
     description 'Builds a trusted OCI image from a trusted Dockerfile.'
     dependsOn   bootJar
-    commandLine ("sh", "-c", "docker image build -f build/resources/main/Dockerfile --build-arg jar=$jarPathForOCI"
+    commandLine ('sh', '-c', "docker image build -f build/resources/main/Dockerfile --build-arg jar=$jarPathForOCI"
             + " -t $ociImageName:$gitShortCommit-trusted --no-cache . && docker tag $ociImageName:$gitShortCommit-trusted $ociImageName:dev-trusted")
 }
 
@@ -193,19 +196,19 @@ task templatePalaemon {
     * We need to extract the 2nd occurence 'abcdef'
     */
     ext.extractValueBetweenTags = { s, tag ->
-        String beginTag = "<" + tag + ">"
-        String endTag = "</" + tag + ">"
+        String beginTag = '<' + tag + '>'
+        String endTag = '</' + tag + '>'
         return s.substring(s.indexOf(beginTag, s.indexOf(beginTag) + 2) + beginTag.length(), s.indexOf(endTag, s.indexOf(endTag) + 2))
     }
 
     doFirst {
         String logs = buildImage.output()
-        smsMrEnclave = extractValueBetweenTags(logs, "MRENCLAVE")
-        smsFspfKey = extractValueBetweenTags(logs, "FSPF_KEY")
-        smsFspfTag = extractValueBetweenTags(logs, "FSPF_TAG")
+        smsMrEnclave = extractValueBetweenTags(logs, 'MRENCLAVE')
+        smsFspfKey = extractValueBetweenTags(logs, 'FSPF_KEY')
+        smsFspfTag = extractValueBetweenTags(logs, 'FSPF_TAG')
     }
 
-    doLast{
+    doLast {
         copy {
             // delete old one
             delete 'src/main/resources/boot/sms-palaemon-conf.yml'
@@ -223,7 +226,6 @@ task templatePalaemon {
                     IEXEC_SMS_FSPF_KEY: smsFspfKey,
                     IEXEC_SMS_FSPF_TAG: smsFspfTag,
             ])
-
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.palaemon;
+package com.iexec.sms.tee.session.base;
 
 import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
-import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
+import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -30,29 +30,19 @@ import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
-import com.iexec.sms.tee.session.attestation.AttestationSecurityConfig;
+import com.iexec.sms.tee.session.base.SecretEnclaveBase.SecretEnclaveBaseBuilder;
+import com.iexec.sms.tee.session.base.SecretSessionBase.SecretSessionBaseBuilder;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.FileNotFoundException;
-import java.io.StringWriter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
-import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
 import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
@@ -61,120 +51,71 @@ import static com.iexec.sms.api.TeeSessionGenerationError.*;
 
 @Slf4j
 @Service
-public class PalaemonSessionService {
+public class SecretSessionBaseService {
 
-    public static final String EMPTY_YML_VALUE = "";
+    static final String EMPTY_YML_VALUE = "";
 
-    // Internal values required for setting up a palaemon session
-    // Generic
-    static final String SESSION_ID = "SESSION_ID";
-    static final String INPUT_FILE_URLS = "INPUT_FILE_URLS";
-    static final String INPUT_FILE_NAMES = "INPUT_FILE_NAMES";
-    static final String TOLERATED_INSECURE_OPTIONS = "TOLERATED_INSECURE_OPTIONS";
-    static final String IGNORED_SGX_ADVISORIES = "IGNORED_SGX_ADVISORIES";
+    public static final String INPUT_FILE_URLS = "INPUT_FILE_URLS";
+    public static final String INPUT_FILE_NAMES = "INPUT_FILE_NAMES";
     // PreCompute
     static final String IS_PRE_COMPUTE_REQUIRED = "IS_PRE_COMPUTE_REQUIRED";
-    static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
-    static final String PRE_COMPUTE_ENTRYPOINT = "PRE_COMPUTE_ENTRYPOINT";
+    public static final String PRE_COMPUTE_MRENCLAVE = "PRE_COMPUTE_MRENCLAVE";
+    static final String IEXEC_PRE_COMPUTE_OUT = "IEXEC_PRE_COMPUTE_OUT";
+    static final String IEXEC_DATASET_KEY = "IEXEC_DATASET_KEY";
     // Compute
-    static final String APP_MRENCLAVE = "APP_MRENCLAVE";
-    static final String APP_ARGS = "APP_ARGS";
+    public static final String APP_MRENCLAVE = "APP_MRENCLAVE";
     // PostCompute
-    static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
-    static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
-    // Secrets
-    static final String REQUESTER_SECRETS = "REQUESTER_SECRETS";
-    // Env
-    private static final String ENV_PROPERTY = "env";
+    public static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
 
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
     private final TeeWorkflowConfiguration teeWorkflowConfig;
-    private final AttestationSecurityConfig attestationSecurityConfig;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
-    @Value("${scone.cas.palaemon}")
-    private String palaemonTemplateFilePath;
-
-    public PalaemonSessionService(
+    public SecretSessionBaseService(
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
             TeeWorkflowConfiguration teeWorkflowConfig,
-            AttestationSecurityConfig attestationSecurityConfig,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
         this.teeWorkflowConfig = teeWorkflowConfig;
-        this.attestationSecurityConfig = attestationSecurityConfig;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
     }
 
-    @PostConstruct
-    void postConstruct() throws FileNotFoundException {
-        if (StringUtils.isEmpty(palaemonTemplateFilePath)) {
-            throw new IllegalArgumentException("Missing palaemon template filepath");
-        }
-        if (!FileHelper.exists(palaemonTemplateFilePath)) {
-            throw new FileNotFoundException("Missing palaemon template file");
-        }
-    }
-
     /**
-     * Collect tokens required for different compute stages (pre, in, post)
-     * and build the yaml config of the TEE session.
-     * <p>
-     * TODO: Read onchain available infos from enclave instead of copying
-     * public vars to palaemon.yml. It needs ssl call from enclave to eth
-     * node (only ethereum node address required inside palaemon.yml)
+     * Collect tokens required for different compute stages (pre, in, post).
      *
      * @param request session request details
-     * @return session config in yaml string format
+     * @return All common tokens for a session, whatever TEE technology is used
      */
-    public String getSessionYml(PalaemonSessionRequest request) throws TeeSessionGenerationException {
+    public SecretSessionBase getSecretsTokens(TeeSessionRequest request) throws TeeSessionGenerationException {
         if (request == null) {
             throw new TeeSessionGenerationException(
                     NO_SESSION_REQUEST,
-                    "Session request must not be null"
-            );
+                    "Session request must not be null");
         }
         if (request.getTaskDescription() == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must not be null"
-            );
+                    "Task description must not be null");
         }
-
+        SecretSessionBaseBuilder sessionBase = SecretSessionBase.builder();
         TaskDescription taskDescription = request.getTaskDescription();
-        Map<String, Object> palaemonTokens = new HashMap<>();
-        palaemonTokens.put(SESSION_ID, request.getSessionId());
         // pre-compute
         boolean isPreComputeRequired = taskDescription.containsDataset() ||
                 !taskDescription.getInputFiles().isEmpty();
-        palaemonTokens.put(IS_PRE_COMPUTE_REQUIRED, isPreComputeRequired);
         if (isPreComputeRequired) {
-            palaemonTokens.putAll(getPreComputePalaemonTokens(request));
+            sessionBase.preCompute(getPreComputeTokens(request));
         }
         // app
-        palaemonTokens.putAll(getAppPalaemonTokens(request));
+        sessionBase.appCompute(getAppTokens(request));
         // post compute
-        palaemonTokens.putAll(getPostComputePalaemonTokens(request));
-        // env variables
-        Map<String, String> env = IexecEnvUtils.getAllIexecEnv(taskDescription);
-        // Null value should be replaced by an empty string.
-        env.forEach((key, value) -> env.replace(key, null, EMPTY_YML_VALUE));
-        palaemonTokens.put(ENV_PROPERTY, env);
-        // Add attestation security config
-        String toleratedInsecureOptions =
-                String.join(",", attestationSecurityConfig.getToleratedInsecureOptions());
-        String ignoredSgxAdvisories =
-                String.join(",", attestationSecurityConfig.getIgnoredSgxAdvisories());
-        palaemonTokens.put(TOLERATED_INSECURE_OPTIONS, toleratedInsecureOptions);
-        palaemonTokens.put(IGNORED_SGX_ADVISORIES, ignoredSgxAdvisories);
-        // Merge template with tokens and return the result
-        return getFilledPalaemonTemplate(this.palaemonTemplateFilePath, palaemonTokens);
+        sessionBase.postCompute(getPostComputeTokens(request));
+        return sessionBase.build();
     }
 
     /**
@@ -183,51 +124,64 @@ public class PalaemonSessionService {
      * @return map of pre-compute tokens
      * @throws TeeSessionGenerationException if dataset secret is not found.
      */
-    Map<String, Object> getPreComputePalaemonTokens(PalaemonSessionRequest request)
+    public SecretEnclaveBase getPreComputeTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
+        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
+        enclaveBase.name("pre-compute");
+        Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
-        Map<String, Object> tokens = new HashMap<>();
-        String fingerprint = teeWorkflowConfig.getPreComputeFingerprint();
-        tokens.put(PRE_COMPUTE_MRENCLAVE, fingerprint);
-        String entrypoint = teeWorkflowConfig.getPreComputeEntrypoint();
-        tokens.put(PRE_COMPUTE_ENTRYPOINT, entrypoint);
+        enclaveBase.mrenclave(teeWorkflowConfig.getPreComputeFingerprint());
+        tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
+        // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
-        tokens.put(IEXEC_DATASET_KEY, EMPTY_YML_VALUE);
+
+        List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
             String datasetKey = web3SecretService
                     .getSecret(taskDescription.getDatasetAddress(), true)
                     .orElseThrow(() -> new TeeSessionGenerationException(
                             PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
-                            "Empty dataset secret - taskId: " + taskId
-                    ))
+                            "Empty dataset secret - taskId: " + taskId))
                     .getTrimmedValue();
             tokens.put(IEXEC_DATASET_KEY, datasetKey);
+            trustedEnv.addAll(List.of(
+                    IexecEnvUtils.IEXEC_DATASET_URL,
+                    IexecEnvUtils.IEXEC_DATASET_FILENAME,
+                    IexecEnvUtils.IEXEC_DATASET_CHECKSUM));
         } else {
             log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
-        // extract <IEXEC_INPUT_FILE_URL_N, url>
-        // this map will be empty (not null) if no input file is found
-        Map<String, String> inputFileUrls = IexecEnvUtils.getAllIexecEnv(taskDescription)
+        trustedEnv.addAll(List.of(
+                IexecEnvUtils.IEXEC_TASK_ID,
+                IexecEnvUtils.IEXEC_INPUT_FILES_FOLDER,
+                IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER));
+        IexecEnvUtils.getAllIexecEnv(taskDescription)
                 .entrySet()
                 .stream()
-                .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        tokens.put(INPUT_FILE_URLS, inputFileUrls);
-        return tokens;
+                .filter(e ->
+                // extract trusted en vars to include
+                trustedEnv.contains(e.getKey())
+                        // extract <IEXEC_INPUT_FILE_URL_N, url>
+                        || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
+                .forEach(e -> tokens.put(e.getKey(), e.getValue()));
+        return enclaveBase
+                .environment(tokens)
+                .build();
     }
 
     /*
      * Compute (App)
      */
-    Map<String, Object> getAppPalaemonTokens(PalaemonSessionRequest request)
-            throws TeeSessionGenerationException{
+    public SecretEnclaveBase getAppTokens(TeeSessionRequest request)
+            throws TeeSessionGenerationException {
+        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
+        enclaveBase.name("app");
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must no be null"
-            );
+                    "Task description must not be null");
         }
 
         Map<String, Object> tokens = new HashMap<>();
@@ -235,36 +189,31 @@ public class PalaemonSessionService {
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
-                    "Enclave configuration must no be null"
-            );
+                    "Enclave configuration must not be null");
         }
-        if (!enclaveConfig.getValidator().isValid()){
+        if (!enclaveConfig.getValidator().isValid()) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
                     "Invalid enclave configuration: " +
-                            enclaveConfig.getValidator().validate().toString()
-            );
+                            enclaveConfig.getValidator().validate().toString());
         }
 
-        tokens.put(APP_MRENCLAVE, enclaveConfig.getFingerprint());
-        String appArgs = enclaveConfig.getEntrypoint();
-        if (!StringUtils.isEmpty(taskDescription.getCmd())) {
-            appArgs = appArgs + " " + taskDescription.getCmd();
-        }
-        tokens.put(APP_ARGS, appArgs);
+        enclaveBase.mrenclave(enclaveConfig.getFingerprint());
         // extract <IEXEC_INPUT_FILE_NAME_N, name>
         // this map will be empty (not null) if no input file is found
-        Map<String, String> inputFileNames = IexecEnvUtils.getComputeStageEnvMap(taskDescription)
+        IexecEnvUtils.getComputeStageEnvMap(taskDescription)
                 .entrySet()
                 .stream()
-                .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        tokens.put(INPUT_FILE_NAMES, inputFileNames);
+                .filter(e -> e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
+                .forEach(e -> tokens.put(e.getKey(), e.getValue()));
 
         final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);
         tokens.putAll(computeSecrets);
-
-        return tokens;
+        // trusted env variables (not confidential)
+        tokens.putAll(IexecEnvUtils.getComputeStageEnvMap(taskDescription));
+        return enclaveBase
+                .environment(tokens)
+                .build();
     }
 
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
@@ -273,25 +222,26 @@ public class PalaemonSessionService {
 
         if (applicationAddress != null) {
             final String secretIndex = "1";
-            String appDeveloperSecret =
-                    teeTaskComputeSecretService.getSecret(
-                                    OnChainObjectType.APPLICATION,
-                                    applicationAddress.toLowerCase(),
-                                    SecretOwnerRole.APPLICATION_DEVELOPER,
-                                    "",
-                                    secretIndex)
-                            .map(TeeTaskComputeSecret::getValue)
-                            .orElse(EMPTY_YML_VALUE);
-            tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret);
+            String appDeveloperSecret = teeTaskComputeSecretService.getSecret(
+                    OnChainObjectType.APPLICATION,
+                    applicationAddress.toLowerCase(),
+                    SecretOwnerRole.APPLICATION_DEVELOPER,
+                    "",
+                    secretIndex)
+                    .map(TeeTaskComputeSecret::getValue)
+                    .orElse(EMPTY_YML_VALUE);
+            if (!StringUtils.isEmpty(appDeveloperSecret)) {
+                tokens.put("IEXEC_APP_DEVELOPER_SECRET", appDeveloperSecret);
+                tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + secretIndex, appDeveloperSecret);
+            }
         }
 
         if (taskDescription.getSecrets() == null || taskDescription.getRequester() == null) {
-            tokens.put(REQUESTER_SECRETS, Collections.emptyMap());
             return tokens;
         }
 
         final HashMap<String, String> requesterSecrets = new HashMap<>();
-        for (Map.Entry<String, String> secretEntry: taskDescription.getSecrets().entrySet()) {
+        for (Map.Entry<String, String> secretEntry : taskDescription.getSecrets().entrySet()) {
             try {
                 int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
                 if (requesterSecretIndex <= 0) {
@@ -300,49 +250,47 @@ public class PalaemonSessionService {
                     log.warn(message);
                     throw new NumberFormatException(message);
                 }
-            } catch(NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 log.warn("Invalid entry found in deal parameters secrets map", e);
                 continue;
             }
             String requesterSecret = teeTaskComputeSecretService.getSecret(
-                            OnChainObjectType.APPLICATION,
-                            "",
-                            SecretOwnerRole.REQUESTER,
-                            taskDescription.getRequester().toLowerCase(),
-                            secretEntry.getValue())
+                    OnChainObjectType.APPLICATION,
+                    "",
+                    SecretOwnerRole.REQUESTER,
+                    taskDescription.getRequester().toLowerCase(),
+                    secretEntry.getValue())
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
         }
-        tokens.put(REQUESTER_SECRETS, requesterSecrets);
-
+        tokens.putAll(requesterSecrets);
         return tokens;
     }
 
     /*
      * Post-Compute (Result)
      */
-    Map<String, String> getPostComputePalaemonTokens(PalaemonSessionRequest request)
+    public SecretEnclaveBase getPostComputeTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
+        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
+                .name("post-compute")
+                .mrenclave(teeWorkflowConfig.getPostComputeFingerprint());
+        Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
         }
-
-        Map<String, String> tokens = new HashMap<>();
-        String teePostComputeFingerprint = teeWorkflowConfig.getPostComputeFingerprint();
         // ###############################################################################
         // TODO: activate this when user specific post-compute is properly
-        // supported. See https://github.com/iExecBlockchainComputing/iexec-sms/issues/52.
+        // supported. See
+        // https://github.com/iExecBlockchainComputing/iexec-sms/issues/52.
         // ###############################################################################
         // // Use specific post-compute image if requested.
-        //if (taskDescription.containsPostCompute()) {
-        //    teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
-        //    //add entrypoint too
-        //}
-        tokens.put(POST_COMPUTE_MRENCLAVE, teePostComputeFingerprint);
-        String entrypoint = teeWorkflowConfig.getPostComputeEntrypoint();
-        tokens.put(POST_COMPUTE_ENTRYPOINT, entrypoint);
+        // if (taskDescription.containsPostCompute()) {
+        // teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
+        // //add entrypoint too
+        // }
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         tokens.putAll(encryptionTokens);
@@ -352,10 +300,12 @@ public class PalaemonSessionService {
         // enclave signature
         Map<String, String> signTokens = getPostComputeSignTokens(request);
         tokens.putAll(signTokens);
-        return tokens;
+        return enclaveBase
+                .environment(tokens)
+                .build();
     }
 
-    Map<String, String> getPostComputeEncryptionTokens(PalaemonSessionRequest request)
+    public Map<String, String> getPostComputeEncryptionTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
@@ -374,8 +324,7 @@ public class PalaemonSessionService {
         if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
-                    "Empty beneficiary encryption key - taskId: " + taskId
-            );
+                    "Empty beneficiary encryption key - taskId: " + taskId);
         }
         String publicKeyValue = beneficiaryResultEncryptionKeySecret.get().getTrimmedValue();
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, publicKeyValue); // base64 encoded by client
@@ -386,7 +335,7 @@ public class PalaemonSessionService {
     // to the beneficiary private storage space waiting for
     // that feature we only allow to push to the requester
     // private storage space
-    Map<String, String> getPostComputeStorageTokens(PalaemonSessionRequest request)
+    public Map<String, String> getPostComputeStorageTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
@@ -404,8 +353,8 @@ public class PalaemonSessionService {
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN
                 : ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<Secret> requesterStorageTokenSecret =
-                web2SecretsService.getSecret(taskDescription.getRequester(), keyName, true);
+        Optional<Secret> requesterStorageTokenSecret = web2SecretsService.getSecret(taskDescription.getRequester(),
+                keyName, true);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());
@@ -420,7 +369,7 @@ public class PalaemonSessionService {
         return tokens;
     }
 
-    Map<String, String> getPostComputeSignTokens(PalaemonSessionRequest request)
+    public Map<String, String> getPostComputeSignTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         String taskId = request.getTaskDescription().getChainTaskId();
         String workerAddress = request.getWorkerAddress();
@@ -428,28 +377,24 @@ public class PalaemonSessionService {
         if (StringUtils.isEmpty(workerAddress)) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
-                    "Empty worker address - taskId: " + taskId
-            );
+                    "Empty worker address - taskId: " + taskId);
         }
         if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
-                    "Empty public enclave challenge - taskId: " + taskId
-            );
+                    "Empty public enclave challenge - taskId: " + taskId);
         }
         Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
         if (teeChallenge.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
-                    "Empty TEE challenge  - taskId: " + taskId
-            );
+                    "Empty TEE challenge  - taskId: " + taskId);
         }
         EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
         if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
-                    "Empty TEE challenge credentials - taskId: " + taskId
-            );
+                    "Empty TEE challenge credentials - taskId: " + taskId);
         }
         tokens.put(RESULT_TASK_ID, taskId);
         tokens.put(RESULT_SIGN_WORKER_ADDRESS, workerAddress);
@@ -457,14 +402,4 @@ public class PalaemonSessionService {
         return tokens;
     }
 
-    private String getFilledPalaemonTemplate(String templatePath, Map<String, Object> tokens) {
-        VelocityEngine ve = new VelocityEngine();
-        ve.init();
-        Template template = ve.getTemplate(templatePath);
-        VelocityContext context = new VelocityContext();
-        tokens.forEach(context::put); // copy all data from the tokens into context
-        StringWriter writer = new StringWriter();
-        template.merge(context, writer);
-        return writer.toString();
-    }
 }

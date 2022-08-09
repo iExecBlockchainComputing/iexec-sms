@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.attestation;
+package com.iexec.sms.tee.session.gramine.sps;
 
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
 import java.util.List;
+import java.util.Map;
 
-@Configuration
-public class AttestationSecurityConfig {
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class GramineEnclave {
 
-    @Value("${scone.attestation.tolerated-insecure-options}")
-    @Getter
-    private List<String> toleratedInsecureOptions;
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("mrenclave")
+    private String mrenclave;
+    @JsonProperty("command")
+    private String command;
+    @JsonProperty("environment")
+    private Map<String, Object> environment;
+    @JsonProperty("volumes")
+    private List<String> volumes;
 
-    @Value("${scone.attestation.ignored-sgx-advisories}")
-    @Getter
-    private List<String> ignoredSgxAdvisories;
 }

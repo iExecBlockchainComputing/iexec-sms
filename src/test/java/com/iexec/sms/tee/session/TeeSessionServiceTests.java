@@ -1,87 +1,133 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.tee.session.cas.CasClient;
-import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionHandler;
+import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
+import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
 
-import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import java.util.Map;
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class TeeSessionServiceTests {
     private final static String TASK_ID = "0x0";
     private final static String WORKER_ADDRESS = "0x1";
     private final static String TEE_CHALLENGE = "0x2";
-
+    private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
     @Mock
-    IexecHubService iexecHubService;
-
+    private SconeSessionHandlerService sconeService;
     @Mock
-    CasClient casClient;
-
+    private GramineSessionHandlerService gramineService;
     @Mock
-    PalaemonSessionService palaemonSessionService;
-
-    TeeSessionService teeSessionService;
+    private IexecHubService iexecHubService;
+    @InjectMocks
+    private TeeSessionService teeSessionService;
+    private Map<TeeEnclaveProvider, TeeSessionHandler> providerToSessionService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        teeSessionService = new TeeSessionService(iexecHubService, palaemonSessionService, casClient, false);
+        providerToSessionService = Map.of(
+                TeeEnclaveProvider.SCONE, sconeService,
+                TeeEnclaveProvider.GRAMINE, gramineService);
     }
 
-    @Test
-    void shouldGenerateTeeSession() throws TeeSessionGenerationException {
-        final TaskDescription taskDescription = TaskDescription.builder().chainTaskId(TASK_ID).build();
-        final String sessionYmlAsString = "YML session";
+    static Stream<TeeEnclaveProvider> teeProviders() {
+        return Stream.of(
+                TeeEnclaveProvider.SCONE,
+                TeeEnclaveProvider.GRAMINE);
+    }
 
+    @ParameterizedTest
+    @MethodSource("teeProviders")
+    void shouldGenerateTeeSession(TeeEnclaveProvider teeEnclaveProvider)
+            throws TeeSessionGenerationException {
+        final TaskDescription taskDescription = TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .teeEnclaveProvider(teeEnclaveProvider)
+                .build();
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
-        when(palaemonSessionService.getSessionYml(any())).thenReturn(sessionYmlAsString);
-        when(casClient.generateSecureSession(sessionYmlAsString.getBytes())).thenReturn(ResponseEntity.ok(null));
+        TeeSessionHandler teeProviderSessionHandler = getTeeSessionHandler(teeEnclaveProvider);
+        when(teeProviderSessionHandler.buildAndPostSession(any())).thenReturn(SECRET_PROVISIONING_URL);
 
-        final String teeSession = assertDoesNotThrow(() -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertNotNull(teeSession);
+        final TeeSessionGenerationResponse teeSessionReponse = assertDoesNotThrow(
+                () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
+        verify(teeProviderSessionHandler, times(1))
+                .buildAndPostSession(any());
+        assertFalse(teeSessionReponse.getSessionId().isEmpty());
+        assertEquals(SECRET_PROVISIONING_URL, teeSessionReponse.getSecretProvisioningUrl());
     }
 
     @Test
     void shouldNotGenerateTeeSessionSinceCantGetTaskDescription() {
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(null);
 
-        final TeeSessionGenerationException teeSessionGenerationException = assertThrows(TeeSessionGenerationException.class, () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(GET_TASK_DESCRIPTION_FAILED, teeSessionGenerationException.getError());
-        assertEquals(String.format("Failed to get task description [taskId:%s]", TASK_ID), teeSessionGenerationException.getMessage());
+        final TeeSessionGenerationException teeSessionGenerationException = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
+        assertEquals(TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED,
+                teeSessionGenerationException.getError());
+        assertEquals(String.format("Failed to get task description [taskId:%s]", TASK_ID),
+                teeSessionGenerationException.getMessage());
     }
 
     @Test
-    void shouldNotGenerateTeeSessionSinceCantGetSessionYml() throws TeeSessionGenerationException {
-        final TaskDescription taskDescription = TaskDescription.builder().chainTaskId(TASK_ID).build();
+    void shouldNotGenerateTeeSessionSinceNoTeeEnclaveProvider() {
+        final TaskDescription taskDescription = TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .teeEnclaveProvider(null)
+                .build();
 
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
-        when(palaemonSessionService.getSessionYml(any())).thenReturn("");
 
-        final TeeSessionGenerationException teeSessionGenerationException = assertThrows(TeeSessionGenerationException.class, () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(GET_SESSION_YML_FAILED, teeSessionGenerationException.getError());
-        assertEquals(String.format("Failed to get session yml [taskId:%s, workerAddress:%s]", TASK_ID, WORKER_ADDRESS), teeSessionGenerationException.getMessage());
+        final TeeSessionGenerationException teeSessionGenerationException = assertThrows(
+                TeeSessionGenerationException.class,
+                () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
+        assertEquals(TeeSessionGenerationError.SECURE_SESSION_NO_TEE_PROVIDER,
+                teeSessionGenerationException.getError());
+        assertEquals(String.format("TEE provider can't be null [taskId:%s]",
+                TASK_ID),
+                teeSessionGenerationException.getMessage());
     }
 
-    @Test
-    void shouldNotGenerateTeeSessionSinceCantGenerateSecureSession() throws TeeSessionGenerationException {
-        final TaskDescription taskDescription = TaskDescription.builder().chainTaskId(TASK_ID).build();
-        final String sessionYmlAsString = "YML session";
-
+    @ParameterizedTest
+    @MethodSource("teeProviders")
+    void shouldNotGenerateTeeSessionSinceCantBuildAndPostSession(TeeEnclaveProvider teeEnclaveProvider)
+            throws TeeSessionGenerationException {
+        final TaskDescription taskDescription = TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .teeEnclaveProvider(teeEnclaveProvider)
+                .build();
+        TeeSessionGenerationError error = TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED;
+        TeeSessionGenerationException exception = new TeeSessionGenerationException(
+                error, "some error");
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
-        when(palaemonSessionService.getSessionYml(any())).thenReturn(sessionYmlAsString);
-        when(casClient.generateSecureSession(sessionYmlAsString.getBytes())).thenReturn(ResponseEntity.notFound().build());
+        doThrow(exception)
+                .when(getTeeSessionHandler(teeEnclaveProvider)).buildAndPostSession(any());
 
-        final TeeSessionGenerationException teeSessionGenerationException = assertThrows(TeeSessionGenerationException.class, () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(SECURE_SESSION_CAS_CALL_FAILED, teeSessionGenerationException.getError());
-        assertEquals(String.format("Failed to generate secure session [taskId:%s, workerAddress:%s]", TASK_ID, WORKER_ADDRESS), teeSessionGenerationException.getMessage());
+        final TeeSessionGenerationException teeSessionGenerationException = assertThrows(
+                exception.getClass(),
+                () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
+        assertEquals(error, teeSessionGenerationException.getError());
     }
+
+    private TeeSessionHandler getTeeSessionHandler(TeeEnclaveProvider teeEnclaveProvider) {
+        return providerToSessionService.get(teeEnclaveProvider);
+    }
+
 }

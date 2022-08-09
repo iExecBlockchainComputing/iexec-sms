@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.palaemon;
+package com.iexec.sms.api;
 
-import com.iexec.common.task.TaskDescription;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
-@Data
-@Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class PalaemonSessionRequest {
+@Getter
+public class TeeSessionGenerationResponse {
 
     private String sessionId;
-    private TaskDescription taskDescription;
-    private String workerAddress;
-    private String enclaveChallenge;
+    private String secretProvisioningUrl;
+
 }

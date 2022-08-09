@@ -17,14 +17,19 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
-import com.iexec.sms.tee.session.cas.CasClient;
-import com.iexec.sms.tee.session.palaemon.PalaemonSessionRequest;
-import com.iexec.sms.tee.session.palaemon.PalaemonSessionService;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
+import com.iexec.sms.tee.session.generic.TeeSessionHandler;
+import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
+import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 
@@ -33,67 +38,59 @@ import static com.iexec.sms.api.TeeSessionGenerationError.*;
 public class TeeSessionService {
 
     private final IexecHubService iexecHubService;
-    private final CasClient casClient;
-    private final PalaemonSessionService palaemonSessionService;
-    private final boolean shouldDisplayDebugSession;
+
+    private final Map<TeeEnclaveProvider, TeeSessionHandler> teeSessionConfigurations;
 
     public TeeSessionService(
             IexecHubService iexecService,
-            PalaemonSessionService palaemonSessionService,
-            CasClient casClient,
-            @Value("${logging.tee.display-debug-session}")
-            boolean shouldDisplayDebugSession) {
+            SconeSessionHandlerService sconeService,
+            GramineSessionHandlerService gramineService) {
         this.iexecHubService = iexecService;
-        this.palaemonSessionService = palaemonSessionService;
-        this.casClient = casClient;
-        this.shouldDisplayDebugSession = shouldDisplayDebugSession;
+        this.teeSessionConfigurations = Map.of(
+                TeeEnclaveProvider.SCONE, sconeService,
+                TeeEnclaveProvider.GRAMINE, gramineService);
     }
 
-    public String generateTeeSession(
+    public TeeSessionGenerationResponse generateTeeSession(
             String taskId,
             String workerAddress,
             String teeChallenge) throws TeeSessionGenerationException {
-
         String sessionId = createSessionId(taskId);
         TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     GET_TASK_DESCRIPTION_FAILED,
-                    String.format("Failed to get task description [taskId:%s]", taskId)
-            );
+                    String.format("Failed to get task description [taskId:%s]", taskId));
         }
-        PalaemonSessionRequest request = PalaemonSessionRequest.builder()
+        TeeSessionRequest request = TeeSessionRequest.builder()
                 .sessionId(sessionId)
                 .taskDescription(taskDescription)
                 .workerAddress(workerAddress)
                 .enclaveChallenge(teeChallenge)
                 .build();
-        String sessionYmlAsString = palaemonSessionService.getSessionYml(request);
-        if (sessionYmlAsString.isEmpty()) {
+
+        final TeeEnclaveProvider teeEnclaveProvider = taskDescription.getTeeEnclaveProvider();
+        if (teeEnclaveProvider == null) {
             throw new TeeSessionGenerationException(
-                    GET_SESSION_YML_FAILED,
-                    String.format("Failed to get session yml [taskId:%s, workerAddress:%s]", taskId, workerAddress));
+                    SECURE_SESSION_NO_TEE_PROVIDER,
+                    String.format("TEE provider can't be null [taskId:%s]", taskId));
         }
-        log.info("Session yml is ready [taskId:{}]", taskId);
-        if (shouldDisplayDebugSession){
-            log.info("Session yml content [taskId:{}]\n{}", taskId, sessionYmlAsString);
+
+        final TeeSessionHandler teeSessionHandler = teeSessionConfigurations.get(teeEnclaveProvider);
+        if (teeSessionHandler == null) {
+            throw new TeeSessionGenerationException(
+                    SECURE_SESSION_UNKNOWN_TEE_PROVIDER,
+                    String.format("Unknown TEE provider [taskId:%s, teeProvider:%s]", taskId, teeEnclaveProvider));
         }
+
         // /!\ TODO clean expired tasks sessions
-        boolean isSessionGenerated = casClient
-                .generateSecureSession(sessionYmlAsString.getBytes())
-                .getStatusCode()
-                .is2xxSuccessful();
-        if (!isSessionGenerated) {
-            throw new TeeSessionGenerationException(
-                    SECURE_SESSION_CAS_CALL_FAILED,
-                    String.format("Failed to generate secure session [taskId:%s, workerAddress:%s]", taskId, workerAddress)
-            );
-        }
-        return sessionId;
+        String secretProvisioningUrl = teeSessionHandler.buildAndPostSession(request);
+        return new TeeSessionGenerationResponse(sessionId, secretProvisioningUrl);
     }
 
     private String createSessionId(String taskId) {
         String randomString = RandomStringUtils.randomAlphanumeric(10);
         return String.format("%s0000%s", randomString, taskId);
     }
+
 }

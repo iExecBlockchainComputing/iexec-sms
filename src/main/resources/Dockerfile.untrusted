@@ -5,10 +5,8 @@ ARG jar
 RUN test -n "$jar"
 
 COPY $jar                                       /app/iexec-sms.jar
-COPY build/resources/main/palaemonTemplate.vm   /app/palaemonTemplate.vm
 COPY src/main/resources/ssl-keystore-dev.p12    /app/ssl-keystore-dev.p12
 
-ENV IEXEC_PALAEMON_TEMPLATE=/app/palaemonTemplate.vm
 ENV IEXEC_SMS_SSL_KEYSTORE=/app/ssl-keystore-dev.p12
 ENV IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH=/scone/iexec-sms-aes.key
 ENV IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS=http://chain:8545

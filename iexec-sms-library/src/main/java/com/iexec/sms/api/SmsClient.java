@@ -49,9 +49,6 @@ public interface SmsClient {
             @Param("secretIndex") String secretIndex
     );
 
-    @RequestLine("GET /cas/url")
-    String getSconeCasUrl();
-
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addRequesterAppComputeSecret(
@@ -89,7 +86,7 @@ public interface SmsClient {
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")
-    ApiResponseBody<String, TeeSessionGenerationError> generateTeeSession(
+    ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> generateTeeSession(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );

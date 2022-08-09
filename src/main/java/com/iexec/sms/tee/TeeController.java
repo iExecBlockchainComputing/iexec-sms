@@ -18,15 +18,16 @@ package com.iexec.sms.tee;
 
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionService;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -111,14 +112,14 @@ public class TeeController {
      *      500 INTERNAL_SERVER_ERROR otherwise.
      */
     @PostMapping("/sessions")
-    public ResponseEntity<ApiResponseBody<String, TeeSessionGenerationError>> generateTeeSession(
+    public ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> generateTeeSession(
             @RequestHeader("Authorization") String authorization,
             @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
         String workerAddress = workerpoolAuthorization.getWorkerWallet();
         String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(INVALID_AUTHORIZATION)
                             .build();
 
@@ -132,8 +133,8 @@ public class TeeController {
             final TeeSessionGenerationError teeSessionGenerationError =
                     authorizationToGenerationError.get(authorizationError.get());
 
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(teeSessionGenerationError)
                             .build();
 
@@ -147,19 +148,21 @@ public class TeeController {
         log.info("TEE session request [taskId:{}, workerAddress:{}]",
                 taskId, workerAddress);
         try {
-            String sessionId = teeSessionService
+            TeeSessionGenerationResponse teeSessionGenerationResponse = teeSessionService
                     .generateTeeSession(taskId, workerAddress, attestingEnclave);
 
-            if (sessionId.isEmpty()) {
+            if (teeSessionGenerationResponse == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            return ResponseEntity.ok(ApiResponseBody.<String, TeeSessionGenerationError>builder().data(sessionId).build());
+            return ResponseEntity.ok(ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
+            .data(teeSessionGenerationResponse)
+            .build());
         } catch(TeeSessionGenerationException e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(e.getError())
                             .build();
             return ResponseEntity
@@ -168,8 +171,8 @@ public class TeeController {
         } catch (Exception e) {
             log.error("Failed to generate secure session with unknown reason [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(SECURE_SESSION_GENERATION_FAILED)
                             .build();
             return ResponseEntity
