@@ -46,20 +46,26 @@ public class SconeSessionHandlerServiceTests {
     }
 
     @Test
-    void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
+    void shouldBuildAndPostSession(CapturedOutput output)
+            throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
-        when(apiClient.postSession(casSession.toString())).thenReturn(ResponseEntity.ok("sessionId"));
-        
-        assertEquals(CAS_URL, sessionHandlerService.buildAndPostSession(request));
-        // Testing output here since it reflects a business feature (ability to catch a
+        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
+                .thenReturn(true);
+        when(apiClient.postSession(casSession.toString()))
+                .thenReturn(ResponseEntity.created(null).body("sessionId"));
+
+        assertEquals(CAS_URL,
+                sessionHandlerService.buildAndPostSession(request));
+        // Testing output here since it reflects a business feature (ability to
+        // catch a
         // session in debug mode)
-        assertTrue(output.getOut().contains("Session content [taskId:null]\nsessionContent\n"));
+        assertTrue(output.getOut()
+                .contains("Session content [taskId:null]\nsessionContent\n"));
     }
 
     @Test
@@ -67,8 +73,10 @@ public class SconeSessionHandlerServiceTests {
             throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TeeSessionGenerationException teeSessionGenerationException = new TeeSessionGenerationException(
-                TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED, "some error");
-        when(sessionService.generateSession(request)).thenThrow(teeSessionGenerationException);
+                TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED,
+                "some error");
+        when(sessionService.generateSession(request))
+                .thenThrow(teeSessionGenerationException);
 
         assertThrows(teeSessionGenerationException.getClass(),
                 () -> sessionHandlerService.buildAndPostSession(request));
@@ -82,8 +90,10 @@ public class SconeSessionHandlerServiceTests {
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
-        when(apiClient.postSession(casSession.toString())).thenReturn(ResponseEntity.internalServerError().build());
+        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
+                .thenReturn(true);
+        when(apiClient.postSession(casSession.toString()))
+                .thenReturn(ResponseEntity.internalServerError().build());
 
         assertThrows(TeeSessionGenerationException.class,
                 () -> sessionHandlerService.buildAndPostSession(request));

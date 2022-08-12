@@ -64,7 +64,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
         }
         ResponseEntity<String> postSession = apiClient.postSession(session.toString());
         int httpCode = postSession != null ? postSession.getStatusCodeValue() : null;
-        if (httpCode != 200) {
+        if (httpCode != 201) {
             throw new TeeSessionGenerationException(
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
                     "Failed to post session: " + httpCode);

@@ -24,6 +24,7 @@ import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeEnclave;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.AccessPolicy;
+import com.iexec.sms.tee.session.scone.cas.SconeSession.Image;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Security;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Volumes;
@@ -31,10 +32,7 @@ import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 //TODO Rename and move
 @Slf4j
@@ -76,48 +74,62 @@ public class SconeSessionMakerService {
      * @param request session request details
      * @return session config in yaml string format
      */
-    public SconeSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
-        SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
-
-        SconeEnclave sconePreEnclave = toSconeEnclave(baseSession.getPreCompute());
-        sconePreEnclave.setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
-        SconeEnclave sconeAppEnclave = toSconeEnclave(baseSession.getAppCompute());
-        sconeAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
-        SconeEnclave sconePostEnclave = toSconeEnclave(baseSession.getPostCompute());
-        sconePostEnclave.setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
-
-        addJavaEnvVars(sconePreEnclave);
-        addJavaEnvVars(sconePostEnclave);
-
+    public SconeSession generateSession(TeeSessionRequest request)
+            throws TeeSessionGenerationException {
         List<String> policy = Arrays.asList("CREATOR");
+        Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
+        Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
+        Volume postComputeTmpVolume = new Volume("post-compute-tmp",
+                "/post-compute-tmp");
+        List<SconeEnclave> services = new ArrayList<>();
+        List<Image> images = new ArrayList<>();
 
-        SconeSession casSession = SconeSession.builder()
+        SecretSessionBase baseSession = secretSessionBaseService
+                .getSecretsTokens(request);
+
+        // pre (optional)
+        if (baseSession.getPreCompute() != null) {
+            SconeEnclave sconePreEnclave = toSconeEnclave(
+                    baseSession.getPreCompute());
+            sconePreEnclave
+                    .setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
+            addJavaEnvVars(sconePreEnclave);
+            services.add(sconePreEnclave);
+            images.add(new SconeSession.Image(sconePreEnclave.getImageName(),
+                    Arrays.asList(iexecInVolume)));
+        }
+        // app
+        SconeEnclave sconeAppEnclave = toSconeEnclave(
+                baseSession.getAppCompute());
+        sconeAppEnclave
+                .setCommand(request.getTaskDescription().getAppCommand());
+        services.add(sconeAppEnclave);
+        images.add(new SconeSession.Image(sconeAppEnclave.getImageName(),
+                Arrays.asList(iexecInVolume, iexecOutVolume)));
+        // post
+        SconeEnclave sconePostEnclave = toSconeEnclave(
+                baseSession.getPostCompute());
+        sconePostEnclave
+                .setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
+        addJavaEnvVars(sconePostEnclave);
+        services.add(sconePostEnclave);
+        images.add(new SconeSession.Image(sconePostEnclave.getImageName(),
+                Arrays.asList(iexecOutVolume,
+                        postComputeTmpVolume)));
+
+        return SconeSession.builder()
                 .name(request.getSessionId())
                 .version("0.3")
                 .accessPolicy(new AccessPolicy(policy, policy))
-                .services(Arrays.asList(sconePreEnclave, sconeAppEnclave, sconePostEnclave))
-                .security(new Security(attestationSecurityConfig.getToleratedInsecureOptions(),
+                .services(services)
+                .images(images)
+                .volumes(Arrays.asList(new Volumes(iexecInVolume.getName()),
+                        new Volumes(iexecOutVolume.getName()),
+                        new Volumes(postComputeTmpVolume.getName())))
+                .security(new Security(
+                        attestationSecurityConfig.getToleratedInsecureOptions(),
                         attestationSecurityConfig.getIgnoredSgxAdvisories()))
                 .build();
-
-        Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
-        Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
-        Volume postComputeTmpVolume = new Volume("post-compute-tmp", "/post-compute-tmp");
-
-        casSession.setVolumes(Arrays.asList(
-                new Volumes(iexecInVolume.getName()),
-                new Volumes(iexecOutVolume.getName()),
-                new Volumes(postComputeTmpVolume.getName())));
-
-        casSession.setImages(Arrays.asList(
-                new SconeSession.Image(sconePreEnclave.getImageName(), Arrays.asList(iexecInVolume)),
-                new SconeSession.Image(sconeAppEnclave.getImageName(), Arrays.asList(iexecInVolume, iexecOutVolume)),
-                new SconeSession.Image(sconePostEnclave.getImageName(),
-                        Arrays.asList(iexecOutVolume, postComputeTmpVolume))
-
-        ));
-
-        return casSession;
     }
 
     private void addJavaEnvVars(SconeEnclave sconeEnclave) {
