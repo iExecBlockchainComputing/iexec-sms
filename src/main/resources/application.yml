@@ -68,7 +68,7 @@ gramine:
       password: ${IEXEC_GRAPHENE_SPS_WEB_PASSWORD:admin}
     enclave:
       host: ${IEXEC_GRAPHENE_SPS_ENCLAVE_HOST:localhost}
-      port: ${IEXEC_GRAPHENE_SPS_ENCLAVE_PORT:4443}
+      port: ${IEXEC_GRAPHENE_SPS_ENCLAVE_PORT:4433}
 
 # TODO /!\ remove the option of env variable for releases.
 tee.workflow:

@@ -50,7 +50,7 @@ public class SpsConfiguration {
     }
 
     public String getEnclaveUrl() {
-        return "https://" + enclaveHost + ":" + enclavePort;
+        return enclaveHost + ":" + enclavePort;
     }
 
     public SpsApiClient getInstance() {
