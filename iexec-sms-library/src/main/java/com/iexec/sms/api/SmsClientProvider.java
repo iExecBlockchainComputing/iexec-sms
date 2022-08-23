@@ -16,7 +16,7 @@ import java.util.Optional;
  */
 @Slf4j
 public class SmsClientProvider {
-    private final Map<String, SmsClient> smsClientForUrl = new HashMap<>();
+    private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 
     private final IexecHubAbstractService iexecHubService;
 
@@ -47,6 +47,6 @@ public class SmsClientProvider {
             return Optional.empty();
         }
 
-        return Optional.of(smsClientForUrl.computeIfAbsent(smsUrl, url -> SmsClientBuilder.getInstance(Logger.Level.NONE, url)));
+        return Optional.of(urlToSmsClient.computeIfAbsent(smsUrl, url -> SmsClientBuilder.getInstance(Logger.Level.NONE, url)));
     }
 }
