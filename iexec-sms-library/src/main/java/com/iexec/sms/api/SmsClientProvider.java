@@ -19,10 +19,19 @@ public class SmsClientProvider {
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 
     private final IexecHubAbstractService iexecHubService;
+    private final Logger.Level loggerLevel;
 
     public SmsClientProvider(IexecHubAbstractService iexecHubService) {
         this.iexecHubService = iexecHubService;
+        this.loggerLevel = Logger.Level.NONE;
     }
+
+    public SmsClientProvider(IexecHubAbstractService iexecHubService,
+                             Logger.Level loggerLevel) {
+        this.iexecHubService = iexecHubService;
+        this.loggerLevel = loggerLevel;
+    }
+
 
     /**
      * Retrieves the specified SMS URL for this task, then:
@@ -47,6 +56,6 @@ public class SmsClientProvider {
             return Optional.empty();
         }
 
-        return Optional.of(urlToSmsClient.computeIfAbsent(smsUrl, url -> SmsClientBuilder.getInstance(Logger.Level.NONE, url)));
+        return Optional.of(urlToSmsClient.computeIfAbsent(smsUrl, url -> SmsClientBuilder.getInstance(loggerLevel, url)));
     }
 }
