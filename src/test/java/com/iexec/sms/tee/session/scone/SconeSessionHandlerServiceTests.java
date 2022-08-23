@@ -42,7 +42,7 @@ public class SconeSessionHandlerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(casConfiguration.getEnclaveUrl()).thenReturn(CAS_URL);
+        when(casConfiguration.getEnclaveHost()).thenReturn(CAS_URL);
     }
 
     @Test

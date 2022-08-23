@@ -69,7 +69,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
                     "Failed to post session: " + httpCode);
         }
-        return casConfiguration.getEnclaveUrl();
+        return casConfiguration.getEnclaveHost();
     }
 
 }
