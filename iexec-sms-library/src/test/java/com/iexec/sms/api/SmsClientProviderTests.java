@@ -2,9 +2,9 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.IexecHubAbstractService;
 import com.iexec.common.task.TaskDescription;
+import feign.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -36,12 +36,13 @@ class SmsClientProviderTests {
 
     @Mock
     IexecHubAbstractService iexecHubService;
-    @InjectMocks
+
     SmsClientProvider smsClientProvider;
 
     @BeforeEach
     void init() {
         MockitoAnnotations.openMocks(this);
+        smsClientProvider = new SmsClientProvider(iexecHubService, Logger.Level.NONE);
     }
 
     @Test
