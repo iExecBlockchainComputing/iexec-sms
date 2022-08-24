@@ -24,7 +24,7 @@ import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineEnclave;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession.GramineSessionBuilder;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,10 +33,10 @@ import java.util.List;
 public class GramineSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private TeeWorkflowConfiguration teeWorkflowConfiguration;
+    private TeeWorkflowInternalConfiguration teeWorkflowConfiguration;
 
     public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService,
-            TeeWorkflowConfiguration teeWorkflowConfiguration) {
+            TeeWorkflowInternalConfiguration teeWorkflowConfiguration) {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeWorkflowConfiguration = teeWorkflowConfiguration;
     }

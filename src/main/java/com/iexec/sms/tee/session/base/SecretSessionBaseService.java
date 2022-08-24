@@ -34,7 +34,7 @@ import com.iexec.sms.tee.session.base.SecretEnclaveBase.SecretEnclaveBaseBuilder
 import com.iexec.sms.tee.session.base.SecretSessionBase.SecretSessionBaseBuilder;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -71,14 +71,14 @@ public class SecretSessionBaseService {
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
-    private final TeeWorkflowConfiguration teeWorkflowConfig;
+    private final TeeWorkflowInternalConfiguration teeWorkflowConfig;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            TeeWorkflowConfiguration teeWorkflowConfig,
+            TeeWorkflowInternalConfiguration teeWorkflowConfig,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;

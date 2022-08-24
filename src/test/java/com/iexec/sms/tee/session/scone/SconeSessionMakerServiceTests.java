@@ -23,7 +23,7 @@ import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class SconeSessionMakerServiceTests {
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
 
     @Mock
-    private TeeWorkflowConfiguration teeWorkflowConfig;
+    private TeeWorkflowInternalConfiguration teeWorkflowConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @Mock

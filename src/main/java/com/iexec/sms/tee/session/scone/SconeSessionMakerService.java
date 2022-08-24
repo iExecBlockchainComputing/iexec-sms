@@ -27,7 +27,7 @@ import com.iexec.sms.tee.session.scone.cas.SconeSession.AccessPolicy;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Security;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Volumes;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -53,12 +53,12 @@ public class SconeSessionMakerService {
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private final TeeWorkflowConfiguration teeWorkflowConfig;
+    private final TeeWorkflowInternalConfiguration teeWorkflowConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
-            TeeWorkflowConfiguration teeWorkflowConfig,
+            TeeWorkflowInternalConfiguration teeWorkflowConfig,
             SconeSessionSecurityConfig attestationSecurityConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeWorkflowConfig = teeWorkflowConfig;
