@@ -37,7 +37,7 @@ public class SpsConfiguration {
     @Value("${gramine.sps.web.password}")
     private String webPassword;
 
-    @Value("${gramine.sps.enclave.host}")
+    @Value("${gramine.sps.enclave.hostname}")
     private String enclaveHostName;
 
     @Value("${gramine.sps.enclave.port}")
