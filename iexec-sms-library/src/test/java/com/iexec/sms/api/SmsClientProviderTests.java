@@ -9,8 +9,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class SmsClientProviderTests {
@@ -49,18 +47,19 @@ class SmsClientProviderTests {
     void shouldGetSmsClientForTask() {
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_1)).thenReturn(TASK_DESCRIPTION_1);
 
-        assertTrue(smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1).isPresent());
+        final SmsClient smsClient = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertNotNull(smsClient);
     }
 
     @Test
     void shouldNotRebuildSmsClientForSameTask() {
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_1)).thenReturn(TASK_DESCRIPTION_1);
 
-        final Optional<SmsClient> smsClient1 = smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1);
-        assertTrue(smsClient1.isPresent());
+        final SmsClient smsClient1 = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertNotNull(smsClient1);
 
-        final Optional<SmsClient> smsClient2 = smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1);
-        assertTrue(smsClient2.isPresent());
+        final SmsClient smsClient2 = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertNotNull(smsClient2);
 
         assertEquals(smsClient1, smsClient2);
     }
@@ -68,12 +67,12 @@ class SmsClientProviderTests {
     @Test
     void shouldNotRebuildSmsClientForSameSmsUrlOnAnotherTask() {
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_1)).thenReturn(TASK_DESCRIPTION_1);
-        final Optional<SmsClient> smsClient1 = smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1);
-        assertTrue(smsClient1.isPresent());
+        final SmsClient smsClient1 = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertNotNull(smsClient1);
 
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_3)).thenReturn(TASK_DESCRIPTION_3);
-        final Optional<SmsClient> smsClient2 = smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_3);
-        assertTrue(smsClient2.isPresent());
+        final SmsClient smsClient2 = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_3));
+        assertNotNull(smsClient2);
 
         assertEquals(smsClient1, smsClient2);
     }
@@ -83,11 +82,12 @@ class SmsClientProviderTests {
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_1)).thenReturn(TASK_DESCRIPTION_1);
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_2)).thenReturn(TASK_DESCRIPTION_2);
 
-        final Optional<SmsClient> smsClientForTask1 = smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1);
-        assertTrue(smsClientForTask1.isPresent());
+        final SmsClient smsClientForTask1 = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertNotNull(smsClientForTask1);
 
-        final Optional<SmsClient> smsClientForTask2 = smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_2);
-        assertTrue(smsClientForTask2.isPresent());
+        final SmsClient smsClientForTask2 = assertDoesNotThrow(() -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_2));
+        assertNotNull(smsClientForTask2);
+
 
         assertNotEquals(smsClientForTask1, smsClientForTask2);
     }
@@ -96,13 +96,17 @@ class SmsClientProviderTests {
     void shouldNotGetSmsClientForTaskWhenNoTask() {
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_1)).thenReturn(null);
 
-        assertTrue(smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1).isEmpty());
+        SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
+                () -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertEquals("No such task [chainTaskId: " + CHAIN_TASK_ID_1 +"]", e.getMessage());
     }
 
     @Test
     void shouldNotGetSmsClientForTaskWhenNoSmsUrl() {
         Mockito.when(iexecHubService.getTaskDescription(CHAIN_TASK_ID_1)).thenReturn(TaskDescription.builder().build());
 
-        assertTrue(smsClientProvider.getSmsClientForTask(CHAIN_TASK_ID_1).isEmpty());
+        SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
+                () -> smsClientProvider.getOrCreateSmsClientForTask(CHAIN_TASK_ID_1));
+        assertEquals("No SMS URL defined for given task [chainTaskId: " + CHAIN_TASK_ID_1 +"]", e.getMessage());
     }
 }

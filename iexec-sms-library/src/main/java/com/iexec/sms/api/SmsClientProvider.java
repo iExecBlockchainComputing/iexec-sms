@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Manages the {@link SmsClient}, providing an easy way to access SMS
@@ -43,19 +42,17 @@ public class SmsClientProvider {
      * @param chainTaskId ID of the task the specified SMS URL should be retrieved.
      * @return An instance of {@link SmsClient} pointing on the task's specified SMS.
      */
-    public Optional<SmsClient> getSmsClientForTask(String chainTaskId) {
+    public SmsClient getOrCreateSmsClientForTask(String chainTaskId) {
         final TaskDescription taskDescription = iexecHubService.getTaskDescription(chainTaskId);
         if (taskDescription == null) {
-            log.warn("No such task [chainTaskId: {}]", chainTaskId);
-            return Optional.empty();
+            throw new SmsClientCreationException("No such task [chainTaskId: " + chainTaskId +"]");
         }
 
         final String smsUrl = taskDescription.getSmsUrl();
         if (StringUtils.isEmpty(smsUrl)) {
-            log.warn("No SMS URL defined for given task [chainTaskId: {}]", chainTaskId);
-            return Optional.empty();
+            throw new SmsClientCreationException("No SMS URL defined for given task [chainTaskId: " + chainTaskId +"]");
         }
 
-        return Optional.of(urlToSmsClient.computeIfAbsent(smsUrl, url -> SmsClientBuilder.getInstance(loggerLevel, url)));
+        return urlToSmsClient.computeIfAbsent(smsUrl, url -> SmsClientBuilder.getInstance(loggerLevel, url));
     }
 }
