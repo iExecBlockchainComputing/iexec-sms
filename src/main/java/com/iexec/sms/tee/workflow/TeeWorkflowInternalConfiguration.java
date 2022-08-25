@@ -68,7 +68,6 @@ public class TeeWorkflowInternalConfiguration {
             @Positive(message = "post-compute heap size must be provided")
             int postComputeHeapSizeGb,
             Validator validator) {
-        this.validator = validator;
         this.preComputeFingerprint = preComputeFingerprint;
         this.postComputeFingerprint = postComputeFingerprint;
         this.sharedConfig = TeeWorkflowConfiguration.builder()
@@ -80,6 +79,7 @@ public class TeeWorkflowInternalConfiguration {
                 .postComputeHeapSize(postComputeHeapSizeGb)
                 .postComputeEntrypoint(postComputeEntrypoint)
                 .build();
+         this.validator = validator;
     }
 
     @PostConstruct
