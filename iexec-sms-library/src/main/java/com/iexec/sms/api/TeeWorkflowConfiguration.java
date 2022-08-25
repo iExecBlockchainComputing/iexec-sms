@@ -32,6 +32,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 // TODO: rename into `TeeServicesConfiguration` (or better)
 public class TeeWorkflowConfiguration {
+   // only required for Scone
     private String lasImage;
     private String preComputeImage;
     private long preComputeHeapSize;
