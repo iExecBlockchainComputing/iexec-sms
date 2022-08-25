@@ -67,7 +67,7 @@ gramine:
       login: ${IEXEC_GRAPHENE_SPS_WEB_LOGIN:admin}
       password: ${IEXEC_GRAPHENE_SPS_WEB_PASSWORD:admin}
     enclave:
-      //TODO: Merge shared conf of CAS & SPS (url, port, ..) in a common top parent in yml. Use only  secret-provisioner.gramine: and secret-provisioner.scone: for additionnal properties.
+      # TODO: Merge shared conf of CAS & SPS (url, port, ..) in a common top parent in yml. Use only  secret-provisioner.gramine: and secret-provisioner.scone: for additionnal properties.
       hostname: ${IEXEC_GRAPHENE_SPS_ENCLAVE_HOST_NAME:localhost}
       port: ${IEXEC_GRAPHENE_SPS_ENCLAVE_PORT:4433}
 
