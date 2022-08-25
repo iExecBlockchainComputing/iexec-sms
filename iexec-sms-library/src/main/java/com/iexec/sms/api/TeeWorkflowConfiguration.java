@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+// TODO: rename into `TeeServicesConfiguration` (or better)
 public class TeeWorkflowConfiguration {
     private String lasImage;
     private String preComputeImage;
