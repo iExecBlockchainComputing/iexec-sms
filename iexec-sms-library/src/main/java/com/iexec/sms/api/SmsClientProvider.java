@@ -57,10 +57,7 @@ public class SmsClientProvider {
     }
 
     /**
-     * Retrieves the SMS URL defined for this task and caches the result.
-     * </p>
-     * If the task has already been initialized, then gets the URL from the {@link TaskDescription}.
-     * Otherwise, gets the URL from the {@link ChainDeal}.
+     * Retrieves the SMS URL from the {@link TaskDescription} defined for this task and caches the result.
      *
      * @param chainTaskId ID of the task the specified SMS URL should be retrieved.
      * @return The SMS URL defined for this task.
@@ -70,20 +67,54 @@ public class SmsClientProvider {
             return taskIdToSmsUrl.get(chainTaskId);
         }
 
-        final Optional<String> smsUrl;
-
         final TaskDescription taskDescription = iexecHubService.getTaskDescription(chainTaskId);
-        if (taskDescription != null) {
-            smsUrl = Optional.ofNullable(taskDescription.getSmsUrl());
-        } else {
-            // Fallback: if task is not initialized yet,
-            // we can still get its SMS url in its deal.
-            final Optional<ChainDeal> chainDeal = iexecHubService.getChainDeal(chainTaskId);
-            smsUrl = chainDeal
-                    .map(deal -> deal.getParams().getIexecSmsUrl());
+        final Optional<String> smsUrl = taskDescription != null
+                ? Optional.ofNullable(taskDescription.getSmsUrl())
+                : Optional.empty();
+        taskIdToSmsUrl.put(chainTaskId, smsUrl);
+        return smsUrl;
+    }
+
+    /**
+     * Retrieves the specified SMS URL for this task based on its dealId, then:
+     * <ul>
+     *     <li>If this SMS has already been accessed, returns the already-constructed {@link SmsClient};</li>
+     *     <li>Otherwise, constructs, stores and returns a new {@link SmsClient}.</li>
+     * </ul>
+     *
+     * @param chainDealId ID of the task the specified SMS URL should be retrieved.
+     * @param chainTaskId ID of the task the specified SMS URL should be stored.
+     * @throws SmsClientCreationException if SMS URL can't be retrieved.
+     * @return An instance of {@link SmsClient} pointing on the deal's specified SMS.
+     */
+    public SmsClient getOrCreateSmsClientForUninitializedTask(String chainDealId, String chainTaskId) {
+        final Optional<String> smsUrl = getSmsUrlForUninitializedTask(chainDealId, chainTaskId);
+        if (smsUrl.isEmpty() || StringUtils.isEmpty(smsUrl.get())) {
+            throw new SmsClientCreationException("No SMS URL defined for given deal " +
+                    "[chainDealId: " + chainDealId + ", chainTaskId: " + chainTaskId +"]");
         }
+
+        return urlToSmsClient.computeIfAbsent(smsUrl.get(), url -> SmsClientBuilder.getInstance(loggerLevel, url));
+    }
+
+    /**
+     * Retrieves the SMS URL from the {@link ChainDeal} defined for this task and caches the result.
+     *
+     * @param chainDealId ID of the deal the specified SMS URL should be retrieved.
+     * @param chainTaskId ID of the task the specified SMS URL should be stored.
+     * @return The SMS URL defined for this deal.
+     */
+    Optional<String> getSmsUrlForUninitializedTask(String chainDealId, String chainTaskId) {
+        if (taskIdToSmsUrl.containsKey(chainTaskId)) {
+            return taskIdToSmsUrl.get(chainTaskId);
+        }
+
+        final Optional<ChainDeal> chainDeal = iexecHubService.getChainDeal(chainDealId);
+        final Optional<String> smsUrl = chainDeal
+                .map(deal -> deal.getParams().getIexecSmsUrl());
 
         taskIdToSmsUrl.put(chainTaskId, smsUrl);
         return smsUrl;
     }
+
 }
