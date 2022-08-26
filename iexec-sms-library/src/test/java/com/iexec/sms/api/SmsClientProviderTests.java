@@ -292,7 +292,7 @@ class SmsClientProviderTests {
 
     @Test
     void shouldNotGetSmsUrlForTaskWhenDealNotFound() {
-        Mockito.when(iexecHubService.getChainDeal(CHAIN_DEAL_ID_1)).thenReturn(Optional.empty());
+        Mockito.when(iexecHubService.getChainDeal(CHAIN_DEAL_ID_1)).thenReturn(Optional.of(CHAIN_DEAL_1));
 
         Optional<String> smsUrl = smsClientProvider.getSmsUrlForUninitializedTask(CHAIN_DEAL_ID_1, CHAIN_TASK_ID_1);
         assertTrue(smsUrl.isEmpty());
