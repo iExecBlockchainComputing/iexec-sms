@@ -41,7 +41,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
@@ -157,16 +156,15 @@ public class SecretSessionBaseService {
                 IexecEnvUtils.IEXEC_TASK_ID,
                 IexecEnvUtils.IEXEC_INPUT_FILES_FOLDER,
                 IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER));
-        Map<String, String> trustedEnvVars = IexecEnvUtils.getAllIexecEnv(taskDescription)
+        IexecEnvUtils.getAllIexecEnv(taskDescription)
                 .entrySet()
                 .stream()
                 .filter(e ->
                 // extract trusted en vars to include
                 trustedEnv.contains(e.getKey())
                         // extract <IEXEC_INPUT_FILE_URL_N, url>
-                        || e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        tokens.putAll(trustedEnvVars);
+                        || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
+                .forEach(e -> tokens.put(e.getKey(), e.getValue()));
         return enclaveBase
                 .environment(tokens)
                 .build();
@@ -183,7 +181,7 @@ public class SecretSessionBaseService {
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must no be null");
+                    "Task description must not be null");
         }
 
         Map<String, Object> tokens = new HashMap<>();
@@ -191,7 +189,7 @@ public class SecretSessionBaseService {
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
-                    "Enclave configuration must no be null");
+                    "Enclave configuration must not be null");
         }
         if (!enclaveConfig.getValidator().isValid()) {
             throw new TeeSessionGenerationException(
@@ -203,12 +201,11 @@ public class SecretSessionBaseService {
         enclaveBase.mrenclave(enclaveConfig.getFingerprint());
         // extract <IEXEC_INPUT_FILE_NAME_N, name>
         // this map will be empty (not null) if no input file is found
-        Map<String, String> inputFileNames = IexecEnvUtils.getComputeStageEnvMap(taskDescription)
+        IexecEnvUtils.getComputeStageEnvMap(taskDescription)
                 .entrySet()
                 .stream()
-                .filter(e -> e.getKey().contains(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        tokens.putAll(inputFileNames);
+                .filter(e -> e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX))
+                .forEach(e -> tokens.put(e.getKey(), e.getValue()));
 
         final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);
         tokens.putAll(computeSecrets);
