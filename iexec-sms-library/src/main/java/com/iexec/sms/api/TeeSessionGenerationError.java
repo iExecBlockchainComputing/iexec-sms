@@ -58,7 +58,6 @@ public enum TeeSessionGenerationError {
     NO_SESSION_REQUEST,
     NO_TASK_DESCRIPTION,
     GET_SESSION_FAILED,
-    NO_SMS_FOR_TASK,
 
     UNKNOWN_ISSUE
     // endregion
