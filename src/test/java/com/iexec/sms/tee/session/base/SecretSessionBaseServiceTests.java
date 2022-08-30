@@ -19,7 +19,7 @@ import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +62,7 @@ class SecretSessionBaseServiceTests {
     @Mock
     private TeeChallengeService teeChallengeService;
     @Mock
-    private TeeWorkflowConfiguration teeWorkflowConfig;
+    private TeeWorkflowInternalConfiguration teeWorkflowConfig;
     @Mock
     private TeeTaskComputeSecretService teeTaskComputeSecretService;
 

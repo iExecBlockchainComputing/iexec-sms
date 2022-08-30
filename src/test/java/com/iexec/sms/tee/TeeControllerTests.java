@@ -9,7 +9,7 @@ import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +46,7 @@ class TeeControllerTests {
     @Mock
     TeeSessionService teeSessionService;
     @Mock
-    TeeWorkflowConfiguration teeWorkflowConfig;
+    TeeWorkflowInternalConfiguration teeWorkflowConfig;
 
     @InjectMocks
     TeeController teeController;

@@ -56,7 +56,7 @@ public class GramineSessionHandlerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(spsConfiguration.getEnclaveUrl()).thenReturn(SPS_URL);
+        when(spsConfiguration.getEnclaveHost()).thenReturn(SPS_URL);
     }
 
     @Test

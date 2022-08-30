@@ -18,7 +18,6 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
-import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
 import com.iexec.common.web.ApiResponseBody;
 import feign.Headers;
 import feign.Param;
@@ -92,7 +91,7 @@ public interface SmsClient {
     );
 
     @RequestLine("GET /tee/workflow/config")
-    TeeWorkflowSharedConfiguration getTeeWorkflowConfiguration();
+    TeeWorkflowConfiguration getTeeWorkflowConfiguration();
 
     @RequestLine("POST /untee/secrets")
     @Headers("Authorization: {authorization}")

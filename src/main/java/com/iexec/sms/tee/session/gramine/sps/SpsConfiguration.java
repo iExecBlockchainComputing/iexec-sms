@@ -37,8 +37,8 @@ public class SpsConfiguration {
     @Value("${gramine.sps.web.password}")
     private String webPassword;
 
-    @Value("${gramine.sps.enclave.host}")
-    private String enclaveHost;
+    @Value("${gramine.sps.enclave.hostname}")
+    private String enclaveHostName;
 
     @Value("${gramine.sps.enclave.port}")
     private String enclavePort;
@@ -49,8 +49,8 @@ public class SpsConfiguration {
         return "http://" + webHost + ":" + webPort;
     }
 
-    public String getEnclaveUrl() {
-        return "https://" + enclaveHost + ":" + enclavePort;
+    public String getEnclaveHost() {
+        return enclaveHostName + ":" + enclavePort;
     }
 
     public SpsApiClient getInstance() {

@@ -7,7 +7,7 @@ import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 @Slf4j
 class GramineSessionMakerServiceTests {
     @Mock
-    private TeeWorkflowConfiguration teeWorkflowConfig;
+    private TeeWorkflowInternalConfiguration teeWorkflowConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @InjectMocks
