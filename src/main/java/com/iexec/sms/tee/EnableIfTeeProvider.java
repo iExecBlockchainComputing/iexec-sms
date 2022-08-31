@@ -14,7 +14,7 @@ import org.springframework.core.type.StandardMethodMetadata;
  * Annotate any bean with the following:
  * {@code
  * @Conditional(EnableIfTeeProvider.class)
- * @EnableIfTeeProviderDefinition(TeeEnclaveProvider.<member>)
+ * @EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.<member>)
  * }
  * <p/>
  * If bean is not annotated with {@link EnableIfTeeProviderDefinition}

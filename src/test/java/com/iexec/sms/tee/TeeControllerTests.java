@@ -4,12 +4,12 @@ import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
+import com.iexec.sms.api.config.TeeServicesConfiguration;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +46,7 @@ class TeeControllerTests {
     @Mock
     TeeSessionService teeSessionService;
     @Mock
-    TeeWorkflowInternalConfiguration teeWorkflowConfig;
+    TeeServicesConfiguration teeServicesConfig;
 
     @InjectMocks
     TeeController teeController;

@@ -16,10 +16,14 @@
 
 package com.iexec.sms.tee.session.scone.cas;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.tee.EnableIfTeeProvider;
+import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,21 +38,23 @@ import org.springframework.stereotype.Component;
  * code. It guarantees that a code behaves exactly as expected.
  */
 @Component
+@Conditional(EnableIfTeeProvider.class)
+@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.SCONE)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CasConfiguration {
 
-    @Value("${scone.cas.host}")
+    @Value("${tee.secret-provisioner.web.hostname}")
     private String host;
 
-    @Value("${scone.cas.port}")
+    @Value("${tee.secret-provisioner.web.port}")
     private String port;
 
-    @Value("${scone.cas.public-host}")
+    @Value("${tee.secret-provisioner.enclave.hostname}")
     private String publicHost;
 
-    @Value("${scone.cas.enclave-port}")
+    @Value("${tee.secret-provisioner.enclave.port}")
     private String enclavePort;
 
     public String getUrl() {

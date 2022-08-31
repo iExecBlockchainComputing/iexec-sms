@@ -18,17 +18,17 @@ package com.iexec.sms.tee;
 
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
-import com.iexec.sms.api.TeeWorkflowConfiguration;
+import com.iexec.sms.api.config.TeeServicesConfiguration;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,29 +58,35 @@ public class TeeController {
     private final AuthorizationService authorizationService;
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
-    private final TeeWorkflowInternalConfiguration teeWorkflowConfig;
+    private final TeeServicesConfiguration teeServicesConfig;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeWorkflowInternalConfiguration teeWorkflowConfig) {
+            TeeServicesConfiguration teeServicesConfig) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeWorkflowConfig = teeWorkflowConfig;
+        this.teeServicesConfig = teeServicesConfig;
     }
 
     /**
-     * Retrieve configuration for tee workflow. This includes configuration
-     * for pre-compute and post-compute stages.
+     * Retrieve configuration for TEE services. This includes configuration
+     * for pre-compute and post-compute stages
+     * and potential TEE provider's specific data.
      *
-     * @return tee workflow config (pre-compute image uri, post-compute image uri,
+     * @return TEE services config (pre-compute image uri, post-compute image uri,
      * heap size, ...)
      */
-    @GetMapping("/workflow/config")
-    public ResponseEntity<TeeWorkflowConfiguration> getTeeWorkflowSharedConfig() {
-        return ResponseEntity.ok(teeWorkflowConfig.getSharedConfig());
+    @GetMapping("/config/{teeEnclaveProvider}")
+    public ResponseEntity<TeeServicesConfiguration> getTeeServicesConfig(TeeEnclaveProvider teeEnclaveProvider) {
+        if (teeEnclaveProvider != teeServicesConfig.getTeeEnclaveProvider()) {
+            log.error("SMS configured to use another TeeEnclaveProvider " +
+                    "[required: {}, actual: {}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return ResponseEntity.ok(teeServicesConfig);
     }
 
     /**

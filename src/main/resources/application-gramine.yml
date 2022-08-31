@@ -1,0 +1,13 @@
+tee:
+  secret-provisioner:
+    web:
+      hostname: ${IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME:localhost}
+      port: ${IEXEC_SECRET_PROVISIONER_WEB_PORT:8080}
+    enclave:
+      hostname: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME:localhost}
+      port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:4433}
+
+  gramine:
+    sps:
+      login: ${IEXEC_GRAPHENE_SPS_WEB_LOGIN:admin}
+      password: ${IEXEC_GRAPHENE_SPS_WEB_PASSWORD:admin}

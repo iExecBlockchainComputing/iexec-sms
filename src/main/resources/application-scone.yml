@@ -1,0 +1,14 @@
+tee:
+  secret-provisioner:
+    web:
+      hostname: ${IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME:localhost}
+      port: ${IEXEC_SECRET_PROVISIONER_WEB_PORT:8081}
+    enclave:
+      hostname: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME:localhost}
+      port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:18765}
+
+  scone:
+    las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:} # e.g.: registry.scontain.com:5050/scone-production/iexec-las:x.y.z
+    attestation:
+      tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:} # e.g.: hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode
+      ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270

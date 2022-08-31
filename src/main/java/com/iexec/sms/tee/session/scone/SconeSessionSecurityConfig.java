@@ -16,13 +16,19 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.tee.EnableIfTeeProvider;
+import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
 @Configuration
+@Conditional(EnableIfTeeProvider.class)
+@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.SCONE)
 public class SconeSessionSecurityConfig {
 
     @Value("${scone.attestation.tolerated-insecure-options}")

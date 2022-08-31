@@ -20,6 +20,7 @@ import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
+import com.iexec.sms.api.config.TeeServicesConfiguration;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -33,7 +34,6 @@ import com.iexec.sms.tee.session.base.SecretEnclaveBase.SecretEnclaveBaseBuilder
 import com.iexec.sms.tee.session.base.SecretSessionBase.SecretSessionBaseBuilder;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -69,19 +69,19 @@ public class SecretSessionBaseService {
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
-    private final TeeWorkflowInternalConfiguration teeWorkflowConfig;
+    private final TeeServicesConfiguration teeServicesConfig;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            TeeWorkflowInternalConfiguration teeWorkflowConfig,
+            TeeServicesConfiguration teeServicesConfig,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
         this.teeChallengeService = teeChallengeService;
-        this.teeWorkflowConfig = teeWorkflowConfig;
+        this.teeServicesConfig = teeServicesConfig;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
     }
 
@@ -130,7 +130,7 @@ public class SecretSessionBaseService {
         Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
-        enclaveBase.mrenclave(teeWorkflowConfig.getPreComputeFingerprint());
+        enclaveBase.mrenclave(teeServicesConfig.getPreComputeConfiguration().getFingerprint());
         tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
@@ -274,7 +274,7 @@ public class SecretSessionBaseService {
             throws TeeSessionGenerationException {
         SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
                 .name("post-compute")
-                .mrenclave(teeWorkflowConfig.getPostComputeFingerprint());
+                .mrenclave(teeServicesConfig.getPostComputeConfiguration().getFingerprint());
         Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {

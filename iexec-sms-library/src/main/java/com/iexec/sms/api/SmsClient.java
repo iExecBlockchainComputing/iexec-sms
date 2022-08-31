@@ -18,7 +18,11 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.config.GramineServicesConfiguration;
+import com.iexec.sms.api.config.SconeServicesConfiguration;
+import com.iexec.sms.api.config.TeeServicesConfiguration;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -90,9 +94,6 @@ public interface SmsClient {
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
-    @RequestLine("GET /tee/workflow/config")
-    TeeWorkflowConfiguration getTeeWorkflowConfiguration();
-
     @RequestLine("POST /untee/secrets")
     @Headers("Authorization: {authorization}")
     SmsSecretResponse getUnTeeSecrets(
@@ -100,4 +101,19 @@ public interface SmsClient {
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
+    @RequestLine("GET /tee/config/scone")
+    SconeServicesConfiguration getSconeServicesConfiguration();
+
+    @RequestLine("GET /tee/config/gramine")
+    GramineServicesConfiguration getGramineServicesConfiguration();
+
+    default TeeServicesConfiguration getServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
+        if (teeEnclaveProvider == TeeEnclaveProvider.SCONE) {
+            return getSconeServicesConfiguration();
+        } else if (teeEnclaveProvider == TeeEnclaveProvider.GRAMINE) {
+            return getGramineServicesConfiguration();
+        }
+
+        return null;    // FIXME: throw
+    }
 }

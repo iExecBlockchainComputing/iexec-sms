@@ -7,6 +7,8 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.api.config.TeeAppConfiguration;
+import com.iexec.sms.api.config.TeeServicesConfiguration;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -19,7 +21,6 @@ import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import com.iexec.sms.utils.EthereumCredentials;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +63,11 @@ class SecretSessionBaseServiceTests {
     @Mock
     private TeeChallengeService teeChallengeService;
     @Mock
-    private TeeWorkflowInternalConfiguration teeWorkflowConfig;
+    private TeeAppConfiguration preComputeConfiguration;
+    @Mock
+    private TeeAppConfiguration postComputeConfiguration;
+    @Mock
+    private TeeServicesConfiguration teeServicesConfig;
     @Mock
     private TeeTaskComputeSecretService teeTaskComputeSecretService;
 
@@ -72,6 +77,8 @@ class SecretSessionBaseServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        when(teeServicesConfig.getPreComputeConfiguration()).thenReturn(preComputeConfiguration);
+        when(teeServicesConfig.getPostComputeConfiguration()).thenReturn(postComputeConfiguration);
     }
 
     // region getSecretsTokens
@@ -81,14 +88,14 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(taskDescription);
 
         // pre
-        when(teeWorkflowConfig.getPreComputeFingerprint())
+        when(preComputeConfiguration.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
         // post
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
-        when(teeWorkflowConfig.getPostComputeFingerprint())
+        when(postComputeConfiguration.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
@@ -155,7 +162,7 @@ class SecretSessionBaseServiceTests {
     void shouldGetPreComputeTokens() throws Exception {
         TaskDescription taskDescription = createTaskDescription(enclaveConfig);
         TeeSessionRequest request = createSessionRequest(taskDescription);
-        when(teeWorkflowConfig.getPreComputeFingerprint())
+        when(preComputeConfiguration.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
@@ -190,7 +197,7 @@ class SecretSessionBaseServiceTests {
                         .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                         .build())
                 .build();
-        when(teeWorkflowConfig.getPreComputeFingerprint())
+        when(preComputeConfiguration.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
 
         SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
@@ -385,7 +392,7 @@ class SecretSessionBaseServiceTests {
         String requesterAddress = request.getTaskDescription().getRequester();
 
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
-        when(teeWorkflowConfig.getPostComputeFingerprint())
+        when(postComputeConfiguration.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),

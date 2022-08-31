@@ -16,6 +16,10 @@
 
 package com.iexec.sms.tee.session.gramine;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.tee.EnableIfTeeProvider;
+import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -24,21 +28,23 @@ import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineEnclave;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession.GramineSessionBuilder;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Conditional(EnableIfTeeProvider.class)
+@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.GRAMINE)
 public class GramineSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private TeeWorkflowInternalConfiguration teeWorkflowConfiguration;
+    private final TeeServicesConfiguration teeServicesConfig;
 
     public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService,
-            TeeWorkflowInternalConfiguration teeWorkflowConfiguration) {
+                                      TeeServicesConfiguration teeServicesConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
-        this.teeWorkflowConfiguration = teeWorkflowConfiguration;
+        this.teeServicesConfig = teeServicesConfig;
     }
 
     /**
@@ -55,7 +61,7 @@ public class GramineSessionMakerService {
         GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
         gramineAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
         GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
-        graminePostEnclave.setCommand(teeWorkflowConfiguration.getPostComputeEntrypoint());
+        graminePostEnclave.setCommand(teeServicesConfig.getPostComputeConfiguration().getEntrypoint());
 
         // TODO: Remove useless volumes when SPS is ready
         gramineAppEnclave.setVolumes(List.of());

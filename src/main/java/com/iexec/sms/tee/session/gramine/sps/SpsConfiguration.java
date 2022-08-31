@@ -16,31 +16,37 @@
 
 package com.iexec.sms.tee.session.gramine.sps;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.utils.FeignBuilder;
+import com.iexec.sms.tee.EnableIfTeeProvider;
+import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
 import feign.Logger.Level;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@Conditional(EnableIfTeeProvider.class)
+@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.GRAMINE)
 @Getter
 public class SpsConfiguration {
-    @Value("${gramine.sps.web.host}")
+    @Value("${tee.secret-provisioner.web.hostname}")
     private String webHost;
 
-    @Value("${gramine.sps.web.port}")
+    @Value("${tee.secret-provisioner.web.port}")
     private String webPort;
 
-    @Value("${gramine.sps.web.login}")
+    @Value("${tee.gramine.sps.web.login}")
     private String webLogin;
 
-    @Value("${gramine.sps.web.password}")
+    @Value("${tee.gramine.sps.web.password}")
     private String webPassword;
 
-    @Value("${gramine.sps.enclave.hostname}")
+    @Value("${tee.secret-provisioner.enclave.hostname}")
     private String enclaveHostName;
 
-    @Value("${gramine.sps.enclave.port}")
+    @Value("${tee.secret-provisioner.enclave.port}")
     private String enclavePort;
 
     private SpsApiClient spsApiClient;

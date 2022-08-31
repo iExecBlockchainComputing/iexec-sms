@@ -16,7 +16,10 @@
 
 package com.iexec.sms.tee.session.gramine;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.tee.EnableIfTeeProvider;
+import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
@@ -24,10 +27,13 @@ import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@Conditional(EnableIfTeeProvider.class)
+@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.GRAMINE)
 public class GramineSessionHandlerService implements TeeSessionHandler {
     private GramineSessionMakerService sessionService;
     private SpsConfiguration spsConfiguration;
