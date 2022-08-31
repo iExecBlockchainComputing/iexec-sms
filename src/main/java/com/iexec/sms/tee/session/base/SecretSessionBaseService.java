@@ -16,7 +16,6 @@
 
 package com.iexec.sms.tee.session.base;
 
-import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
@@ -44,10 +43,10 @@ import java.util.*;
 
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
-import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 
 @Slf4j
 @Service
@@ -351,8 +350,8 @@ public class SecretSessionBaseService {
         String storageProvider = taskDescription.getResultStorageProvider();
         String storageProxy = taskDescription.getResultStorageProxy();
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
-                ? ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN
-                : ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN;
+                ? IEXEC_RESULT_DROPBOX_TOKEN
+                : IEXEC_RESULT_IEXEC_IPFS_TOKEN;
         Optional<Secret> requesterStorageTokenSecret = web2SecretsService.getSecret(taskDescription.getRequester(),
                 keyName, true);
         if (requesterStorageTokenSecret.isEmpty()) {
