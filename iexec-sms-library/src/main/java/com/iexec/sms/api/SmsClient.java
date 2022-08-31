@@ -107,7 +107,7 @@ public interface SmsClient {
     @RequestLine("GET /tee/config/gramine")
     GramineServicesConfiguration getGramineServicesConfiguration();
 
-    default TeeServicesConfiguration getServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
+    default TeeServicesConfiguration getTeeServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider == TeeEnclaveProvider.SCONE) {
             return getSconeServicesConfiguration();
         } else if (teeEnclaveProvider == TeeEnclaveProvider.GRAMINE) {
