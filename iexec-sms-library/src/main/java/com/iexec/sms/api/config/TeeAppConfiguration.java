@@ -13,5 +13,5 @@ public class TeeAppConfiguration {
     private String image;
     private String fingerprint;
     private String entrypoint;
-    private long heapSize;
+    private long heapSize;  // In GB
 }

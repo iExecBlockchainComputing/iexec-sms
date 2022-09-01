@@ -4,6 +4,7 @@ import com.iexec.sms.api.config.TeeAppConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.unit.DataSize;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
@@ -28,7 +29,7 @@ public class SideComputeInternalConfiguration {
                 preComputeImage,
                 preComputeFingerprint,
                 preComputeEntrypoint,
-                preComputeHeapSize
+                DataSize.ofGigabytes(preComputeHeapSize).toBytes()
         );
     }
 
@@ -50,7 +51,7 @@ public class SideComputeInternalConfiguration {
                 postComputeImage,
                 postComputeFingerprint,
                 postComputeEntrypoint,
-                postComputeHeapSize
+                DataSize.ofGigabytes(postComputeHeapSize).toBytes()
         );
     }
 
