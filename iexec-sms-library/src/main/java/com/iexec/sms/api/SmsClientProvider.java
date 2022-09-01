@@ -22,6 +22,10 @@ public class SmsClientProvider {
 
     private final Logger.Level loggerLevel;
 
+    public SmsClientProvider() {
+        this(Logger.Level.BASIC);
+    }
+
     public SmsClientProvider(Logger.Level loggerLevel) {
         this.loggerLevel = loggerLevel;
     }
