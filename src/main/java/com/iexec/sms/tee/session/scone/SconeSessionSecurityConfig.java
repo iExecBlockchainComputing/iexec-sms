@@ -31,11 +31,11 @@ import java.util.List;
 @EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.SCONE)
 public class SconeSessionSecurityConfig {
 
-    @Value("${scone.attestation.tolerated-insecure-options}")
+    @Value("${tee.scone.attestation.tolerated-insecure-options}")
     @Getter
     private List<String> toleratedInsecureOptions;
 
-    @Value("${scone.attestation.ignored-sgx-advisories}")
+    @Value("${tee.scone.attestation.ignored-sgx-advisories}")
     @Getter
     private List<String> ignoredSgxAdvisories;
 }
