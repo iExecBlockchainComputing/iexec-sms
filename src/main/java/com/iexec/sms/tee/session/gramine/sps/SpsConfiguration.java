@@ -37,10 +37,10 @@ public class SpsConfiguration {
     @Value("${tee.secret-provisioner.web.port}")
     private String webPort;
 
-    @Value("${tee.gramine.sps.web.login}")
+    @Value("${tee.gramine.sps.login}")
     private String webLogin;
 
-    @Value("${tee.gramine.sps.web.password}")
+    @Value("${tee.gramine.sps.password}")
     private String webPassword;
 
     @Value("${tee.secret-provisioner.enclave.hostname}")
