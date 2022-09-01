@@ -80,7 +80,8 @@ public class TeeController {
      * heap size, ...)
      */
     @GetMapping("/config/{teeEnclaveProvider}")
-    public ResponseEntity<TeeServicesConfiguration> getTeeServicesConfig(TeeEnclaveProvider teeEnclaveProvider) {
+    public ResponseEntity<TeeServicesConfiguration> getTeeServicesConfig(
+            @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider != teeServicesConfig.getTeeEnclaveProvider()) {
             log.error("SMS configured to use another TeeEnclaveProvider " +
                     "[required: {}, actual: {}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
