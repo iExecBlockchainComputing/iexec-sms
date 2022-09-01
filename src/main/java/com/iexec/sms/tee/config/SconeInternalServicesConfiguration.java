@@ -6,8 +6,11 @@ import com.iexec.sms.api.config.TeeAppConfiguration;
 import com.iexec.sms.tee.EnableIfTeeProvider;
 import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+
+import javax.validation.constraints.NotBlank;
 
 @Configuration
 @Conditional(EnableIfTeeProvider.class)
@@ -17,6 +20,8 @@ public class SconeInternalServicesConfiguration extends SconeServicesConfigurati
     protected SconeInternalServicesConfiguration(
             TeeAppConfiguration preComputeConfiguration,
             TeeAppConfiguration postComputeConfiguration,
+            @Value("${tee.scone.las-image}")
+            @NotBlank(message = "las image must be provided")
             String lasImage) {
         super(preComputeConfiguration, postComputeConfiguration, lasImage);
     }
