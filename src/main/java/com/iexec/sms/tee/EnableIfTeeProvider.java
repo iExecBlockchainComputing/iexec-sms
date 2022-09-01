@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardMethodMetadata;
 
 /**
@@ -26,7 +27,7 @@ public class EnableIfTeeProvider implements Condition {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         final String[] activeProfiles = context.getEnvironment().getActiveProfiles();
-        final String beanClassName = ((StandardMethodMetadata) metadata).getReturnTypeName();
+        final String beanClassName = ((AnnotationMetadata) metadata).getClassName();
         final Class<?> clazz;
         try {
             clazz = Class.forName(beanClassName);
