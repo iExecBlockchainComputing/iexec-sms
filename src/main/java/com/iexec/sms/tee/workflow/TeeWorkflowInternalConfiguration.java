@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.unit.DataSize;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolationException;
@@ -73,10 +74,14 @@ public class TeeWorkflowInternalConfiguration {
         this.sharedConfig = TeeWorkflowConfiguration.builder()
                 .lasImage(lasImage)
                 .preComputeImage(preComputeImage)
-                .preComputeHeapSize(preComputeHeapSizeGb)
+                .preComputeHeapSize(DataSize
+                    .ofGigabytes(preComputeHeapSizeGb)
+                    .toBytes())
                 .preComputeEntrypoint(preComputeEntrypoint)
                 .postComputeImage(postComputeImage)
-                .postComputeHeapSize(postComputeHeapSizeGb)
+                .postComputeHeapSize(DataSize
+                    .ofGigabytes(postComputeHeapSizeGb)
+                    .toBytes())
                 .postComputeEntrypoint(postComputeEntrypoint)
                 .build();
          this.validator = validator;
