@@ -1,18 +1,17 @@
 package com.iexec.sms.api.config;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
+@Setter
 public class TeeAppConfiguration {
-    private final String image;
-    private final String fingerprint;
-    private final String entrypoint;
-    private final long heapSize;
-
-    public TeeAppConfiguration(String image, String fingerprint, String entrypoint, long heapSize) {
-        this.image = image;
-        this.fingerprint = fingerprint;
-        this.entrypoint = entrypoint;
-        this.heapSize = heapSize;
-    }
+    private String image;
+    private String fingerprint;
+    private String entrypoint;
+    private long heapSize;
 }

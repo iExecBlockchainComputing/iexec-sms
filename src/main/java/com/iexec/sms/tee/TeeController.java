@@ -27,6 +27,7 @@ import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.config.TeeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
@@ -58,13 +59,13 @@ public class TeeController {
     private final AuthorizationService authorizationService;
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
-    private final TeeServicesConfiguration teeServicesConfig;
+    private final TeeInternalServicesConfiguration teeServicesConfig;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeServicesConfiguration teeServicesConfig) {
+            TeeInternalServicesConfiguration teeServicesConfig) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
@@ -87,7 +88,7 @@ public class TeeController {
                     "[required: {}, actual: {}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        return ResponseEntity.ok(teeServicesConfig);
+        return ResponseEntity.ok(teeServicesConfig.getShareableConfiguration());
     }
 
     /**
