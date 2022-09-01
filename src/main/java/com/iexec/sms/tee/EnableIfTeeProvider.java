@@ -31,23 +31,26 @@ public class EnableIfTeeProvider implements Condition {
         try {
             clazz = Class.forName(beanClassName);
         } catch (ClassNotFoundException e) {
-            log.error("Bean does not exist " +
-                    "[bean: {}]", beanClassName);
+            log.error(
+                    "Bean does not exist [bean: {}]",
+                    beanClassName);
             return false;
         }
 
         final EnableIfTeeProviderDefinition condition =
                 clazz.getAnnotation(EnableIfTeeProviderDefinition.class);
         if (condition == null) {
-            log.error("@EnableIfTeeProviderDefinition annotation is required to use EnableIfTeeProvider condition " +
-                    "[bean: {}]", beanClassName);
+            log.error(
+                    "@EnableIfTeeProviderDefinition annotation is required to use EnableIfTeeProvider condition [bean: {}]",
+                    beanClassName);
             return false;
         }
 
         final TeeEnclaveProvider[] teeProviders = condition.providers();
         if (teeProviders == null || teeProviders.length == 0) {
-            log.warn("No TEE provider defined for bean, won't be loaded " +
-                    "[bean: {}]", beanClassName);
+            log.warn(
+                    "No TEE provider defined for bean, won't be loaded [bean: {}]",
+                    beanClassName);
             return false;
         }
 
@@ -59,8 +62,9 @@ public class EnableIfTeeProvider implements Condition {
             }
         }
 
-        log.debug("Active profiles and condition don't match, bean won't be loaded" +
-                "[bean: {}]", beanClassName);
+        log.debug(
+                "Active profiles and condition don't match, bean won't be loaded [bean: {}]",
+                beanClassName);
         return false;
     }
 }

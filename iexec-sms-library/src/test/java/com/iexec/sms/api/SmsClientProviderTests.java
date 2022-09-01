@@ -95,8 +95,9 @@ class SmsClientProviderTests {
 
     @Test
     void shouldNotGetSmsClientForTaskDescriptionWhenNoSmsUrl() {
-        SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
-                () -> smsClientProvider.getOrCreateSmsClientForTask(TaskDescription.builder().chainTaskId(CHAIN_TASK_ID_1).build()));
+        final TaskDescription taskDescription = TaskDescription.builder().chainTaskId(CHAIN_TASK_ID_1).build();
+        final SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
+                () -> smsClientProvider.getOrCreateSmsClientForTask(taskDescription));
         assertEquals("No SMS URL defined for given task [chainTaskId: " + CHAIN_TASK_ID_1 +"]", e.getMessage());
     }
     // endregion
@@ -143,8 +144,13 @@ class SmsClientProviderTests {
 
     @Test
     void shouldNotGetSmsClientForUninitializedTaskWhenNoSmsUrl() {
-        SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
-                () -> smsClientProvider.getOrCreateSmsClientForUninitializedTask(ChainDeal.builder().chainDealId(CHAIN_DEAL_ID_1).params(DealParams.builder().build()).build(), CHAIN_TASK_ID_1));
+        final ChainDeal chainDeal = ChainDeal
+                .builder()
+                .chainDealId(CHAIN_DEAL_ID_1)
+                .params(DealParams.builder().build())
+                .build();
+        final SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
+                () -> smsClientProvider.getOrCreateSmsClientForUninitializedTask(chainDeal, CHAIN_TASK_ID_1));
         assertEquals(
                 "No SMS URL defined for given deal" +
                         " [chainDealId: " + CHAIN_DEAL_ID_1 + ", chainTaskId: " + CHAIN_TASK_ID_1 +"]",
