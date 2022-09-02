@@ -101,6 +101,9 @@ public interface SmsClient {
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
+    @RequestLine("GET /tee/provider")
+    TeeEnclaveProvider getTeeEnclaveProvider();
+
     @RequestLine("GET /tee/config/scone")
     SconeServicesConfiguration getSconeServicesConfiguration();
 

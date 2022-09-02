@@ -20,7 +20,7 @@ import javax.validation.constraints.NotBlank;
 public class SconeInternalServicesConfiguration
         extends SconeServicesConfiguration
         implements TeeInternalServicesConfiguration{
-    protected SconeInternalServicesConfiguration(
+    public SconeInternalServicesConfiguration(
             TeeAppConfiguration preComputeConfiguration,
             TeeAppConfiguration postComputeConfiguration,
             @Value("${tee.scone.las-image}")

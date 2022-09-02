@@ -1,13 +1,20 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
+import com.iexec.sms.api.config.GramineServicesConfiguration;
+import com.iexec.sms.api.config.SconeServicesConfiguration;
+import com.iexec.sms.api.config.TeeAppConfiguration;
 import com.iexec.sms.api.config.TeeServicesConfiguration;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
+import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
+import com.iexec.sms.tee.config.TeeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +45,8 @@ class TeeControllerTests {
     private final static String CHALLENGE = "CHALLENGE";
     private final static String SESSION_ID = "SESSION_ID";
     private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
+    private static final String LAS_IMAGE = "lasImage";
+
 
     @Mock
     AuthorizationService authorizationService;
@@ -48,6 +57,11 @@ class TeeControllerTests {
     @Mock
     TeeServicesConfiguration teeServicesConfig;
 
+    @Mock
+    TeeAppConfiguration preComputeConfig;
+    @Mock
+    TeeAppConfiguration postComputeConfig;
+
     @InjectMocks
     TeeController teeController;
 
@@ -55,6 +69,137 @@ class TeeControllerTests {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
+
+    // region getTeeEnclaveProvider
+    @Test
+    void shouldGetSconeProvider() {
+        final TeeInternalServicesConfiguration config = new SconeInternalServicesConfiguration(
+                preComputeConfig,
+                postComputeConfig,
+                LAS_IMAGE
+        );
+
+        final TeeController teeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, config
+        );
+
+        final ResponseEntity<TeeEnclaveProvider> response =
+                teeController.getTeeEnclaveProvider();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        final TeeEnclaveProvider result = response.getBody();
+        assertEquals(TeeEnclaveProvider.SCONE, result);
+    }
+
+    @Test
+    void shouldGetGramineProvider() {
+        final TeeInternalServicesConfiguration config = new GramineInternalServicesConfiguration(
+                preComputeConfig,
+                postComputeConfig
+        );
+
+        final TeeController teeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, config
+        );
+
+        final ResponseEntity<TeeEnclaveProvider> response =
+                teeController.getTeeEnclaveProvider();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        final TeeEnclaveProvider result = response.getBody();
+        assertEquals(TeeEnclaveProvider.GRAMINE, result);
+    }
+    // endregion
+
+    // region getTeeServicesConfig
+    @Test
+    void shouldGetSconeConfig() {
+        final TeeInternalServicesConfiguration config = new SconeInternalServicesConfiguration(
+                preComputeConfig,
+                postComputeConfig,
+                LAS_IMAGE
+        );
+
+        final TeeController teeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, config
+        );
+
+        final ResponseEntity<TeeServicesConfiguration> response =
+                teeController.getTeeServicesConfig(TeeEnclaveProvider.SCONE);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        final TeeServicesConfiguration result = response.getBody();
+        assertNotNull(result);
+        assertInstanceOf(SconeServicesConfiguration.class, result);
+        assertEquals(TeeEnclaveProvider.SCONE, result.getTeeEnclaveProvider());
+        assertEquals(preComputeConfig, result.getPreComputeConfiguration());
+        assertEquals(postComputeConfig, result.getPostComputeConfiguration());
+        assertEquals(postComputeConfig, result.getPostComputeConfiguration());
+        assertEquals(LAS_IMAGE, ((SconeServicesConfiguration) result).getLasImage());
+    }
+
+    @Test
+    void shouldGetGramineConfig() {
+        final TeeInternalServicesConfiguration config = new GramineInternalServicesConfiguration(
+                preComputeConfig,
+                postComputeConfig
+        );
+
+        final TeeController teeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, config
+        );
+
+        final ResponseEntity<TeeServicesConfiguration> response =
+                teeController.getTeeServicesConfig(TeeEnclaveProvider.GRAMINE);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        final TeeServicesConfiguration result = response.getBody();
+        assertNotNull(result);
+        assertInstanceOf(GramineServicesConfiguration.class, result);
+        assertEquals(TeeEnclaveProvider.GRAMINE, result.getTeeEnclaveProvider());
+        assertEquals(preComputeConfig, result.getPreComputeConfiguration());
+        assertEquals(postComputeConfig, result.getPostComputeConfiguration());
+    }
+
+    @Test
+    void shouldNotGetSconeConfigSinceGramineSms() {
+        final TeeInternalServicesConfiguration config = new SconeInternalServicesConfiguration(
+                preComputeConfig,
+                postComputeConfig,
+                LAS_IMAGE
+        );
+
+        final TeeController teeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, config
+        );
+
+        final ResponseEntity<TeeServicesConfiguration> response =
+                teeController.getTeeServicesConfig(TeeEnclaveProvider.GRAMINE);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test
+    void shouldNotGetGramineConfigSinceSconeSms() {
+        final TeeInternalServicesConfiguration config = new GramineInternalServicesConfiguration(
+                preComputeConfig,
+                postComputeConfig
+        );
+
+        final TeeController teeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, config
+        );
+
+        final ResponseEntity<TeeServicesConfiguration> response =
+                teeController.getTeeServicesConfig(TeeEnclaveProvider.SCONE);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+    // endregion
 
     // region generateTeeSession
     @Test

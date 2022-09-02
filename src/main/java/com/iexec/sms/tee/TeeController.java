@@ -73,6 +73,15 @@ public class TeeController {
     }
 
     /**
+     * Return which TEE enclave provider this SMS is configured to use.
+     * @return TEE enclave provider this SMS is configured to use.
+     */
+    @GetMapping("/provider")
+    public ResponseEntity<TeeEnclaveProvider> getTeeEnclaveProvider() {
+        return ResponseEntity.ok(teeServicesConfig.getTeeEnclaveProvider());
+    }
+
+    /**
      * Retrieve configuration for TEE services. This includes configuration
      * for pre-compute and post-compute stages
      * and potential TEE provider's specific data.

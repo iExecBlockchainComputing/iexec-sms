@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 public class GramineInternalServicesConfiguration
         extends GramineServicesConfiguration
         implements TeeInternalServicesConfiguration {
-    protected GramineInternalServicesConfiguration(
+    public GramineInternalServicesConfiguration(
             TeeAppConfiguration preComputeConfiguration,
             TeeAppConfiguration postComputeConfiguration) {
         super(preComputeConfiguration, postComputeConfiguration);
