@@ -35,7 +35,6 @@ class SmsClientProviderTests {
             .smsUrl(SMS_URL_2)
             .build();
 
-    private static final String CHAIN_DEAL_ID_3 = "chainDealId3";
     private static final String CHAIN_TASK_ID_3 = "chainTaskId3";
     private static final ChainDeal CHAIN_DEAL_3 = ChainDeal.builder()
             .params(DealParams.builder().iexecSmsUrl(SMS_URL_1).build())
@@ -99,6 +98,14 @@ class SmsClientProviderTests {
         final SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
                 () -> smsClientProvider.getOrCreateSmsClientForTask(taskDescription));
         assertEquals("No SMS URL defined for given task [chainTaskId: " + CHAIN_TASK_ID_1 +"]", e.getMessage());
+    }
+
+    @Test
+    void shouldNotGetSmsClientForTaskDescriptionWhenEmptySmsUrl() {
+        final TaskDescription taskDescription = TaskDescription.builder().chainTaskId(CHAIN_TASK_ID_1).smsUrl("").build();
+        final SmsClientCreationException e = assertThrows(SmsClientCreationException.class,
+                () -> smsClientProvider.getOrCreateSmsClientForTask(taskDescription));
+        assertEquals("No SMS URL defined for given task [chainTaskId: " + CHAIN_TASK_ID_1 + "]", e.getMessage());
     }
     // endregion
 
