@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 
@@ -31,6 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 class EnableIfTeeProviderTests {
+    @Conditional(EnableIfTeeProvider.class)
+    @EnableIfTeeProviderDefinition(providers = {})
+    static class NoProvidersSet {
+
+    }
     @Mock
     Environment environment;
     @Mock
@@ -131,7 +137,7 @@ class EnableIfTeeProviderTests {
     }
 
     @ParameterizedTest
-    @MethodSource("gramineBeansClasses")
+    @MethodSource("sconeAndGramineBeansClasses")
     void shouldNotMatchAnySinceNoProfile(Class<?> clazz) {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{});
@@ -150,6 +156,16 @@ class EnableIfTeeProviderTests {
         assertFalse(condition.matches(context, metadata));
     }
 
+    @Test
+    void shouldNotMatchAnySinceNoProviderDefined() {
+        final Class<?> clazz = NoProvidersSet.class;
+
+        when(context.getEnvironment()).thenReturn(environment);
+        when(environment.getActiveProfiles()).thenReturn(new String[]{"scone", "gramine"});
+        when(metadata.getClassName()).thenReturn(clazz.getName());
+
+        assertFalse(condition.matches(context, metadata));
+    }
 
     @Test
     void shouldNotMatchAnySinceClassDoesNotExist() {

@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.StandardMethodMetadata;
 
 /**
  * Define a way to include beans only if a profile is enabled
