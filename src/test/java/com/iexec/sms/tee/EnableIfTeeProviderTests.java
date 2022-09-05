@@ -34,9 +34,8 @@ import static org.mockito.Mockito.when;
 class EnableIfTeeProviderTests {
     @Conditional(EnableIfTeeProvider.class)
     @EnableIfTeeProviderDefinition(providers = {})
-    static class NoProvidersSet {
+    static class NoProvidersSet {}
 
-    }
     @Mock
     Environment environment;
     @Mock

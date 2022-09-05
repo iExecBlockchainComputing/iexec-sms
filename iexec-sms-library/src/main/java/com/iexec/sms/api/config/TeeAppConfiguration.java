@@ -13,5 +13,8 @@ public class TeeAppConfiguration {
     private String image;
     private String fingerprint;
     private String entrypoint;
-    private long heapSize;  // In GB
+    /**
+     * Represents the app heap size, in bytes.
+     */
+    private long heapSizeInBytes;
 }
