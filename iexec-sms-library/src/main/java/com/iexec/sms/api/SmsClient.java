@@ -37,6 +37,7 @@ import java.util.List;
  */
 public interface SmsClient {
 
+    // region Secrets
     @RequestLine("POST /apps/{appAddress}/secrets/1")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
@@ -84,19 +85,21 @@ public interface SmsClient {
             String secretValue
     );
 
+    @RequestLine("POST /untee/secrets")
+    @Headers("Authorization: {authorization}")
+    SmsSecretResponse getUnTeeSecrets(
+            @Param("authorization") String authorization,
+            WorkerpoolAuthorization workerpoolAuthorization
+    );
+    // endregion
+
+    // region TEE
     @RequestLine("POST /tee/challenges/{chainTaskId}")
     String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> generateTeeSession(
-            @Param("authorization") String authorization,
-            WorkerpoolAuthorization workerpoolAuthorization
-    );
-
-    @RequestLine("POST /untee/secrets")
-    @Headers("Authorization: {authorization}")
-    SmsSecretResponse getUnTeeSecrets(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );
@@ -119,4 +122,5 @@ public interface SmsClient {
 
         return null;
     }
+    // endregion
 }
