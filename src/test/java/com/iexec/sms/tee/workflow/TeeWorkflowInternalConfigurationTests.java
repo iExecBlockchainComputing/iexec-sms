@@ -3,7 +3,7 @@ package com.iexec.sms.tee.workflow;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class TeeWorkflowInternalConfigurationTests {
+class TeeWorkflowInternalConfigurationTests {
 
     @Test
     void testGetSharedConfigWithHeapSizeValues() {
