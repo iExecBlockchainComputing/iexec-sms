@@ -24,12 +24,12 @@ public class SideComputeInternalConfiguration {
             String preComputeEntrypoint,
             @Value("${tee.workflow.pre-compute.heap-size-gb}")
             @Positive(message = "pre-compute heap size must be provided")
-            long preComputeHeapSize) {
+            long preComputeHeapSizeInGB) {
         return new TeeAppConfiguration(
                 preComputeImage,
                 preComputeFingerprint,
                 preComputeEntrypoint,
-                DataSize.ofGigabytes(preComputeHeapSize).toBytes()
+                DataSize.ofGigabytes(preComputeHeapSizeInGB).toBytes()
         );
     }
 
@@ -46,12 +46,12 @@ public class SideComputeInternalConfiguration {
             String postComputeEntrypoint,
             @Value("${tee.workflow.post-compute.heap-size-gb}")
             @Positive(message = "post-compute heap size must be provided")
-            long postComputeHeapSize) {
+            long postComputeHeapSizeInGB) {
         return new TeeAppConfiguration(
                 postComputeImage,
                 postComputeFingerprint,
                 postComputeEntrypoint,
-                DataSize.ofGigabytes(postComputeHeapSize).toBytes()
+                DataSize.ofGigabytes(postComputeHeapSizeInGB).toBytes()
         );
     }
 
