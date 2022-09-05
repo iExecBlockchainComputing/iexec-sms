@@ -13,7 +13,7 @@ public class GramineServicesConfiguration extends TeeServicesConfiguration {
     }
 
     public GramineServicesConfiguration(TeeAppConfiguration preComputeConfiguration,
-                                           TeeAppConfiguration postComputeConfiguration) {
+                                        TeeAppConfiguration postComputeConfiguration) {
         super(TeeEnclaveProvider.GRAMINE, preComputeConfiguration, postComputeConfiguration);
     }
 }
