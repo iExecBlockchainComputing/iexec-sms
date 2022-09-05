@@ -2,6 +2,7 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.utils.purge.Purgeable;
 import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,8 +16,7 @@ import java.util.Optional;
  * and avoiding the need to create a new {@link SmsClient} instance each time.
  */
 @Slf4j
-public class SmsClientProvider {
-    // TODO: purge once task has been completed
+public class SmsClientProvider implements Purgeable {
     private final Map<String, Optional<String>> taskIdToSmsUrl = new HashMap<>();
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 
@@ -80,5 +80,18 @@ public class SmsClientProvider {
         }
 
         return urlToSmsClient.computeIfAbsent(smsUrl.get(), url -> SmsClientBuilder.getInstance(loggerLevel, url));
+    }
+
+    @Override
+    public boolean purgeTask(String chainTaskId) {
+        // Returning `taskIdToSmsUrl.remove(chainTaskId) != null` throws a warning:
+        // don't compare an `Optional` with null.
+        // So let's use a longer form.
+
+        if (!taskIdToSmsUrl.containsKey(chainTaskId)) {
+            return false;
+        }
+        taskIdToSmsUrl.remove(chainTaskId);
+        return true;
     }
 }
