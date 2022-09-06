@@ -67,7 +67,7 @@ public class SecretController {
         }
 
         Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress, shouldDecryptSecret);
-        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.of(secret);
     }
 
     @PostMapping("/web3")
@@ -115,7 +115,7 @@ public class SecretController {
         }
 
         Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, shouldDecryptSecret);
-        return secret.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return ResponseEntity.of(secret);
     }
 
     @PostMapping("/web2")
