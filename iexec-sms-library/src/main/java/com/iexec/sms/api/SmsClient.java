@@ -67,6 +67,12 @@ public interface SmsClient {
             @Param("secretKey") String secretKey
     );
 
+    @RequestLine("HEAD /secrets/web2?ownerAddress={ownerAddress}&secretName={secretName}")
+    void isWeb2SecretSet(
+            @Param("ownerAddress") String ownerAddress,
+            @Param("secretName") String secretName
+    );
+
     @RequestLine("POST /secrets/web2?ownerAddress={ownerAddress}&secretName={secretName}")
     @Headers("Authorization: {authorization}")
     String setWeb2Secret(
@@ -74,6 +80,20 @@ public interface SmsClient {
             @Param("ownerAddress") String ownerAddress,
             @Param("secretName") String secretName,
             String secretValue
+    );
+
+    @RequestLine("PUT /secrets/web2?ownerAddress={ownerAddress}&secretName={secretName}")
+    @Headers("Authorization: {authorization}")
+    String updateWeb2Secret(
+            @Param("authorization") String authorization,
+            @Param("ownerAddress") String ownerAddress,
+            @Param("secretName") String secretName,
+            String secretValue
+    );
+
+    @RequestLine("HEAD /secrets/web3?secretAddress={secretAddress}")
+    void isWeb3SecretSet(
+            @Param("secretAddress") String secretAddress
     );
 
     @RequestLine("POST /secrets/web3?secretAddress={secretAddress}")
