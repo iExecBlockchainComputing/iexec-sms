@@ -7,6 +7,8 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.core.type.AnnotationMetadata;
 
+import java.util.Arrays;
+
 /**
  * Define a way to include beans only if a profile is enabled
  * <p/>
@@ -32,7 +34,7 @@ public class EnableIfTeeProvider implements Condition {
             clazz = Class.forName(beanClassName);
         } catch (ClassNotFoundException e) {
             log.error(
-                    "Bean does not exist [bean: {}]",
+                    "Bean does not exist [bean:{}]",
                     beanClassName);
             return false;
         }
@@ -41,7 +43,7 @@ public class EnableIfTeeProvider implements Condition {
                 clazz.getAnnotation(EnableIfTeeProviderDefinition.class);
         if (condition == null) {
             log.error(
-                    "@EnableIfTeeProviderDefinition annotation is required to use EnableIfTeeProvider condition [bean: {}]",
+                    "@EnableIfTeeProviderDefinition annotation is required to use EnableIfTeeProvider condition [bean:{}]",
                     beanClassName);
             return false;
         }
@@ -49,7 +51,7 @@ public class EnableIfTeeProvider implements Condition {
         final TeeEnclaveProvider[] teeProviders = condition.providers();
         if (teeProviders == null || teeProviders.length == 0) {
             log.warn(
-                    "No TEE provider defined for bean, won't be loaded [bean: {}]",
+                    "No TEE provider defined for bean, won't be loaded [bean:{}]",
                     beanClassName);
             return false;
         }
@@ -63,7 +65,7 @@ public class EnableIfTeeProvider implements Condition {
         }
 
         log.debug(
-                "Active profiles and condition don't match, bean won't be loaded [bean: {}]",
+                "Active profiles and condition don't match, bean won't be loaded [bean:{}]",
                 beanClassName);
         return false;
     }

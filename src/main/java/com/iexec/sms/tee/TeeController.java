@@ -94,7 +94,7 @@ public class TeeController {
             @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider != teeServicesConfig.getTeeEnclaveProvider()) {
             log.error("SMS configured to use another TeeEnclaveProvider " +
-                    "[required: {}, actual: {}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
+                    "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         return ResponseEntity.ok(teeServicesConfig.getShareableConfiguration());
