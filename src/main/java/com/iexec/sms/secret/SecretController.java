@@ -147,6 +147,10 @@ public class SecretController {
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
+        if (!SecretUtils.isSecretSizeValid(newSecretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+
         String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
