@@ -17,7 +17,6 @@
 package com.iexec.sms.secret;
 
 
-import com.iexec.common.security.Signature;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
@@ -28,8 +27,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-
-import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
 
 @Slf4j
 @CrossOrigin
@@ -165,19 +162,5 @@ public class SecretController {
         return ResponseEntity.noContent().build();
     }
 
-    /*
-     * Server-side signature of a messageHash
-     * */
-    @PostMapping("/delegate/signature")
-    public ResponseEntity<String> signMessageHashOnServerSide(@RequestParam String messageHash,
-                                                       @RequestBody String privateKey) {
-        Signature signature = signMessageHashAndGetSignature(messageHash, privateKey);
-
-        if (signature.getValue() == null || signature.getValue().isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(signature.getValue());
-    }
 }
 
