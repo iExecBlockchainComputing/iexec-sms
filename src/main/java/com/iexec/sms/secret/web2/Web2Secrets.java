@@ -25,6 +25,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Getter
@@ -46,12 +47,9 @@ public class Web2Secrets {
         this.secrets = new ArrayList<>();
     }
 
-    public Secret getSecret(String secretAddress) {
-        for (Secret secret : secrets) {
-            if (secret.getAddress().equals(secretAddress)) {
-                return secret;
-            }
-        }
-        return null;
+    public Optional<Secret> getSecret(String secretAddress) {
+        return secrets.stream()
+                .filter(secret -> secret.getAddress().equals(secretAddress))
+                .findFirst();
     }
 }

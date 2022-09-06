@@ -65,6 +65,7 @@ class Web2SecretsServiceTests {
                 .thenReturn(plainSecretValue);
 
         Optional<Secret> result = web2SecretsService.getSecret(ownerAddress, secretAddress, true);
+        assertThat(result).isNotEmpty();
         assertThat(result.get().getAddress()).isEqualTo(secretAddress);
         assertThat(result.get().getValue()).isEqualTo(plainSecretValue);
     }

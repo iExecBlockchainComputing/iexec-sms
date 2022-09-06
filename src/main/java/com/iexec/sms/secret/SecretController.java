@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
@@ -98,7 +99,7 @@ public class SecretController {
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
     public ResponseEntity<Void> isWeb2SecretSet(@RequestParam String ownerAddress,
                                                 @RequestParam String secretName) {
-        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, false);
+        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName);
         return secret.isPresent() ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
@@ -158,12 +159,12 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (web2SecretsService.getSecret(ownerAddress, secretName).isEmpty()) {
+        try {
+            web2SecretsService.updateSecret(ownerAddress, secretName, newSecretValue);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }
-
-        web2SecretsService.updateSecret(ownerAddress, secretName, newSecretValue);
-        return ResponseEntity.noContent().build();
     }
 
 }
