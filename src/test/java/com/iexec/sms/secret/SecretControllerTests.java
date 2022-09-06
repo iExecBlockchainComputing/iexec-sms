@@ -88,25 +88,28 @@ class SecretControllerTests {
     //endregion
 
     //region getWeb3Secret
-    @Test
-    void failToGetWeb3SecretWhenBadAuthorization() {
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void failToGetWeb3SecretWhenBadAuthorization(boolean shouldDecryptValue) {
         when(authorizationService.getChallengeForGetWeb3Secret(WEB3_SECRET_ADDRESS))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, WEB3_SECRET_ADDRESS))
                 .thenReturn(false);
-        assertThat(secretController.getWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, false))
+        assertThat(secretController.getWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, shouldDecryptValue))
                 .isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         verifyNoInteractions(web2SecretsService, web3SecretService);
     }
 
-    @Test
-    void failToGetWeb3SecretWhenSecretDoesNotExist() {
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void failToGetWeb3SecretWhenSecretDoesNotExist(boolean shouldDecryptValue) {
         when(authorizationService.getChallengeForGetWeb3Secret(WEB3_SECRET_ADDRESS))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, WEB3_SECRET_ADDRESS))
                 .thenReturn(true);
-        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS)).thenReturn(Optional.empty());
-        assertThat(secretController.getWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, false))
+        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS, shouldDecryptValue))
+                .thenReturn(Optional.empty());
+        assertThat(secretController.getWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, shouldDecryptValue))
                 .isEqualTo(ResponseEntity.notFound().build());
         verifyNoInteractions(web2SecretsService);
     }
@@ -192,25 +195,28 @@ class SecretControllerTests {
     //endregion
 
     //region getWeb2Secret
-    @Test
-    void failToGetWeb2SecretWhenBadAuthorization() {
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void failToGetWeb2SecretWhenBadAuthorization(boolean shouldDecryptValue) {
         when(authorizationService.getChallengeForGetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(false);
-        assertThat(secretController.getWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, false))
+        assertThat(secretController.getWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, shouldDecryptValue))
                 .isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         verifyNoInteractions(web2SecretsService, web3SecretService);
     }
 
-    @Test
-    void failToGetWeb2SecretWhenSecretDoesNotExist() {
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void failToGetWeb2SecretWhenSecretDoesNotExist(boolean shouldDecryptValue) {
         when(authorizationService.getChallengeForGetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
-        when(web2SecretsService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME)).thenReturn(Optional.empty());
-        assertThat(secretController.getWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, false))
+        when(web2SecretsService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, shouldDecryptValue))
+                .thenReturn(Optional.empty());
+        assertThat(secretController.getWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, shouldDecryptValue))
                 .isEqualTo(ResponseEntity.notFound().build());
         verifyNoInteractions(web3SecretService);
     }
