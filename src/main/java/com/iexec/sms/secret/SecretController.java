@@ -49,13 +49,13 @@ public class SecretController {
     // Web3
 
     @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
-    public ResponseEntity<?> isWeb3SecretSet(@RequestParam String secretAddress) {
+    public ResponseEntity<Void> isWeb3SecretSet(@RequestParam String secretAddress) {
         Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/web3")
-    public ResponseEntity<Web3Secret> getWeb3Secret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<Web3Secret> getWeb3Secret(@RequestHeader String authorization,
                                                     @RequestParam String secretAddress,
                                                     @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
         String challenge = authorizationService.getChallengeForGetWeb3Secret(secretAddress);
@@ -71,7 +71,7 @@ public class SecretController {
     }
 
     @PostMapping("/web3")
-    public ResponseEntity<String> addWeb3Secret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<String> addWeb3Secret(@RequestHeader String authorization,
                                                 @RequestParam String secretAddress,
                                                 @RequestBody String secretValue) {
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
@@ -96,14 +96,14 @@ public class SecretController {
     // Web2
 
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
-    public ResponseEntity<?> isWeb2SecretSet(@RequestParam String ownerAddress,
-                                          @RequestParam String secretName) {
+    public ResponseEntity<Void> isWeb2SecretSet(@RequestParam String ownerAddress,
+                                                @RequestParam String secretName) {
         Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName, false);
         return secret.map(body -> ResponseEntity.noContent().build()).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/web2")
-    public ResponseEntity<Secret> getWeb2Secret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<Secret> getWeb2Secret(@RequestHeader String authorization,
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestParam(required = false, defaultValue = "false") boolean shouldDecryptSecret) {
@@ -119,7 +119,7 @@ public class SecretController {
     }
 
     @PostMapping("/web2")
-    public ResponseEntity<String> addWeb2Secret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<String> addWeb2Secret(@RequestHeader String authorization,
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestBody String secretValue) {
@@ -143,7 +143,7 @@ public class SecretController {
     }
 
     @PutMapping("/web2")
-    public ResponseEntity<String> updateWeb2Secret(@RequestHeader("Authorization") String authorization,
+    public ResponseEntity<String> updateWeb2Secret(@RequestHeader String authorization,
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
