@@ -22,6 +22,8 @@ import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -109,15 +111,18 @@ class SecretControllerTests {
         verifyNoInteractions(web2SecretsService);
     }
 
-    @Test
-    void getWeb3Secret() {
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void getWeb3Secret(boolean shouldDecryptSecret) {
+        Web3Secret expectedSecret = new Web3Secret();
         when(authorizationService.getChallengeForGetWeb3Secret(WEB3_SECRET_ADDRESS))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, WEB3_SECRET_ADDRESS))
                 .thenReturn(true);
-        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS)).thenReturn(Optional.of(new Web3Secret()));
-        assertThat(secretController.getWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, false))
-                .isEqualTo(ResponseEntity.notFound().build());
+        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS, shouldDecryptSecret))
+                .thenReturn(Optional.of(expectedSecret));
+        assertThat(secretController.getWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, shouldDecryptSecret))
+                .isEqualTo(ResponseEntity.ok(expectedSecret));
         verifyNoInteractions(web2SecretsService);
     }
     //endregion
@@ -210,15 +215,18 @@ class SecretControllerTests {
         verifyNoInteractions(web3SecretService);
     }
 
-    @Test
-    void getWeb2Secret() {
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void getWeb2Secret(boolean shouldDecryptSecret) {
+        Secret expectedSecret = new Secret();
         when(authorizationService.getChallengeForGetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
-        when(web2SecretsService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME)).thenReturn(Optional.of(new Secret()));
-        assertThat(secretController.getWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, false))
-                .isEqualTo(ResponseEntity.notFound().build());
+        when(web2SecretsService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, shouldDecryptSecret))
+                .thenReturn(Optional.of(expectedSecret));
+        assertThat(secretController.getWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, shouldDecryptSecret))
+                .isEqualTo(ResponseEntity.ok(expectedSecret));
         verifyNoInteractions(web3SecretService);
     }
     //endregion
