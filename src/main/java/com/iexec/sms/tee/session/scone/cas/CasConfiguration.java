@@ -17,13 +17,11 @@
 package com.iexec.sms.tee.session.scone.cas;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.tee.EnableIfTeeProvider;
-import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
+import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,8 +36,7 @@ import org.springframework.stereotype.Component;
  * code. It guarantees that a code behaves exactly as expected.
  */
 @Component
-@Conditional(EnableIfTeeProvider.class)
-@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.SCONE)
+@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
