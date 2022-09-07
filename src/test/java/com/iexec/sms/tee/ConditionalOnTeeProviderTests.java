@@ -65,8 +65,7 @@ class ConditionalOnTeeProviderTests {
                 Arguments.of(GramineInternalServicesConfiguration.class),
                 Arguments.of(GramineSessionHandlerService.class),
                 Arguments.of(GramineSessionMakerService.class),
-                Arguments.of(SpsConfiguration.class),
-                Arguments.of(GramineInternalServicesConfiguration.class)
+                Arguments.of(SpsConfiguration.class)
         );
     }
 
