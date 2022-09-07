@@ -164,4 +164,22 @@ class SmsClientProviderTests {
                 e.getMessage());
     }
     // endregion
+
+    // region purgeTask
+    @Test
+    void shouldPurgeTask() {
+        // Adding a task
+        smsClientProvider.getOrCreateSmsClientForTask(TASK_DESCRIPTION_1);
+
+        // Purging the task
+        boolean purged = smsClientProvider.purgeTask(CHAIN_TASK_ID_1);
+        assertTrue(purged);
+    }
+
+    @Test
+    void shouldNotPurgeTaskSinceTaskNeverAccessed() {
+        boolean purged = smsClientProvider.purgeTask(CHAIN_TASK_ID_1);
+        assertFalse(purged);
+    }
+    // endregion
 }
