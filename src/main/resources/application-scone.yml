@@ -7,6 +7,18 @@ tee:
       hostname: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME:localhost}
       port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:18765}
 
+  workflow:
+    pre-compute:
+      image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
+      fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
+      heap-size-gb: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB:3}
+      entrypoint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
+    post-compute:
+      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-post-compute:x.y.z-production
+      fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
+      heap-size-gb: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB:3}
+      entrypoint: ${IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
+
   scone:
     las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:} # e.g.: registry.scontain.com:5050/scone-production/iexec-las:x.y.z
     attestation:

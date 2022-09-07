@@ -1,5 +1,6 @@
 package com.iexec.sms.tee;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
 import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
 import com.iexec.sms.tee.config.TeeInternalServicesConfiguration;
@@ -20,10 +21,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -31,9 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-class EnableIfTeeProviderTests {
-    @Conditional(EnableIfTeeProvider.class)
-    @EnableIfTeeProviderDefinition(providers = {})
+class ConditionalOnTeeProviderTests {
+    @ConditionalOnTeeProvider(providers = {})
     static class NoProvidersSet {}
 
     @Mock
@@ -42,7 +42,7 @@ class EnableIfTeeProviderTests {
     ConditionContext context;
     @Mock
     AnnotationMetadata metadata;
-    EnableIfTeeProvider condition = new EnableIfTeeProvider();
+    OnTeeProviderCondition condition = new OnTeeProviderCondition();
 
     @BeforeEach
     void init() {
@@ -65,8 +65,7 @@ class EnableIfTeeProviderTests {
                 Arguments.of(GramineInternalServicesConfiguration.class),
                 Arguments.of(GramineSessionHandlerService.class),
                 Arguments.of(GramineSessionMakerService.class),
-                Arguments.of(SpsConfiguration.class),
-                Arguments.of(GramineInternalServicesConfiguration.class)
+                Arguments.of(SpsConfiguration.class)
         );
     }
 
@@ -89,6 +88,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"scone"});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertTrue(condition.matches(context, metadata));
     }
@@ -99,6 +99,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"gramine"});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertTrue(condition.matches(context, metadata));
     }
@@ -109,6 +110,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"scone", "gramine"});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertTrue(condition.matches(context, metadata));
     }
@@ -121,6 +123,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"gramine"});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertFalse(condition.matches(context, metadata));
     }
@@ -131,6 +134,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"scone"});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertFalse(condition.matches(context, metadata));
     }
@@ -141,6 +145,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertFalse(condition.matches(context, metadata));
     }
@@ -162,6 +167,7 @@ class EnableIfTeeProviderTests {
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"scone", "gramine"});
         when(metadata.getClassName()).thenReturn(clazz.getName());
+        setAttributesForMetadataMock(clazz);
 
         assertFalse(condition.matches(context, metadata));
     }
@@ -179,4 +185,11 @@ class EnableIfTeeProviderTests {
 
 
     // endregion
+
+    void setAttributesForMetadataMock(Class<?> clazz) {
+        ConditionalOnTeeProvider annotation = clazz.getAnnotation(ConditionalOnTeeProvider.class);
+        TeeEnclaveProvider[] providers = annotation.providers();
+        when(metadata.getAnnotationAttributes(ConditionalOnTeeProvider.class.getName()))
+                .thenReturn(Map.of("providers", providers));
+    }
 }

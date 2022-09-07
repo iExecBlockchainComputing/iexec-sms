@@ -18,8 +18,7 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.EnableIfTeeProvider;
-import com.iexec.sms.tee.EnableIfTeeProviderDefinition;
+import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
@@ -28,14 +27,12 @@ import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Conditional(EnableIfTeeProvider.class)
-@EnableIfTeeProviderDefinition(providers = TeeEnclaveProvider.SCONE)
+@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 public class SconeSessionHandlerService implements TeeSessionHandler {
     private SconeSessionMakerService sessionService;
     private CasClient apiClient;
