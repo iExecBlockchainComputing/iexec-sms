@@ -23,5 +23,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Conditional(OnTeeProviderCondition.class)
 public @interface ConditionalOnTeeProvider {
-    TeeEnclaveProvider[] providers() default {};
+    TeeEnclaveProvider[] providers();
 }

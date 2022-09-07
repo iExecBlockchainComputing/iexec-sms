@@ -25,6 +25,13 @@ public class OnTeeProviderCondition extends SpringBootCondition {
         final String[] activeProfiles = context.getEnvironment().getActiveProfiles();
 
         final String beanClassName = ((AnnotationMetadata) metadata).getClassName();
+        if (attributes == null) {
+            log.warn("No attribute for bean annotation, won't be loaded [bean:{}",
+                    beanClassName);
+            return new ConditionOutcome(
+                    false,
+                    ConditionMessage.forCondition(ConditionalOnTeeProvider.class).didNotFind("any TEE enclave providers").atAll());
+        }
 
         final TeeEnclaveProvider[] providers = (TeeEnclaveProvider[]) attributes.get("providers");
         if (providers == null || providers.length == 0) {
