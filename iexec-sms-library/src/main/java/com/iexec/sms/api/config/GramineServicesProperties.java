@@ -16,4 +16,9 @@ public class GramineServicesProperties extends TeeServicesProperties {
                                      TeeAppProperties postComputeProperties) {
         super(TeeEnclaveProvider.GRAMINE, preComputeProperties, postComputeProperties);
     }
+
+    @Override
+    public TeeServicesProperties getProperties() {
+        return new GramineServicesProperties(getPreComputeProperties(), getPostComputeProperties());
+    }
 }

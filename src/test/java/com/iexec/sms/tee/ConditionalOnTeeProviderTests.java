@@ -3,7 +3,6 @@ package com.iexec.sms.tee;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
 import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
-import com.iexec.sms.tee.config.TeeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
@@ -76,7 +75,6 @@ class ConditionalOnTeeProviderTests {
 
     static Stream<Arguments> nonAnnotatedClasses() {
         return Stream.of(
-                Arguments.of(TeeInternalServicesConfiguration.class),
                 Arguments.of(TeeSessionHandler.class)
         );
     }

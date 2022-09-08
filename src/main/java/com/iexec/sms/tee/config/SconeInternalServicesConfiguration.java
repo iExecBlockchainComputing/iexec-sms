@@ -15,8 +15,7 @@ import javax.validation.constraints.NotBlank;
 @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 @Getter
 public class SconeInternalServicesConfiguration
-        extends SconeServicesProperties
-        implements TeeInternalServicesConfiguration{
+        extends SconeServicesProperties {
     public SconeInternalServicesConfiguration(
             TeeAppProperties preComputeProperties,
             TeeAppProperties postComputeProperties,

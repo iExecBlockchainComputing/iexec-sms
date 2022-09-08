@@ -19,4 +19,9 @@ public class SconeServicesProperties extends TeeServicesProperties {
         super(TeeEnclaveProvider.SCONE, preComputeProperties, postComputeProperties);
         this.lasImage = lasImage;
     }
+
+    @Override
+    public TeeServicesProperties getProperties() {
+        return new SconeServicesProperties(getPreComputeProperties(), getPostComputeProperties(), getLasImage());
+    }
 }

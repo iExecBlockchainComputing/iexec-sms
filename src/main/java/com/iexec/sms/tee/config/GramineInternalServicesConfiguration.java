@@ -12,8 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
 @Getter
 public class GramineInternalServicesConfiguration
-        extends GramineServicesProperties
-        implements TeeInternalServicesConfiguration {
+        extends GramineServicesProperties {
     public GramineInternalServicesConfiguration(
             TeeAppProperties preComputeProperties,
             TeeAppProperties postComputeProperties) {
