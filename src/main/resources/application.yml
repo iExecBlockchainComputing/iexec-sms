@@ -49,16 +49,6 @@ blockchain:
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
   is-sidechain: ${IEXEC_IS_SIDECHAIN:false}
 
-# TODO /!\ remove the option of env variable for releases.
-tee:
-  secret-provisioner:
-    web:
-      hostname: ${IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME:localhost}
-      port: ${IEXEC_SECRET_PROVISIONER_WEB_PORT}
-    enclave:
-      hostname: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME:localhost}
-      port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT}
-
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
 #  level:
