@@ -18,6 +18,4 @@ public abstract class TeeServicesProperties {
     TeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
         this.teeEnclaveProvider = teeEnclaveProvider;
     }
-
-    public abstract TeeServicesProperties getProperties();
 }
