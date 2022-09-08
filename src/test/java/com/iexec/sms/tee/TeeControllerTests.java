@@ -5,10 +5,10 @@ import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
-import com.iexec.sms.api.config.GramineServicesConfiguration;
-import com.iexec.sms.api.config.SconeServicesConfiguration;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -55,12 +55,12 @@ class TeeControllerTests {
     @Mock
     TeeSessionService teeSessionService;
     @Mock
-    TeeServicesConfiguration teeServicesConfig;
+    TeeServicesProperties teeServicesConfig;
 
     @Mock
-    TeeAppConfiguration preComputeConfig;
+    TeeAppProperties preComputeConfig;
     @Mock
-    TeeAppConfiguration postComputeConfig;
+    TeeAppProperties postComputeConfig;
 
     @InjectMocks
     TeeController teeController;
@@ -126,19 +126,19 @@ class TeeControllerTests {
                 authorizationService, teeChallengeService, teeSessionService, config
         );
 
-        final ResponseEntity<TeeServicesConfiguration> response =
+        final ResponseEntity<TeeServicesProperties> response =
                 teeController.getTeeServicesConfig(TeeEnclaveProvider.SCONE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        final TeeServicesConfiguration result = response.getBody();
+        final TeeServicesProperties result = response.getBody();
         assertNotNull(result);
-        assertInstanceOf(SconeServicesConfiguration.class, result);
+        assertInstanceOf(SconeServicesProperties.class, result);
         assertEquals(TeeEnclaveProvider.SCONE, result.getTeeEnclaveProvider());
-        assertEquals(preComputeConfig, result.getPreComputeConfiguration());
-        assertEquals(postComputeConfig, result.getPostComputeConfiguration());
-        assertEquals(postComputeConfig, result.getPostComputeConfiguration());
-        assertEquals(LAS_IMAGE, ((SconeServicesConfiguration) result).getLasImage());
+        assertEquals(preComputeConfig, result.getPreComputeProperties());
+        assertEquals(postComputeConfig, result.getPostComputeProperties());
+        assertEquals(postComputeConfig, result.getPostComputeProperties());
+        assertEquals(LAS_IMAGE, ((SconeServicesProperties) result).getLasImage());
     }
 
     @Test
@@ -152,17 +152,17 @@ class TeeControllerTests {
                 authorizationService, teeChallengeService, teeSessionService, config
         );
 
-        final ResponseEntity<TeeServicesConfiguration> response =
+        final ResponseEntity<TeeServicesProperties> response =
                 teeController.getTeeServicesConfig(TeeEnclaveProvider.GRAMINE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        final TeeServicesConfiguration result = response.getBody();
+        final TeeServicesProperties result = response.getBody();
         assertNotNull(result);
-        assertInstanceOf(GramineServicesConfiguration.class, result);
+        assertInstanceOf(GramineServicesProperties.class, result);
         assertEquals(TeeEnclaveProvider.GRAMINE, result.getTeeEnclaveProvider());
-        assertEquals(preComputeConfig, result.getPreComputeConfiguration());
-        assertEquals(postComputeConfig, result.getPostComputeConfiguration());
+        assertEquals(preComputeConfig, result.getPreComputeProperties());
+        assertEquals(postComputeConfig, result.getPostComputeProperties());
     }
 
     @Test
@@ -177,7 +177,7 @@ class TeeControllerTests {
                 authorizationService, teeChallengeService, teeSessionService, config
         );
 
-        final ResponseEntity<TeeServicesConfiguration> response =
+        final ResponseEntity<TeeServicesProperties> response =
                 teeController.getTeeServicesConfig(TeeEnclaveProvider.GRAMINE);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
@@ -194,7 +194,7 @@ class TeeControllerTests {
                 authorizationService, teeChallengeService, teeSessionService, config
         );
 
-        final ResponseEntity<TeeServicesConfiguration> response =
+        final ResponseEntity<TeeServicesProperties> response =
                 teeController.getTeeServicesConfig(TeeEnclaveProvider.SCONE);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());

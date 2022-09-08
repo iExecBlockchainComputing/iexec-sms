@@ -2,7 +2,7 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.api.config.TeeAppConfiguration;
+import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
@@ -26,9 +26,9 @@ import static org.mockito.Mockito.when;
 @Slf4j
 class GramineSessionMakerServiceTests {
     @Mock
-    private TeeAppConfiguration preComputeConfiguration;
+    private TeeAppProperties preComputeConfiguration;
     @Mock
-    private TeeAppConfiguration postComputeConfiguration;
+    private TeeAppProperties postComputeConfiguration;
     @Mock
     private GramineInternalServicesConfiguration teeServicesConfig;
     @Mock
@@ -39,8 +39,8 @@ class GramineSessionMakerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeConfiguration()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeConfiguration()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeConfiguration);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeConfiguration);
     }
 
     // region getSessionYml

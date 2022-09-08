@@ -7,8 +7,8 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -63,11 +63,11 @@ class SecretSessionBaseServiceTests {
     @Mock
     private TeeChallengeService teeChallengeService;
     @Mock
-    private TeeAppConfiguration preComputeConfiguration;
+    private TeeAppProperties preComputeConfiguration;
     @Mock
-    private TeeAppConfiguration postComputeConfiguration;
+    private TeeAppProperties postComputeConfiguration;
     @Mock
-    private TeeServicesConfiguration teeServicesConfig;
+    private TeeServicesProperties teeServicesConfig;
     @Mock
     private TeeTaskComputeSecretService teeTaskComputeSecretService;
 
@@ -77,8 +77,8 @@ class SecretSessionBaseServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeConfiguration()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeConfiguration()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeConfiguration);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeConfiguration);
     }
 
     // region getSecretsTokens

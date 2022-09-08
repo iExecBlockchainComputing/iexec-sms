@@ -17,7 +17,7 @@
 package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
@@ -54,12 +54,12 @@ public class SconeSessionMakerService {
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private final TeeServicesConfiguration teeServicesConfig;
+    private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
-            TeeServicesConfiguration teeServicesConfig,
+            TeeServicesProperties teeServicesConfig,
             SconeSessionSecurityConfig attestationSecurityConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeServicesConfig = teeServicesConfig;
@@ -95,7 +95,7 @@ public class SconeSessionMakerService {
             SconeEnclave sconePreEnclave = toSconeEnclave(
                     baseSession.getPreCompute());
             sconePreEnclave
-                    .setCommand(teeServicesConfig.getPreComputeConfiguration().getEntrypoint());
+                    .setCommand(teeServicesConfig.getPreComputeProperties().getEntrypoint());
             addJavaEnvVars(sconePreEnclave);
             services.add(sconePreEnclave);
             images.add(new SconeSession.Image(sconePreEnclave.getImageName(),
@@ -113,7 +113,7 @@ public class SconeSessionMakerService {
         SconeEnclave sconePostEnclave = toSconeEnclave(
                 baseSession.getPostCompute());
         sconePostEnclave
-                .setCommand(teeServicesConfig.getPostComputeConfiguration().getEntrypoint());
+                .setCommand(teeServicesConfig.getPostComputeProperties().getEntrypoint());
         addJavaEnvVars(sconePostEnclave);
         services.add(sconePostEnclave);
         images.add(new SconeSession.Image(sconePostEnclave.getImageName(),

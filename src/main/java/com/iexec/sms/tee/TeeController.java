@@ -22,7 +22,7 @@ import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -90,14 +90,14 @@ public class TeeController {
      * heap size, ...)
      */
     @GetMapping("/config/{teeEnclaveProvider}")
-    public ResponseEntity<TeeServicesConfiguration> getTeeServicesConfig(
+    public ResponseEntity<TeeServicesProperties> getTeeServicesConfig(
             @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider != teeServicesConfig.getTeeEnclaveProvider()) {
             log.error("SMS configured to use another TeeEnclaveProvider " +
                     "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        return ResponseEntity.ok(teeServicesConfig.getShareableConfiguration());
+        return ResponseEntity.ok(teeServicesConfig.getProperties());
     }
 
     /**

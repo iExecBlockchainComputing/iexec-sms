@@ -1,9 +1,9 @@
 package com.iexec.sms.tee.config;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.api.config.SconeServicesConfiguration;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,11 +15,11 @@ import javax.validation.constraints.NotBlank;
 @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 @Getter
 public class SconeInternalServicesConfiguration
-        extends SconeServicesConfiguration
+        extends SconeServicesProperties
         implements TeeInternalServicesConfiguration{
     public SconeInternalServicesConfiguration(
-            TeeAppConfiguration preComputeConfiguration,
-            TeeAppConfiguration postComputeConfiguration,
+            TeeAppProperties preComputeConfiguration,
+            TeeAppProperties postComputeConfiguration,
             @Value("${tee.scone.las-image}")
             @NotBlank(message = "las image must be provided")
             String lasImage) {
@@ -27,7 +27,7 @@ public class SconeInternalServicesConfiguration
     }
 
     @Override
-    public TeeServicesConfiguration getShareableConfiguration() {
-        return new SconeServicesConfiguration(getPreComputeConfiguration(), getPostComputeConfiguration(), getLasImage());
+    public TeeServicesProperties getProperties() {
+        return new SconeServicesProperties(getPreComputeProperties(), getPostComputeProperties(), getLasImage());
     }
 }

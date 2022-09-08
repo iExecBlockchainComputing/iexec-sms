@@ -17,10 +17,10 @@
 package com.iexec.sms.api;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.api.config.GramineServicesConfiguration;
-import com.iexec.sms.api.config.SconeServicesConfiguration;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
@@ -33,15 +33,15 @@ class SmsClientTests {
     private static final String LAS_IMAGE = "lasImage";
 
     @Mock
-    TeeAppConfiguration preComputeConfig;
+    TeeAppProperties preComputeConfig;
     @Mock
-    TeeAppConfiguration postComputeConfig;
+    TeeAppProperties postComputeConfig;
 
     // region getTeeServicesConfiguration
     @Test
     void shouldGetSconeServicesConfiguration() {
         final SmsClient smsClient = spy(SmsClient.class);
-        final SconeServicesConfiguration config = new SconeServicesConfiguration(
+        final SconeServicesProperties config = new SconeServicesProperties(
                 preComputeConfig,
                 postComputeConfig,
                 LAS_IMAGE
@@ -49,26 +49,26 @@ class SmsClientTests {
 
         when(smsClient.getSconeServicesConfiguration()).thenReturn(config);
 
-        final TeeServicesConfiguration teeServicesConfiguration =
+        final TeeServicesProperties teeServicesProperties =
                 smsClient.getTeeServicesConfiguration(TeeEnclaveProvider.SCONE);
 
-        assertEquals(config, teeServicesConfiguration);
+        assertEquals(config, teeServicesProperties);
     }
 
     @Test
     void shouldGetGramineServicesConfiguration() {
         final SmsClient smsClient = spy(SmsClient.class);
-        final GramineServicesConfiguration config = new GramineServicesConfiguration(
+        final GramineServicesProperties config = new GramineServicesProperties(
                 preComputeConfig,
                 postComputeConfig
         );
 
         when(smsClient.getGramineServicesConfiguration()).thenReturn(config);
 
-        final TeeServicesConfiguration teeServicesConfiguration =
+        final TeeServicesProperties teeServicesProperties =
                 smsClient.getTeeServicesConfiguration(TeeEnclaveProvider.GRAMINE);
 
-        assertEquals(config, teeServicesConfiguration);
+        assertEquals(config, teeServicesProperties);
     }
 
     @Test
@@ -77,10 +77,10 @@ class SmsClientTests {
 
         when(smsClient.getGramineServicesConfiguration()).thenReturn(null);
 
-        final TeeServicesConfiguration teeServicesConfiguration =
+        final TeeServicesProperties teeServicesProperties =
                 smsClient.getTeeServicesConfiguration(TeeEnclaveProvider.GRAMINE);
 
-        assertNull(teeServicesConfiguration);
+        assertNull(teeServicesProperties);
     }
     // endregion
 }

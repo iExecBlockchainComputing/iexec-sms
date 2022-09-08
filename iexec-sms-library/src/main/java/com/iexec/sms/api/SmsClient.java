@@ -20,9 +20,9 @@ import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
-import com.iexec.sms.api.config.GramineServicesConfiguration;
-import com.iexec.sms.api.config.SconeServicesConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -108,12 +108,12 @@ public interface SmsClient {
     TeeEnclaveProvider getTeeEnclaveProvider();
 
     @RequestLine("GET /tee/config/scone")
-    SconeServicesConfiguration getSconeServicesConfiguration();
+    SconeServicesProperties getSconeServicesConfiguration();
 
     @RequestLine("GET /tee/config/gramine")
-    GramineServicesConfiguration getGramineServicesConfiguration();
+    GramineServicesProperties getGramineServicesConfiguration();
 
-    default <T extends TeeServicesConfiguration> T getTeeServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
+    default <T extends TeeServicesProperties> T getTeeServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider == TeeEnclaveProvider.SCONE) {
             return (T) getSconeServicesConfiguration();
         } else if (teeEnclaveProvider == TeeEnclaveProvider.GRAMINE) {

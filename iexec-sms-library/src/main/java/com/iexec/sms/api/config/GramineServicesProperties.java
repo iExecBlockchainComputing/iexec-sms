@@ -6,14 +6,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class GramineServicesConfiguration extends TeeServicesConfiguration {
+public class GramineServicesProperties extends TeeServicesProperties {
 
-    public GramineServicesConfiguration() {
+    public GramineServicesProperties() {
         super(TeeEnclaveProvider.GRAMINE);
     }
 
-    public GramineServicesConfiguration(TeeAppConfiguration preComputeConfiguration,
-                                        TeeAppConfiguration postComputeConfiguration) {
+    public GramineServicesProperties(TeeAppProperties preComputeConfiguration,
+                                     TeeAppProperties postComputeConfiguration) {
         super(TeeEnclaveProvider.GRAMINE, preComputeConfiguration, postComputeConfiguration);
     }
 }

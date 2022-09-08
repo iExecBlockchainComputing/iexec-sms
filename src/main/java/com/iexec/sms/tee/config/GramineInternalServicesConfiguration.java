@@ -1,9 +1,9 @@
 package com.iexec.sms.tee.config;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.api.config.GramineServicesConfiguration;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import lombok.Getter;
 import org.springframework.context.annotation.Configuration;
@@ -12,16 +12,16 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
 @Getter
 public class GramineInternalServicesConfiguration
-        extends GramineServicesConfiguration
+        extends GramineServicesProperties
         implements TeeInternalServicesConfiguration {
     public GramineInternalServicesConfiguration(
-            TeeAppConfiguration preComputeConfiguration,
-            TeeAppConfiguration postComputeConfiguration) {
+            TeeAppProperties preComputeConfiguration,
+            TeeAppProperties postComputeConfiguration) {
         super(preComputeConfiguration, postComputeConfiguration);
     }
 
     @Override
-    public TeeServicesConfiguration getShareableConfiguration() {
-        return new GramineServicesConfiguration(getPreComputeConfiguration(), getPostComputeConfiguration());
+    public TeeServicesProperties getProperties() {
+        return new GramineServicesProperties(getPreComputeProperties(), getPostComputeProperties());
     }
 }

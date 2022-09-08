@@ -18,7 +18,7 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.api.config.TeeAppConfiguration;
+import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
@@ -49,9 +49,9 @@ class SconeSessionMakerServiceTests {
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
 
     @Mock
-    private TeeAppConfiguration preComputeConfiguration;
+    private TeeAppProperties preComputeConfiguration;
     @Mock
-    private TeeAppConfiguration postComputeConfiguration;
+    private TeeAppProperties postComputeConfiguration;
     @Mock
     private SconeInternalServicesConfiguration teeServicesConfig;
     @Mock
@@ -65,8 +65,8 @@ class SconeSessionMakerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeConfiguration()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeConfiguration()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeConfiguration);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeConfiguration);
     }
 
     // region getSessionYml
