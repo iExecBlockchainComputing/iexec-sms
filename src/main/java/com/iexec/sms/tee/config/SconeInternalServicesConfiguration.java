@@ -18,12 +18,12 @@ public class SconeInternalServicesConfiguration
         extends SconeServicesProperties
         implements TeeInternalServicesConfiguration{
     public SconeInternalServicesConfiguration(
-            TeeAppProperties preComputeConfiguration,
-            TeeAppProperties postComputeConfiguration,
+            TeeAppProperties preComputeProperties,
+            TeeAppProperties postComputeProperties,
             @Value("${tee.scone.las-image}")
             @NotBlank(message = "las image must be provided")
             String lasImage) {
-        super(preComputeConfiguration, postComputeConfiguration, lasImage);
+        super(preComputeProperties, postComputeProperties, lasImage);
     }
 
     @Override

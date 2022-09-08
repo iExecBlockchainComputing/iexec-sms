@@ -49,9 +49,9 @@ class SconeSessionMakerServiceTests {
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
 
     @Mock
-    private TeeAppProperties preComputeConfiguration;
+    private TeeAppProperties preComputeProperties;
     @Mock
-    private TeeAppProperties postComputeConfiguration;
+    private TeeAppProperties postComputeProperties;
     @Mock
     private SconeInternalServicesConfiguration teeServicesConfig;
     @Mock
@@ -65,8 +65,8 @@ class SconeSessionMakerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
     }
 
     // region getSessionYml
@@ -75,8 +75,8 @@ class SconeSessionMakerServiceTests {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
-        when(preComputeConfiguration.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
-        when(postComputeConfiguration.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
+        when(preComputeProperties.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
+        when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
 

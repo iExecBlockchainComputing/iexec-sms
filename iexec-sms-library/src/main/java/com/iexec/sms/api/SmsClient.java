@@ -107,17 +107,17 @@ public interface SmsClient {
     @RequestLine("GET /tee/provider")
     TeeEnclaveProvider getTeeEnclaveProvider();
 
-    @RequestLine("GET /tee/config/scone")
-    SconeServicesProperties getSconeServicesConfiguration();
+    @RequestLine("GET /tee/properties/scone")
+    SconeServicesProperties getSconeServicesProperties();
 
-    @RequestLine("GET /tee/config/gramine")
-    GramineServicesProperties getGramineServicesConfiguration();
+    @RequestLine("GET /tee/properties/gramine")
+    GramineServicesProperties getGramineServicesProperties();
 
-    default <T extends TeeServicesProperties> T getTeeServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
+    default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider == TeeEnclaveProvider.SCONE) {
-            return (T) getSconeServicesConfiguration();
+            return (T) getSconeServicesProperties();
         } else if (teeEnclaveProvider == TeeEnclaveProvider.GRAMINE) {
-            return (T) getGramineServicesConfiguration();
+            return (T) getGramineServicesProperties();
         }
 
         return null;

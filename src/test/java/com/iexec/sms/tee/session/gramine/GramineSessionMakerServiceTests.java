@@ -26,9 +26,9 @@ import static org.mockito.Mockito.when;
 @Slf4j
 class GramineSessionMakerServiceTests {
     @Mock
-    private TeeAppProperties preComputeConfiguration;
+    private TeeAppProperties preComputeProperties;
     @Mock
-    private TeeAppProperties postComputeConfiguration;
+    private TeeAppProperties postComputeProperties;
     @Mock
     private GramineInternalServicesConfiguration teeServicesConfig;
     @Mock
@@ -39,8 +39,8 @@ class GramineSessionMakerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
     }
 
     // region getSessionYml
@@ -49,8 +49,8 @@ class GramineSessionMakerServiceTests {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
-        when(postComputeConfiguration.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
-        when(postComputeConfiguration.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
+        when(postComputeProperties.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
+        when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn("/apploader.sh");
 

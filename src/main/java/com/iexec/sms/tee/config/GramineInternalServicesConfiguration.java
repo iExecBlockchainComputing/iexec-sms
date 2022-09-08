@@ -15,9 +15,9 @@ public class GramineInternalServicesConfiguration
         extends GramineServicesProperties
         implements TeeInternalServicesConfiguration {
     public GramineInternalServicesConfiguration(
-            TeeAppProperties preComputeConfiguration,
-            TeeAppProperties postComputeConfiguration) {
-        super(preComputeConfiguration, postComputeConfiguration);
+            TeeAppProperties preComputeProperties,
+            TeeAppProperties postComputeProperties) {
+        super(preComputeProperties, postComputeProperties);
     }
 
     @Override

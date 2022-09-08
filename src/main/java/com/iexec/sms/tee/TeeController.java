@@ -89,7 +89,7 @@ public class TeeController {
      * @return TEE services config (pre-compute image uri, post-compute image uri,
      * heap size, ...)
      */
-    @GetMapping("/config/{teeEnclaveProvider}")
+    @GetMapping("/properties/{teeEnclaveProvider}")
     public ResponseEntity<TeeServicesProperties> getTeeServicesConfig(
             @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
         if (teeEnclaveProvider != teeServicesConfig.getTeeEnclaveProvider()) {

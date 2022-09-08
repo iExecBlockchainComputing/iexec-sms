@@ -23,9 +23,9 @@ public class MockTeeConfiguration {
     @MockBean
     private TeeServicesProperties teeServicesProperties;
     @MockBean
-    @Qualifier("preComputeConfiguration")
-    private TeeAppProperties preComputeConfiguration;
+    @Qualifier("preComputeProperties")
+    private TeeAppProperties preComputeProperties;
     @MockBean
-    @Qualifier("postComputeConfiguration")
-    private TeeAppProperties postComputeConfiguration;
+    @Qualifier("postComputeProperties")
+    private TeeAppProperties postComputeProperties;
 }

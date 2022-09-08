@@ -58,9 +58,9 @@ class TeeControllerTests {
     TeeServicesProperties teeServicesConfig;
 
     @Mock
-    TeeAppProperties preComputeConfig;
+    TeeAppProperties preComputeProperties;
     @Mock
-    TeeAppProperties postComputeConfig;
+    TeeAppProperties postComputeProperties;
 
     @InjectMocks
     TeeController teeController;
@@ -74,8 +74,8 @@ class TeeControllerTests {
     @Test
     void shouldGetSconeProvider() {
         final TeeInternalServicesConfiguration config = new SconeInternalServicesConfiguration(
-                preComputeConfig,
-                postComputeConfig,
+                preComputeProperties,
+                postComputeProperties,
                 LAS_IMAGE
         );
 
@@ -95,8 +95,8 @@ class TeeControllerTests {
     @Test
     void shouldGetGramineProvider() {
         final TeeInternalServicesConfiguration config = new GramineInternalServicesConfiguration(
-                preComputeConfig,
-                postComputeConfig
+                preComputeProperties,
+                postComputeProperties
         );
 
         final TeeController teeController = new TeeController(
@@ -117,8 +117,8 @@ class TeeControllerTests {
     @Test
     void shouldGetSconeConfig() {
         final TeeInternalServicesConfiguration config = new SconeInternalServicesConfiguration(
-                preComputeConfig,
-                postComputeConfig,
+                preComputeProperties,
+                postComputeProperties,
                 LAS_IMAGE
         );
 
@@ -135,17 +135,17 @@ class TeeControllerTests {
         assertNotNull(result);
         assertInstanceOf(SconeServicesProperties.class, result);
         assertEquals(TeeEnclaveProvider.SCONE, result.getTeeEnclaveProvider());
-        assertEquals(preComputeConfig, result.getPreComputeProperties());
-        assertEquals(postComputeConfig, result.getPostComputeProperties());
-        assertEquals(postComputeConfig, result.getPostComputeProperties());
+        assertEquals(preComputeProperties, result.getPreComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
         assertEquals(LAS_IMAGE, ((SconeServicesProperties) result).getLasImage());
     }
 
     @Test
     void shouldGetGramineConfig() {
         final TeeInternalServicesConfiguration config = new GramineInternalServicesConfiguration(
-                preComputeConfig,
-                postComputeConfig
+                preComputeProperties,
+                postComputeProperties
         );
 
         final TeeController teeController = new TeeController(
@@ -161,15 +161,15 @@ class TeeControllerTests {
         assertNotNull(result);
         assertInstanceOf(GramineServicesProperties.class, result);
         assertEquals(TeeEnclaveProvider.GRAMINE, result.getTeeEnclaveProvider());
-        assertEquals(preComputeConfig, result.getPreComputeProperties());
-        assertEquals(postComputeConfig, result.getPostComputeProperties());
+        assertEquals(preComputeProperties, result.getPreComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
     }
 
     @Test
     void shouldNotGetSconeConfigSinceGramineSms() {
         final TeeInternalServicesConfiguration config = new SconeInternalServicesConfiguration(
-                preComputeConfig,
-                postComputeConfig,
+                preComputeProperties,
+                postComputeProperties,
                 LAS_IMAGE
         );
 
@@ -186,8 +186,8 @@ class TeeControllerTests {
     @Test
     void shouldNotGetGramineConfigSinceSconeSms() {
         final TeeInternalServicesConfiguration config = new GramineInternalServicesConfiguration(
-                preComputeConfig,
-                postComputeConfig
+                preComputeProperties,
+                postComputeProperties
         );
 
         final TeeController teeController = new TeeController(

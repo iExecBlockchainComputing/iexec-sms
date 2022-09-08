@@ -14,7 +14,7 @@ import javax.validation.constraints.Positive;
 @Validated
 public class TeeWorkerInternalConfiguration {
     @Bean
-    TeeAppProperties preComputeConfiguration(
+    TeeAppProperties preComputeProperties(
             @Value("${tee.worker.pre-compute.image}")
             @NotBlank(message = "pre-compute image must be provided")
             String preComputeImage,
@@ -36,7 +36,7 @@ public class TeeWorkerInternalConfiguration {
     }
 
     @Bean
-    TeeAppProperties postComputeConfiguration(
+    TeeAppProperties postComputeProperties(
             @Value("${tee.worker.post-compute.image}")
             @NotBlank(message = "post-compute image must be provided")
             String postComputeImage,

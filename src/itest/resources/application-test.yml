@@ -10,3 +10,17 @@ spring:
   datasource:
     url: jdbc:h2:mem:db
 
+tee:
+  worker:
+    pre-compute:
+      image: some
+      fingerprint: some
+      heap-size-gb: 3
+      entrypoint: some
+    post-compute:
+      image: some
+      fingerprint: some
+      heap-size-gb: 3
+      entrypoint: some
+  scone:
+    las-image: some
