@@ -2,8 +2,8 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
+import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
-import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -30,7 +30,7 @@ class GramineSessionMakerServiceTests {
     @Mock
     private TeeAppProperties postComputeProperties;
     @Mock
-    private GramineInternalServicesConfiguration teeServicesConfig;
+    private GramineServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @InjectMocks

@@ -18,8 +18,8 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
+import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
-import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -53,7 +53,7 @@ class SconeSessionMakerServiceTests {
     @Mock
     private TeeAppProperties postComputeProperties;
     @Mock
-    private SconeInternalServicesConfiguration teeServicesConfig;
+    private SconeServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @Mock

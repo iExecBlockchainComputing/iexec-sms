@@ -96,7 +96,7 @@ public class TeeController {
                     "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesProperties.getTeeEnclaveProvider());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        return ResponseEntity.ok(teeServicesProperties.getProperties());
+        return ResponseEntity.ok(teeServicesProperties);
     }
 
     /**

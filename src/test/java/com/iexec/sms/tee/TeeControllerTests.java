@@ -12,7 +12,6 @@ import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -114,7 +113,7 @@ class TeeControllerTests {
     // region getTeeServicesConfig
     @Test
     void shouldGetSconeProperties() {
-        final TeeServicesProperties properties = new SconeInternalServicesConfiguration(
+        final TeeServicesProperties properties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -165,7 +164,7 @@ class TeeControllerTests {
 
     @Test
     void shouldNotGetSconePropertiesSinceGramineSms() {
-        final TeeServicesProperties properties = new SconeInternalServicesConfiguration(
+        final TeeServicesProperties properties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
