@@ -1,6 +1,6 @@
 package com.iexec.sms.tee;
 
-import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
+import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
@@ -14,7 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles(profiles = "gramine")
 public class GramineBeansLoadingTests extends TeeBeansLoadingTests {
     @Autowired
-    GramineInternalServicesConfiguration gramineInternalServicesConfiguration;
+    GramineServicesProperties gramineServicesProperties;
     @Autowired
     GramineSessionHandlerService gramineSessionHandlerService;
     @Autowired
@@ -29,7 +29,7 @@ public class GramineBeansLoadingTests extends TeeBeansLoadingTests {
     @Test
     @Override
     void checkTeeBeansAreLoaded() {
-        Assertions.assertNotNull(gramineInternalServicesConfiguration);
+        Assertions.assertNotNull(gramineServicesProperties);
         Assertions.assertNotNull(gramineSessionHandlerService);
         Assertions.assertNotNull(gramineSessionMakerService);
         Assertions.assertNotNull(spsConfiguration);

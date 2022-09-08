@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.MethodMetadata;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -24,7 +25,14 @@ public class OnTeeProviderCondition extends SpringBootCondition {
         final Map<String, Object> attributes = metadata.getAnnotationAttributes(ConditionalOnTeeProvider.class.getName());
         final String[] activeProfiles = context.getEnvironment().getActiveProfiles();
 
-        final String beanClassName = ((AnnotationMetadata) metadata).getClassName();
+        final String beanClassName;
+
+        if (metadata instanceof AnnotationMetadata) {
+            beanClassName = ((AnnotationMetadata) metadata).getClassName();
+        } else {
+            beanClassName = ((MethodMetadata) metadata).getMethodName();
+        }
+
         if (attributes == null) {
             log.warn("No attribute for bean annotation, won't be loaded [bean:{}",
                     beanClassName);
