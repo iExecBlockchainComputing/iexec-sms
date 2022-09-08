@@ -10,19 +10,19 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 
 @Configuration
-public class SideComputeInternalConfiguration {
+public class TeeWorkerInternalConfiguration {
     @Bean
     TeeAppConfiguration preComputeConfiguration(
-            @Value("${tee.workflow.pre-compute.image}")
+            @Value("${tee.worker.pre-compute.image}")
             @NotBlank(message = "pre-compute image must be provided")
             String preComputeImage,
-            @Value("${tee.workflow.pre-compute.fingerprint}")
+            @Value("${tee.worker.pre-compute.fingerprint}")
             @NotBlank(message = "pre-compute fingerprint must be provided")
             String preComputeFingerprint,
-            @Value("${tee.workflow.pre-compute.entrypoint}")
+            @Value("${tee.worker.pre-compute.entrypoint}")
             @NotBlank(message = "pre-compute entrypoint must be provided")
             String preComputeEntrypoint,
-            @Value("${tee.workflow.pre-compute.heap-size-gb}")
+            @Value("${tee.worker.pre-compute.heap-size-gb}")
             @Positive(message = "pre-compute heap size must be provided")
             long preComputeHeapSizeInGB) {
         return new TeeAppConfiguration(
@@ -35,16 +35,16 @@ public class SideComputeInternalConfiguration {
 
     @Bean
     TeeAppConfiguration postComputeConfiguration(
-            @Value("${tee.workflow.post-compute.image}")
+            @Value("${tee.worker.post-compute.image}")
             @NotBlank(message = "post-compute image must be provided")
             String postComputeImage,
-            @Value("${tee.workflow.post-compute.fingerprint}")
+            @Value("${tee.worker.post-compute.fingerprint}")
             @NotBlank(message = "post-compute fingerprint must be provided")
             String postComputeFingerprint,
-            @Value("${tee.workflow.post-compute.entrypoint}")
+            @Value("${tee.worker.post-compute.entrypoint}")
             @NotBlank(message = "post-compute entrypoint must be provided")
             String postComputeEntrypoint,
-            @Value("${tee.workflow.post-compute.heap-size-gb}")
+            @Value("${tee.worker.post-compute.heap-size-gb}")
             @Positive(message = "post-compute heap size must be provided")
             long postComputeHeapSizeInGB) {
         return new TeeAppConfiguration(

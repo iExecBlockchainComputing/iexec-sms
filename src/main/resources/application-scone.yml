@@ -7,7 +7,7 @@ tee:
       hostname: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME:localhost}
       port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:18765}
 
-  workflow:
+  worker:
     pre-compute:
       image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
       fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
