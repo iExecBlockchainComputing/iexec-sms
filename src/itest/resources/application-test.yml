@@ -10,14 +10,3 @@ spring:
   datasource:
     url: jdbc:h2:mem:db
 
-# `TeeWorkflowConfiguration` needs some dummy value to be instantiated
-tee:
-  scone:
-    las-image: "none"
-  workflow:
-    pre-compute:
-      image: "none"
-      fingerprint: "none"
-    post-compute:
-      image: "none"
-      fingerprint: "none"

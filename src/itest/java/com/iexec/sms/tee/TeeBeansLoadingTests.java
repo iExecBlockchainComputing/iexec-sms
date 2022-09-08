@@ -7,16 +7,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.util.AnnotatedTypeScanner;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Arrays;
 import java.util.Set;
 
+import static com.iexec.sms.MockChainConfiguration.MOCK_CHAIN_PROFILE;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Subclass this class to test whether some TEE beans are correctly loaded.
  */
 @Slf4j
+@ActiveProfiles(MOCK_CHAIN_PROFILE)
 public abstract class TeeBeansLoadingTests extends CommonTestSetup {
 
     final AnnotatedTypeScanner annotatedTypeScanner;
