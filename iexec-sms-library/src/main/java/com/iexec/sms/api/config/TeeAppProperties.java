@@ -9,7 +9,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class TeeAppConfiguration {
+public class TeeAppProperties {
     private String image;
     private String fingerprint;
     private String entrypoint;

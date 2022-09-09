@@ -20,7 +20,7 @@ import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -69,14 +69,14 @@ public class SecretSessionBaseService {
     private final Web3SecretService web3SecretService;
     private final Web2SecretsService web2SecretsService;
     private final TeeChallengeService teeChallengeService;
-    private final TeeServicesConfiguration teeServicesConfig;
+    private final TeeServicesProperties teeServicesConfig;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
             Web3SecretService web3SecretService,
             Web2SecretsService web2SecretsService,
             TeeChallengeService teeChallengeService,
-            TeeServicesConfiguration teeServicesConfig,
+            TeeServicesProperties teeServicesConfig,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretsService = web2SecretsService;
@@ -130,7 +130,7 @@ public class SecretSessionBaseService {
         Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
-        enclaveBase.mrenclave(teeServicesConfig.getPreComputeConfiguration().getFingerprint());
+        enclaveBase.mrenclave(teeServicesConfig.getPreComputeProperties().getFingerprint());
         tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
@@ -274,7 +274,7 @@ public class SecretSessionBaseService {
             throws TeeSessionGenerationException {
         SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
                 .name("post-compute")
-                .mrenclave(teeServicesConfig.getPostComputeConfiguration().getFingerprint());
+                .mrenclave(teeServicesConfig.getPostComputeProperties().getFingerprint());
         Map<String, Object> tokens = new HashMap<>();
         TaskDescription taskDescription = request.getTaskDescription();
         if (taskDescription == null) {

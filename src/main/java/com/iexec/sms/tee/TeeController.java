@@ -22,12 +22,11 @@ import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.config.TeeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
@@ -59,17 +58,17 @@ public class TeeController {
     private final AuthorizationService authorizationService;
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
-    private final TeeInternalServicesConfiguration teeServicesConfig;
+    private final TeeServicesProperties teeServicesProperties;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeInternalServicesConfiguration teeServicesConfig) {
+            TeeServicesProperties teeServicesProperties) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeServicesConfig = teeServicesConfig;
+        this.teeServicesProperties = teeServicesProperties;
     }
 
     /**
@@ -78,26 +77,26 @@ public class TeeController {
      */
     @GetMapping("/provider")
     public ResponseEntity<TeeEnclaveProvider> getTeeEnclaveProvider() {
-        return ResponseEntity.ok(teeServicesConfig.getTeeEnclaveProvider());
+        return ResponseEntity.ok(teeServicesProperties.getTeeEnclaveProvider());
     }
 
     /**
-     * Retrieve configuration for TEE services. This includes configuration
+     * Retrieve properties for TEE services. This includes properties
      * for pre-compute and post-compute stages
      * and potential TEE provider's specific data.
      *
-     * @return TEE services config (pre-compute image uri, post-compute image uri,
+     * @return TEE services properties (pre-compute image uri, post-compute image uri,
      * heap size, ...)
      */
-    @GetMapping("/config/{teeEnclaveProvider}")
-    public ResponseEntity<TeeServicesConfiguration> getTeeServicesConfig(
+    @GetMapping("/properties/{teeEnclaveProvider}")
+    public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
             @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
-        if (teeEnclaveProvider != teeServicesConfig.getTeeEnclaveProvider()) {
+        if (teeEnclaveProvider != teeServicesProperties.getTeeEnclaveProvider()) {
             log.error("SMS configured to use another TeeEnclaveProvider " +
-                    "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesConfig.getTeeEnclaveProvider());
+                    "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesProperties.getTeeEnclaveProvider());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        return ResponseEntity.ok(teeServicesConfig.getShareableConfiguration());
+        return ResponseEntity.ok(teeServicesProperties);
     }
 
     /**

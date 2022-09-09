@@ -7,8 +7,8 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -63,11 +63,11 @@ class SecretSessionBaseServiceTests {
     @Mock
     private TeeChallengeService teeChallengeService;
     @Mock
-    private TeeAppConfiguration preComputeConfiguration;
+    private TeeAppProperties preComputeProperties;
     @Mock
-    private TeeAppConfiguration postComputeConfiguration;
+    private TeeAppProperties postComputeProperties;
     @Mock
-    private TeeServicesConfiguration teeServicesConfig;
+    private TeeServicesProperties teeServicesConfig;
     @Mock
     private TeeTaskComputeSecretService teeTaskComputeSecretService;
 
@@ -77,8 +77,8 @@ class SecretSessionBaseServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeConfiguration()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeConfiguration()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
     }
 
     // region getSecretsTokens
@@ -88,14 +88,14 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(taskDescription);
 
         // pre
-        when(preComputeConfiguration.getFingerprint())
+        when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
         // post
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
-        when(postComputeConfiguration.getFingerprint())
+        when(postComputeProperties.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
@@ -162,7 +162,7 @@ class SecretSessionBaseServiceTests {
     void shouldGetPreComputeTokens() throws Exception {
         TaskDescription taskDescription = createTaskDescription(enclaveConfig);
         TeeSessionRequest request = createSessionRequest(taskDescription);
-        when(preComputeConfiguration.getFingerprint())
+        when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
         Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
@@ -197,7 +197,7 @@ class SecretSessionBaseServiceTests {
                         .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                         .build())
                 .build();
-        when(preComputeConfiguration.getFingerprint())
+        when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
 
         SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
@@ -392,7 +392,7 @@ class SecretSessionBaseServiceTests {
         String requesterAddress = request.getTaskDescription().getRequester();
 
         Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
-        when(postComputeConfiguration.getFingerprint())
+        when(postComputeProperties.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),

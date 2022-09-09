@@ -2,8 +2,8 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.sms.api.config.TeeAppConfiguration;
-import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -26,11 +26,11 @@ import static org.mockito.Mockito.when;
 @Slf4j
 class GramineSessionMakerServiceTests {
     @Mock
-    private TeeAppConfiguration preComputeConfiguration;
+    private TeeAppProperties preComputeProperties;
     @Mock
-    private TeeAppConfiguration postComputeConfiguration;
+    private TeeAppProperties postComputeProperties;
     @Mock
-    private GramineInternalServicesConfiguration teeServicesConfig;
+    private GramineServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @InjectMocks
@@ -39,8 +39,8 @@ class GramineSessionMakerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeConfiguration()).thenReturn(preComputeConfiguration);
-        when(teeServicesConfig.getPostComputeConfiguration()).thenReturn(postComputeConfiguration);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
     }
 
     // region getSessionYml
@@ -49,8 +49,8 @@ class GramineSessionMakerServiceTests {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
-        when(postComputeConfiguration.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
-        when(postComputeConfiguration.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
+        when(postComputeProperties.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
+        when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn("/apploader.sh");
 

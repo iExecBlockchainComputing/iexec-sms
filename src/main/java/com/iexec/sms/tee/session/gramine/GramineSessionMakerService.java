@@ -17,7 +17,7 @@
 package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.api.config.TeeServicesConfiguration;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
@@ -36,10 +36,10 @@ import java.util.List;
 public class GramineSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private final TeeServicesConfiguration teeServicesConfig;
+    private final TeeServicesProperties teeServicesConfig;
 
     public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService,
-                                      TeeServicesConfiguration teeServicesConfig) {
+                                      TeeServicesProperties teeServicesConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeServicesConfig = teeServicesConfig;
     }
@@ -58,7 +58,7 @@ public class GramineSessionMakerService {
         GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
         gramineAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
         GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
-        graminePostEnclave.setCommand(teeServicesConfig.getPostComputeConfiguration().getEntrypoint());
+        graminePostEnclave.setCommand(teeServicesConfig.getPostComputeProperties().getEntrypoint());
 
         // TODO: Remove useless volumes when SPS is ready
         gramineAppEnclave.setVolumes(List.of());

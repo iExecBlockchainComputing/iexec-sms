@@ -10,12 +10,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public abstract class TeeServicesConfiguration {
+public abstract class TeeServicesProperties {
     private TeeEnclaveProvider teeEnclaveProvider;
-    private TeeAppConfiguration preComputeConfiguration;
-    private TeeAppConfiguration postComputeConfiguration;
+    private TeeAppProperties preComputeProperties;
+    private TeeAppProperties postComputeProperties;
 
-    TeeServicesConfiguration(TeeEnclaveProvider teeEnclaveProvider) {
+    TeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
         this.teeEnclaveProvider = teeEnclaveProvider;
     }
 }

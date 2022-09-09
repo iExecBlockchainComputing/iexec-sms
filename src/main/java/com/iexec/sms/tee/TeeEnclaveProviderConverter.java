@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * This class is needed to have a case-insensitive `teeEnclaveProvider` path variable in
- * {@link TeeController#getTeeServicesConfig(TeeEnclaveProvider)}.
+ * {@link TeeController#getTeeServicesProperties(TeeEnclaveProvider)}.
  */
 @Component
 public class TeeEnclaveProviderConverter implements Converter<String, TeeEnclaveProvider> {

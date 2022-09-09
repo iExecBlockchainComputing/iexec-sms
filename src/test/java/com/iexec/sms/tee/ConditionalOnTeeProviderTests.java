@@ -1,9 +1,6 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.tee.config.GramineInternalServicesConfiguration;
-import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
-import com.iexec.sms.tee.config.TeeInternalServicesConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
@@ -51,7 +48,7 @@ class ConditionalOnTeeProviderTests {
 
     static Stream<Arguments> sconeBeansClasses() {
         return Stream.of(
-                Arguments.of(SconeInternalServicesConfiguration.class),
+//                Arguments.of(SconeServicesProperties.class),  // Can't test this bean as it is declared through a method, not a class
                 Arguments.of(SconeSessionHandlerService.class),
                 Arguments.of(SconeSessionMakerService.class),
                 Arguments.of(SconeSessionSecurityConfig.class),
@@ -62,7 +59,7 @@ class ConditionalOnTeeProviderTests {
 
     static Stream<Arguments> gramineBeansClasses() {
         return Stream.of(
-                Arguments.of(GramineInternalServicesConfiguration.class),
+//                Arguments.of(GramineServicesProperties.class),    // Can't test this bean as it is declared through a method, not a class
                 Arguments.of(GramineSessionHandlerService.class),
                 Arguments.of(GramineSessionMakerService.class),
                 Arguments.of(SpsConfiguration.class)
@@ -76,7 +73,6 @@ class ConditionalOnTeeProviderTests {
 
     static Stream<Arguments> nonAnnotatedClasses() {
         return Stream.of(
-                Arguments.of(TeeInternalServicesConfiguration.class),
                 Arguments.of(TeeSessionHandler.class)
         );
     }
@@ -182,8 +178,6 @@ class ConditionalOnTeeProviderTests {
 
         assertFalse(condition.matches(context, metadata));
     }
-
-
     // endregion
 
     void setAttributesForMetadataMock(Class<?> clazz) {

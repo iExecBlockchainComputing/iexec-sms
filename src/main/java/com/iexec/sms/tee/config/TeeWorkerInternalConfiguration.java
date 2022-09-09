@@ -1,18 +1,24 @@
 package com.iexec.sms.tee.config;
 
-import com.iexec.sms.api.config.TeeAppConfiguration;
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.unit.DataSize;
+import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 
 @Configuration
+@Validated
 public class TeeWorkerInternalConfiguration {
     @Bean
-    TeeAppConfiguration preComputeConfiguration(
+    TeeAppProperties preComputeProperties(
             @Value("${tee.worker.pre-compute.image}")
             @NotBlank(message = "pre-compute image must be provided")
             String preComputeImage,
@@ -25,7 +31,7 @@ public class TeeWorkerInternalConfiguration {
             @Value("${tee.worker.pre-compute.heap-size-gb}")
             @Positive(message = "pre-compute heap size must be provided")
             long preComputeHeapSizeInGB) {
-        return new TeeAppConfiguration(
+        return new TeeAppProperties(
                 preComputeImage,
                 preComputeFingerprint,
                 preComputeEntrypoint,
@@ -34,7 +40,7 @@ public class TeeWorkerInternalConfiguration {
     }
 
     @Bean
-    TeeAppConfiguration postComputeConfiguration(
+    TeeAppProperties postComputeProperties(
             @Value("${tee.worker.post-compute.image}")
             @NotBlank(message = "post-compute image must be provided")
             String postComputeImage,
@@ -47,7 +53,7 @@ public class TeeWorkerInternalConfiguration {
             @Value("${tee.worker.post-compute.heap-size-gb}")
             @Positive(message = "post-compute heap size must be provided")
             long postComputeHeapSizeInGB) {
-        return new TeeAppConfiguration(
+        return new TeeAppProperties(
                 postComputeImage,
                 postComputeFingerprint,
                 postComputeEntrypoint,
@@ -55,4 +61,22 @@ public class TeeWorkerInternalConfiguration {
         );
     }
 
+    @Bean
+    @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
+    GramineServicesProperties gramineServicesProperties(
+            TeeAppProperties preComputeProperties,
+            TeeAppProperties postComputeProperties) {
+        return new GramineServicesProperties(preComputeProperties, postComputeProperties);
+    }
+
+    @Bean
+    @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
+    SconeServicesProperties sconeServicesProperties(
+            TeeAppProperties preComputeProperties,
+            TeeAppProperties postComputeProperties,
+            @Value("${tee.scone.las-image}")
+            @NotBlank(message = "las image must be provided")
+            String lasImage) {
+        return new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
+    }
 }

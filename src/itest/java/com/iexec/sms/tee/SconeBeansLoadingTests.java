@@ -1,6 +1,6 @@
 package com.iexec.sms.tee;
 
-import com.iexec.sms.tee.config.SconeInternalServicesConfiguration;
+import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import com.iexec.sms.tee.session.scone.SconeSessionMakerService;
 import com.iexec.sms.tee.session.scone.SconeSessionSecurityConfig;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ActiveProfiles(profiles = "scone")
 public class SconeBeansLoadingTests extends TeeBeansLoadingTests {
     @Autowired
-    SconeInternalServicesConfiguration sconeInternalServicesConfiguration;
+    SconeServicesProperties sconeServicesProperties;
     @Autowired
     SconeSessionHandlerService sconeSessionHandlerService;
     @Autowired
@@ -35,7 +35,7 @@ public class SconeBeansLoadingTests extends TeeBeansLoadingTests {
     @Test
     @Override
     void checkTeeBeansAreLoaded() {
-        assertNotNull(sconeInternalServicesConfiguration);
+        assertNotNull(sconeServicesProperties);
         assertNotNull(sconeSessionHandlerService);
         assertNotNull(sconeSessionMakerService);
         assertNotNull(sconeSessionSecurityConfig);
