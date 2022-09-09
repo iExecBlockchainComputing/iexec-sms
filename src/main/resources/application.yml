@@ -49,42 +49,6 @@ blockchain:
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
   is-sidechain: ${IEXEC_IS_SIDECHAIN:false}
 
-scone:
-  cas:
-    host: ${IEXEC_SCONE_CAS_HOST:localhost}
-    port: ${IEXEC_SCONE_CAS_PORT:8081}
-    public-host: ${IEXEC_SCONE_CAS_PUBLIC_HOST:localhost}
-    enclave-port: ${IEXEC_SCONE_CAS_ENCLAVE_PORT:18765}
-  attestation:
-    tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:} # e.g.: hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode
-    ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270
-
-gramine:
-  sps:
-    web:
-      host: ${IEXEC_GRAPHENE_SPS_WEB_HOST:localhost}
-      port: ${IEXEC_GRAPHENE_SPS_WEB_POST:8080}
-      login: ${IEXEC_GRAPHENE_SPS_WEB_LOGIN:admin}
-      password: ${IEXEC_GRAPHENE_SPS_WEB_PASSWORD:admin}
-    enclave:
-      # TODO: Merge shared conf of CAS & SPS (url, port, ..) in a common top parent in yml. Use only  secret-provisioner.gramine: and secret-provisioner.scone: for additionnal properties.
-      hostname: ${IEXEC_GRAPHENE_SPS_ENCLAVE_HOST_NAME:localhost}
-      port: ${IEXEC_GRAPHENE_SPS_ENCLAVE_PORT:4433}
-
-# TODO /!\ remove the option of env variable for releases.
-tee.workflow:
-  las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:} # e.g.: registry.scontain.com:5050/scone-production/iexec-las:x.y.z
-  pre-compute:
-    image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
-    fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
-    heap-size-gb: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB:4}
-    entrypoint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
-  post-compute:
-      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-post-compute:x.y.z-production
-      fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
-      heap-size-gb: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB:4}
-      entrypoint: ${IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
-
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
 #  level:

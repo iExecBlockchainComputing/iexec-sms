@@ -18,12 +18,13 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,11 @@ class SconeSessionMakerServiceTests {
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
 
     @Mock
-    private TeeWorkflowInternalConfiguration teeWorkflowConfig;
+    private TeeAppProperties preComputeProperties;
+    @Mock
+    private TeeAppProperties postComputeProperties;
+    @Mock
+    private SconeServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @Mock
@@ -60,6 +65,8 @@ class SconeSessionMakerServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
     }
 
     // region getSessionYml
@@ -68,8 +75,8 @@ class SconeSessionMakerServiceTests {
         TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
-        when(teeWorkflowConfig.getPreComputeEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
-        when(teeWorkflowConfig.getPostComputeEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
+        when(preComputeProperties.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
+        when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
         when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
         when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
 

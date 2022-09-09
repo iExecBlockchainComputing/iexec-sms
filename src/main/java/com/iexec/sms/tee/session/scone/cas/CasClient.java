@@ -16,7 +16,9 @@
 
 package com.iexec.sms.tee.session.scone.cas;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.ssl.TwoWaySslClient;
+import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 
 @Service
+@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 public class CasClient {
 
     private final CasConfiguration casConfiguration;

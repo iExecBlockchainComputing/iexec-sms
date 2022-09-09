@@ -16,6 +16,9 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.sms.api.config.TeeServicesProperties;
+import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -28,7 +31,6 @@ import com.iexec.sms.tee.session.scone.cas.SconeSession.Image;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Security;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Volumes;
-import com.iexec.sms.tee.workflow.TeeWorkflowInternalConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +39,7 @@ import java.util.*;
 //TODO Rename and move
 @Slf4j
 @Service
+@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 public class SconeSessionMakerService {
 
     // Internal values required for setting up a palaemon session
@@ -51,15 +54,15 @@ public class SconeSessionMakerService {
     static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private final TeeWorkflowInternalConfiguration teeWorkflowConfig;
+    private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
-            TeeWorkflowInternalConfiguration teeWorkflowConfig,
+            TeeServicesProperties teeServicesConfig,
             SconeSessionSecurityConfig attestationSecurityConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
-        this.teeWorkflowConfig = teeWorkflowConfig;
+        this.teeServicesConfig = teeServicesConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
     }
 
@@ -92,7 +95,7 @@ public class SconeSessionMakerService {
             SconeEnclave sconePreEnclave = toSconeEnclave(
                     baseSession.getPreCompute());
             sconePreEnclave
-                    .setCommand(teeWorkflowConfig.getPreComputeEntrypoint());
+                    .setCommand(teeServicesConfig.getPreComputeProperties().getEntrypoint());
             addJavaEnvVars(sconePreEnclave);
             services.add(sconePreEnclave);
             images.add(new SconeSession.Image(sconePreEnclave.getImageName(),
@@ -110,7 +113,7 @@ public class SconeSessionMakerService {
         SconeEnclave sconePostEnclave = toSconeEnclave(
                 baseSession.getPostCompute());
         sconePostEnclave
-                .setCommand(teeWorkflowConfig.getPostComputeEntrypoint());
+                .setCommand(teeServicesConfig.getPostComputeProperties().getEntrypoint());
         addJavaEnvVars(sconePostEnclave);
         services.add(sconePostEnclave);
         images.add(new SconeSession.Image(sconePostEnclave.getImageName(),

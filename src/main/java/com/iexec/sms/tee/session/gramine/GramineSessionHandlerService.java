@@ -16,7 +16,9 @@
 
 package com.iexec.sms.tee.session.gramine;
 
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
 public class GramineSessionHandlerService implements TeeSessionHandler {
     private GramineSessionMakerService sessionService;
     private SpsConfiguration spsConfiguration;

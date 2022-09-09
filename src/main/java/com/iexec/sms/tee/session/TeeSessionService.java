@@ -23,32 +23,26 @@ import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
-import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
-import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
+import static com.iexec.sms.api.TeeSessionGenerationError.SECURE_SESSION_NO_TEE_PROVIDER;
 
 @Slf4j
 @Service
 public class TeeSessionService {
 
     private final IexecHubService iexecHubService;
+    private final TeeSessionHandler teeSessionHandler;
 
-    private final Map<TeeEnclaveProvider, TeeSessionHandler> teeSessionConfigurations;
 
     public TeeSessionService(
             IexecHubService iexecService,
-            SconeSessionHandlerService sconeService,
-            GramineSessionHandlerService gramineService) {
+            TeeSessionHandler teeSessionHandler) {
         this.iexecHubService = iexecService;
-        this.teeSessionConfigurations = Map.of(
-                TeeEnclaveProvider.SCONE, sconeService,
-                TeeEnclaveProvider.GRAMINE, gramineService);
+        this.teeSessionHandler = teeSessionHandler;
     }
 
     public TeeSessionGenerationResponse generateTeeSession(
@@ -74,13 +68,6 @@ public class TeeSessionService {
             throw new TeeSessionGenerationException(
                     SECURE_SESSION_NO_TEE_PROVIDER,
                     String.format("TEE provider can't be null [taskId:%s]", taskId));
-        }
-
-        final TeeSessionHandler teeSessionHandler = teeSessionConfigurations.get(teeEnclaveProvider);
-        if (teeSessionHandler == null) {
-            throw new TeeSessionGenerationException(
-                    SECURE_SESSION_UNKNOWN_TEE_PROVIDER,
-                    String.format("Unknown TEE provider [taskId:%s, teeProvider:%s]", taskId, teeEnclaveProvider));
         }
 
         // /!\ TODO clean expired tasks sessions
