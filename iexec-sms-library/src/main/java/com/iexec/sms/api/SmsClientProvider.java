@@ -2,6 +2,7 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.utils.purge.ExpiringTaskMapFactory;
 import com.iexec.common.utils.purge.Purgeable;
 import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,8 @@ import java.util.Optional;
  */
 @Slf4j
 public class SmsClientProvider implements Purgeable {
-    private final Map<String, Optional<String>> taskIdToSmsUrl = new HashMap<>();
+    private final Map<String, Optional<String>> taskIdToSmsUrl =
+            ExpiringTaskMapFactory.getExpiringTaskMap();
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 
     private final Logger.Level loggerLevel;
