@@ -34,10 +34,10 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
 public class SconeSessionHandlerService implements TeeSessionHandler {
-    private SconeSessionMakerService sessionService;
-    private CasClient apiClient;
-    private TeeSessionLogConfiguration teeSessionLogConfiguration;
-    private CasConfiguration casConfiguration;
+    private final SconeSessionMakerService sessionService;
+    private final CasClient apiClient;
+    private final TeeSessionLogConfiguration teeSessionLogConfiguration;
+    private final CasConfiguration casConfiguration;
 
     public SconeSessionHandlerService(SconeSessionMakerService sessionService,
             CasClient apiClient,
@@ -54,20 +54,19 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
      * 
      * @param request tee session generation request
      * @return String secret provisioning service url
-     * @throws TeeSessionGenerationException
+     * @throws TeeSessionGenerationException if call to CAS failed
      */
     @Override
     public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         SconeSession session = sessionService.generateSession(request);
-        if (session != null
-                && teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
+        if (teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
             log.info("Session content [taskId:{}]\n{}",
-                    request.getTaskDescription().getChainTaskId(), session.toString());
+                    request.getTaskDescription().getChainTaskId(), session);
         }
         ResponseEntity<String> postSession = apiClient.postSession(session.toString());
-        int httpCode = postSession != null ? postSession.getStatusCodeValue() : null;
-        if (httpCode != 201) {
+        Integer httpCode = postSession != null ? postSession.getStatusCodeValue() : null;
+        if (httpCode == null || httpCode != 201) {
             throw new TeeSessionGenerationException(
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
                     "Failed to post session: " + httpCode);
