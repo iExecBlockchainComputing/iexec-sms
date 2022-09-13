@@ -52,7 +52,7 @@ class Web2SecretsServiceTests {
     }
 
     @Test
-    void shouldGetAndDecryptSecret() {
+    void shouldGetDecryptedSecret() {
         ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
