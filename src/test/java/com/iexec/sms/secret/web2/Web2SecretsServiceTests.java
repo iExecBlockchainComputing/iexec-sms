@@ -52,7 +52,7 @@ class Web2SecretsServiceTests {
     }
 
     @Test
-    void shouldGetAndDecryptWeb2Secrets() {
+    void shouldGetAndDecryptSecret() {
         ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
@@ -71,10 +71,44 @@ class Web2SecretsServiceTests {
     }
 
     @Test
+    void shouldGetEncryptedSecret() {
+        ownerAddress = ownerAddress.toLowerCase();
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
+        encryptedSecret.setEncryptedValue(true);
+        List<Secret> secretList = List.of(encryptedSecret);
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
+        web2Secrets.setSecrets(secretList);
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
+                .thenReturn(Optional.of(web2Secrets));
+
+        Optional<Secret> result = web2SecretsService.getSecret(ownerAddress, secretAddress);
+        assertThat(result)
+                .isNotEmpty()
+                .contains(encryptedSecret);
+    }
+
+    @Test
     void shouldAddSecret() {
         ownerAddress = ownerAddress.toLowerCase();
         web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue);
         verify(web2SecretsRepository, times(1)).save(any());
+    }
+
+    @Test
+    void shouldNotUpdateSecretIfPresent() {
+        ownerAddress = ownerAddress.toLowerCase();
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
+        encryptedSecret.setEncryptedValue(true);
+        List<Secret> secretList = List.of(encryptedSecret);
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
+        web2Secrets.setSecrets(secretList);
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
+                .thenReturn(Optional.of(web2Secrets));
+        when(encryptionService.encrypt(plainSecretValue))
+                .thenReturn(encryptedSecretValue);
+
+        web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue);
+        verify(web2SecretsRepository, never()).save(web2Secrets);
     }
 
     @Test
