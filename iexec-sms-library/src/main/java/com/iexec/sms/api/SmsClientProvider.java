@@ -84,16 +84,15 @@ public class SmsClientProvider implements Purgeable {
         return urlToSmsClient.computeIfAbsent(smsUrl.get(), url -> SmsClientBuilder.getInstance(loggerLevel, url));
     }
 
+    /**
+     * Try and remove SMS URL related to given task ID.
+     * @param chainTaskId Task ID whose related SMS URL should be purged
+     * @return {@literal true} if key is not stored anymore,
+     * {@literal false} otherwise.
+     */
     @Override
     public boolean purgeTask(String chainTaskId) {
-        // Returning `taskIdToSmsUrl.remove(chainTaskId) != null` throws a warning:
-        // don't compare an `Optional` with null.
-        // So let's use a longer form.
-
-        if (!taskIdToSmsUrl.containsKey(chainTaskId)) {
-            return false;
-        }
         taskIdToSmsUrl.remove(chainTaskId);
-        return true;
+        return !taskIdToSmsUrl.containsKey(chainTaskId);
     }
 }

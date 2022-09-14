@@ -177,9 +177,8 @@ class SmsClientProviderTests {
     }
 
     @Test
-    void shouldNotPurgeTaskSinceTaskNeverAccessed() {
-        boolean purged = smsClientProvider.purgeTask(CHAIN_TASK_ID_1);
-        assertFalse(purged);
+    void shouldPurgeTaskEvenThoughTaskNeverAccessed() {
+        assertTrue(smsClientProvider.purgeTask(CHAIN_TASK_ID_1));
     }
     // endregion
 }
