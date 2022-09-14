@@ -181,4 +181,11 @@ class SmsClientProviderTests {
         assertTrue(smsClientProvider.purgeTask(CHAIN_TASK_ID_1));
     }
     // endregion
+
+    // region purgeAllTasksData
+    @Test
+    void shouldPurgeAllTasksData() {
+        assertDoesNotThrow(smsClientProvider::purgeAllTasksData);
+    }
+    // endregion
 }

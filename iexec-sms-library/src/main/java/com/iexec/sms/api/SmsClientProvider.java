@@ -95,4 +95,9 @@ public class SmsClientProvider implements Purgeable {
         taskIdToSmsUrl.remove(chainTaskId);
         return !taskIdToSmsUrl.containsKey(chainTaskId);
     }
+
+    @Override
+    public void purgeAllTasksData() {
+        taskIdToSmsUrl.clear();
+    }
 }
