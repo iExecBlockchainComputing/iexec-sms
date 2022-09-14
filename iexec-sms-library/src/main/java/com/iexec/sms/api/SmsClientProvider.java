@@ -2,8 +2,8 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.task.TaskDescription;
-import com.iexec.common.utils.purge.ExpiringTaskMapFactory;
-import com.iexec.common.utils.purge.Purgeable;
+import com.iexec.common.lifecycle.purge.ExpiringTaskMapFactory;
+import com.iexec.common.lifecycle.purge.Purgeable;
 import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
