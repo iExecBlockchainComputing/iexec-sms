@@ -31,6 +31,7 @@ import com.iexec.sms.tee.session.scone.cas.SconeSession.Image;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Security;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Volumes;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -77,6 +78,7 @@ public class SconeSessionMakerService {
      * @param request session request details
      * @return session config in yaml string format
      */
+    @NonNull
     public SconeSession generateSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         List<String> policy = Arrays.asList("CREATOR");
