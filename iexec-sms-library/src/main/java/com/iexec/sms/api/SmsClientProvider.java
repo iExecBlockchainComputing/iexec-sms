@@ -2,6 +2,8 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.task.TaskDescription;
+import com.iexec.common.lifecycle.purge.ExpiringTaskMapFactory;
+import com.iexec.common.lifecycle.purge.Purgeable;
 import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +17,9 @@ import java.util.Optional;
  * and avoiding the need to create a new {@link SmsClient} instance each time.
  */
 @Slf4j
-public class SmsClientProvider {
-    // TODO: purge once task has been completed
-    private final Map<String, Optional<String>> taskIdToSmsUrl = new HashMap<>();
+public class SmsClientProvider implements Purgeable {
+    private final Map<String, Optional<String>> taskIdToSmsUrl =
+            ExpiringTaskMapFactory.getExpiringTaskMap();
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 
     private final Logger.Level loggerLevel;
@@ -80,5 +82,22 @@ public class SmsClientProvider {
         }
 
         return urlToSmsClient.computeIfAbsent(smsUrl.get(), url -> SmsClientBuilder.getInstance(loggerLevel, url));
+    }
+
+    /**
+     * Try and remove SMS URL related to given task ID.
+     * @param chainTaskId Task ID whose related SMS URL should be purged
+     * @return {@literal true} if key is not stored anymore,
+     * {@literal false} otherwise.
+     */
+    @Override
+    public boolean purgeTask(String chainTaskId) {
+        taskIdToSmsUrl.remove(chainTaskId);
+        return !taskIdToSmsUrl.containsKey(chainTaskId);
+    }
+
+    @Override
+    public void purgeAllTasksData() {
+        taskIdToSmsUrl.clear();
     }
 }
