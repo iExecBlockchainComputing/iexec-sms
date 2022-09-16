@@ -65,8 +65,15 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
                     request.getTaskDescription().getChainTaskId(), session);
         }
         ResponseEntity<String> postSession = apiClient.postSession(session.toString());
-        Integer httpCode = postSession != null ? postSession.getStatusCodeValue() : null;
-        if (httpCode == null || httpCode != 201) {
+
+        if (postSession == null) {
+            throw new TeeSessionGenerationException(
+                    TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
+                    "Failed to post session, no return from CAS.");
+        }
+
+        int httpCode = postSession.getStatusCodeValue();
+        if (httpCode != 201) {
             throw new TeeSessionGenerationException(
                     TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
                     "Failed to post session: " + httpCode);
