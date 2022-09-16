@@ -86,11 +86,10 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (web3SecretService.getSecret(secretAddress).isPresent()) {
+        if (!web3SecretService.addSecret(secretAddress, secretValue)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build(); // secret already exists
         }
 
-        web3SecretService.addSecret(secretAddress, secretValue);
         return ResponseEntity.noContent().build();
     }
 
@@ -135,11 +134,10 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (web2SecretsService.getSecret(ownerAddress, secretName).isPresent()) {
+        if (!web2SecretsService.addSecret(ownerAddress, secretName, secretValue)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        web2SecretsService.addSecret(ownerAddress, secretName, secretValue);
         return ResponseEntity.noContent().build();
     }
 

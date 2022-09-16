@@ -53,10 +53,15 @@ public class Web2SecretsService extends AbstractSecretService {
         return shouldDecryptValue ? oSecret.map(this::decryptSecret) : oSecret;
     }
 
-    public void addSecret(String ownerAddress, String secretAddress, String secretValue) {
+    public boolean addSecret(String ownerAddress, String secretAddress, String secretValue) {
         ownerAddress = ownerAddress.toLowerCase();
         Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress)
                 .orElse(new Web2Secrets(ownerAddress));
+
+        if (web2Secrets.getSecret(secretAddress).isPresent()) {
+            log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
+            return false;
+        }
 
         Secret secret = new Secret(secretAddress, secretValue);
         encryptSecret(secret);
@@ -64,6 +69,7 @@ public class Web2SecretsService extends AbstractSecretService {
                 ownerAddress, secretAddress, secret.getValue());
         web2Secrets.getSecrets().add(secret);
         web2SecretsRepository.save(web2Secrets);
+        return true;
     }
 
     public void updateSecret(String ownerAddress, String secretAddress, String newSecretValue) {

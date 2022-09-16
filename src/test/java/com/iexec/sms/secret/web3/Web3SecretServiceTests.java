@@ -48,9 +48,19 @@ class Web3SecretServiceTests {
     }
 
     @Test
+    void shouldNotAddSecretIfPresent() {
+        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
+        when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.of(web3Secret));
+        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
+        verifyNoInteractions(encryptionService);
+        verify(web3SecretRepository, never()).save(any());
+    }
+
+    @Test
     void shouldAddSecret() {
+        when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.empty());
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
-        web3SecretService.addSecret(secretAddress, plainSecretValue);
+        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isTrue();
         verify(encryptionService).encrypt(any());
         verify(web3SecretRepository).save(any());
     }

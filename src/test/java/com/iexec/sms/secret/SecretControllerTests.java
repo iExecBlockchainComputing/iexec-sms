@@ -135,7 +135,7 @@ class SecretControllerTests {
     void failToAddWeb3SecretWhenPayloadTooLarge() {
         assertThat(secretController.addWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, getRandomString(4097)))
                 .isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build());
-        verifyNoInteractions(web2SecretsService, web3SecretService);
+        verifyNoInteractions(authorizationService, web2SecretsService, web3SecretService);
     }
 
     @Test
@@ -155,10 +155,12 @@ class SecretControllerTests {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, WEB3_SECRET_ADDRESS))
                 .thenReturn(true);
-        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS))
-                .thenReturn(Optional.of(new Web3Secret()));
+        when(web3SecretService.addSecret(WEB3_SECRET_ADDRESS, WEB3_SECRET_VALUE))
+                .thenReturn(false);
         assertThat(secretController.addWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, WEB3_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
+        verifyNoInteractions(web2SecretsService);
+        verify(web3SecretService).addSecret(WEB3_SECRET_ADDRESS, WEB3_SECRET_VALUE);
     }
 
     @Test
@@ -167,10 +169,12 @@ class SecretControllerTests {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, WEB3_SECRET_ADDRESS))
                 .thenReturn(true);
-        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS))
-                .thenReturn(Optional.empty());
+        when(web3SecretService.addSecret(WEB3_SECRET_ADDRESS, WEB3_SECRET_VALUE))
+                .thenReturn(true);
         assertThat(secretController.addWeb3Secret(AUTHORIZATION, WEB3_SECRET_ADDRESS, WEB3_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.noContent().build());
+        verifyNoInteractions(web2SecretsService);
+        verify(web3SecretService).addSecret(WEB3_SECRET_ADDRESS, WEB3_SECRET_VALUE);
     }
     //endregion
 
@@ -262,10 +266,11 @@ class SecretControllerTests {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
-        when(web2SecretsService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
-                .thenReturn(Optional.of(new Secret()));
+        when(web2SecretsService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
+                .thenReturn(false);
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
             .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
+        verify(web2SecretsService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
     }
 
     @Test
@@ -274,10 +279,11 @@ class SecretControllerTests {
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
-        when(web2SecretsService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
-                .thenReturn(Optional.empty());
+        when(web2SecretsService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
+                .thenReturn(true);
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.noContent().build());
+        verify(web2SecretsService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
     }
     //endregion
 
