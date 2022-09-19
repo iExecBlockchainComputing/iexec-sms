@@ -71,6 +71,7 @@ public class SmsClientProvider implements Purgeable {
      * @throws SmsClientCreationException if SMS URL can't be retrieved.
      * @return An instance of {@link SmsClient} pointing on the deal's specified SMS.
      */
+    // FIXME: merge with `getOrCreateSmsClientForTask`
     public SmsClient getOrCreateSmsClientForUninitializedTask(ChainDeal deal, String chainTaskId) {
         final Optional<String> smsUrl = taskIdToSmsUrl.computeIfAbsent(
                 chainTaskId,
