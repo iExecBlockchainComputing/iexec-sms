@@ -18,6 +18,7 @@ import java.util.Optional;
  */
 @Slf4j
 public class SmsClientProvider implements Purgeable {
+    // FIXME: `Optional` is useless here. We should remove it.
     private final Map<String, Optional<String>> taskIdToSmsUrl =
             ExpiringTaskMapFactory.getExpiringTaskMap();
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
