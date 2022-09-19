@@ -12,7 +12,6 @@ import java.util.Map;
  */
 @Slf4j
 public class SmsClientProvider {
-    // TODO: purge once task has been completed
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 
     private final Logger.Level loggerLevel;

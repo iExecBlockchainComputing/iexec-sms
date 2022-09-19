@@ -1,8 +1,6 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
