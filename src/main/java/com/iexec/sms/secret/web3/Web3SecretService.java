@@ -56,13 +56,20 @@ public class Web3SecretService extends AbstractSecretService {
      *
      * Stores encrypted secrets
      * */
-    public void addSecret(String secretAddress, String secretValue) {
+    public boolean addSecret(String secretAddress, String secretValue) {
         secretAddress = secretAddress.toLowerCase();
+
+        if (web3SecretRepository.findWeb3SecretByAddress(secretAddress).isPresent()) {
+            log.error("Secret already exists [secretAddress:{}]", secretAddress);
+            return false;
+        }
+
         Web3Secret web3Secret = new Web3Secret(secretAddress, secretValue);
         encryptSecret(web3Secret);
         log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
                 secretAddress, web3Secret.getValue());
         web3SecretRepository.save(web3Secret);
+        return true;
     }
 
 }

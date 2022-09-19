@@ -22,7 +22,7 @@ public abstract class AbstractSecretService {
 
     private final EncryptionService encryptionService;
 
-    public AbstractSecretService(EncryptionService encryptionService) {
+    protected AbstractSecretService(EncryptionService encryptionService) {
         this.encryptionService = encryptionService;
     }
 
