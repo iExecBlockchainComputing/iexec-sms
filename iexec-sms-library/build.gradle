@@ -2,11 +2,13 @@ plugins {
     id 'java-library'
     id 'jacoco'
     id 'maven-publish'
+    id 'io.freefair.lombok'
 }
 
 dependencies {
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.7.0'
 }
 
 java {

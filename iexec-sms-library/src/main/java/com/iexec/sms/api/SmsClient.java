@@ -18,8 +18,11 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.sms.secret.SmsSecretResponse;
-import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -34,6 +37,7 @@ import java.util.List;
  */
 public interface SmsClient {
 
+    // region Secrets
     @RequestLine("POST /apps/{appAddress}/secrets/1")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
@@ -48,9 +52,6 @@ public interface SmsClient {
             @Param("appAddress") String appAddress,
             @Param("secretIndex") String secretIndex
     );
-
-    @RequestLine("GET /cas/url")
-    String getSconeCasUrl();
 
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")
     @Headers("Authorization: {authorization}")
@@ -104,24 +105,42 @@ public interface SmsClient {
             String secretValue
     );
 
-    @RequestLine("POST /tee/challenges/{chainTaskId}")
-    String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
-
-    @RequestLine("POST /tee/sessions")
-    @Headers("Authorization: {authorization}")
-    ApiResponseBody<String, TeeSessionGenerationError> generateTeeSession(
-            @Param("authorization") String authorization,
-            WorkerpoolAuthorization workerpoolAuthorization
-    );
-
-    @RequestLine("GET /tee/workflow/config")
-    TeeWorkflowSharedConfiguration getTeeWorkflowConfiguration();
-
     @RequestLine("POST /untee/secrets")
     @Headers("Authorization: {authorization}")
     SmsSecretResponse getUnTeeSecrets(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );
+    // endregion
 
+    // region TEE
+    @RequestLine("POST /tee/challenges/{chainTaskId}")
+    String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
+
+    @RequestLine("POST /tee/sessions")
+    @Headers("Authorization: {authorization}")
+    ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> generateTeeSession(
+            @Param("authorization") String authorization,
+            WorkerpoolAuthorization workerpoolAuthorization
+    );
+
+    @RequestLine("GET /tee/provider")
+    TeeEnclaveProvider getTeeEnclaveProvider();
+
+    @RequestLine("GET /tee/properties/scone")
+    SconeServicesProperties getSconeServicesProperties();
+
+    @RequestLine("GET /tee/properties/gramine")
+    GramineServicesProperties getGramineServicesProperties();
+
+    default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
+        if (teeEnclaveProvider == TeeEnclaveProvider.SCONE) {
+            return (T) getSconeServicesProperties();
+        } else if (teeEnclaveProvider == TeeEnclaveProvider.GRAMINE) {
+            return (T) getGramineServicesProperties();
+        }
+
+        return null;
+    }
+    // endregion
 }

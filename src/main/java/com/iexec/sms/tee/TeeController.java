@@ -18,16 +18,17 @@ package com.iexec.sms.tee;
 
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.api.TeeSessionGenerationResponse;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.session.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.TeeSessionService;
-import com.iexec.sms.tee.workflow.TeeWorkflowConfiguration;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,33 +58,45 @@ public class TeeController {
     private final AuthorizationService authorizationService;
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
-    private final TeeWorkflowConfiguration teeWorkflowConfig;
+    private final TeeServicesProperties teeServicesProperties;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeWorkflowConfiguration teeWorkflowConfig) {
+            TeeServicesProperties teeServicesProperties) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeWorkflowConfig = teeWorkflowConfig;
+        this.teeServicesProperties = teeServicesProperties;
     }
 
     /**
-     * Retrieve configuration for tee workflow. This includes configuration
-     * for pre-compute and post-compute stages.
-     * <p>
-     * Note: Being able to read the fingerprints on this endpoint is not required
-     * for the workflow but it might be convenient to keep it for
-     * transparency purposes.
-     *
-     * @return tee workflow config (pre-compute image uri, post-compute image uri,
-     * pre-compute fingerprint, heap size, ...)
+     * Return which TEE enclave provider this SMS is configured to use.
+     * @return TEE enclave provider this SMS is configured to use.
      */
-    @GetMapping("/workflow/config")
-    public ResponseEntity<TeeWorkflowSharedConfiguration> getTeeWorkflowSharedConfig() {
-        return ResponseEntity.ok(teeWorkflowConfig.getSharedConfiguration());
+    @GetMapping("/provider")
+    public ResponseEntity<TeeEnclaveProvider> getTeeEnclaveProvider() {
+        return ResponseEntity.ok(teeServicesProperties.getTeeEnclaveProvider());
+    }
+
+    /**
+     * Retrieve properties for TEE services. This includes properties
+     * for pre-compute and post-compute stages
+     * and potential TEE provider's specific data.
+     *
+     * @return TEE services properties (pre-compute image uri, post-compute image uri,
+     * heap size, ...)
+     */
+    @GetMapping("/properties/{teeEnclaveProvider}")
+    public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
+            @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
+        if (teeEnclaveProvider != teeServicesProperties.getTeeEnclaveProvider()) {
+            log.error("SMS configured to use another TeeEnclaveProvider " +
+                    "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesProperties.getTeeEnclaveProvider());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return ResponseEntity.ok(teeServicesProperties);
     }
 
     /**
@@ -111,14 +124,14 @@ public class TeeController {
      *      500 INTERNAL_SERVER_ERROR otherwise.
      */
     @PostMapping("/sessions")
-    public ResponseEntity<ApiResponseBody<String, TeeSessionGenerationError>> generateTeeSession(
+    public ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> generateTeeSession(
             @RequestHeader("Authorization") String authorization,
             @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
         String workerAddress = workerpoolAuthorization.getWorkerWallet();
         String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(INVALID_AUTHORIZATION)
                             .build();
 
@@ -132,8 +145,8 @@ public class TeeController {
             final TeeSessionGenerationError teeSessionGenerationError =
                     authorizationToGenerationError.get(authorizationError.get());
 
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(teeSessionGenerationError)
                             .build();
 
@@ -147,19 +160,21 @@ public class TeeController {
         log.info("TEE session request [taskId:{}, workerAddress:{}]",
                 taskId, workerAddress);
         try {
-            String sessionId = teeSessionService
+            TeeSessionGenerationResponse teeSessionGenerationResponse = teeSessionService
                     .generateTeeSession(taskId, workerAddress, attestingEnclave);
 
-            if (sessionId.isEmpty()) {
+            if (teeSessionGenerationResponse == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            return ResponseEntity.ok(ApiResponseBody.<String, TeeSessionGenerationError>builder().data(sessionId).build());
+            return ResponseEntity.ok(ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
+            .data(teeSessionGenerationResponse)
+            .build());
         } catch(TeeSessionGenerationException e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(e.getError())
                             .build();
             return ResponseEntity
@@ -168,8 +183,8 @@ public class TeeController {
         } catch (Exception e) {
             log.error("Failed to generate secure session with unknown reason [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
-            final ApiResponseBody<String, TeeSessionGenerationError> body =
-                    ApiResponseBody.<String, TeeSessionGenerationError>builder()
+            final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
+                    ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                             .error(SECURE_SESSION_GENERATION_FAILED)
                             .build();
             return ResponseEntity

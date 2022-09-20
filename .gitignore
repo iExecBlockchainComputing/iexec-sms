@@ -26,6 +26,7 @@ build
 /.nb-gradle/
 
 /bin/
+/iexec-sms-library/bin
 .vscode/
 
 ### iExec ###
