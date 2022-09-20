@@ -27,6 +27,7 @@ import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineEnclave;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession.GramineSessionBuilder;
+import lombok.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,6 +52,7 @@ public class GramineSessionMakerService {
      * @param request session request details
      * @return session config
      */
+    @NonNull
     public GramineSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
         SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
         GramineSessionBuilder gramineSession = GramineSession.builder()

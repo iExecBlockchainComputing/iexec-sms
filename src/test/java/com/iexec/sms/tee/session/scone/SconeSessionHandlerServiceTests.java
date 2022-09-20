@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(OutputCaptureExtension.class)
-public class SconeSessionHandlerServiceTests {
+class SconeSessionHandlerServiceTests {
 
     private static final String CAS_URL = "casUrl";
     @Mock

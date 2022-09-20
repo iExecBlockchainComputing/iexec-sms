@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 
 class Web2SecretsServiceTests {
 
-    String ownerAddress = "ownerAddress";
+    String ownerAddress = "ownerAddress".toLowerCase();
     String secretAddress = "secretAddress";
     String plainSecretValue = "plainSecretValue";
     String encryptedSecretValue = "encryptedSecretValue";
@@ -52,8 +52,7 @@ class Web2SecretsServiceTests {
     }
 
     @Test
-    void shouldGetAndDecryptWeb2Secrets() {
-        ownerAddress = ownerAddress.toLowerCase();
+    void shouldGetDecryptedSecret() {
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
         List<Secret> secretList = List.of(encryptedSecret);
@@ -65,20 +64,63 @@ class Web2SecretsServiceTests {
                 .thenReturn(plainSecretValue);
 
         Optional<Secret> result = web2SecretsService.getSecret(ownerAddress, secretAddress, true);
+        assertThat(result).isNotEmpty();
         assertThat(result.get().getAddress()).isEqualTo(secretAddress);
         assertThat(result.get().getValue()).isEqualTo(plainSecretValue);
     }
 
     @Test
+    void shouldGetEncryptedSecret() {
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
+        encryptedSecret.setEncryptedValue(true);
+        List<Secret> secretList = List.of(encryptedSecret);
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
+        web2Secrets.setSecrets(secretList);
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
+                .thenReturn(Optional.of(web2Secrets));
+
+        Optional<Secret> result = web2SecretsService.getSecret(ownerAddress, secretAddress);
+        assertThat(result)
+                .isNotEmpty()
+                .contains(encryptedSecret);
+    }
+
+    @Test
+    void shouldNotAddSecretIfPresent() {
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
+        web2Secrets.getSecrets().add(new Secret(secretAddress, encryptedSecretValue));
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress)).thenReturn(Optional.of(web2Secrets));
+        assertThat(web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue)).isFalse();
+        verifyNoInteractions(encryptionService);
+        verify(web2SecretsRepository, never()).save(any());
+    }
+
+    @Test
     void shouldAddSecret() {
-        ownerAddress = ownerAddress.toLowerCase();
-        web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue);
-        verify(web2SecretsRepository, times(1)).save(any());
+        when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
+        assertThat(web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue)).isTrue();
+        verify(encryptionService).encrypt(any());
+        verify(web2SecretsRepository).save(any());
+    }
+
+    @Test
+    void shouldNotUpdateSecretIfPresent() {
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
+        encryptedSecret.setEncryptedValue(true);
+        List<Secret> secretList = List.of(encryptedSecret);
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
+        web2Secrets.setSecrets(secretList);
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
+                .thenReturn(Optional.of(web2Secrets));
+        when(encryptionService.encrypt(plainSecretValue))
+                .thenReturn(encryptedSecretValue);
+
+        web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue);
+        verify(web2SecretsRepository, never()).save(web2Secrets);
     }
 
     @Test
     void shouldUpdateSecret() {
-        ownerAddress = ownerAddress.toLowerCase();
         Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
         encryptedSecret.setEncryptedValue(true);
         String newSecretValue = "newSecretValue";

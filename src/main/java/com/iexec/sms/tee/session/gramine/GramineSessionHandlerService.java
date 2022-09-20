@@ -55,10 +55,9 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
     public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         GramineSession session = sessionService.generateSession(request);
-        if (session != null
-                && teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
+        if (teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
             log.info("Session content [taskId:{}]\n{}",
-                    request.getTaskDescription().getChainTaskId(), session.toString());
+                    request.getTaskDescription().getChainTaskId(), session);
         }
 
         try {

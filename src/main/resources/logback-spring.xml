@@ -25,8 +25,4 @@
     <!-- Web3J -->
     <!-- <logger name="org.web3j.protocol" level="DEBUG"/> -->
 
-    <!-- Feign -->
-    <!-- Enable logging for now -->
-    <logger name="feign" level="DEBUG"/>
-
 </configuration>
