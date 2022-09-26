@@ -104,13 +104,6 @@ public interface SmsClient {
             @Param("secretAddress") String secretAddress,
             String secretValue
     );
-
-    @RequestLine("POST /untee/secrets")
-    @Headers("Authorization: {authorization}")
-    SmsSecretResponse getUnTeeSecrets(
-            @Param("authorization") String authorization,
-            WorkerpoolAuthorization workerpoolAuthorization
-    );
     // endregion
 
     // region TEE
