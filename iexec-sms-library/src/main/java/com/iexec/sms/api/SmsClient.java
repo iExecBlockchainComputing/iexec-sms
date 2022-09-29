@@ -17,7 +17,6 @@
 package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.sms.secret.SmsSecretResponse;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.config.GramineServicesProperties;
@@ -103,13 +102,6 @@ public interface SmsClient {
             @Param("authorization") String authorization,
             @Param("secretAddress") String secretAddress,
             String secretValue
-    );
-
-    @RequestLine("POST /untee/secrets")
-    @Headers("Authorization: {authorization}")
-    SmsSecretResponse getUnTeeSecrets(
-            @Param("authorization") String authorization,
-            WorkerpoolAuthorization workerpoolAuthorization
     );
     // endregion
 
