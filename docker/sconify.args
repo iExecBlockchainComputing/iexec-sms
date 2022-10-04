@@ -1,0 +1,13 @@
+--verbose \
+--name=iexec-sms \
+--base=ubuntu:20.04 \
+--from=${IMG_FROM} \
+--to=${IMG_TO} \
+--binary=/usr/local/openjdk-11/bin/java \
+--heap="8G" \
+--stack="8M" \
+--fork="1" \
+--binary-fs \
+--fs-dir=/app \
+--host-path=/etc/hosts \
+--host-path=/etc/resolv.conf \
