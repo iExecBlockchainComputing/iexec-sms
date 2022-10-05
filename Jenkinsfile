@@ -5,7 +5,7 @@ String repositoryName = 'iexec-sms'
 buildInfo = getBuildInfo()
 
 buildJavaProject(
-        buildInfo: getBuildInfo(),
+        buildInfo: buildInfo,
         integrationTestsEnvVars: [],
         shouldPublishJars: true,
         shouldPublishDockerImages: true,
