@@ -1,5 +1,5 @@
 #!/bin/bash
-# IMG_FROM=docker.io/iexechub/iexec-sms:dev IMG_TO=docker.io/iexechub/iexec-sms:dev-debug ./sconify.sh
+# IMG_FROM=iexechub/iexec-sms:7.1.0 IMG_TO=iexechub/iexec-sms:7.1.0-debug ./sconify.sh
 cd $(dirname $0)
 
 SCONE_IMG_NAME=sconecuratedimages/iexec-sconify-image

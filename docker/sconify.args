@@ -1,6 +1,6 @@
 --verbose \
 --name=iexec-sms \
---base=ubuntu:20.04 \
+--base=openjdk:11.0.15-jre-slim \
 --from=${IMG_FROM} \
 --to=${IMG_TO} \
 --binary=/usr/local/openjdk-11/bin/java \
