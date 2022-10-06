@@ -1,24 +1,17 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
-import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.Map;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,7 +41,7 @@ class TeeSessionServiceTests {
 
         final TaskDescription taskDescription = TaskDescription.builder()
                 .chainTaskId(TASK_ID)
-                .teeEnclaveProvider(TeeEnclaveProvider.SCONE)
+                .teeFramework(TeeFramework.SCONE)
                 .build();
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
         when(sconeService.buildAndPostSession(any())).thenReturn(SECRET_PROVISIONING_URL);
@@ -68,7 +61,7 @@ class TeeSessionServiceTests {
 
         final TaskDescription taskDescription = TaskDescription.builder()
                 .chainTaskId(TASK_ID)
-                .teeEnclaveProvider(TeeEnclaveProvider.GRAMINE)
+                .teeFramework(TeeFramework.GRAMINE)
                 .build();
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
         when(gramineService.buildAndPostSession(any())).thenReturn(SECRET_PROVISIONING_URL);
@@ -102,7 +95,7 @@ class TeeSessionServiceTests {
 
         final TaskDescription taskDescription = TaskDescription.builder()
                 .chainTaskId(TASK_ID)
-                .teeEnclaveProvider(null)
+                .teeFramework(null)
                 .build();
 
         when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
