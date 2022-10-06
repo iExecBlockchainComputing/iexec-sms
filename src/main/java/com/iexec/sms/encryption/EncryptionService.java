@@ -33,7 +33,7 @@ import static com.iexec.common.utils.FileHelper.createFileWithContent;
 public class EncryptionService {
 
     private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
-    private byte[] aesKey;
+    private final byte[] aesKey;
 
     public EncryptionService(EncryptionConfiguration configuration) {
         this.aesKey = getOrCreateAesKey(configuration.getAesKeyPath());

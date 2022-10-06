@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class TeeChallengeService {
 
-    private TeeChallengeRepository teeChallengeRepository;
-    private EncryptionService encryptionService;
+    private final TeeChallengeRepository teeChallengeRepository;
+    private final EncryptionService encryptionService;
 
     public TeeChallengeService(TeeChallengeRepository teeChallengeRepository,
                                EncryptionService encryptionService) {
