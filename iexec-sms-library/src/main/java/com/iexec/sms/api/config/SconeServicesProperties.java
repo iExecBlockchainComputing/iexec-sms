@@ -1,6 +1,6 @@
 package com.iexec.sms.api.config;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,13 +10,13 @@ public class SconeServicesProperties extends TeeServicesProperties {
     private String lasImage;
 
     public SconeServicesProperties() {
-        super(TeeEnclaveProvider.SCONE);
+        super(TeeFramework.SCONE);
     }
 
     public SconeServicesProperties(TeeAppProperties preComputeProperties,
                                    TeeAppProperties postComputeProperties,
                                    String lasImage) {
-        super(TeeEnclaveProvider.SCONE, preComputeProperties, postComputeProperties);
+        super(TeeFramework.SCONE, preComputeProperties, postComputeProperties);
         this.lasImage = lasImage;
     }
 }

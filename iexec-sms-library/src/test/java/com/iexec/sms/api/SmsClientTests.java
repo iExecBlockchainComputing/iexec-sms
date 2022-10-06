@@ -16,7 +16,7 @@
 
 package com.iexec.sms.api;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
@@ -50,7 +50,7 @@ class SmsClientTests {
         when(smsClient.getSconeServicesProperties()).thenReturn(properties);
 
         final TeeServicesProperties teeServicesProperties =
-                smsClient.getTeeServicesProperties(TeeEnclaveProvider.SCONE);
+                smsClient.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertEquals(properties, teeServicesProperties);
     }
@@ -66,7 +66,7 @@ class SmsClientTests {
         when(smsClient.getGramineServicesProperties()).thenReturn(properties);
 
         final TeeServicesProperties teeServicesProperties =
-                smsClient.getTeeServicesProperties(TeeEnclaveProvider.GRAMINE);
+                smsClient.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertEquals(properties, teeServicesProperties);
     }
@@ -78,7 +78,7 @@ class SmsClientTests {
         when(smsClient.getGramineServicesProperties()).thenReturn(null);
 
         final TeeServicesProperties teeServicesProperties =
-                smsClient.getTeeServicesProperties(TeeEnclaveProvider.GRAMINE);
+                smsClient.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertNull(teeServicesProperties);
     }

@@ -1,6 +1,6 @@
 package com.iexec.sms.api.config;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,11 +9,11 @@ import lombok.Setter;
 public class GramineServicesProperties extends TeeServicesProperties {
 
     public GramineServicesProperties() {
-        super(TeeEnclaveProvider.GRAMINE);
+        super(TeeFramework.GRAMINE);
     }
 
     public GramineServicesProperties(TeeAppProperties preComputeProperties,
                                      TeeAppProperties postComputeProperties) {
-        super(TeeEnclaveProvider.GRAMINE, preComputeProperties, postComputeProperties);
+        super(TeeFramework.GRAMINE, preComputeProperties, postComputeProperties);
     }
 }

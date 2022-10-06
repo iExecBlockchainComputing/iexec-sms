@@ -1,6 +1,6 @@
 package com.iexec.sms.api.config;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,11 +11,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public abstract class TeeServicesProperties {
-    private TeeEnclaveProvider teeEnclaveProvider;
+    private TeeFramework teeFramework;
     private TeeAppProperties preComputeProperties;
     private TeeAppProperties postComputeProperties;
 
-    TeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
-        this.teeEnclaveProvider = teeEnclaveProvider;
+    TeeServicesProperties(TeeFramework teeFramework) {
+        this.teeFramework = teeFramework;
     }
 }
