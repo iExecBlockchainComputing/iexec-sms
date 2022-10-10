@@ -18,16 +18,12 @@ package com.iexec.sms.api.config;
 
 import com.iexec.common.tee.TeeFramework;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@Setter
+@NoArgsConstructor
 public class SconeServicesProperties extends TeeServicesProperties {
     private String lasImage;
-
-    public SconeServicesProperties() {
-        super(TeeFramework.SCONE);
-    }
 
     public SconeServicesProperties(TeeAppProperties preComputeProperties,
                                    TeeAppProperties postComputeProperties,

@@ -16,22 +16,23 @@
 
 package com.iexec.sms.api.config;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.iexec.common.tee.TeeFramework;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "teeFramework", visible = true)
+@JsonSubTypes({
+        @JsonSubTypes.Type(name = "SCONE", value = SconeServicesProperties.class),
+        @JsonSubTypes.Type(name = "GRAMINE", value = GramineServicesProperties.class)
+})
 public abstract class TeeServicesProperties {
-    private TeeFramework teeFramework;
-    private TeeAppProperties preComputeProperties;
-    private TeeAppProperties postComputeProperties;
-
-    TeeServicesProperties(TeeFramework teeFramework) {
-        this.teeFramework = teeFramework;
-    }
+    protected TeeFramework teeFramework;
+    protected TeeAppProperties preComputeProperties;
+    protected TeeAppProperties postComputeProperties;
 }
