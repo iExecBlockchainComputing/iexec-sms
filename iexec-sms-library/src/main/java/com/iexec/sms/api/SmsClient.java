@@ -125,25 +125,12 @@ public interface SmsClient {
     @RequestLine("GET /tee/framework")
     TeeFramework getTeeFramework();
 
-    @RequestLine("GET /tee/properties/scone")
-    SconeServicesProperties getSconeServicesProperties();
-
-    @RequestLine("GET /tee/properties/gramine")
-    GramineServicesProperties getGramineServicesProperties();
+    @RequestLine("GET /tee/properties/{teeFramework}")
+    <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
 
     @Deprecated(forRemoval = true)
     default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
         return getTeeServicesProperties(TeeFramework.valueOf(teeEnclaveProvider.toString()));
-    }
-
-    default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeFramework teeFramework) {
-        if (teeFramework == TeeFramework.SCONE) {
-            return (T) getSconeServicesProperties();
-        } else if (teeFramework == TeeFramework.GRAMINE) {
-            return (T) getGramineServicesProperties();
-        }
-
-        return null;
     }
     // endregion
 }
