@@ -21,11 +21,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.iexec.common.tee.TeeFramework;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
+@AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "teeFramework", visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(name = "SCONE", value = SconeServicesProperties.class),

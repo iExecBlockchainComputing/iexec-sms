@@ -16,16 +16,17 @@
 
 package com.iexec.sms.api.config;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.iexec.common.tee.TeeFramework;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 public class GramineServicesProperties extends TeeServicesProperties {
 
-    public GramineServicesProperties(TeeAppProperties preComputeProperties,
-                                     TeeAppProperties postComputeProperties) {
+    @JsonCreator
+    public GramineServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+                                     @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties) {
         super(TeeFramework.GRAMINE, preComputeProperties, postComputeProperties);
     }
 }

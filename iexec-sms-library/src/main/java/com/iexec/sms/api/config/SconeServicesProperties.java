@@ -16,18 +16,19 @@
 
 package com.iexec.sms.api.config;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.iexec.common.tee.TeeFramework;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 public class SconeServicesProperties extends TeeServicesProperties {
-    private String lasImage;
+    private final String lasImage;
 
-    public SconeServicesProperties(TeeAppProperties preComputeProperties,
-                                   TeeAppProperties postComputeProperties,
-                                   String lasImage) {
+    @JsonCreator
+    public SconeServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+                                   @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties,
+                                   @JsonProperty("lasImage") String lasImage) {
         super(TeeFramework.SCONE, preComputeProperties, postComputeProperties);
         this.lasImage = lasImage;
     }
