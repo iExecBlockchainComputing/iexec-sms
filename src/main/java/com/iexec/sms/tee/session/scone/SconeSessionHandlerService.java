@@ -16,6 +16,8 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
@@ -25,7 +27,7 @@ import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
-import com.iexec.sms.tee.session.scone.cas.SconeSession;
+import com.iexec.sms.tee.scone.SconeSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -64,7 +66,8 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
             log.info("Session content [taskId:{}]\n{}",
                     request.getTaskDescription().getChainTaskId(), session);
         }
-        ResponseEntity<String> postSession = apiClient.postSession(session.toString());
+        final String sessionAsYaml = getSessionAsYaml(request.getSessionId(), session);
+        ResponseEntity<String> postSession = apiClient.postSession(sessionAsYaml);
 
         if (postSession == null) {
             throw new TeeSessionGenerationException(
@@ -79,6 +82,15 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
                     "Failed to post session: " + httpCode);
         }
         return casConfiguration.getEnclaveHost();
+    }
+
+    private static String getSessionAsYaml(String sessionId, SconeSession session) {
+        try {
+            return new YAMLMapper().writeValueAsString(session);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to write SPS session as string [session:{}]", sessionId, e);
+            return "";
+        }
     }
 
 }

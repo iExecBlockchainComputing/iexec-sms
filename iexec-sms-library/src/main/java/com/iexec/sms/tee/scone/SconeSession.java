@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone.cas;
+package com.iexec.sms.tee.scone;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,22 +89,11 @@ public class SconeSession {
 
         @AllArgsConstructor
         @Getter
-        public class Attestation {
+        public static class Attestation {
             @JsonProperty("tolerate")
             private List<String> tolerate;
             @JsonProperty("ignore_advisories")
             private List<String> ignoreAdvisories;
         }
     }
-
-    @Override
-    public String toString() {
-        try {
-            return new YAMLMapper().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to write SPS session as string [session:{}]", name, e);
-            return "";
-        }
-    }
-
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session.scone.cas;
+package com.iexec.sms.tee.scone;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
