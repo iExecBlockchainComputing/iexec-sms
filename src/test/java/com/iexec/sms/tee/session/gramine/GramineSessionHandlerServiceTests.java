@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(OutputCaptureExtension.class)
 class GramineSessionHandlerServiceTests {
 
-    private static String SPS_URL = "spsUrl";
+    private static final String SPS_URL = "spsUrl";
     @Mock
     private GramineSessionMakerService sessionService;
     @Mock

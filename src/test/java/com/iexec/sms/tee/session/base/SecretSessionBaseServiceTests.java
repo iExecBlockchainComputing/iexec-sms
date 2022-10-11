@@ -1,14 +1,14 @@
 package com.iexec.sms.tee.session.base;
 
 import com.iexec.common.chain.DealParams;
-import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
+import com.iexec.sms.secret.ReservedSecretKeyName;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -50,7 +50,7 @@ import static org.mockito.Mockito.*;
 class SecretSessionBaseServiceTests {
 
     private static final TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
-            .provider(TeeEnclaveProvider.SCONE)// any would be fine
+            .framework(TeeFramework.SCONE)// any would be fine
             .entrypoint(APP_ENTRYPOINT)
             .fingerprint(APP_FINGERPRINT)
             .heapSize(1)

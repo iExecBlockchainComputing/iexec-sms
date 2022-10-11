@@ -91,7 +91,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     }
 
     @BeforeEach
-    private void setUp() {
+    public void setUp() {
         apiClient = SmsClientBuilder.getInstance(Logger.Level.FULL, "http://localhost:" + randomServerPort);
         final Ownable appContract = mock(Ownable.class);
         when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);

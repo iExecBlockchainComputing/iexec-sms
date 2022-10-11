@@ -1,6 +1,6 @@
 package com.iexec.sms.tee;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.CommonTestSetup;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ public abstract class TeeBeansLoadingTests extends CommonTestSetup {
     final String[] activeProfiles;
 
     TeeBeansLoadingTests(@Autowired Environment environment) {
-        this.annotatedTypeScanner = new AnnotatedTypeScanner(true, ConditionalOnTeeProvider.class);
+        this.annotatedTypeScanner = new AnnotatedTypeScanner(true, ConditionalOnTeeFramework.class);
         this.annotatedTypeScanner.setEnvironment(environment);
         this.activeProfiles = environment.getActiveProfiles();
     }
@@ -40,18 +40,18 @@ public abstract class TeeBeansLoadingTests extends CommonTestSetup {
         final Set<Class<?>> sconeClasses = annotatedTypeScanner.findTypes("com", "iexec", "sms");
         for (Class<?> clazz : sconeClasses) {
             log.info("{} is loaded", clazz);
-            final TeeEnclaveProvider[] providers = clazz.getAnnotation(ConditionalOnTeeProvider.class).providers();
+            final TeeFramework[] frameworks = clazz.getAnnotation(ConditionalOnTeeFramework.class).frameworks();
             assertTrue(
-                    areProfilesAndProvidersMatching(providers),
+                    areProfilesAndFrameworksMatching(frameworks),
                     clazz.getName() + " should not have been loaded [profiles:" + Arrays.toString(activeProfiles) + "]"
             );
         }
     }
 
-    private boolean areProfilesAndProvidersMatching(TeeEnclaveProvider[] providers) {
-        for (TeeEnclaveProvider provider : providers) {
+    private boolean areProfilesAndFrameworksMatching(TeeFramework[] frameworks) {
+        for (TeeFramework framework : frameworks) {
             for (String activeProfile : activeProfiles) {
-                if (provider.name().equalsIgnoreCase(activeProfile)) {
+                if (framework.name().equalsIgnoreCase(activeProfile)) {
                     return true;
                 }
             }

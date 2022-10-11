@@ -16,8 +16,8 @@
 
 package com.iexec.sms.tee.session.scone;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.common.tee.TeeFramework;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 @Configuration
-@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
+@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionSecurityConfig {
 
     @Value("${tee.scone.attestation.tolerated-insecure-options}")
