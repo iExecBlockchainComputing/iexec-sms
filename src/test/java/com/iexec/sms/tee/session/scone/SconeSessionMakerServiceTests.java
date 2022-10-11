@@ -27,6 +27,7 @@ import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -64,7 +65,7 @@ class SconeSessionMakerServiceTests {
     private YAMLMapper yamlMapper;
 
     @InjectMocks
-    private SconeSessionMakerService palaemonSessionService;
+    private SconeSessionMakerService sessionMakerService;
 
     @BeforeEach
     void beforeEach() {
@@ -153,13 +154,21 @@ class SconeSessionMakerServiceTests {
                         .postCompute(postCompute)
                         .build());
 
-        SconeSession actualCasSession = palaemonSessionService.generateSession(request);
-        String actualCasSessionAsString = palaemonSessionService.getSessionAsYaml(actualCasSession);
+        SconeSession actualCasSession = sessionMakerService.generateSession(request);
+        String actualCasSessionAsString = sessionMakerService.getSessionAsYaml(actualCasSession);
         System.out.println(actualCasSessionAsString);
         Map<String, Object> actualYmlMap = new Yaml().load(actualCasSessionAsString);
         String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
         assertRecursively(expectedYmlMap, actualYmlMap);
+    }
+
+    @Test
+    void shouldNotGetSessionYml() {
+        final SconeSession session = mock(SconeSession.class);
+        final String sessionAsYaml = sessionMakerService.getSessionAsYaml(session);
+
+        Assertions.assertThat(sessionAsYaml).isEmpty();
     }
     // endregion
 }
