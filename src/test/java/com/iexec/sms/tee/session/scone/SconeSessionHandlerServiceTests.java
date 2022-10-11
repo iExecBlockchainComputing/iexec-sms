@@ -1,5 +1,7 @@
 package com.iexec.sms.tee.session.scone;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
@@ -21,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +32,7 @@ import static org.mockito.Mockito.when;
 class SconeSessionHandlerServiceTests {
 
     private static final String CAS_URL = "casUrl";
+    private static final String SESSION_CONTENT = "sessionContent";
     @Mock
     private SconeSessionMakerService sessionService;
     @Mock
@@ -47,16 +52,17 @@ class SconeSessionHandlerServiceTests {
 
     @Test
     void shouldBuildAndPostSessionWithLogs(CapturedOutput output)
-            throws TeeSessionGenerationException {
+            throws TeeSessionGenerationException, JsonProcessingException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
-        when(casSession.toString()).thenReturn("sessionContent");
+        when(casSession.toString()).thenReturn(SESSION_CONTENT);
         when(sessionService.generateSession(request)).thenReturn(casSession);
+        when(sessionService.getSessionAsYaml(any(), eq(casSession))).thenReturn(SESSION_CONTENT);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
                 .thenReturn(true);
-        when(apiClient.postSession(casSession.toString()))
+        when(apiClient.postSession(SESSION_CONTENT))
                 .thenReturn(ResponseEntity.created(null).body("sessionId"));
 
         assertEquals(CAS_URL,
@@ -70,16 +76,16 @@ class SconeSessionHandlerServiceTests {
 
     @Test
     void shouldBuildAndPostSessionWithoutLogs(CapturedOutput output)
-            throws TeeSessionGenerationException {
+            throws TeeSessionGenerationException, JsonProcessingException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = mock(TaskDescription.class);
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
-        when(casSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(casSession);
+        when(sessionService.getSessionAsYaml(any(), eq(casSession))).thenReturn(SESSION_CONTENT);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
                 .thenReturn(false);
-        when(apiClient.postSession(casSession.toString()))
+        when(apiClient.postSession(SESSION_CONTENT))
                 .thenReturn(ResponseEntity.created(null).body("sessionId"));
 
         assertEquals(CAS_URL,

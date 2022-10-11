@@ -16,6 +16,8 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
@@ -57,14 +59,17 @@ public class SconeSessionMakerService {
     private final SecretSessionBaseService secretSessionBaseService;
     private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
+    private final YAMLMapper yamlMapper;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
             TeeServicesProperties teeServicesConfig,
-            SconeSessionSecurityConfig attestationSecurityConfig) {
+            SconeSessionSecurityConfig attestationSecurityConfig,
+            YAMLMapper yamlMapper) {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeServicesConfig = teeServicesConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
+        this.yamlMapper = yamlMapper;
     }
 
     /**
@@ -156,6 +161,15 @@ public class SconeSessionMakerService {
                 // TODO .command(command)
                 .environment(enclaveBase.getEnvironment())
                 .build();
+    }
+
+    public String getSessionAsYaml(String sessionId, SconeSession session) {
+        try {
+            return yamlMapper.writeValueAsString(session);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to write SPS session as string [session:{}]", sessionId, e);
+            return "";
+        }
     }
 
 }

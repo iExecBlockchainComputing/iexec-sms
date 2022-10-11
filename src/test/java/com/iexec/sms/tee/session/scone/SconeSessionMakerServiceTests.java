@@ -16,21 +16,23 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.tee.scone.SconeSession;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.tee.scone.SconeSession;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.List;
@@ -58,6 +60,8 @@ class SconeSessionMakerServiceTests {
     private SecretSessionBaseService teeSecretsService;
     @Mock
     private SconeSessionSecurityConfig attestationSecurityConfig;
+    @Spy
+    private YAMLMapper yamlMapper;
 
     @InjectMocks
     private SconeSessionMakerService palaemonSessionService;
@@ -150,8 +154,9 @@ class SconeSessionMakerServiceTests {
                         .build());
 
         SconeSession actualCasSession = palaemonSessionService.generateSession(request);
-        System.out.println(actualCasSession.toString());
-        Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+        String actualCasSessionAsString = palaemonSessionService.getSessionAsYaml(SESSION_ID, actualCasSession);
+        System.out.println(actualCasSessionAsString);
+        Map<String, Object> actualYmlMap = new Yaml().load(actualCasSessionAsString);
         String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
         assertRecursively(expectedYmlMap, actualYmlMap);

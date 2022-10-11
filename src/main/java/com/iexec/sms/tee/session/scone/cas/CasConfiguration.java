@@ -16,12 +16,14 @@
 
 package com.iexec.sms.tee.session.scone.cas;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.sms.tee.ConditionalOnTeeProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -60,5 +62,10 @@ public class CasConfiguration {
 
     public String getEnclaveHost() {
         return publicHost + ":" + enclavePort;
+    }
+
+    @Bean
+    YAMLMapper yamlMapper() {
+        return new YAMLMapper();
     }
 }
