@@ -19,6 +19,7 @@ package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
@@ -74,26 +75,37 @@ public class TeeController {
     /**
      * Return which TEE enclave provider this SMS is configured to use.
      * @return TEE enclave provider this SMS is configured to use.
+     * @deprecated Use {@link #getTeeFramework()} instead
      */
+    @Deprecated(forRemoval = true)
     @GetMapping("/provider")
     public ResponseEntity<TeeEnclaveProvider> getTeeEnclaveProvider() {
-        return ResponseEntity.ok(teeServicesProperties.getTeeEnclaveProvider());
+        return ResponseEntity.ok(TeeEnclaveProvider.valueOf(teeServicesProperties.getTeeFramework().toString()));
+    }
+
+    /**
+     * Return which TEE framework this SMS is configured to use.
+     * @return TEE framework this SMS is configured to use.
+     */
+    @GetMapping("/framework")
+    public ResponseEntity<TeeFramework> getTeeFramework() {
+        return ResponseEntity.ok(teeServicesProperties.getTeeFramework());
     }
 
     /**
      * Retrieve properties for TEE services. This includes properties
      * for pre-compute and post-compute stages
-     * and potential TEE provider's specific data.
+     * and potential TEE framework's specific data.
      *
      * @return TEE services properties (pre-compute image uri, post-compute image uri,
      * heap size, ...)
      */
-    @GetMapping("/properties/{teeEnclaveProvider}")
+    @GetMapping("/properties/{teeFramework}")
     public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
-            @PathVariable TeeEnclaveProvider teeEnclaveProvider) {
-        if (teeEnclaveProvider != teeServicesProperties.getTeeEnclaveProvider()) {
-            log.error("SMS configured to use another TeeEnclaveProvider " +
-                    "[required:{}, actual:{}]", teeEnclaveProvider, teeServicesProperties.getTeeEnclaveProvider());
+            @PathVariable TeeFramework teeFramework) {
+        if (teeFramework != teeServicesProperties.getTeeFramework()) {
+            log.error("SMS configured to use another TeeFramework " +
+                    "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         return ResponseEntity.ok(teeServicesProperties);

@@ -1,12 +1,12 @@
 package com.iexec.sms.tee.config;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 class TeeWorkerInternalConfigurationTests {
@@ -63,7 +63,7 @@ class TeeWorkerInternalConfigurationTests {
         GramineServicesProperties properties =
                 teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
 
-        assertEquals(TeeEnclaveProvider.GRAMINE, properties.getTeeEnclaveProvider());
+        assertEquals(TeeFramework.GRAMINE, properties.getTeeFramework());
         assertEquals(preComputeProperties, properties.getPreComputeProperties());
         assertEquals(postComputeProperties, properties.getPostComputeProperties());
     }
@@ -78,7 +78,7 @@ class TeeWorkerInternalConfigurationTests {
         SconeServicesProperties properties =
                 teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
 
-        assertEquals(TeeEnclaveProvider.SCONE, properties.getTeeEnclaveProvider());
+        assertEquals(TeeFramework.SCONE, properties.getTeeFramework());
         assertEquals(preComputeProperties, properties.getPreComputeProperties());
         assertEquals(postComputeProperties, properties.getPostComputeProperties());
         assertEquals(LAS_IMAGE, properties.getLasImage());

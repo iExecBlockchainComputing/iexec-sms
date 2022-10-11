@@ -4,12 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static com.iexec.common.tee.TeeEnclaveProvider.GRAMINE;
-import static com.iexec.common.tee.TeeEnclaveProvider.SCONE;
-import static org.junit.jupiter.api.Assertions.*;
+import static com.iexec.common.tee.TeeFramework.GRAMINE;
+import static com.iexec.common.tee.TeeFramework.SCONE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class TeeEnclaveProviderConverterTests {
-    private final TeeEnclaveProviderConverter converter = new TeeEnclaveProviderConverter();
+class TeeFrameworkConverterTests {
+    private final TeeFrameworkConverter converter = new TeeFrameworkConverter();
 
     // region convert
     @Test

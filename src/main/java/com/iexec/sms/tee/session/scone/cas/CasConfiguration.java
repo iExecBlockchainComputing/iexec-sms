@@ -17,8 +17,8 @@
 package com.iexec.sms.tee.session.scone.cas;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.iexec.common.tee.TeeEnclaveProvider;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.common.tee.TeeFramework;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,12 +33,12 @@ import org.springframework.stereotype.Component;
  * When a service wants to access those secrets, it sends a quote with its MREnclave.
  * The CAS attests the quote through Intel Attestation Service and sends the secrets
  * if the MREnclave is as expected.
- * 
+ * <p>
  * MREnclave: an enclave identifier, created by hashing all its
  * code. It guarantees that a code behaves exactly as expected.
  */
 @Component
-@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
+@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

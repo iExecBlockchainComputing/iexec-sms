@@ -1,7 +1,7 @@
 package com.iexec.sms.tee;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
@@ -80,13 +80,13 @@ class TeeControllerTests {
                 authorizationService, teeChallengeService, teeSessionService, properties
         );
 
-        final ResponseEntity<TeeEnclaveProvider> response =
-                teeController.getTeeEnclaveProvider();
+        final ResponseEntity<TeeFramework> response =
+                teeController.getTeeFramework();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        final TeeEnclaveProvider result = response.getBody();
-        assertEquals(TeeEnclaveProvider.SCONE, result);
+        final TeeFramework result = response.getBody();
+        assertEquals(TeeFramework.SCONE, result);
     }
 
     @Test
@@ -100,13 +100,13 @@ class TeeControllerTests {
                 authorizationService, teeChallengeService, teeSessionService, properties
         );
 
-        final ResponseEntity<TeeEnclaveProvider> response =
-                teeController.getTeeEnclaveProvider();
+        final ResponseEntity<TeeFramework> response =
+                teeController.getTeeFramework();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        final TeeEnclaveProvider result = response.getBody();
-        assertEquals(TeeEnclaveProvider.GRAMINE, result);
+        final TeeFramework result = response.getBody();
+        assertEquals(TeeFramework.GRAMINE, result);
     }
     // endregion
 
@@ -124,14 +124,14 @@ class TeeControllerTests {
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeEnclaveProvider.SCONE);
+                teeController.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         final TeeServicesProperties result = response.getBody();
         assertNotNull(result);
         assertInstanceOf(SconeServicesProperties.class, result);
-        assertEquals(TeeEnclaveProvider.SCONE, result.getTeeEnclaveProvider());
+        assertEquals(TeeFramework.SCONE, result.getTeeFramework());
         assertEquals(preComputeProperties, result.getPreComputeProperties());
         assertEquals(postComputeProperties, result.getPostComputeProperties());
         assertEquals(postComputeProperties, result.getPostComputeProperties());
@@ -150,14 +150,14 @@ class TeeControllerTests {
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeEnclaveProvider.GRAMINE);
+                teeController.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         final TeeServicesProperties result = response.getBody();
         assertNotNull(result);
         assertInstanceOf(GramineServicesProperties.class, result);
-        assertEquals(TeeEnclaveProvider.GRAMINE, result.getTeeEnclaveProvider());
+        assertEquals(TeeFramework.GRAMINE, result.getTeeFramework());
         assertEquals(preComputeProperties, result.getPreComputeProperties());
         assertEquals(postComputeProperties, result.getPostComputeProperties());
     }
@@ -175,7 +175,7 @@ class TeeControllerTests {
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeEnclaveProvider.GRAMINE);
+                teeController.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
@@ -192,7 +192,7 @@ class TeeControllerTests {
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeEnclaveProvider.SCONE);
+                teeController.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }

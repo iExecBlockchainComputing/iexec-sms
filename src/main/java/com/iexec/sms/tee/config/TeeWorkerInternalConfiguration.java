@@ -1,10 +1,10 @@
 package com.iexec.sms.tee.config;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,7 +62,7 @@ public class TeeWorkerInternalConfiguration {
     }
 
     @Bean
-    @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
+    @ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
     GramineServicesProperties gramineServicesProperties(
             TeeAppProperties preComputeProperties,
             TeeAppProperties postComputeProperties) {
@@ -70,7 +70,7 @@ public class TeeWorkerInternalConfiguration {
     }
 
     @Bean
-    @ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
+    @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
     SconeServicesProperties sconeServicesProperties(
             TeeAppProperties preComputeProperties,
             TeeAppProperties postComputeProperties,

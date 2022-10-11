@@ -18,9 +18,8 @@ package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import feign.Headers;
 import feign.Param;
@@ -116,23 +115,20 @@ public interface SmsClient {
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
+    /** @deprecated Use {@code getTeeFramework()} instead */
+    @Deprecated(forRemoval = true)
     @RequestLine("GET /tee/provider")
     TeeEnclaveProvider getTeeEnclaveProvider();
 
-    @RequestLine("GET /tee/properties/scone")
-    SconeServicesProperties getSconeServicesProperties();
+    @RequestLine("GET /tee/framework")
+    TeeFramework getTeeFramework();
 
-    @RequestLine("GET /tee/properties/gramine")
-    GramineServicesProperties getGramineServicesProperties();
+    @RequestLine("GET /tee/properties/{teeFramework}")
+    <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
 
+    @Deprecated(forRemoval = true)
     default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
-        if (teeEnclaveProvider == TeeEnclaveProvider.SCONE) {
-            return (T) getSconeServicesProperties();
-        } else if (teeEnclaveProvider == TeeEnclaveProvider.GRAMINE) {
-            return (T) getGramineServicesProperties();
-        }
-
-        return null;
+        return getTeeServicesProperties(TeeFramework.valueOf(teeEnclaveProvider.toString()));
     }
     // endregion
 }

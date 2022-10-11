@@ -16,9 +16,9 @@
 
 package com.iexec.sms.tee.session.gramine;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.config.TeeServicesProperties;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
+@ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
 public class GramineSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
