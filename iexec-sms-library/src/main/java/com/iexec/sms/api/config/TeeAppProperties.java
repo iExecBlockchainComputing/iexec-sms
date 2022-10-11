@@ -19,12 +19,10 @@ package com.iexec.sms.api.config;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class TeeAppProperties {
     private String image;
     private String fingerprint;
