@@ -154,7 +154,7 @@ class SconeSessionMakerServiceTests {
                         .build());
 
         SconeSession actualCasSession = palaemonSessionService.generateSession(request);
-        String actualCasSessionAsString = palaemonSessionService.getSessionAsYaml(SESSION_ID, actualCasSession);
+        String actualCasSessionAsString = palaemonSessionService.getSessionAsYaml(actualCasSession);
         System.out.println(actualCasSessionAsString);
         Map<String, Object> actualYmlMap = new Yaml().load(actualCasSessionAsString);
         String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");

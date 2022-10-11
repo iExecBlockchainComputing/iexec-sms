@@ -64,7 +64,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
             log.info("Session content [taskId:{}]\n{}",
                     request.getTaskDescription().getChainTaskId(), session);
         }
-        final String sessionAsYaml = sessionService.getSessionAsYaml(request.getSessionId(), session);
+        final String sessionAsYaml = sessionService.getSessionAsYaml(session);
         ResponseEntity<String> postSession = apiClient.postSession(sessionAsYaml);
 
         if (postSession == null) {

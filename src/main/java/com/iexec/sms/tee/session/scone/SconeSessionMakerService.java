@@ -163,11 +163,11 @@ public class SconeSessionMakerService {
                 .build();
     }
 
-    public String getSessionAsYaml(String sessionId, SconeSession session) {
+    public String getSessionAsYaml(SconeSession session) {
         try {
             return yamlMapper.writeValueAsString(session);
         } catch (JsonProcessingException e) {
-            log.error("Failed to write SPS session as string [session:{}]", sessionId, e);
+            log.error("Failed to write SPS session as string [session:{}]", session.getName(), e);
             return "";
         }
     }

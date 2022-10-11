@@ -1,15 +1,14 @@
 package com.iexec.sms.tee.session.scone;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.tee.scone.SconeSession;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
-import com.iexec.sms.tee.scone.SconeSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -59,7 +56,7 @@ class SconeSessionHandlerServiceTests {
         SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn(SESSION_CONTENT);
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(sessionService.getSessionAsYaml(any(), eq(casSession))).thenReturn(SESSION_CONTENT);
+        when(sessionService.getSessionAsYaml(casSession)).thenReturn(SESSION_CONTENT);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
                 .thenReturn(true);
         when(apiClient.postSession(SESSION_CONTENT))
@@ -82,7 +79,7 @@ class SconeSessionHandlerServiceTests {
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(sessionService.getSessionAsYaml(any(), eq(casSession))).thenReturn(SESSION_CONTENT);
+        when(sessionService.getSessionAsYaml(casSession)).thenReturn(SESSION_CONTENT);
         when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
                 .thenReturn(false);
         when(apiClient.postSession(SESSION_CONTENT))
