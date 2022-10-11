@@ -29,8 +29,9 @@ import lombok.Getter;
         @JsonSubTypes.Type(name = "SCONE", value = SconeServicesProperties.class),
         @JsonSubTypes.Type(name = "GRAMINE", value = GramineServicesProperties.class)
 })
+// TODO upgrade to sealed class in Java 17
 public abstract class TeeServicesProperties {
-    protected TeeFramework teeFramework;
-    protected TeeAppProperties preComputeProperties;
-    protected TeeAppProperties postComputeProperties;
+    private final TeeFramework teeFramework;
+    private final TeeAppProperties preComputeProperties;
+    private final TeeAppProperties postComputeProperties;
 }
