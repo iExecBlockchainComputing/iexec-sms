@@ -20,8 +20,6 @@ import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import feign.Headers;
 import feign.Param;
