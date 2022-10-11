@@ -45,15 +45,4 @@ public class SconeEnclave {
     private String command;
     @JsonProperty("environment")
     private Map<String, Object> environment;
-
-  @Override
-  public String toString() {
-    try {
-      return new ObjectMapper().writeValueAsString(this);
-    } catch (JsonProcessingException e) {
-      log.error("Failed to write CAS session as string [session:{}]", name, e);
-      return "";
-    }
-  }
-
 }
