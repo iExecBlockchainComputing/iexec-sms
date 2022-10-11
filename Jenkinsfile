@@ -26,7 +26,7 @@ stage('Trigger TEE debug image build') {
 
     sconeSigning(
             IMG_FROM: nativeImage,
-            IMG_TO:   "docker-regis.iex.ec/$imageName-unlocked:$imageTag-sconify-$sconifyVersion-debug",
+            IMG_TO:   "docker-regis.iex.ec/$imageName:$imageTag-sconify-$sconifyVersion-debug",
             SCRIPT_CONFIG: sconifyArgsPath,
             SCONE_IMG_NAME: 'sconecuratedimages/iexec-sconify-image',
             SCONE_IMG_VERS: sconifyVersion,
