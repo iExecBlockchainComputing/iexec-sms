@@ -35,6 +35,9 @@ import java.util.List;
  */
 public interface SmsClient {
 
+    @RequestLine("GET /up")
+    String isUp();
+
     // region Secrets
     @RequestLine("POST /apps/{appAddress}/secrets/1")
     @Headers("Authorization: {authorization}")
