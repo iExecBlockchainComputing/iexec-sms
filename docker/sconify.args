@@ -4,7 +4,7 @@
 --from=${IMG_FROM} \
 --to=${IMG_TO} \
 --binary=/usr/local/openjdk-11/bin/java \
---heap="3G" \
+--heap="8G" \
 --stack="8M" \
 --fork="1" \
 --binary-fs \
