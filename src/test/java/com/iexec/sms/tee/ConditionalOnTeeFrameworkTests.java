@@ -1,6 +1,6 @@
 package com.iexec.sms.tee;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-class ConditionalOnTeeProviderTests {
-    @ConditionalOnTeeProvider(providers = {})
+class ConditionalOnTeeFrameworkTests {
+    @ConditionalOnTeeFramework(frameworks = {})
     static class NoProvidersSet {}
 
     @Mock
@@ -39,7 +39,7 @@ class ConditionalOnTeeProviderTests {
     ConditionContext context;
     @Mock
     AnnotationMetadata metadata;
-    OnTeeProviderCondition condition = new OnTeeProviderCondition();
+    OnTeeFrameworkCondition condition = new OnTeeFrameworkCondition();
 
     @BeforeEach
     void init() {
@@ -181,9 +181,9 @@ class ConditionalOnTeeProviderTests {
     // endregion
 
     void setAttributesForMetadataMock(Class<?> clazz) {
-        ConditionalOnTeeProvider annotation = clazz.getAnnotation(ConditionalOnTeeProvider.class);
-        TeeEnclaveProvider[] providers = annotation.providers();
-        when(metadata.getAnnotationAttributes(ConditionalOnTeeProvider.class.getName()))
-                .thenReturn(Map.of("providers", providers));
+        ConditionalOnTeeFramework annotation = clazz.getAnnotation(ConditionalOnTeeFramework.class);
+        TeeFramework[] frameworks = annotation.frameworks();
+        when(metadata.getAnnotationAttributes(ConditionalOnTeeFramework.class.getName()))
+                .thenReturn(Map.of("frameworks", frameworks));
     }
 }

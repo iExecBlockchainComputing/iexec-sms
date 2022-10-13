@@ -1,6 +1,6 @@
 package com.iexec.sms.tee;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
@@ -16,13 +16,13 @@ import java.util.Map;
 
 /**
  * {@link Condition} that checks for a specific profile to be enabled.
- * To be used with {@link ConditionalOnTeeProvider}.
+ * To be used with {@link ConditionalOnTeeFramework}.
  */
 @Slf4j
-public class OnTeeProviderCondition extends SpringBootCondition {
+public class OnTeeFrameworkCondition extends SpringBootCondition {
     @Override
     public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        final Map<String, Object> attributes = metadata.getAnnotationAttributes(ConditionalOnTeeProvider.class.getName());
+        final Map<String, Object> attributes = metadata.getAnnotationAttributes(ConditionalOnTeeFramework.class.getName());
         final String[] activeProfiles = context.getEnvironment().getActiveProfiles();
 
         final String beanClassName;
@@ -38,25 +38,25 @@ public class OnTeeProviderCondition extends SpringBootCondition {
                     beanClassName);
             return new ConditionOutcome(
                     false,
-                    ConditionMessage.forCondition(ConditionalOnTeeProvider.class).didNotFind("any TEE enclave providers").atAll());
+                    ConditionMessage.forCondition(ConditionalOnTeeFramework.class).didNotFind("any TEE frameworks").atAll());
         }
 
-        final TeeEnclaveProvider[] providers = (TeeEnclaveProvider[]) attributes.get("providers");
-        if (providers == null || providers.length == 0) {
+        final TeeFramework[] frameworks = (TeeFramework[]) attributes.get("frameworks");
+        if (frameworks == null || frameworks.length == 0) {
             log.warn(
-                    "No TEE provider defined for bean, won't be loaded [bean:{}]",
+                    "No TEE framework defined for bean, won't be loaded [bean:{}]",
                     beanClassName);
             return new ConditionOutcome(
                     false,
-                    ConditionMessage.forCondition(ConditionalOnTeeProvider.class).didNotFind("any TEE enclave providers").atAll());
+                    ConditionMessage.forCondition(ConditionalOnTeeFramework.class).didNotFind("any TEE frameworks").atAll());
         }
 
         for (String activeProfile : activeProfiles) {
-            for (TeeEnclaveProvider teeProvider : providers) {
-                if (activeProfile.equalsIgnoreCase(teeProvider.name())) {
+            for (TeeFramework framework : frameworks) {
+                if (activeProfile.equalsIgnoreCase(framework.name())) {
                     return new ConditionOutcome(
                             true,
-                            ConditionMessage.forCondition(ConditionalOnTeeProvider.class).foundExactly(teeProvider));
+                            ConditionMessage.forCondition(ConditionalOnTeeFramework.class).foundExactly(framework));
                 }
             }
         }
@@ -67,6 +67,6 @@ public class OnTeeProviderCondition extends SpringBootCondition {
 
         return new ConditionOutcome(
                 false,
-                ConditionMessage.forCondition(ConditionalOnTeeProvider.class).didNotFind("profile", "profiles").items(Arrays.asList(providers)));
+                ConditionMessage.forCondition(ConditionalOnTeeFramework.class).didNotFind("profile", "profiles").items(Arrays.asList(frameworks)));
     }
 }

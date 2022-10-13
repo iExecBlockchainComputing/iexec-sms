@@ -16,9 +16,9 @@
 
 package com.iexec.sms.tee.session.scone;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
+@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionHandlerService implements TeeSessionHandler {
     private final SconeSessionMakerService sessionService;
     private final CasClient apiClient;

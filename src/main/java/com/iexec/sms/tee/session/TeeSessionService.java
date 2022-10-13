@@ -17,7 +17,7 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.common.task.TaskDescription;
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -63,8 +63,8 @@ public class TeeSessionService {
                 .enclaveChallenge(teeChallenge)
                 .build();
 
-        final TeeEnclaveProvider teeEnclaveProvider = taskDescription.getTeeEnclaveProvider();
-        if (teeEnclaveProvider == null) {
+        final TeeFramework teeFramework = taskDescription.getTeeFramework();
+        if (teeFramework == null) {
             throw new TeeSessionGenerationException(
                     SECURE_SESSION_NO_TEE_PROVIDER,
                     String.format("TEE provider can't be null [taskId:%s]", taskId));

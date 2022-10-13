@@ -16,16 +16,16 @@
 
 package com.iexec.sms.tee.session.gramine.sps;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.utils.FeignBuilder;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import feign.Logger.Level;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.GRAMINE)
+@ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
 @Getter
 public class SpsConfiguration {
     @Value("${tee.secret-provisioner.web.hostname}")

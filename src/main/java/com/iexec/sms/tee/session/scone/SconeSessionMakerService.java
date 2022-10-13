@@ -16,9 +16,9 @@
 
 package com.iexec.sms.tee.session.scone;
 
-import com.iexec.common.tee.TeeEnclaveProvider;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.sms.api.config.TeeServicesProperties;
-import com.iexec.sms.tee.ConditionalOnTeeProvider;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -40,7 +40,7 @@ import java.util.*;
 //TODO Rename and move
 @Slf4j
 @Service
-@ConditionalOnTeeProvider(providers = TeeEnclaveProvider.SCONE)
+@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionMakerService {
 
     // Internal values required for setting up a palaemon session
