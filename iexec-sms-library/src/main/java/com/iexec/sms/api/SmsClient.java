@@ -118,20 +118,10 @@ public interface SmsClient {
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
-    /** @deprecated Use {@code getTeeFramework()} instead */
-    @Deprecated(forRemoval = true)
-    @RequestLine("GET /tee/provider")
-    TeeEnclaveProvider getTeeEnclaveProvider();
-
     @RequestLine("GET /tee/framework")
     TeeFramework getTeeFramework();
 
     @RequestLine("GET /tee/properties/{teeFramework}")
     <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
-
-    @Deprecated(forRemoval = true)
-    default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
-        return getTeeServicesProperties(TeeFramework.valueOf(teeEnclaveProvider.toString()));
-    }
     // endregion
 }

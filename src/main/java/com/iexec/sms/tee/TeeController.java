@@ -73,17 +73,6 @@ public class TeeController {
     }
 
     /**
-     * Return which TEE enclave provider this SMS is configured to use.
-     * @return TEE enclave provider this SMS is configured to use.
-     * @deprecated Use {@link #getTeeFramework()} instead
-     */
-    @Deprecated(forRemoval = true)
-    @GetMapping("/provider")
-    public ResponseEntity<TeeEnclaveProvider> getTeeEnclaveProvider() {
-        return ResponseEntity.ok(TeeEnclaveProvider.valueOf(teeServicesProperties.getTeeFramework().toString()));
-    }
-
-    /**
      * Return which TEE framework this SMS is configured to use.
      * @return TEE framework this SMS is configured to use.
      */
@@ -180,8 +169,8 @@ public class TeeController {
             }
 
             return ResponseEntity.ok(ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
-            .data(teeSessionGenerationResponse)
-            .build());
+                    .data(teeSessionGenerationResponse)
+                    .build());
         } catch(TeeSessionGenerationException e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
