@@ -17,7 +17,6 @@
 package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.config.TeeServicesProperties;
