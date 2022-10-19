@@ -18,7 +18,6 @@ package com.iexec.sms.tee;
 
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.TeeSessionGenerationError;
@@ -70,17 +69,6 @@ public class TeeController {
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
         this.teeServicesProperties = teeServicesProperties;
-    }
-
-    /**
-     * Return which TEE enclave provider this SMS is configured to use.
-     * @return TEE enclave provider this SMS is configured to use.
-     * @deprecated Use {@link #getTeeFramework()} instead
-     */
-    @Deprecated(forRemoval = true)
-    @GetMapping("/provider")
-    public ResponseEntity<TeeEnclaveProvider> getTeeEnclaveProvider() {
-        return ResponseEntity.ok(TeeEnclaveProvider.valueOf(teeServicesProperties.getTeeFramework().toString()));
     }
 
     /**
@@ -180,8 +168,8 @@ public class TeeController {
             }
 
             return ResponseEntity.ok(ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
-            .data(teeSessionGenerationResponse)
-            .build());
+                    .data(teeSessionGenerationResponse)
+                    .build());
         } catch(TeeSessionGenerationException e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);

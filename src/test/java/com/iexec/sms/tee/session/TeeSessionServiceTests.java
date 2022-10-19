@@ -90,7 +90,7 @@ class TeeSessionServiceTests {
     }
 
     @Test
-    void shouldNotGenerateTeeSessionSinceNoTeeEnclaveProvider() {
+    void shouldNotGenerateTeeSessionSinceNoTeeFramework() {
         final TeeSessionService teeSessionService = new TeeSessionService(iexecHubService, sconeService);
 
         final TaskDescription taskDescription = TaskDescription.builder()
@@ -105,7 +105,7 @@ class TeeSessionServiceTests {
                 () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
         assertEquals(TeeSessionGenerationError.SECURE_SESSION_NO_TEE_PROVIDER,
                 teeSessionGenerationException.getError());
-        assertEquals(String.format("TEE provider can't be null [taskId:%s]",
+        assertEquals(String.format("TEE framework can't be null [taskId:%s]",
                 TASK_ID),
                 teeSessionGenerationException.getMessage());
     }

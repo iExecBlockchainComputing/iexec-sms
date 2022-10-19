@@ -60,7 +60,7 @@ public abstract class TeeBeansLoadingTests extends CommonTestSetup {
     }
 
     /**
-     * Implement this method to check all beans of given TEE enclave provider are loaded (= not null).
+     * Implement this method to check all beans of given TEE framework are loaded (= not null).
      */
     abstract void checkTeeBeansAreLoaded();
 }

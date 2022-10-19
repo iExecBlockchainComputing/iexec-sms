@@ -67,7 +67,7 @@ public class TeeSessionService {
         if (teeFramework == null) {
             throw new TeeSessionGenerationException(
                     SECURE_SESSION_NO_TEE_PROVIDER,
-                    String.format("TEE provider can't be null [taskId:%s]", taskId));
+                    String.format("TEE framework can't be null [taskId:%s]", taskId));
         }
 
         // /!\ TODO clean expired tasks sessions
