@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@2.2.0') _
+@Library('global-jenkins-library@2.2.1') _
 
 String repositoryName = 'iexec-sms'
 
@@ -17,19 +17,11 @@ buildJavaProject(
         preProductionVisibility: 'docker.io',
         productionVisibility: 'docker.io')
 
-stage('Trigger TEE debug image build') {
-    def nativeImage     = "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag"
-    def imageName       = repositoryName
-    def imageTag        = buildInfo.imageTag
-    def sconifyArgsPath = './docker/sconify.args'
-    def sconifyVersion  = '5.7.0-wal'
-
-    sconeSigning(
-            IMG_FROM: nativeImage,
-            IMG_TO:   "docker-regis.iex.ec/$imageName:$imageTag-sconify-$sconifyVersion-debug",
-            SCRIPT_CONFIG: sconifyArgsPath,
-            SCONE_IMG_NAME: 'sconecuratedimages/iexec-sconify-image',
-            SCONE_IMG_VERS: sconifyVersion,
-            FLAVOR: 'DEBUG'
-    )
-}
+sconeBuildUnlocked(
+        nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
+        imageName:       repositoryName,
+        imageTag:        buildInfo.imageTag,
+        sconifyArgsPath: './docker/sconify.args',
+        sconifyImage:    'sconecuratedimages/iexec-sconify-image',
+        sconifyVersion:  '5.7.0-wal'
+)
