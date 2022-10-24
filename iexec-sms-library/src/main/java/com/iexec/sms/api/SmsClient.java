@@ -17,7 +17,6 @@
 package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.tee.TeeEnclaveProvider;
 import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.config.TeeServicesProperties;
@@ -118,20 +117,10 @@ public interface SmsClient {
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
-    /** @deprecated Use {@code getTeeFramework()} instead */
-    @Deprecated(forRemoval = true)
-    @RequestLine("GET /tee/provider")
-    TeeEnclaveProvider getTeeEnclaveProvider();
-
     @RequestLine("GET /tee/framework")
     TeeFramework getTeeFramework();
 
     @RequestLine("GET /tee/properties/{teeFramework}")
     <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
-
-    @Deprecated(forRemoval = true)
-    default <T extends TeeServicesProperties> T getTeeServicesProperties(TeeEnclaveProvider teeEnclaveProvider) {
-        return getTeeServicesProperties(TeeFramework.valueOf(teeEnclaveProvider.toString()));
-    }
     // endregion
 }

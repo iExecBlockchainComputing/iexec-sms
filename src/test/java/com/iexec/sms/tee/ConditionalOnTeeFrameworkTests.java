@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 
 class ConditionalOnTeeFrameworkTests {
     @ConditionalOnTeeFramework(frameworks = {})
-    static class NoProvidersSet {}
+    static class NoFrameworksSet {}
 
     @Mock
     Environment environment;
@@ -157,8 +157,8 @@ class ConditionalOnTeeFrameworkTests {
     }
 
     @Test
-    void shouldNotMatchAnySinceNoProviderDefined() {
-        final Class<?> clazz = NoProvidersSet.class;
+    void shouldNotMatchAnySinceNoFrameworkDefined() {
+        final Class<?> clazz = NoFrameworksSet.class;
 
         when(context.getEnvironment()).thenReturn(environment);
         when(environment.getActiveProfiles()).thenReturn(new String[]{"scone", "gramine"});

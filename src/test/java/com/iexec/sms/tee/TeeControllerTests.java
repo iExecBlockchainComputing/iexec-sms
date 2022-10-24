@@ -67,9 +67,9 @@ class TeeControllerTests {
         MockitoAnnotations.openMocks(this);
     }
 
-    // region getTeeEnclaveProvider
+    // region getTeeFramework
     @Test
-    void shouldGetSconeProvider() {
+    void shouldGetSconeFramework() {
         final TeeServicesProperties properties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
@@ -90,7 +90,7 @@ class TeeControllerTests {
     }
 
     @Test
-    void shouldGetGramineProvider() {
+    void shouldGetGramineFramework() {
         final TeeServicesProperties properties = new GramineServicesProperties(
                 preComputeProperties,
                 postComputeProperties
