@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -72,13 +71,12 @@ class SconeSessionMakerServiceTests {
     // region getSessionYml
     @Test
     void shouldGetSessionYml() throws Exception {
-        TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
+        TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
+                .fingerprint(APP_FINGERPRINT).entrypoint(APP_ENTRYPOINT).build();
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
         when(preComputeProperties.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
         when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
-        when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
-        when(enclaveConfig.getEntrypoint()).thenReturn(APP_ENTRYPOINT);
 
         SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")
