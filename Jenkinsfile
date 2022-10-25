@@ -1,6 +1,11 @@
-@Library('global-jenkins-library@2.2.0') _
+@Library('global-jenkins-library@2.2.1') _
+
+String repositoryName = 'iexec-sms'
+
+buildInfo = getBuildInfo()
+
 buildJavaProject(
-        buildInfo: getBuildInfo(),
+        buildInfo: buildInfo,
         integrationTestsEnvVars: [],
         shouldPublishJars: true,
         shouldPublishDockerImages: true,
@@ -11,3 +16,12 @@ buildJavaProject(
         developVisibility: 'iex.ec',
         preProductionVisibility: 'docker.io',
         productionVisibility: 'docker.io')
+
+sconeBuildUnlocked(
+        nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
+        imageName:       repositoryName,
+        imageTag:        buildInfo.imageTag,
+        sconifyArgsPath: './docker/sconify.args',
+        sconifyImage:    'sconecuratedimages/iexec-sconify-image',
+        sconifyVersion:  '5.7.0-wal'
+)
