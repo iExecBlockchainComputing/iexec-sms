@@ -46,7 +46,9 @@ class GramineSessionMakerServiceTests {
     @Test
     void shouldGetSessionJson() throws Exception {
         TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
-                .fingerprint(APP_FINGERPRINT).entrypoint("/apploader.sh").build();
+                .fingerprint(APP_FINGERPRINT)
+                .entrypoint("/apploader.sh")
+                .build();
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
         when(postComputeProperties.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);

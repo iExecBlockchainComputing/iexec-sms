@@ -72,7 +72,9 @@ class SconeSessionMakerServiceTests {
     @Test
     void shouldGetSessionYml() throws Exception {
         TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
-                .fingerprint(APP_FINGERPRINT).entrypoint(APP_ENTRYPOINT).build();
+                .fingerprint(APP_FINGERPRINT)
+                .entrypoint(APP_ENTRYPOINT)
+                .build();
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
         when(preComputeProperties.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
