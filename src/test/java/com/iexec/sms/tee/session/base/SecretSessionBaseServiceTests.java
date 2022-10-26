@@ -341,7 +341,7 @@ class SecretSessionBaseServiceTests {
     @Test
     void shouldFailToGetAppTokensInvalidEnclaveConfig() {
         // invalid enclave config
-        TeeSessionRequest request = createSessionRequest(createTaskDescription(new TeeEnclaveConfiguration()));
+        TeeSessionRequest request = createSessionRequest(createTaskDescription(TeeEnclaveConfiguration.builder().build()));
 
         TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
                 () -> teeSecretsService.getAppTokens(request));

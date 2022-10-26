@@ -20,7 +20,6 @@ import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
 import java.util.Map;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -46,13 +45,14 @@ class GramineSessionMakerServiceTests {
     // region getSessionYml
     @Test
     void shouldGetSessionJson() throws Exception {
-        TeeEnclaveConfiguration enclaveConfig = mock(TeeEnclaveConfiguration.class);
+        TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
+                .fingerprint(APP_FINGERPRINT)
+                .entrypoint("/apploader.sh")
+                .build();
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
         when(postComputeProperties.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
         when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
-        when(enclaveConfig.getFingerprint()).thenReturn(APP_FINGERPRINT);
-        when(enclaveConfig.getEntrypoint()).thenReturn("/apploader.sh");
 
         SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
                 .name("app")
