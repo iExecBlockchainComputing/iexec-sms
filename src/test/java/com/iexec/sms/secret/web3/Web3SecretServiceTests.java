@@ -49,7 +49,7 @@ class Web3SecretServiceTests {
 
     @Test
     void shouldNotAddSecretIfPresent() {
-        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
+        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue, true);
         when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.of(web3Secret));
         assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
         verifyNoInteractions(encryptionService);
@@ -67,19 +67,23 @@ class Web3SecretServiceTests {
 
     @Test
     void shouldGetDecryptedSecret() {
-        Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
-        encryptedSecret.setEncryptedValue(true);
+        Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue, true);
         when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.decrypt(encryptedSecretValue)).thenReturn(plainSecretValue);
+
         Optional<Web3Secret> result = web3SecretService.getSecret(secretAddress, true);
-        assertThat(result).contains(new Web3Secret(secretAddress, plainSecretValue));
+        assertThat(result).isPresent();
+        assertThat(result).get().extracting(Web3Secret::getAddress).isEqualTo(secretAddress);
+        assertThat(result).get().extracting(Web3Secret::getValue).isEqualTo(plainSecretValue);
+        assertThat(result).get().extracting(Web3Secret::isEncryptedValue).isEqualTo(false);
+
         verify(web3SecretRepository).findWeb3SecretByAddress(secretAddress);
         verify(encryptionService).decrypt(any());
     }
 
     @Test
     void shouldGetEncryptedSecret() {
-        Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
+        Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue, true);
         when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.of(encryptedSecret));
         assertThat(web3SecretService.getSecret(secretAddress))
                 .contains(encryptedSecret);

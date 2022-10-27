@@ -71,7 +71,7 @@ class SecretControllerTests {
     @Test
     void shouldReturnNoContentWhenWeb3SecretExists() {
         when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS))
-                .thenReturn(Optional.of(new Web3Secret()));
+                .thenReturn(Optional.of(mock(Web3Secret.class)));
         assertThat(secretController.isWeb3SecretSet(WEB3_SECRET_ADDRESS))
                 .isEqualTo(ResponseEntity.noContent().build());
         verifyNoInteractions(authorizationService, web2SecretsService);
@@ -117,7 +117,7 @@ class SecretControllerTests {
     @ParameterizedTest
     @ValueSource(strings = {"true", "false"})
     void getWeb3Secret(boolean shouldDecryptSecret) {
-        Web3Secret expectedSecret = new Web3Secret();
+        Web3Secret expectedSecret = mock(Web3Secret.class);
         when(authorizationService.getChallengeForGetWeb3Secret(WEB3_SECRET_ADDRESS))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, WEB3_SECRET_ADDRESS))
@@ -267,7 +267,7 @@ class SecretControllerTests {
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretsService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenReturn(false);
+                .thenReturn(Optional.empty());
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
             .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
         verify(web2SecretsService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
@@ -280,7 +280,7 @@ class SecretControllerTests {
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretsService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenReturn(true);
+                .thenReturn(Optional.of(new Secret(WEB2_SECRET_NAME, WEB2_SECRET_VALUE, true)));
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.noContent().build());
         verify(web2SecretsService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);

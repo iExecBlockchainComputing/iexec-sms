@@ -38,14 +38,15 @@ public class Web3SecretService extends AbstractSecretService {
 
     public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
         secretAddress = secretAddress.toLowerCase();
-        Optional<Web3Secret> secret = web3SecretRepository.findWeb3SecretByAddress(secretAddress);
-        if (secret.isEmpty()) {
+        Optional<Web3Secret> oSecret = web3SecretRepository.findWeb3SecretByAddress(secretAddress);
+        if (oSecret.isEmpty()) {
             return Optional.empty();
         }
         if (shouldDecryptValue) {
-            decryptSecret(secret.get());
+            final String decryptedValue = encryptionService.decrypt(oSecret.get().getValue());
+            return oSecret.map(secret -> secret.withValue(decryptedValue, false));
         }
-        return secret;
+        return oSecret;
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress) {
@@ -64,10 +65,11 @@ public class Web3SecretService extends AbstractSecretService {
             return false;
         }
 
-        Web3Secret web3Secret = new Web3Secret(secretAddress, secretValue);
-        encryptSecret(web3Secret);
+        final String encryptedValue = encryptionService.encrypt(secretValue);
         log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
-                secretAddress, web3Secret.getValue());
+                secretAddress, encryptedValue);
+
+        final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue, true);
         web3SecretRepository.save(web3Secret);
         return true;
     }

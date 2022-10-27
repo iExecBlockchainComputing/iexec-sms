@@ -17,20 +17,18 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.secret.Secret;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Data
-@Getter
 @Entity
-@NoArgsConstructor
+@Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web2Secrets {
 
     @Id
@@ -43,13 +41,41 @@ public class Web2Secrets {
     private List<Secret> secrets;
 
     Web2Secrets(String ownerAddress) {
-        this.ownerAddress = ownerAddress;
-        this.secrets = new ArrayList<>();
+        this(ownerAddress, List.of());
+    }
+
+    public Web2Secrets(String ownerAddress, List<Secret> secrets) {
+        this.ownerAddress = ownerAddress.toLowerCase();
+        this.secrets = Collections.unmodifiableList(secrets);
     }
 
     public Optional<Secret> getSecret(String secretAddress) {
         return secrets.stream()
                 .filter(secret -> secret.getAddress().equals(secretAddress))
                 .findFirst();
+    }
+
+    /**
+     * Copies the current {@link Web2Secrets} object, while adding given {@link Secret} to the secrets list.
+     * In case of an update,
+     * given secret is removed from the secrets list before the new object is created.
+     *
+     * @param newSecret {@link Secret} to add to the list
+     * @return A new {@link Web2Secrets} object with given new {@link Secret}.
+     */
+    public Web2Secrets withNewSecret(Secret newSecret) {
+        List<Secret> newSecrets;
+        if (newSecret.getId() == null) {
+            // New secret, no need to remove any old corresponding secret.
+            newSecrets = new ArrayList<>(secrets);
+        } else {
+            // Update of existing secret, remove the old secret.
+            newSecrets = secrets.stream()
+                    .filter(secret -> !Objects.equals(secret.getId(), newSecret.getId()))
+                    .collect(Collectors.toList());
+        }
+        newSecrets.add(newSecret);
+
+        return new Web2Secrets(id, ownerAddress, newSecrets);
     }
 }

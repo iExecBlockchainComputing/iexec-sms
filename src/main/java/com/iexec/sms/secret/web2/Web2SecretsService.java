@@ -50,43 +50,57 @@ public class Web2SecretsService extends AbstractSecretService {
         ownerAddress = ownerAddress.toLowerCase();
         Optional<Secret> oSecret = getWeb2Secrets(ownerAddress)
                 .flatMap(web2Secrets -> web2Secrets.getSecret(secretAddress));
-        return shouldDecryptValue ? oSecret.map(this::decryptSecret) : oSecret;
+
+        if (oSecret.isEmpty() || !shouldDecryptValue) {
+            return oSecret;
+        }
+
+        final Secret secret = oSecret.get();
+        final String decryptedValue = encryptionService.decrypt(secret.getValue());
+        return Optional.of(secret.withValue(decryptedValue, false));
     }
 
-    public boolean addSecret(String ownerAddress, String secretAddress, String secretValue) {
+    public Optional<Secret> addSecret(String ownerAddress, String secretAddress, String secretValue) {
         ownerAddress = ownerAddress.toLowerCase();
-        Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress)
+        final Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress)
                 .orElse(new Web2Secrets(ownerAddress));
 
         if (web2Secrets.getSecret(secretAddress).isPresent()) {
             log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
-            return false;
+            return Optional.empty();
         }
 
-        Secret secret = new Secret(secretAddress, secretValue);
-        encryptSecret(secret);
+        final String encryptedValue = encryptionService.encrypt(secretValue);
         log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, encryptedSecretValue:{}]",
-                ownerAddress, secretAddress, secret.getValue());
-        web2Secrets.getSecrets().add(secret);
-        web2SecretsRepository.save(web2Secrets);
-        return true;
+                ownerAddress, secretAddress, encryptedValue);
+
+        final Secret secret = new Secret(secretAddress, encryptedValue, true);
+        addSecretAndSave(web2Secrets, secret);
+        return Optional.of(secret);
     }
 
-    public void updateSecret(String ownerAddress, String secretAddress, String newSecretValue) {
+    public Optional<Secret> updateSecret(String ownerAddress, String secretAddress, String newSecretValue) {
         ownerAddress = ownerAddress.toLowerCase();
-        Secret newSecret = new Secret(secretAddress, newSecretValue);
-        encryptSecret(newSecret);
-        Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress).orElseThrow();
-        Secret existingSecret = web2Secrets.getSecret(secretAddress).orElseThrow();
-        if (existingSecret.getValue().equals(newSecret.getValue())) {
+        final Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress).orElseThrow();
+        final Secret existingSecret = web2Secrets.getSecret(secretAddress).orElseThrow();
+
+        final String encryptedValue = encryptionService.encrypt(newSecretValue);
+        if (existingSecret.getValue().equals(encryptedValue)) {
             log.info("No need to update secret [ownerAddress:{}, secretAddress:{}]",
                     ownerAddress, secretAddress);
-            return;
+            return Optional.empty();
         }
 
         log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldEncryptedSecretValue:{}, newEncryptedSecretValue:{}]",
-                ownerAddress, secretAddress, existingSecret.getValue(), newSecret.getValue());
-        existingSecret.setValue(newSecret.getValue(), true);
-        web2SecretsRepository.save(web2Secrets);
+                ownerAddress, secretAddress, existingSecret.getValue(), encryptedValue);
+
+        final Secret newSecret = existingSecret.withValue(encryptedValue, true);
+        addSecretAndSave(web2Secrets, newSecret);
+        return Optional.of(newSecret);
+    }
+
+    private void addSecretAndSave(Web2Secrets web2Secrets, Secret secret) {
+        final Web2Secrets newWeb2Secrets = web2Secrets.withNewSecret(secret);
+        web2SecretsRepository.save(newWeb2Secrets);
     }
 }

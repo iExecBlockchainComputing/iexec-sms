@@ -20,26 +20,9 @@ import com.iexec.sms.encryption.EncryptionService;
 
 public abstract class AbstractSecretService {
 
-    private final EncryptionService encryptionService;
+    protected final EncryptionService encryptionService;
 
     protected AbstractSecretService(EncryptionService encryptionService) {
         this.encryptionService = encryptionService;
     }
-
-    public Secret encryptSecret(Secret secret) {
-        if (!secret.isEncryptedValue()) {
-            String encrypted = encryptionService.encrypt(secret.getValue());
-            secret.setValue(encrypted, true);            
-        }
-        return secret;
-    }
-
-    public Secret decryptSecret(Secret secret) {
-        if (secret.isEncryptedValue()) {
-            String decrypted = encryptionService.decrypt(secret.getValue());
-            secret.setValue(decrypted, false);
-        }
-        return secret;
-    }
-
 }

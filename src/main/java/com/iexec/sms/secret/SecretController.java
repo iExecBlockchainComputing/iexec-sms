@@ -134,7 +134,7 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!web2SecretsService.addSecret(ownerAddress, secretName, secretValue)) {
+        if (web2SecretsService.addSecret(ownerAddress, secretName, secretValue).isEmpty()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 

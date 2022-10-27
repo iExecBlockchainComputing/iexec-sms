@@ -16,10 +16,7 @@
 
 package com.iexec.sms.secret;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -28,11 +25,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.util.Objects;
 
-@Data
-@Getter
-@AllArgsConstructor
 @Entity
-@NoArgsConstructor
+@Builder
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Secret {
 
     @Id
@@ -46,14 +43,22 @@ public class Secret {
     private boolean isEncryptedValue;
 
     /* Clear secrets at construction */
-    public Secret(String address, String value) {
+    public Secret(String address, String value, boolean isEncryptedValue) {
         this.address = address;
-        this.setValue(value, false);
-    }
-
-    public void setValue(String value, boolean isEncryptedValue) {
         this.value = value;
         this.isEncryptedValue = isEncryptedValue;
+    }
+
+    /**
+     * Copies the current {@link Secret} object,
+     * while replacing the old value with the new one.
+     *
+     * @param newValue         Value to use for new object.
+     * @param isEncryptedValue Whether this value is encrypted.
+     * @return A new {@link Secret} object with new value.
+     */
+    public Secret withValue(String newValue, boolean isEncryptedValue) {
+        return new Secret(this.id, this.address, newValue, isEncryptedValue);
     }
 
     /**

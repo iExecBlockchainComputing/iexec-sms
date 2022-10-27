@@ -53,11 +53,8 @@ class Web2SecretsServiceTests {
 
     @Test
     void shouldGetDecryptedSecret() {
-        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
-        encryptedSecret.setEncryptedValue(true);
-        List<Secret> secretList = List.of(encryptedSecret);
-        Web2Secrets web2SecretsMock = new Web2Secrets(ownerAddress);
-        web2SecretsMock.setSecrets(secretList);
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue, true);
+        Web2Secrets web2SecretsMock = new Web2Secrets(ownerAddress, List.of(encryptedSecret));
         when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
                 .thenReturn(Optional.of(web2SecretsMock));
         when(encryptionService.decrypt(encryptedSecret.getValue()))
@@ -65,17 +62,15 @@ class Web2SecretsServiceTests {
 
         Optional<Secret> result = web2SecretsService.getSecret(ownerAddress, secretAddress, true);
         assertThat(result).isNotEmpty();
-        assertThat(result.get().getAddress()).isEqualTo(secretAddress);
-        assertThat(result.get().getValue()).isEqualTo(plainSecretValue);
+        assertThat(result).get().extracting(Secret::getAddress).isEqualTo(secretAddress);
+        assertThat(result).get().extracting(Secret::getValue).isEqualTo(plainSecretValue);
+        assertThat(result).get().extracting(Secret::isEncryptedValue).isEqualTo(false);
     }
 
     @Test
     void shouldGetEncryptedSecret() {
-        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
-        encryptedSecret.setEncryptedValue(true);
-        List<Secret> secretList = List.of(encryptedSecret);
-        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
-        web2Secrets.setSecrets(secretList);
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue, true);
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress, List.of(encryptedSecret));
         when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
                 .thenReturn(Optional.of(web2Secrets));
 
@@ -87,10 +82,9 @@ class Web2SecretsServiceTests {
 
     @Test
     void shouldNotAddSecretIfPresent() {
-        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
-        web2Secrets.getSecrets().add(new Secret(secretAddress, encryptedSecretValue));
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress, List.of(new Secret(secretAddress, encryptedSecretValue, true)));
         when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress)).thenReturn(Optional.of(web2Secrets));
-        assertThat(web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue)).isFalse();
+        assertThat(web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue)).isEmpty();
         verifyNoInteractions(encryptionService);
         verify(web2SecretsRepository, never()).save(any());
     }
@@ -98,42 +92,48 @@ class Web2SecretsServiceTests {
     @Test
     void shouldAddSecret() {
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
-        assertThat(web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue)).isTrue();
+
+        final Optional<Secret> newSecret = web2SecretsService.addSecret(ownerAddress, secretAddress, plainSecretValue);
+        assertThat(newSecret).isPresent();
+        assertThat(newSecret).get().extracting(Secret::getAddress).isEqualTo(secretAddress);
+        assertThat(newSecret).get().extracting(Secret::getValue).isEqualTo(encryptedSecretValue);
+        assertThat(newSecret).get().extracting(Secret::isEncryptedValue).isEqualTo(true);
+
         verify(encryptionService).encrypt(any());
         verify(web2SecretsRepository).save(any());
     }
 
     @Test
     void shouldNotUpdateSecretIfPresent() {
-        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
-        encryptedSecret.setEncryptedValue(true);
-        List<Secret> secretList = List.of(encryptedSecret);
-        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress);
-        web2Secrets.setSecrets(secretList);
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue, true);
+        Web2Secrets web2Secrets = new Web2Secrets(ownerAddress, List.of(encryptedSecret));
         when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
                 .thenReturn(Optional.of(web2Secrets));
         when(encryptionService.encrypt(plainSecretValue))
                 .thenReturn(encryptedSecretValue);
 
-        web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue);
+        assertThat(web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue)).isEmpty();
         verify(web2SecretsRepository, never()).save(web2Secrets);
     }
 
     @Test
     void shouldUpdateSecret() {
-        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue);
-        encryptedSecret.setEncryptedValue(true);
+        Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue, true);
         String newSecretValue = "newSecretValue";
         String newEncryptedSecretValue = "newEncryptedSecretValue";
-        List<Secret> secretList = List.of(encryptedSecret);
-        Web2Secrets web2SecretsMock = new Web2Secrets(ownerAddress);
-        web2SecretsMock.setSecrets(secretList);
+        Web2Secrets web2SecretsMock = new Web2Secrets(ownerAddress, List.of(encryptedSecret));
         when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
                 .thenReturn(Optional.of(web2SecretsMock));
         when(encryptionService.encrypt(newSecretValue))
                 .thenReturn(newEncryptedSecretValue);
 
-        web2SecretsService.updateSecret(ownerAddress, secretAddress, newSecretValue);
-        verify(web2SecretsRepository, times(1)).save(web2SecretsMock);
+        final Optional<Secret> newSecret = web2SecretsService.updateSecret(ownerAddress, secretAddress, newSecretValue);
+        assertThat(newSecret).isPresent();
+        assertThat(newSecret).get().extracting(Secret::getAddress).isEqualTo(secretAddress);
+        assertThat(newSecret).get().extracting(Secret::getValue).isEqualTo(newEncryptedSecretValue);
+        assertThat(newSecret).get().extracting(Secret::isEncryptedValue).isEqualTo(true);
+
+        verify(web2SecretsRepository, never()).save(web2SecretsMock);   // Current object should not be updated
+        verify(web2SecretsRepository, times(1)).save(any());    // A new object should be created with the same ID
     }
 }
