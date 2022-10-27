@@ -177,3 +177,12 @@ task buildImage(type: Exec) {
         return standardOutput.toString()
     }
 }
+
+task buildTrustedImage(type: Exec) {
+    group       "Build"
+    description "Build an OCI image compatible with scontain TEE framework"
+    dependsOn   buildImage
+    commandLine "docker/sconify.sh"
+    environment "IMG_FROM", "$ociImageName:dev"
+    environment "IMG_TO", "$ociImageName-unlocked:dev"
+}
