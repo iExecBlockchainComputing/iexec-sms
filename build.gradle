@@ -168,7 +168,7 @@ task buildImage(type: Exec) {
     group       'Build'
     description 'Builds an OCI image from a Dockerfile.'
     dependsOn   bootJar
-    commandLine ('sh', '-c', "docker build -f build/resources/main/Dockerfile.untrusted --build-arg jar=$jarPathForOCI"
+    commandLine ('sh', '-c', "docker build -f build/resources/main/Dockerfile --build-arg jar=$jarPathForOCI"
             + " -t $ociImageName:$gitShortCommit . && docker tag $ociImageName:$gitShortCommit $ociImageName:dev")
     standardOutput = new ByteArrayOutputStream()
 
@@ -177,57 +177,3 @@ task buildImage(type: Exec) {
         return standardOutput.toString()
     }
 }
-
-task buildTrustedImage(type: Exec) {
-    group       'Build'
-    description 'Builds a trusted OCI image from a trusted Dockerfile.'
-    dependsOn   bootJar
-    commandLine ('sh', '-c', "docker image build -f build/resources/main/Dockerfile --build-arg jar=$jarPathForOCI"
-            + " -t $ociImageName:$gitShortCommit-trusted --no-cache . && docker tag $ociImageName:$gitShortCommit-trusted $ociImageName:dev-trusted")
-}
-
-task templatePalaemon {
-    String smsMrEnclave
-    String smsFspfKey
-    String smsFspfTag
-
-    /*
-    * Docker build will produce such logs: "RUN .. <MRENCLAVE>$MRENCLAVE</MRENCLAVE> ... <MRENCLAVE>abcdef</MRENCLAVE>"
-    * We need to extract the 2nd occurence 'abcdef'
-    */
-    ext.extractValueBetweenTags = { s, tag ->
-        String beginTag = '<' + tag + '>'
-        String endTag = '</' + tag + '>'
-        return s.substring(s.indexOf(beginTag, s.indexOf(beginTag) + 2) + beginTag.length(), s.indexOf(endTag, s.indexOf(endTag) + 2))
-    }
-
-    doFirst {
-        String logs = buildImage.output()
-        smsMrEnclave = extractValueBetweenTags(logs, 'MRENCLAVE')
-        smsFspfKey = extractValueBetweenTags(logs, 'FSPF_KEY')
-        smsFspfTag = extractValueBetweenTags(logs, 'FSPF_TAG')
-    }
-
-    doLast {
-        copy {
-            // delete old one
-            delete 'src/main/resources/boot/sms-palaemon-conf.yml'
-            // use and copy template to the new location
-            from 'src/main/resources/sms-palaemon-conf.yml.template'
-            into 'src/main/resources/boot/'
-
-            rename { String fileName ->
-                fileName.replace('.template', '')
-            }
-            // replace tokens in the template file
-            filter(ReplaceTokens, tokens: [
-                    IEXEC_SMS_PALAEMON_SERVICE_NAME: "${rootProject.name}".toString(),
-                    IEXEC_SMS_MRENCLAVE: smsMrEnclave,
-                    IEXEC_SMS_FSPF_KEY: smsFspfKey,
-                    IEXEC_SMS_FSPF_TAG: smsFspfTag,
-            ])
-        }
-    }
-}
-//templatePalaemon.dependsOn buildImage
-//buildImage.finalizedBy templatePalaemon
