@@ -46,14 +46,25 @@ public class Web3Secret extends Secret {
 
     /**
      * Copies the current {@link Web3Secret} object,
-     * while replacing the old value with the new one.
+     * while replacing the old value with a new encrypted value.
      *
-     * @param newValue         Value to use for new object.
-     * @param isEncryptedValue Whether this value is encrypted.
+     * @param newValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
     @Override
-    public Web3Secret withValue(String newValue, boolean isEncryptedValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, isEncryptedValue);
+    public Web3Secret withEncryptedValue(String newValue) {
+        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, true);
+    }
+
+    /**
+     * Copies the current {@link Web3Secret} object,
+     * while replacing the old value with a new decrypted value.
+     *
+     * @param newValue Value to use for new object.
+     * @return A new {@link Web3Secret} object with new value.
+     */
+    @Override
+    public Web3Secret withDecryptedValue(String newValue) {
+        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, false);
     }
 }

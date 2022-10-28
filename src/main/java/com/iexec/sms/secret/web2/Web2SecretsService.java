@@ -57,7 +57,7 @@ public class Web2SecretsService extends AbstractSecretService {
 
         final Secret secret = oSecret.get();
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
-        return Optional.of(secret.withValue(decryptedValue, false));
+        return Optional.of(secret.withDecryptedValue(decryptedValue));
     }
 
     public Optional<Secret> addSecret(String ownerAddress, String secretAddress, String secretValue) {

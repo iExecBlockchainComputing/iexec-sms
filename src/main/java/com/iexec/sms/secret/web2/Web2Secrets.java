@@ -106,7 +106,7 @@ public class Web2Secrets {
         // Filtering out old secret
         updatedSecretsList.remove(secretToUpdate);
         // Adding updated secret
-        updatedSecretsList.add(secretToUpdate.withValue(newSecretValue, isEncryptedValue));
+        updatedSecretsList.add(secretToUpdate.withEncryptedValue(newSecretValue));
 
         return new Web2Secrets(id, ownerAddress, updatedSecretsList);
     }

@@ -50,15 +50,26 @@ public class Secret {
 
     /**
      * Copies the current {@link Secret} object,
-     * while replacing the old value with the new one.
+     * while replacing the old value with a new encrypted value.
      *
      * @param newValue         Value to use for new object.
-     * @param isEncryptedValue Whether this value is encrypted.
      * @return A new {@link Secret} object with new value.
      */
-    public Secret withValue(String newValue, boolean isEncryptedValue) {
-        return new Secret(this.id, this.address, newValue, isEncryptedValue);
+    public Secret withEncryptedValue(String newValue) {
+        return new Secret(this.id, this.address, newValue, true);
     }
+
+    /**
+     * Copies the current {@link Secret} object,
+     * while replacing the old value with a new decrypted value.
+     *
+     * @param newValue Value to use for new object.
+     * @return A new {@link Secret} object with new value.
+     */
+    public Secret withDecryptedValue(String newValue) {
+        return new Secret(this.id, this.address, newValue, false);
+    }
+
 
     /**
      * Get the secret value without possible leading or trailing

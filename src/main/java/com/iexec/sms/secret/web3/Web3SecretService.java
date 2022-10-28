@@ -44,7 +44,7 @@ public class Web3SecretService extends AbstractSecretService {
         }
         if (shouldDecryptValue) {
             final String decryptedValue = encryptionService.decrypt(oSecret.get().getValue());
-            return oSecret.map(secret -> secret.withValue(decryptedValue, false));
+            return oSecret.map(secret -> secret.withDecryptedValue(decryptedValue));
         }
         return oSecret;
     }
