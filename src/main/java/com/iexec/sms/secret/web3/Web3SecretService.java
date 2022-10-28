@@ -36,6 +36,11 @@ public class Web3SecretService extends AbstractSecretService {
         this.web3SecretRepository = web3SecretRepository;
     }
 
+    public Optional<Web3Secret> getSecret(String secretAddress) {
+        secretAddress = secretAddress.toLowerCase();
+        return web3SecretRepository.findWeb3SecretByAddress(secretAddress);
+    }
+
     public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
         secretAddress = secretAddress.toLowerCase();
         Optional<Web3Secret> oSecret = getSecret(secretAddress);
@@ -43,11 +48,6 @@ public class Web3SecretService extends AbstractSecretService {
             decryptSecret(oSecret.get());
         }
         return oSecret;
-    }
-
-    public Optional<Web3Secret> getSecret(String secretAddress) {
-        secretAddress = secretAddress.toLowerCase();
-        return web3SecretRepository.findWeb3SecretByAddress(secretAddress);
     }
 
     /*
