@@ -43,13 +43,13 @@ public class Web2SecretsService extends AbstractSecretService {
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress) {
-        return getSecret(ownerAddress, secretAddress, false);
+        ownerAddress = ownerAddress.toLowerCase();
+        return getWeb2Secrets(ownerAddress)
+                .flatMap(web2Secrets -> web2Secrets.getSecret(secretAddress));
     }
 
     public Optional<Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
-        ownerAddress = ownerAddress.toLowerCase();
-        Optional<Secret> oSecret = getWeb2Secrets(ownerAddress)
-                .flatMap(web2Secrets -> web2Secrets.getSecret(secretAddress));
+        Optional<Secret> oSecret = getSecret(ownerAddress, secretAddress);
         return shouldDecryptValue ? oSecret.map(this::decryptSecret) : oSecret;
     }
 

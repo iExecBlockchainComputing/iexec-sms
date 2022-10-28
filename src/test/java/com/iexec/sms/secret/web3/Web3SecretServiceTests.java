@@ -81,9 +81,12 @@ class Web3SecretServiceTests {
     void shouldGetEncryptedSecret() {
         Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.of(encryptedSecret));
-        assertThat(web3SecretService.getSecret(secretAddress))
-                .contains(encryptedSecret);
-        verify(web3SecretRepository).findWeb3SecretByAddress(secretAddress);
+        Optional<Web3Secret> oSecret1 = web3SecretService.getSecret(secretAddress, false);
+        Optional<Web3Secret> oSecret2 = web3SecretService.getSecret(secretAddress);
+        assertThat(oSecret1)
+                .contains(encryptedSecret)
+                .isEqualTo(oSecret2);
+        verify(web3SecretRepository, times(2)).findWeb3SecretByAddress(secretAddress);
         verifyNoInteractions(encryptionService);
     }
 
@@ -91,7 +94,8 @@ class Web3SecretServiceTests {
     void shouldGetEmptyResultIfSecretNotPresent() {
         when(web3SecretRepository.findWeb3SecretByAddress(secretAddress)).thenReturn(Optional.empty());
         assertThat(web3SecretService.getSecret(secretAddress)).isEmpty();
-        verify(web3SecretRepository).findWeb3SecretByAddress(secretAddress);
+        assertThat(web3SecretService.getSecret(secretAddress, false)).isEmpty();
+        verify(web3SecretRepository, times(2)).findWeb3SecretByAddress(secretAddress);
         verifyNoInteractions(encryptionService);
     }
 
