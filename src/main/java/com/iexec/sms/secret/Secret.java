@@ -26,7 +26,6 @@ import javax.persistence.Id;
 import java.util.Objects;
 
 @Entity
-@Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
