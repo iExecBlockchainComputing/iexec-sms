@@ -17,12 +17,14 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.secret.Secret;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -56,25 +58,56 @@ public class Web2Secrets {
 
     /**
      * Copies the current {@link Web2Secrets} object, while adding given {@link Secret} to the secrets list.
-     * In case of an update,
-     * given secret is removed from the secrets list before the new object is created.
      *
-     * @param newSecret {@link Secret} to add to the list
-     * @return A new {@link Web2Secrets} object with given new {@link Secret}.
+     * @param secretAddress    Address of the new secret.
+     * @param secretValue      Value of the new secret.
+     * @param isEncryptedValue Whether this value is encrypted.
+     * @return A new {@link Web2Secrets} instance, with a new {@link Secret} element.
+     * @throws SecretAlreadyExistsException thrown when a secret with same address already exists.
      */
-    public Web2Secrets withNewSecret(Secret newSecret) {
-        List<Secret> newSecrets;
-        if (newSecret.getId() == null) {
-            // New secret, no need to remove any old corresponding secret.
-            newSecrets = new ArrayList<>(secrets);
-        } else {
-            // Update of existing secret, remove the old secret.
-            newSecrets = secrets.stream()
-                    .filter(secret -> !Objects.equals(secret.getId(), newSecret.getId()))
-                    .collect(Collectors.toList());
+    public Web2Secrets addNewSecret(String secretAddress, String secretValue, boolean isEncryptedValue)
+            throws SecretAlreadyExistsException {
+        // A new secret can't already exist
+        if (getSecret(secretAddress).isPresent()) {
+            throw new SecretAlreadyExistsException(ownerAddress, secretAddress);
         }
-        newSecrets.add(newSecret);
 
+        final List<Secret> newSecrets = new ArrayList<>(this.secrets);
+        newSecrets.add(new Secret(secretAddress, secretValue, isEncryptedValue));
         return new Web2Secrets(id, ownerAddress, newSecrets);
+    }
+
+    /**
+     * Copies the current {@link Web2Secrets} object, while updating {@link Secret} at given {@code secretAddress}.
+     *
+     * @param secretAddress    Address of the secret to update.
+     * @param newSecretValue   New value for the secret.
+     * @param isEncryptedValue Whether this value is encrypted.
+     * @return A new {@link Web2Secrets} instance, with a {@link Secret} whose value has been updated.
+     * @throws NotAnExistingSecretException thrown when requested address is not known.
+     * @throws SameSecretException          thrown when secret has already given value.
+     */
+    public Web2Secrets updateSecret(String secretAddress, String newSecretValue, boolean isEncryptedValue)
+            throws NotAnExistingSecretException, SameSecretException {
+        final Optional<Secret> oSecretToUpdate = getSecret(secretAddress);
+
+        // Can't update a secret that doesn't exist
+        if (oSecretToUpdate.isEmpty()) {
+            throw new NotAnExistingSecretException(ownerAddress, secretAddress);
+        }
+
+        // No need to update if same value
+        final Secret secretToUpdate = oSecretToUpdate.get();
+        if (secretToUpdate.isEncryptedValue() == isEncryptedValue && Objects.equals(secretToUpdate.getValue(), newSecretValue)) {
+            throw new SameSecretException(ownerAddress, secretToUpdate);
+        }
+
+        final List<Secret> updatedSecretsList = new ArrayList<>(secrets);
+        // Filtering out old secret
+        updatedSecretsList.remove(secretToUpdate);
+        // Adding updated secret
+        updatedSecretsList.add(secretToUpdate.withValue(newSecretValue, isEncryptedValue));
+
+        return new Web2Secrets(id, ownerAddress, updatedSecretsList);
     }
 }

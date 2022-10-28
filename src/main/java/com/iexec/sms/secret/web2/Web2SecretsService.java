@@ -65,42 +65,39 @@ public class Web2SecretsService extends AbstractSecretService {
         final Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress)
                 .orElse(new Web2Secrets(ownerAddress));
 
-        if (web2Secrets.getSecret(secretAddress).isPresent()) {
-            log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
-            return Optional.empty();
-        }
-
         final String encryptedValue = encryptionService.encrypt(secretValue);
         log.info("Adding new secret [ownerAddress:{}, secretAddress:{}, encryptedSecretValue:{}]",
                 ownerAddress, secretAddress, encryptedValue);
 
-        final Secret secret = new Secret(secretAddress, encryptedValue, true);
-        addSecretAndSave(web2Secrets, secret);
-        return Optional.of(secret);
+        try {
+            final Web2Secrets newWeb2Secrets = web2Secrets.addNewSecret(secretAddress, encryptedValue, true);
+            web2SecretsRepository.save(newWeb2Secrets);
+            return newWeb2Secrets.getSecret(secretAddress);
+        } catch (SecretAlreadyExistsException e) {
+            log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress, e);
+            return Optional.empty();
+        }
     }
 
-    public Optional<Secret> updateSecret(String ownerAddress, String secretAddress, String newSecretValue) {
+    public Optional<Secret> updateSecret(String ownerAddress, String secretAddress, String newSecretValue) throws NotAnExistingSecretException {
         ownerAddress = ownerAddress.toLowerCase();
         final Web2Secrets web2Secrets = getWeb2Secrets(ownerAddress).orElseThrow();
-        final Secret existingSecret = web2Secrets.getSecret(secretAddress).orElseThrow();
-
         final String encryptedValue = encryptionService.encrypt(newSecretValue);
-        if (existingSecret.getValue().equals(encryptedValue)) {
+        log.info("Updating secret [ownerAddress:{}, secretAddress:{}, newEncryptedSecretValue:{}]",
+                ownerAddress, secretAddress, encryptedValue);
+
+        try {
+            final Web2Secrets newWeb2Secrets = web2Secrets.updateSecret(secretAddress, encryptedValue, true);
+            web2SecretsRepository.save(newWeb2Secrets);
+            return newWeb2Secrets.getSecret(secretAddress);
+        } catch (NotAnExistingSecretException e) {
+            log.error("Secret does not exist, can't update it [ownerAddress:{}, secretAddress:{}]",
+                    ownerAddress, secretAddress, e);
+            throw e;
+        } catch (SameSecretException e) {
             log.info("No need to update secret [ownerAddress:{}, secretAddress:{}]",
                     ownerAddress, secretAddress);
             return Optional.empty();
         }
-
-        log.info("Updating secret [ownerAddress:{}, secretAddress:{}, oldEncryptedSecretValue:{}, newEncryptedSecretValue:{}]",
-                ownerAddress, secretAddress, existingSecret.getValue(), encryptedValue);
-
-        final Secret newSecret = existingSecret.withValue(encryptedValue, true);
-        addSecretAndSave(web2Secrets, newSecret);
-        return Optional.of(newSecret);
-    }
-
-    private void addSecretAndSave(Web2Secrets web2Secrets, Secret secret) {
-        final Web2Secrets newWeb2Secrets = web2Secrets.withNewSecret(secret);
-        web2SecretsRepository.save(newWeb2Secrets);
     }
 }
