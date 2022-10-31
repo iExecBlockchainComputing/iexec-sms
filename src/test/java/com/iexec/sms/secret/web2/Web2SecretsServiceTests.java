@@ -27,9 +27,11 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 class Web2SecretsServiceTests {
@@ -77,10 +79,22 @@ class Web2SecretsServiceTests {
         when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
                 .thenReturn(Optional.of(web2Secrets));
 
-        Optional<Secret> result = web2SecretsService.getSecret(ownerAddress, secretAddress);
-        assertThat(result)
-                .isNotEmpty()
-                .contains(encryptedSecret);
+        Optional<Secret> oSecret1 = web2SecretsService.getSecret(ownerAddress, secretAddress);
+        Optional<Secret> oSecret2 = web2SecretsService.getSecret(ownerAddress, secretAddress, false);
+        assertThat(oSecret1)
+                .contains(encryptedSecret)
+                .isEqualTo(oSecret2);
+        verify(web2SecretsRepository, times(2)).findWeb2SecretsByOwnerAddress(ownerAddress);
+        verifyNoInteractions(encryptionService);
+    }
+
+    @Test
+    void shouldGetEmptyResultIfSecretNotPresent() {
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress)).thenReturn(Optional.empty());
+        assertThat(web2SecretsService.getSecret(ownerAddress, secretAddress)).isEmpty();
+        assertThat(web2SecretsService.getSecret(ownerAddress, secretAddress, false)).isEmpty();
+        verify(web2SecretsRepository, times(2)).findWeb2SecretsByOwnerAddress(ownerAddress);
+        verifyNoInteractions(encryptionService);
     }
 
     @Test
@@ -107,7 +121,21 @@ class Web2SecretsServiceTests {
     }
 
     @Test
-    void shouldNotUpdateSecretIfPresent() throws NotAnExistingSecretException {
+    void shouldNotUpdateSecretIfMissing() {
+        final Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue, true);
+        final Web2Secrets web2Secrets = new Web2Secrets(ownerAddress, List.of(encryptedSecret));
+        when(web2SecretsRepository.findWeb2SecretsByOwnerAddress(ownerAddress))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(web2Secrets));
+        assertThatThrownBy(() -> web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue))
+                .isInstanceOf(NoSuchElementException.class);
+        assertThatThrownBy(() -> web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue))
+                .isInstanceOf(NoSuchElementException.class);
+        verify(web2SecretsRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotUpdateSecretIfSameValue() throws NotAnExistingSecretException {
         final Secret encryptedSecret = new Secret(secretAddress, encryptedSecretValue, true);
         final Web2Secrets web2Secrets = new Web2Secrets(ownerAddress, List.of(encryptedSecret));
         when(web2SecretsService.getWeb2Secrets(ownerAddress))
@@ -133,7 +161,7 @@ class Web2SecretsServiceTests {
         exception.extracting(NotAnExistingSecretException::getOwnerAddress).isEqualTo(ownerAddress);
         exception.extracting(NotAnExistingSecretException::getSecretAddress).isEqualTo(secretAddress);
 
-        verify(web2SecretsRepository, never()).save(web2Secrets);
+        verify(web2SecretsRepository, never()).save(any());
     }
 
     @Test
