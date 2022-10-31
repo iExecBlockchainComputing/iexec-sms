@@ -129,8 +129,6 @@ class Web2SecretsServiceTests {
                 .thenReturn(Optional.of(web2Secrets));
         assertThatThrownBy(() -> web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue))
                 .isInstanceOf(NoSuchElementException.class);
-        assertThatThrownBy(() -> web2SecretsService.updateSecret(ownerAddress, secretAddress, plainSecretValue))
-                .isInstanceOf(NoSuchElementException.class);
         verify(web2SecretsRepository, never()).save(any());
     }
 
