@@ -52,7 +52,7 @@ public class Secret {
      * Copies the current {@link Secret} object,
      * while replacing the old value with a new encrypted value.
      *
-     * @param newValue         Value to use for new object.
+     * @param newValue Value to use for new object.
      * @return A new {@link Secret} object with new value.
      */
     public Secret withEncryptedValue(String newValue) {
