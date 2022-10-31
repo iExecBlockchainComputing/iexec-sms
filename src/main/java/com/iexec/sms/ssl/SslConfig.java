@@ -16,6 +16,7 @@
 
 package com.iexec.sms.ssl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -29,19 +30,20 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
+@Slf4j
 @Configuration
 public class SslConfig {
 
-    private String sslKeystore;
-    private String sslKeystoreType;
-    private String sslKeyAlias;
-    private char[] sslKeystorePasswordChar;
+    private final String sslKeystore;
+    private final String sslKeystoreType;
+    private final String sslKeyAlias;
+    private final char[] sslKeystorePasswordChar;
 
     public SslConfig(
-            @Value("${server.ssl.key-store}") String sslKeystore,
-            @Value("${server.ssl.key-store-type}") String sslKeystoreType,
-            @Value("${server.ssl.key-alias}") String sslKeyAlias,
-            @Value("${server.ssl.key-store-password}") String sslKeystorePassword) {
+            @Value("${tee.ssl.key-store}") String sslKeystore,
+            @Value("${tee.ssl.key-store-type}") String sslKeystoreType,
+            @Value("${tee.ssl.key-alias}") String sslKeyAlias,
+            @Value("${tee.ssl.key-store-password}") String sslKeystorePassword) {
         this.sslKeystore = sslKeystore;
         this.sslKeystoreType = sslKeystoreType;
         this.sslKeyAlias = sslKeyAlias;
@@ -62,7 +64,7 @@ public class SslConfig {
                     .loadTrustMaterial(null, (chain, authType) -> true)////TODO: Add CAS certificate to truststore
                     .build();
         } catch (IOException | NoSuchAlgorithmException | KeyStoreException | UnrecoverableKeyException | CertificateException | KeyManagementException e) {
-            e.printStackTrace();
+            log.warn("Failed to create a fresh SSL context", e);
         }
         return null;
     }
