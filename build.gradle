@@ -178,7 +178,7 @@ task buildImage(type: Exec) {
     }
 }
 
-task buildTrustedImage(type: Exec) {
+task buildSconeImage(type: Exec) {
     group       "Build"
     description "Build an OCI image compatible with scontain TEE framework"
     dependsOn   buildImage

@@ -33,7 +33,7 @@ public class CasClient {
     private final TwoWaySslClient twoWaySslClient;
 
     public CasClient(CasConfiguration teeCasConfiguration,
-            TwoWaySslClient twoWaySslClient) {
+                     TwoWaySslClient twoWaySslClient) {
         this.casConfiguration = teeCasConfiguration;
         this.twoWaySslClient = twoWaySslClient;
     }
