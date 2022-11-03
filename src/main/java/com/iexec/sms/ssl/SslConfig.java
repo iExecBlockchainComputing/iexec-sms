@@ -16,6 +16,8 @@
 
 package com.iexec.sms.ssl;
 
+import com.iexec.common.tee.TeeFramework;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +34,7 @@ import java.security.cert.CertificateException;
 
 @Slf4j
 @Configuration
+@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SslConfig {
 
     private final String sslKeystore;

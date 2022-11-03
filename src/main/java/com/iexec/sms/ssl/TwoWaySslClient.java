@@ -16,6 +16,8 @@
 
 package com.iexec.sms.ssl;
 
+import com.iexec.common.tee.TeeFramework;
+import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +25,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
+@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class TwoWaySslClient {
 
     private final SslConfig sslConfig;
