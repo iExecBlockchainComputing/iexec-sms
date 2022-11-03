@@ -7,6 +7,13 @@ tee:
       hostname: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME:localhost}
       port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:18765}
 
+  ssl:
+    key-store: ${IEXEC_SMS_SSL_KEYSTORE:./src/main/resources/ssl-keystore-dev.p12} #iexec-core dev certificate for dev
+    key-store-password: ${IEXEC_SMS_SSL_KEYSTORE_PASSWORD:whatever}
+    key-store-type: ${IEXEC_SMS_SSL_KEYSTORE_TYPE:PKCS12}
+    key-alias: ${IEXEC_SMS_SSL_KEYSTORE_ALIAS:iexec-core}
+    client-auth: need
+
   worker:
     pre-compute:
       image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production

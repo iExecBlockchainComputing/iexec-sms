@@ -51,11 +51,3 @@ logging:
 springdoc:
   packagesToScan: com.iexec.sms
   pathsToMatch: /**
-
-tee:
-  ssl:
-    key-store: ${IEXEC_SMS_SSL_KEYSTORE:./src/main/resources/ssl-keystore-dev.p12} #iexec-core dev certificate for dev
-    key-store-password: ${IEXEC_SMS_SSL_KEYSTORE_PASSWORD:whatever}
-    key-store-type: ${IEXEC_SMS_SSL_KEYSTORE_TYPE:PKCS12}
-    key-alias: ${IEXEC_SMS_SSL_KEYSTORE_ALIAS:iexec-core}
-    client-auth: need
