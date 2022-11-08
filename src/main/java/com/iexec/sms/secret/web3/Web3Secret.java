@@ -30,6 +30,7 @@ import javax.persistence.Id;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web3Secret extends Secret {
 
+    // TODO: remove this duplicate `id` field
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
