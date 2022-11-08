@@ -65,6 +65,7 @@ public class Web2Secrets {
      * @return A new {@link Web2Secrets} instance, with a new {@link Secret} element.
      * @throws SecretAlreadyExistsException thrown when a secret with same address already exists.
      */
+    // TODO: remove `isEncryptedValue` as we only have encrypted values there.
     public Web2Secrets addNewSecret(String secretAddress, String secretValue, boolean isEncryptedValue)
             throws SecretAlreadyExistsException {
         // A new secret can't already exist
