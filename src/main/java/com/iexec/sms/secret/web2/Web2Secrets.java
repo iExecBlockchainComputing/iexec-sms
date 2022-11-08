@@ -99,7 +99,7 @@ public class Web2Secrets {
         // No need to update if same value
         final Secret secretToUpdate = oSecretToUpdate.get();
         if (secretToUpdate.isEncryptedValue() == isEncryptedValue && Objects.equals(secretToUpdate.getValue(), newSecretValue)) {
-            throw new SameSecretException(ownerAddress, secretToUpdate);
+            throw new SameSecretException(ownerAddress, secretAddress);
         }
 
         final List<Secret> updatedSecretsList = new ArrayList<>(secrets);
