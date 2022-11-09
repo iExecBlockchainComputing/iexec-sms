@@ -17,8 +17,8 @@
 package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.secret.Secret;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -27,19 +27,48 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
-@Getter
 @Entity
-@NoArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web3Secret extends Secret {
 
+    // TODO: remove this duplicate `id` field
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
 
-    public Web3Secret(String address, String value) {
-        super(address, value);
+    private Web3Secret(String superId, String id, String address, String value, boolean isEncryptedValue) {
+        super(superId, address, value, isEncryptedValue);
+        this.id = id;
+    }
+
+    public Web3Secret(String address, String value, boolean isEncryptedValue) {
+        super(address, value, isEncryptedValue);
+    }
+
+    /**
+     * Copies the current {@link Web3Secret} object,
+     * while replacing the old value with a new encrypted value.
+     *
+     * @param newValue Value to use for new object.
+     * @return A new {@link Web3Secret} object with new value.
+     */
+    @Override
+    public Web3Secret withEncryptedValue(String newValue) {
+        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, true);
+    }
+
+    /**
+     * Copies the current {@link Web3Secret} object,
+     * while replacing the old value with a new decrypted value.
+     *
+     * @param newValue Value to use for new object.
+     * @return A new {@link Web3Secret} object with new value.
+     */
+    @Override
+    public Web3Secret withDecryptedValue(String newValue) {
+        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, false);
     }
 }

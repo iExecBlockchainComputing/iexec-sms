@@ -90,11 +90,11 @@ class SecretSessionBaseServiceTests {
         // pre
         when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
-        Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
+        Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY, true);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
         // post
-        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
+        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY, true);
         when(postComputeProperties.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretsService.getSecret(
@@ -102,7 +102,7 @@ class SecretSessionBaseServiceTests {
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true))
                 .thenReturn(Optional.of(publicKeySecret));
-        Secret storageSecret = new Secret("address", STORAGE_TOKEN);
+        Secret storageSecret = new Secret("address", STORAGE_TOKEN, true);
         when(web2SecretsService.getSecret(taskDescription.getRequester(),
                 ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
                 .thenReturn(Optional.of(storageSecret));
@@ -164,7 +164,7 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(taskDescription);
         when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
-        Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY);
+        Web3Secret secret = new Web3Secret(DATASET_ADDRESS, DATASET_KEY, true);
         when(web3SecretService.getSecret(DATASET_ADDRESS, true))
                 .thenReturn(Optional.of(secret));
 
@@ -391,7 +391,7 @@ class SecretSessionBaseServiceTests {
 
         String requesterAddress = request.getTaskDescription().getRequester();
 
-        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
+        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY, true);
         when(postComputeProperties.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretsService.getSecret(
@@ -399,7 +399,7 @@ class SecretSessionBaseServiceTests {
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true))
                 .thenReturn(Optional.of(publicKeySecret));
-        Secret storageSecret = new Secret("address", STORAGE_TOKEN);
+        Secret storageSecret = new Secret("address", STORAGE_TOKEN, true);
         when(web2SecretsService.getSecret(
                 requesterAddress,
                 ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN,
@@ -470,7 +470,7 @@ class SecretSessionBaseServiceTests {
         final String secretValue = "Secret value";
         when(web2SecretsService.getSecret(taskDescription.getRequester(),
                 ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
-                .thenReturn(Optional.of(new Secret(null, secretValue)));
+                .thenReturn(Optional.of(new Secret(null, secretValue, true)));
 
         final Map<String, String> tokens = assertDoesNotThrow(
                 () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest));
@@ -493,7 +493,7 @@ class SecretSessionBaseServiceTests {
         final String secretValue = "Secret value";
         when(web2SecretsService.getSecret(taskDescription.getRequester(),
                 ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN, true))
-                .thenReturn(Optional.of(new Secret(null, secretValue)));
+                .thenReturn(Optional.of(new Secret(null, secretValue, true)));
 
         final Map<String, String> tokens = assertDoesNotThrow(
                 () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest));
@@ -636,7 +636,7 @@ class SecretSessionBaseServiceTests {
     void shouldGetPostComputeEncryptionTokensWithEncryption() {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
 
-        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY);
+        Secret publicKeySecret = new Secret("address", ENCRYPTION_PUBLIC_KEY, true);
         when(web2SecretsService.getSecret(
                 request.getTaskDescription().getBeneficiary(),
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,

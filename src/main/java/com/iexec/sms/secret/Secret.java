@@ -16,8 +16,8 @@
 
 package com.iexec.sms.secret;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -28,11 +28,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.util.Objects;
 
-@Data
-@Getter
-@AllArgsConstructor
 @Entity
-@NoArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Secret {
 
     @Id
@@ -46,15 +45,34 @@ public class Secret {
     private boolean isEncryptedValue;
 
     /* Clear secrets at construction */
-    public Secret(String address, String value) {
+    public Secret(String address, String value, boolean isEncryptedValue) {
         this.address = address;
-        this.setValue(value, false);
-    }
-
-    public void setValue(String value, boolean isEncryptedValue) {
         this.value = value;
         this.isEncryptedValue = isEncryptedValue;
     }
+
+    /**
+     * Copies the current {@link Secret} object,
+     * while replacing the old value with a new encrypted value.
+     *
+     * @param newValue Value to use for new object.
+     * @return A new {@link Secret} object with new value.
+     */
+    public Secret withEncryptedValue(String newValue) {
+        return new Secret(this.id, this.address, newValue, true);
+    }
+
+    /**
+     * Copies the current {@link Secret} object,
+     * while replacing the old value with a new decrypted value.
+     *
+     * @param newValue Value to use for new object.
+     * @return A new {@link Secret} object with new value.
+     */
+    public Secret withDecryptedValue(String newValue) {
+        return new Secret(this.id, this.address, newValue, false);
+    }
+
 
     /**
      * Get the secret value without possible leading or trailing

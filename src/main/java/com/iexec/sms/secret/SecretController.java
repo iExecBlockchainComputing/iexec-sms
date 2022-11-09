@@ -18,6 +18,7 @@ package com.iexec.sms.secret;
 
 
 import com.iexec.sms.authorization.AuthorizationService;
+import com.iexec.sms.secret.web2.NotAnExistingSecretException;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -102,7 +103,7 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (!web2SecretsService.addSecret(ownerAddress, secretName, secretValue)) {
+        if (web2SecretsService.addSecret(ownerAddress, secretName, secretValue).isEmpty()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
@@ -128,7 +129,7 @@ public class SecretController {
         try {
             web2SecretsService.updateSecret(ownerAddress, secretName, newSecretValue);
             return ResponseEntity.noContent().build();
-        } catch (NoSuchElementException e) {
+        } catch (NoSuchElementException | NotAnExistingSecretException e) {
             return ResponseEntity.notFound().build();
         }
     }

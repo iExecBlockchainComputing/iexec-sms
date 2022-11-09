@@ -17,6 +17,7 @@
 package com.iexec.sms.secret;
 
 import com.iexec.sms.authorization.AuthorizationService;
+import com.iexec.sms.secret.web2.NotAnExistingSecretException;
 import com.iexec.sms.secret.web2.Web2SecretsService;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
@@ -71,7 +72,7 @@ class SecretControllerTests {
     @Test
     void shouldReturnNoContentWhenWeb3SecretExists() {
         when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS))
-                .thenReturn(Optional.of(new Web3Secret()));
+                .thenReturn(Optional.of(mock(Web3Secret.class)));
         assertThat(secretController.isWeb3SecretSet(WEB3_SECRET_ADDRESS))
                 .isEqualTo(ResponseEntity.noContent().build());
         verifyNoInteractions(authorizationService, web2SecretsService);
@@ -181,7 +182,7 @@ class SecretControllerTests {
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretsService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenReturn(false);
+                .thenReturn(Optional.empty());
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
             .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
         verify(web2SecretsService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
@@ -194,7 +195,7 @@ class SecretControllerTests {
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretsService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenReturn(true);
+                .thenReturn(Optional.of(new Secret(WEB2_SECRET_NAME, WEB2_SECRET_VALUE, true)));
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.noContent().build());
         verify(web2SecretsService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
@@ -221,12 +222,24 @@ class SecretControllerTests {
     }
 
     @Test
-    void failToUpdateWeb2SecretWhenSecretIsMissing() {
+    void failToUpdateWeb2SecretWhenSecretsListIsMissing() throws NotAnExistingSecretException {
         when(authorizationService.getChallengeForSetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         doThrow(NoSuchElementException.class).when(web2SecretsService)
+                .updateSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
+        assertThat(secretController.updateWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
+                .isEqualTo(ResponseEntity.notFound().build());
+    }
+
+    @Test
+    void failToUpdateWeb2SecretWhenSecretIsMissing() throws NotAnExistingSecretException {
+        when(authorizationService.getChallengeForSetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
+                .thenReturn(CHALLENGE);
+        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
+                .thenReturn(true);
+        doThrow(NotAnExistingSecretException.class).when(web2SecretsService)
                 .updateSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
         assertThat(secretController.updateWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.notFound().build());
