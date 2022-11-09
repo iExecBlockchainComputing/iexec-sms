@@ -17,7 +17,10 @@
 package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.secret.Secret;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Entity;
