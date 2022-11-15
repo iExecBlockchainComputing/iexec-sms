@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@ActiveProfiles(profiles = "scone")
+@ActiveProfiles(profiles = {"scone", "test"})
 public class SconeBeansLoadingTests extends TeeBeansLoadingTests {
     @Autowired
     SconeServicesProperties sconeServicesProperties;

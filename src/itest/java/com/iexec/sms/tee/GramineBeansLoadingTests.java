@@ -11,7 +11,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
 
-@ActiveProfiles(profiles = "gramine")
+@ActiveProfiles(profiles = {"gramine", "test"})
 public class GramineBeansLoadingTests extends TeeBeansLoadingTests {
     @Autowired
     GramineServicesProperties gramineServicesProperties;
