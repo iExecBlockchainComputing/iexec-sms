@@ -48,6 +48,7 @@ public class Web2Secret extends Secret {
      * @param newValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
+    @Override
     public Web2Secret withEncryptedValue(String newValue) {
         return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newValue, true);
     }
@@ -59,6 +60,7 @@ public class Web2Secret extends Secret {
      * @param newValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
+    @Override
     public Web2Secret withDecryptedValue(String newValue) {
         return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newValue, false);
     }
