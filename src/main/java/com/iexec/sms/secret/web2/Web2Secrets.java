@@ -26,6 +26,10 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import java.util.*;
 
+/**
+ * @deprecated Use {@link Web2Secret} instead.
+ */
+@Deprecated(forRemoval = true)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PACKAGE)

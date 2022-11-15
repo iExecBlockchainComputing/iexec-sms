@@ -21,6 +21,10 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
+/**
+ * @deprecated Use {@link Web2SecretRepository} instead.
+ */
+@Deprecated(forRemoval = true)
 public interface Web2SecretsRepository extends CrudRepository<Web2Secrets, String> {
 
     Optional<Web2Secrets> findWeb2SecretsByOwnerAddress(String ownerAddress);
