@@ -168,7 +168,7 @@ task buildImage(type: Exec) {
     group       'Build'
     description 'Builds an OCI image from a Dockerfile.'
     dependsOn   bootJar
-    commandLine ('sh', '-c', "docker build -f build/resources/main/Dockerfile --build-arg jar=$jarPathForOCI"
+    commandLine ('sh', '-c', "docker build --build-arg jar=$jarPathForOCI"
             + " -t $ociImageName:$gitShortCommit . && docker tag $ociImageName:$gitShortCommit $ociImageName:dev")
     standardOutput = new ByteArrayOutputStream()
 
