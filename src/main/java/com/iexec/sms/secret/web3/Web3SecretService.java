@@ -38,7 +38,7 @@ public class Web3SecretService extends AbstractSecretService {
 
     public Optional<Web3Secret> getSecret(String secretAddress) {
         secretAddress = secretAddress.toLowerCase();
-        return web3SecretRepository.findWeb3SecretByAddress(secretAddress);
+        return web3SecretRepository.find(secretAddress);
     }
 
     public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
@@ -61,7 +61,7 @@ public class Web3SecretService extends AbstractSecretService {
     public boolean addSecret(String secretAddress, String secretValue) {
         secretAddress = secretAddress.toLowerCase();
 
-        if (web3SecretRepository.findWeb3SecretByAddress(secretAddress).isPresent()) {
+        if (web3SecretRepository.find(secretAddress).isPresent()) {
             log.error("Secret already exists [secretAddress:{}]", secretAddress);
             return false;
         }

@@ -16,16 +16,20 @@
  *
  */
 
-package com.iexec.sms.secret.web2;
+package com.iexec.sms.secret.web3;
 
-import org.springframework.data.repository.CrudRepository;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.util.Optional;
+import javax.persistence.Embeddable;
+import java.io.Serializable;
 
-public interface Web2SecretRepository extends CrudRepository<Web2Secret, String> {
-    Optional<Web2Secret> findByHeader(Web2SecretHeader header);
-
-    default Optional<Web2Secret> find(String ownerAddress, String address) {
-        return findByHeader(new Web2SecretHeader(ownerAddress.toLowerCase(), address.toLowerCase()));
-    }
+@Embeddable
+@Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
+public class Web3SecretHeader implements Serializable {
+    private String address;
 }

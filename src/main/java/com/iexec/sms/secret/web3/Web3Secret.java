@@ -21,31 +21,26 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web3Secret extends Secret {
-
-    // TODO: remove this duplicate `id` field
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
-    private Web3Secret(String superId, String id, String address, String value, boolean isEncryptedValue) {
-        super(superId, address, value, isEncryptedValue);
-        this.id = id;
-    }
+    @EmbeddedId
+    private Web3SecretHeader header;
 
     public Web3Secret(String address, String value, boolean isEncryptedValue) {
-        super(address, value, isEncryptedValue);
+        super(value, isEncryptedValue);
+        this.header = new Web3SecretHeader(address);
+    }
+
+    public Web3Secret(Web3SecretHeader header, String value, boolean isEncryptedValue) {
+        super(value, isEncryptedValue);
+        this.header = header;
     }
 
     /**
@@ -55,9 +50,8 @@ public class Web3Secret extends Secret {
      * @param newValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
-    @Override
     public Web3Secret withEncryptedValue(String newValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, true);
+        return new Web3Secret(header, newValue, true);
     }
 
     /**
@@ -67,8 +61,7 @@ public class Web3Secret extends Secret {
      * @param newValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
-    @Override
     public Web3Secret withDecryptedValue(String newValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, false);
+        return new Web3Secret(header, newValue, false);
     }
 }

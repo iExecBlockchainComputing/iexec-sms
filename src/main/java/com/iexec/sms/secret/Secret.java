@@ -17,62 +17,26 @@
 package com.iexec.sms.secret;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.util.Objects;
 
-@Entity
+@MappedSuperclass
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Secret {
-
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
-    private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
+public abstract class Secret {
     @Column(columnDefinition = "LONGTEXT")
     private String value;
     private boolean isEncryptedValue;
 
     /* Clear secrets at construction */
-    public Secret(String address, String value, boolean isEncryptedValue) {
-        this.address = address;
+    public Secret(String value, boolean isEncryptedValue) {
         this.value = value;
         this.isEncryptedValue = isEncryptedValue;
     }
-
-    /**
-     * Copies the current {@link Secret} object,
-     * while replacing the old value with a new encrypted value.
-     *
-     * @param newValue Value to use for new object.
-     * @return A new {@link Secret} object with new value.
-     */
-    public Secret withEncryptedValue(String newValue) {
-        return new Secret(this.id, this.address, newValue, true);
-    }
-
-    /**
-     * Copies the current {@link Secret} object,
-     * while replacing the old value with a new decrypted value.
-     *
-     * @param newValue Value to use for new object.
-     * @return A new {@link Secret} object with new value.
-     */
-    public Secret withDecryptedValue(String newValue) {
-        return new Secret(this.id, this.address, newValue, false);
-    }
-
 
     /**
      * Get the secret value without possible leading or trailing
@@ -88,32 +52,6 @@ public class Secret {
     public String getTrimmedValue() {
         Objects.requireNonNull(this.value, "Secret value must not be null");
         return this.value.trim();
-    }
-
-    @Override
-    public String toString() {
-        return "Secret{" +
-                "id='" + id + '\'' +
-                ", address='" + address + '\'' +
-                ", value='" + (isEncryptedValue ? value : "<plain text value>") + '\'' +
-                ", isEncryptedValue=" + isEncryptedValue +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Secret secret = (Secret) o;
-        return isEncryptedValue == secret.isEncryptedValue
-                && Objects.equals(id, secret.id)
-                && Objects.equals(address, secret.address)
-                && Objects.equals(value, secret.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, address, value, isEncryptedValue);
     }
 }
 
