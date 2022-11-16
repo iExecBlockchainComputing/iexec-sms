@@ -45,24 +45,24 @@ public class Web2Secret extends Secret {
      * Copies the current {@link Web2Secret} object,
      * while replacing the old value with a new encrypted value.
      *
-     * @param newValue Value to use for new object.
+     * @param newEncryptedValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
     @Override
-    public Web2Secret withEncryptedValue(String newValue) {
-        return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newValue, true);
+    public Web2Secret withEncryptedValue(String newEncryptedValue) {
+        return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newEncryptedValue, true);
     }
 
     /**
      * Copies the current {@link Web2Secret} object,
      * while replacing the old value with a new decrypted value.
      *
-     * @param newValue Value to use for new object.
+     * @param newDecryptedValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
     @Override
-    public Web2Secret withDecryptedValue(String newValue) {
-        return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newValue, false);
+    public Web2Secret withDecryptedValue(String newDecryptedValue) {
+        return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newDecryptedValue, false);
     }
 
     @Override
