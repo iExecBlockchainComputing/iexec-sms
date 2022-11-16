@@ -52,23 +52,23 @@ public class Web3Secret extends Secret {
      * Copies the current {@link Web3Secret} object,
      * while replacing the old value with a new encrypted value.
      *
-     * @param newValue Value to use for new object.
+     * @param newEncryptedValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
     @Override
-    public Web3Secret withEncryptedValue(String newValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, true);
+    public Web3Secret withEncryptedValue(String newEncryptedValue) {
+        return new Web3Secret(super.getId(), this.id, this.getAddress(), newEncryptedValue, true);
     }
 
     /**
      * Copies the current {@link Web3Secret} object,
      * while replacing the old value with a new decrypted value.
      *
-     * @param newValue Value to use for new object.
+     * @param newDecryptedValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
     @Override
-    public Web3Secret withDecryptedValue(String newValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newValue, false);
+    public Web3Secret withDecryptedValue(String newDecryptedValue) {
+        return new Web3Secret(super.getId(), this.id, this.getAddress(), newDecryptedValue, false);
     }
 }

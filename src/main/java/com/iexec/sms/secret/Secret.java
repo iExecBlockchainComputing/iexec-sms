@@ -99,5 +99,21 @@ public class Secret {
                 ", isEncryptedValue=" + isEncryptedValue +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Secret secret = (Secret) o;
+        return isEncryptedValue == secret.isEncryptedValue
+                && Objects.equals(id, secret.id)
+                && Objects.equals(address, secret.address)
+                && Objects.equals(value, secret.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, address, value, isEncryptedValue);
+    }
 }
 

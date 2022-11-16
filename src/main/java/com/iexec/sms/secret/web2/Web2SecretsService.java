@@ -25,6 +25,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * @deprecated Use {@link Web2SecretService} instead.
+ */
+@Deprecated(forRemoval = true)
 @Slf4j
 @Service
 public class Web2SecretsService extends AbstractSecretService {
