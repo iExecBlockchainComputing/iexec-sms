@@ -19,11 +19,13 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.secret.Secret;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import java.util.Objects;
 
 @Entity
 @Getter
@@ -63,19 +65,5 @@ public class Web2Secret extends Secret {
      */
     public Web2Secret withDecryptedValue(String newDecryptedValue) {
         return new Web2Secret(this.getHeader(), newDecryptedValue, false);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        final Web2Secret that = (Web2Secret) o;
-        return Objects.equals(header, that.header);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), header);
     }
 }
