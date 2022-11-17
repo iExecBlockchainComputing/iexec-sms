@@ -21,12 +21,12 @@ import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.sms.api.config.TeeServicesProperties;
-import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
-import com.iexec.sms.secret.web2.Web2SecretsService;
+import com.iexec.sms.secret.web2.Web2Secret;
+import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -67,19 +67,19 @@ public class SecretSessionBaseService {
     public static final String POST_COMPUTE_MRENCLAVE = "POST_COMPUTE_MRENCLAVE";
 
     private final Web3SecretService web3SecretService;
-    private final Web2SecretsService web2SecretsService;
+    private final Web2SecretService web2SecretService;
     private final TeeChallengeService teeChallengeService;
     private final TeeServicesProperties teeServicesConfig;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
             Web3SecretService web3SecretService,
-            Web2SecretsService web2SecretsService,
+            Web2SecretService web2SecretService,
             TeeChallengeService teeChallengeService,
             TeeServicesProperties teeServicesConfig,
             TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
-        this.web2SecretsService = web2SecretsService;
+        this.web2SecretService = web2SecretService;
         this.teeChallengeService = teeChallengeService;
         this.teeServicesConfig = teeServicesConfig;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
@@ -316,7 +316,7 @@ public class SecretSessionBaseService {
         if (!shouldEncrypt) {
             return tokens;
         }
-        Optional<Secret> beneficiaryResultEncryptionKeySecret = web2SecretsService.getSecret(
+        Optional<Web2Secret> beneficiaryResultEncryptionKeySecret = web2SecretService.getSecret(
                 taskDescription.getBeneficiary(),
                 IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
                 true);
@@ -352,8 +352,10 @@ public class SecretSessionBaseService {
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? IEXEC_RESULT_DROPBOX_TOKEN
                 : IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<Secret> requesterStorageTokenSecret = web2SecretsService.getSecret(taskDescription.getRequester(),
-                keyName, true);
+        Optional<Web2Secret> requesterStorageTokenSecret = web2SecretService.getSecret(
+                taskDescription.getRequester(),
+                keyName,
+                true);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());
