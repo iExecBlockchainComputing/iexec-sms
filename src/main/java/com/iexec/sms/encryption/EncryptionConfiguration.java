@@ -16,19 +16,13 @@
 
 package com.iexec.sms.encryption;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
-@Component
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
+@ConstructorBinding
+@ConfigurationProperties(prefix = "encryption")
 public class EncryptionConfiguration {
-    
-    @Value("${encryption.aesKeyPath}")
-    private String aesKeyPath;
-
+    private final String aesKeyPath;
 }

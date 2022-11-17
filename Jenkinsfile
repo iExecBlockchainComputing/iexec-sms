@@ -9,7 +9,7 @@ buildJavaProject(
         integrationTestsEnvVars: [],
         shouldPublishJars: true,
         shouldPublishDockerImages: true,
-        dockerfileDir: 'build/resources/main',
+        dockerfileDir: '.',
         buildContext: '.',
         preDevelopVisibility: 'iex.ec',
         developVisibility: 'iex.ec',

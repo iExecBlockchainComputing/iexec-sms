@@ -31,5 +31,4 @@ build
 
 ### iExec ###
 
-src/main/resources/iexec-sms-aes.key
-src/main/resources/boot/sms-palaemon-conf.yml
+src/test/resources/iexec-sms-aes.key
