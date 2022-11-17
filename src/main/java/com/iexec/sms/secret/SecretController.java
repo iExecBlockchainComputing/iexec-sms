@@ -18,8 +18,7 @@ package com.iexec.sms.secret;
 
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.web2.NotAnExistingSecretException;
-import com.iexec.sms.secret.web2.Web2SecretsService;
+import com.iexec.sms.secret.web2.*;
 import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,12 +37,12 @@ public class SecretController {
 
     private final AuthorizationService authorizationService;
     private final Web3SecretService web3SecretService;
-    private final Web2SecretsService web2SecretsService;
+    private final Web2SecretService web2SecretService;
 
     public SecretController(AuthorizationService authorizationService,
-                            Web2SecretsService web2SecretsService,
+                            Web2SecretService web2SecretService,
                             Web3SecretService web3SecretService) {
-        this.web2SecretsService = web2SecretsService;
+        this.web2SecretService = web2SecretService;
         this.authorizationService = authorizationService;
         this.web3SecretService = web3SecretService;
     }
@@ -83,7 +82,7 @@ public class SecretController {
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
     public ResponseEntity<Void> isWeb2SecretSet(@RequestParam String ownerAddress,
                                                 @RequestParam String secretName) {
-        Optional<Secret> secret = web2SecretsService.getSecret(ownerAddress, secretName);
+        Optional<Web2Secret> secret = web2SecretService.getSecret(ownerAddress, secretName);
         return secret.isPresent() ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
@@ -103,11 +102,12 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        if (web2SecretsService.addSecret(ownerAddress, secretName, secretValue).isEmpty()) {
+        try {
+            web2SecretService.addSecret(ownerAddress, secretName, secretValue);
+            return ResponseEntity.noContent().build();
+        } catch (SecretAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-
-        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/web2")
@@ -127,7 +127,9 @@ public class SecretController {
         }
 
         try {
-            web2SecretsService.updateSecret(ownerAddress, secretName, newSecretValue);
+            web2SecretService.updateSecret(ownerAddress, secretName, newSecretValue);
+            return ResponseEntity.noContent().build();
+        } catch (SameSecretException ignored) {
             return ResponseEntity.noContent().build();
         } catch (NoSuchElementException | NotAnExistingSecretException e) {
             return ResponseEntity.notFound().build();
