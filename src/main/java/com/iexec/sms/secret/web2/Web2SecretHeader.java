@@ -24,13 +24,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Embeddable;
-import java.io.Serializable;
 
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-public class Web2SecretHeader implements Serializable {
+public class Web2SecretHeader {
     private String ownerAddress;
     private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
 }

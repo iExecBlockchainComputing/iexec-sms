@@ -23,12 +23,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Embeddable;
-import java.io.Serializable;
 
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Web3SecretHeader implements Serializable {
+public class Web3SecretHeader {
     private String address;
 
     Web3SecretHeader(String address) {

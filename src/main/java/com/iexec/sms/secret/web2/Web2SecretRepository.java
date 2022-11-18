@@ -18,14 +18,16 @@
 
 package com.iexec.sms.secret.web2;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface Web2SecretRepository extends CrudRepository<Web2Secret, String> {
-    Optional<Web2Secret> findByHeader(Web2SecretHeader header);
+public interface Web2SecretRepository extends CrudRepository<Web2Secret, Web2SecretHeader> {
+    @NotNull
+    Optional<Web2Secret> findById(@NotNull Web2SecretHeader header);
 
     default Optional<Web2Secret> find(String ownerAddress, String address) {
-        return findByHeader(new Web2SecretHeader(ownerAddress, address));
+        return findById(new Web2SecretHeader(ownerAddress, address));
     }
 }
