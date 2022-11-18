@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web3Secret extends Secret {
     @EmbeddedId

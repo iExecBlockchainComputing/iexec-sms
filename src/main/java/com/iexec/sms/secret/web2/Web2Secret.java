@@ -29,7 +29,7 @@ import javax.persistence.Entity;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web2Secret extends Secret {
     @EmbeddedId
