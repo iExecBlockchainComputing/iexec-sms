@@ -16,15 +16,11 @@
 
 package com.iexec.sms.secret.web3;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
 public interface Web3SecretRepository extends CrudRepository<Web3Secret, Web3SecretHeader> {
-    @NotNull
-    Optional<Web3Secret> findById(@NotNull Web3SecretHeader header);
-
     default Optional<Web3Secret> find(String secretAddress) {
         return findById(new Web3SecretHeader(secretAddress));
     }
