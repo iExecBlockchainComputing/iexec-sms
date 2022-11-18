@@ -52,7 +52,7 @@ public class Web2Secret extends Secret {
      * @return A new {@link Web2Secret} object with new value.
      */
     public Web2Secret withEncryptedValue(String newEncryptedValue) {
-        return new Web2Secret(this.getHeader(), newEncryptedValue, true);
+        return new Web2Secret(header, newEncryptedValue, true);
     }
 
     /**
@@ -63,6 +63,6 @@ public class Web2Secret extends Secret {
      * @return A new {@link Web2Secret} object with new value.
      */
     public Web2Secret withDecryptedValue(String newDecryptedValue) {
-        return new Web2Secret(this.getHeader(), newDecryptedValue, false);
+        return new Web2Secret(header, newDecryptedValue, false);
     }
 }
