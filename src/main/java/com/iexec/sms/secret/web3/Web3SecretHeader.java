@@ -19,7 +19,6 @@
 package com.iexec.sms.secret.web3;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -29,7 +28,10 @@ import java.io.Serializable;
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class Web3SecretHeader implements Serializable {
     private String address;
+
+    Web3SecretHeader(String address) {
+        this.address = address.toLowerCase();
+    }
 }

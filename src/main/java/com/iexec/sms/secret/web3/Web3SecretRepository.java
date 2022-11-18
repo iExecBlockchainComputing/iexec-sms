@@ -24,6 +24,6 @@ public interface Web3SecretRepository extends CrudRepository<Web3Secret, String>
     Optional<Web3Secret> findByHeader(Web3SecretHeader header);
 
     default Optional<Web3Secret> find(String secretAddress) {
-        return findByHeader(new Web3SecretHeader(secretAddress.toLowerCase()));
+        return findByHeader(new Web3SecretHeader(secretAddress));
     }
 }

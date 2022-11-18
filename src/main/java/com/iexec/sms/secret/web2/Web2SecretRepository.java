@@ -26,6 +26,6 @@ public interface Web2SecretRepository extends CrudRepository<Web2Secret, String>
     Optional<Web2Secret> findByHeader(Web2SecretHeader header);
 
     default Optional<Web2Secret> find(String ownerAddress, String address) {
-        return findByHeader(new Web2SecretHeader(ownerAddress.toLowerCase(), address.toLowerCase()));
+        return findByHeader(new Web2SecretHeader(ownerAddress, address));
     }
 }
