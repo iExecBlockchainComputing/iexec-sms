@@ -34,8 +34,7 @@ public class Web3Secret extends Secret {
     private Web3SecretHeader header;
 
     public Web3Secret(String address, String value, boolean isEncryptedValue) {
-        super(value, isEncryptedValue);
-        this.header = new Web3SecretHeader(address);
+        this(new Web3SecretHeader(address), value, isEncryptedValue);
     }
 
     public Web3Secret(Web3SecretHeader header, String value, boolean isEncryptedValue) {

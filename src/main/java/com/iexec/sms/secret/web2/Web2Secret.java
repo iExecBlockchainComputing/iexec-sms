@@ -36,8 +36,7 @@ public class Web2Secret extends Secret {
     private Web2SecretHeader header;
 
     public Web2Secret(String ownerAddress, String address, String value, boolean isEncryptedValue) {
-        super(value, isEncryptedValue);
-        this.header = new Web2SecretHeader(ownerAddress, address);
+        this(new Web2SecretHeader(ownerAddress, address), value, isEncryptedValue);
     }
 
     public Web2Secret(Web2SecretHeader header, String value, boolean isEncryptedValue) {
