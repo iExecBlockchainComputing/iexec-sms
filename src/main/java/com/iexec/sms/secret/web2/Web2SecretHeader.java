@@ -27,7 +27,7 @@ import javax.persistence.Embeddable;
 
 @Embeddable
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class Web2SecretHeader {
     private String ownerAddress;

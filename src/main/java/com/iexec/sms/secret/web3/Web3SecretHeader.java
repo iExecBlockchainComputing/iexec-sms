@@ -26,7 +26,7 @@ import javax.persistence.Embeddable;
 
 @Embeddable
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Web3SecretHeader {
     private String address;
 
