@@ -17,6 +17,7 @@
 package com.iexec.sms.secret;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,16 +28,11 @@ import java.util.Objects;
 @MappedSuperclass
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class Secret {
     @Column(columnDefinition = "LONGTEXT")
     private String value;
     private boolean isEncryptedValue;
-
-    /* Clear secrets at construction */
-    public Secret(String value, boolean isEncryptedValue) {
-        this.value = value;
-        this.isEncryptedValue = isEncryptedValue;
-    }
 
     /**
      * Get the secret value without possible leading or trailing
