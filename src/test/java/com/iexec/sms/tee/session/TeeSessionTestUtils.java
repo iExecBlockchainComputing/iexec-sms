@@ -112,6 +112,7 @@ public class TeeSessionTestUtils {
     public static TaskDescription createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
         String appAddress = createEthereumAddress();
         String requesterAddress = createEthereumAddress();
+        String beneficiaryAddress = createEthereumAddress();
         return TaskDescription.builder()
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
@@ -122,6 +123,7 @@ public class TeeSessionTestUtils {
                 .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
                 .requester(requesterAddress)
+                .beneficiary(beneficiaryAddress)
                 .cmd(ARGS)
                 .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                 .isResultEncryption(true)

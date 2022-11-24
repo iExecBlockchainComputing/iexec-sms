@@ -468,11 +468,12 @@ class SecretSessionBaseServiceTests {
     void shouldGetPostComputeStorageTokensOnIpfs() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig));
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
+        final String beneficiaryAddress = taskDescription.getAppAddress();
 
         final String secretValue = "Secret value";
         when(web2SecretService.getSecret(taskDescription.getRequester(),
                 ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN, true))
-                .thenReturn(Optional.of(new Web2Secret(null, null, secretValue, true)));
+                .thenReturn(Optional.of(new Web2Secret(beneficiaryAddress, "address", secretValue, true)));
 
         final Map<String, String> tokens = assertDoesNotThrow(
                 () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest));
@@ -492,10 +493,12 @@ class SecretSessionBaseServiceTests {
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
         taskDescription.setResultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER);
 
+        final String beneficiaryAddress = taskDescription.getAppAddress();
+
         final String secretValue = "Secret value";
         when(web2SecretService.getSecret(taskDescription.getRequester(),
                 ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN, true))
-                .thenReturn(Optional.of(new Web2Secret(null, null, secretValue, true)));
+                .thenReturn(Optional.of(new Web2Secret(beneficiaryAddress, "address", secretValue, true)));
 
         final Map<String, String> tokens = assertDoesNotThrow(
                 () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest));

@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 @Getter
@@ -33,6 +34,8 @@ public class Web3SecretHeader implements Serializable {
     private String address;
 
     Web3SecretHeader(String address) {
+        Objects.requireNonNull(address, "Web3 secret address can't be null.");
+
         this.address = address.toLowerCase();
     }
 }
