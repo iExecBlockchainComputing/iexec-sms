@@ -14,7 +14,7 @@ What is it?
 * If the application enclave is legit (measurable with its mrenclave with Scone), it will receive the secrets.
 * To sum up, if all checks are correct, the secret of Alice will cross the following environments: Alice-Host -> iExec-SMS -> Scone-CAS -> Bob-Scone-Application
 
-The iExec Secret Management Service is available as an OCI image on [dockerhub](https://hub.docker.com/r/iexechub/iexec-sms/tags).
+The iExec Secret Management Service is available as an OCI image on [Docker Hub](https://hub.docker.com/r/iexechub/iexec-sms/tags).
 
 The iExec SMS is an advanced service used to provide secrets for tasks running within enclaves. 
 It can be started locally for development purpose.
@@ -54,15 +54,15 @@ You can configure the SMS with the following properties:
 | IEXEC_SCONE_CAS_PUBLIC_HOST | CAS service host public name, for worker host configured to execute TEE tasks. | Positive integer | `localhost` |
 | IEXEC_SCONE_CAS_ENCLAVE_PORT | CAS service enclave port, used from worker host to attest applications running within enclaves. | Positive integer | `18765` |
 | IEXEC_PALAEMON_TEMPLATE | Path to the template file used to generate configurations of TEE enclave sessions. | String | `src/main/resources/palaemonTemplate.vm` |
-| IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS | | String | |
-| IEXEC_IGNORED_SGX_ADVISORIES | | String | |
+| IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS | List of hardware or software Scone vulnerabilities to ignore | String | |
+| IEXEC_IGNORED_SGX_ADVISORIES | List of hardware or software Intel vulnerabilities to ignore | String | |
 | IEXEC_SMS_IMAGE_LAS_IMAGE | Scontain OCI LAS image to use to perform TEE enabled dapps remote attestation on worker side. | String | |
 | IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE | TEE enabled OCI image name for pre-compute stage of TEE tasks. | String | |
 | IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT | Fingerprint (aka mrenclave) of the TEE enabled pre-compute image. | String | |
 | IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB | Required heap size for a pre-compute enclave (in Giga Bytes). | Positive integer | `4` |
 | IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT | Command executed when starting a container from the TEE enabled pre-compute image. | String | `java -jar /app/app.jar` |
 | IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE | TEE enabled OCI image name for post-compute stage of TEE tasks. | String | |
-| IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT | Fingerprint (aka mrenclave) of the Tee enabled post-compute image. | String | |
+| IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT | Fingerprint (aka mrenclave) of the TEE enabled post-compute image. | String | |
 | IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB | Required heap size for a post-compute enclave (in Giga Bytes). | Positive integer | `4` |
 | IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT | Command executed when starting a container from the TEE enabled post-compute image. | String | `java -jar /app/app.jar` |
 | IEXEC_SMS_DISPLAY_DEBUG_SESSION | Whether to display TEE enclaves sessions configuration in SMS logs. | Boolean | `false` |
