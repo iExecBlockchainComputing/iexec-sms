@@ -2,8 +2,6 @@
 
 ## Overview
 
-The iExec Secret Management Service is available as an OCI image on [Docker Hub](https://hub.docker.com/r/iexechub/iexec-sms/tags).
-
 The iExec Secret Management Service (SMS) stores user secrets and provisions them to authorized Trusted Execution Environment (TEE) applications running on the iExec network.
 
 ### Details
@@ -17,6 +15,8 @@ The iExec Secret Management Service (SMS) stores user secrets and provisions the
 * To sum up, if all checks are correct, the secret of Alice will cross the following environments: Alice-Host -> iExec-SMS -> Scone-CAS -> Bob-Scone-Application
 
 ## Configuration
+
+The iExec Secret Management Service is available as an OCI image on [Docker Hub](https://hub.docker.com/r/iexechub/iexec-sms/tags).
 
 To run properly, the iExec Secret Management Service requires:
 * A blockchain node. iExec smart contracts must be deployed on the blockchain network.
