@@ -13,7 +13,10 @@ plugins {
 ext {
     springCloudVersion = '2021.0.0'
     openFeignVersion = '11.7'
-    gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+}
+
+if (!project.hasProperty('gitBranch')) {
+    ext.gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
 allprojects {
@@ -26,6 +29,13 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven {
+            url "https://docker-regis-adm.iex.ec/repository/maven-public/"
+            credentials {
+                username nexusUser
+                password nexusPassword
+            }
+        }
         maven {
             url "https://nexus.intra.iex.ec/repository/maven-public/"
         }
@@ -142,8 +152,8 @@ publishing {
     repositories {
         maven {
             credentials {
-                username project.hasProperty('nexusUser') ? nexusUser : ''
-                password project.hasProperty('nexusPassword') ? nexusPassword : ''
+                username nexusUser
+                password nexusPassword
             }
             url project.hasProperty('nexusUrl') ? nexusUrl : ''
         }
