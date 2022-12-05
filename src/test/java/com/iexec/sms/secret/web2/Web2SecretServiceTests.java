@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.util.Optional;
 
@@ -45,7 +44,6 @@ class Web2SecretServiceTests {
     private EncryptionService encryptionService;
 
     @InjectMocks
-    @Spy
     private Web2SecretService web2SecretService;
 
     @BeforeEach
