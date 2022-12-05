@@ -20,10 +20,6 @@ package com.iexec.sms.secret.web2;
 
 import org.springframework.data.repository.CrudRepository;
 
-import java.util.Optional;
-
 public interface Web2SecretRepository extends CrudRepository<Web2Secret, Web2SecretHeader> {
-    default Optional<Web2Secret> find(String ownerAddress, String address) {
-        return findById(new Web2SecretHeader(ownerAddress, address));
-    }
+
 }

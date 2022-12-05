@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.util.Optional;
 
@@ -44,6 +45,7 @@ class Web2SecretServiceTests {
     private EncryptionService encryptionService;
 
     @InjectMocks
+    @Spy
     private Web2SecretService web2SecretService;
 
     @BeforeEach
@@ -56,7 +58,7 @@ class Web2SecretServiceTests {
     void shouldGetDecryptedSecret() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
 
-        when(web2SecretRepository.find(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.decrypt(ENCRYPTED_SECRET_VALUE))
                 .thenReturn(PLAIN_SECRET_VALUE);
@@ -74,7 +76,7 @@ class Web2SecretServiceTests {
     void shouldGetEncryptedSecret() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
 
-        when(web2SecretRepository.find(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
 
         final Optional<Web2Secret> oSecret1 = web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS);
@@ -91,13 +93,13 @@ class Web2SecretServiceTests {
 
     @Test
     void shouldGetEmptyResultIfSecretNotPresent() {
-        when(web2SecretRepository.find(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.empty());
 
         assertThat(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS)).isEmpty();
         assertThat(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS, false)).isEmpty();
         verify(web2SecretRepository, times(2))
-                .find(OWNER_ADDRESS, SECRET_ADDRESS);
+                .findById(any(Web2SecretHeader.class));
         verifyNoInteractions(encryptionService);
     }
     // endregion
@@ -105,7 +107,7 @@ class Web2SecretServiceTests {
     // region addSecret
     @Test
     void shouldAddSecret() throws SecretAlreadyExistsException {
-        when(web2SecretRepository.find(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.empty());
         when(encryptionService.encrypt(PLAIN_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
         when(web2SecretRepository.save(any())).thenReturn(new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true));
@@ -124,7 +126,7 @@ class Web2SecretServiceTests {
     @Test
     void shouldNotAddSecretIfPresent() {
         final Web2Secret secret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
-        when(web2SecretRepository.find(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(secret));
 
         final SecretAlreadyExistsException exception = assertThrows(SecretAlreadyExistsException.class,
@@ -144,7 +146,7 @@ class Web2SecretServiceTests {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
         final String newSecretValue = "newSecretValue";
         final String newEncryptedSecretValue = "newEncryptedSecretValue";
-        when(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.encrypt(newSecretValue))
                 .thenReturn(newEncryptedSecretValue);
@@ -165,7 +167,7 @@ class Web2SecretServiceTests {
 
     @Test
     void shouldNotUpdateSecretIfMissing() {
-        when(web2SecretRepository.find(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.empty());
 
         final NotAnExistingSecretException exception = assertThrows(NotAnExistingSecretException.class,
@@ -180,7 +182,7 @@ class Web2SecretServiceTests {
     @Test
     void shouldNotUpdateSecretIfSameValue() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
-        when(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.encrypt(PLAIN_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);

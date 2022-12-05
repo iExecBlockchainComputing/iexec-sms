@@ -38,7 +38,7 @@ public class Web2SecretService extends AbstractSecretService {
     }
 
     public Optional<Web2Secret> getSecret(String ownerAddress, String secretAddress) {
-        return web2SecretRepository.find(ownerAddress, secretAddress);
+        return web2SecretRepository.findById(new Web2SecretHeader(ownerAddress, secretAddress));
     }
 
     public Optional<Web2Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
