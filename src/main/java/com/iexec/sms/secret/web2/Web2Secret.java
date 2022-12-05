@@ -20,7 +20,6 @@ package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.secret.Secret;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,7 +29,6 @@ import javax.persistence.Entity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web2Secret extends Secret {
     @EmbeddedId
     private Web2SecretHeader header;

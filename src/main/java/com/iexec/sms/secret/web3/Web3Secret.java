@@ -18,7 +18,6 @@ package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.secret.Secret;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +27,6 @@ import javax.persistence.Entity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Web3Secret extends Secret {
     @EmbeddedId
     private Web3SecretHeader header;
