@@ -39,7 +39,7 @@ public class Web2Secret extends Secret {
         this(new Web2SecretHeader(ownerAddress, address), value, isEncryptedValue);
     }
 
-    Web2Secret(Web2SecretHeader header, String value, boolean isEncryptedValue) {
+    private Web2Secret(Web2SecretHeader header, String value, boolean isEncryptedValue) {
         super(value, isEncryptedValue);
         this.header = header;
     }
