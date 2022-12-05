@@ -19,26 +19,27 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.secret.Secret;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import java.util.Objects;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Web2Secret extends Secret {
-    private String ownerAddress;
-
-    Web2Secret(String id, String ownerAddress, String address, String value, boolean isEncryptedValue) {
-        super(id, address, value, isEncryptedValue);
-        this.ownerAddress = ownerAddress;
-    }
+    @EmbeddedId
+    private Web2SecretHeader header;
 
     public Web2Secret(String ownerAddress, String address, String value, boolean isEncryptedValue) {
-        super(address, value, isEncryptedValue);
-        this.ownerAddress = ownerAddress;
+        this(new Web2SecretHeader(ownerAddress, address), value, isEncryptedValue);
+    }
+
+    private Web2Secret(Web2SecretHeader header, String value, boolean isEncryptedValue) {
+        super(value, isEncryptedValue);
+        this.header = header;
     }
 
     /**
@@ -48,9 +49,8 @@ public class Web2Secret extends Secret {
      * @param newEncryptedValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
-    @Override
     public Web2Secret withEncryptedValue(String newEncryptedValue) {
-        return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newEncryptedValue, true);
+        return new Web2Secret(header, newEncryptedValue, true);
     }
 
     /**
@@ -60,22 +60,7 @@ public class Web2Secret extends Secret {
      * @param newDecryptedValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
-    @Override
     public Web2Secret withDecryptedValue(String newDecryptedValue) {
-        return new Web2Secret(this.getId(), this.getOwnerAddress(), this.getAddress(), newDecryptedValue, false);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        Web2Secret that = (Web2Secret) o;
-        return Objects.equals(ownerAddress, that.ownerAddress);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), ownerAddress);
+        return new Web2Secret(header, newDecryptedValue, false);
     }
 }

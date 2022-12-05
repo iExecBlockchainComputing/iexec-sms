@@ -18,34 +18,26 @@ package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.secret.Secret;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Web3Secret extends Secret {
-
-    // TODO: remove this duplicate `id` field
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
-    private Web3Secret(String superId, String id, String address, String value, boolean isEncryptedValue) {
-        super(superId, address, value, isEncryptedValue);
-        this.id = id;
-    }
+    @EmbeddedId
+    private Web3SecretHeader header;
 
     public Web3Secret(String address, String value, boolean isEncryptedValue) {
-        super(address, value, isEncryptedValue);
+        this(new Web3SecretHeader(address), value, isEncryptedValue);
+    }
+
+    private Web3Secret(Web3SecretHeader header, String value, boolean isEncryptedValue) {
+        super(value, isEncryptedValue);
+        this.header = header;
     }
 
     /**
@@ -55,9 +47,8 @@ public class Web3Secret extends Secret {
      * @param newEncryptedValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
-    @Override
     public Web3Secret withEncryptedValue(String newEncryptedValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newEncryptedValue, true);
+        return new Web3Secret(header, newEncryptedValue, true);
     }
 
     /**
@@ -67,8 +58,7 @@ public class Web3Secret extends Secret {
      * @param newDecryptedValue Value to use for new object.
      * @return A new {@link Web3Secret} object with new value.
      */
-    @Override
     public Web3Secret withDecryptedValue(String newDecryptedValue) {
-        return new Web3Secret(super.getId(), this.id, this.getAddress(), newDecryptedValue, false);
+        return new Web3Secret(header, newDecryptedValue, false);
     }
 }

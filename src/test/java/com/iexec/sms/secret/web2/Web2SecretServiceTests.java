@@ -19,7 +19,6 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.Secret;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -33,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class Web2SecretServiceTests {
-    private static final String ID = "id";
     private static final String OWNER_ADDRESS = "ownerAddress";
     private static final String SECRET_ADDRESS = "secretAddress";
     private static final String PLAIN_SECRET_VALUE = "plainSecretValue";
@@ -58,7 +56,7 @@ class Web2SecretServiceTests {
     void shouldGetDecryptedSecret() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
 
-        when(web2SecretRepository.findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.decrypt(ENCRYPTED_SECRET_VALUE))
                 .thenReturn(PLAIN_SECRET_VALUE);
@@ -66,9 +64,9 @@ class Web2SecretServiceTests {
         final Optional<Web2Secret> result = web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS, true);
         assertThat(result).isNotEmpty();
         assertAll(
-                () -> assertThat(result).get().extracting(Secret::getAddress).isEqualTo(SECRET_ADDRESS),
-                () -> assertThat(result).get().extracting(Secret::getValue).isEqualTo(PLAIN_SECRET_VALUE),
-                () -> assertThat(result).get().extracting(Secret::isEncryptedValue).isEqualTo(false)
+                () -> assertThat(result).get().extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
+                () -> assertThat(result).get().extracting(Web2Secret::getValue).isEqualTo(PLAIN_SECRET_VALUE),
+                () -> assertThat(result).get().extracting(Web2Secret::isEncryptedValue).isEqualTo(false)
         );
     }
 
@@ -76,7 +74,7 @@ class Web2SecretServiceTests {
     void shouldGetEncryptedSecret() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
 
-        when(web2SecretRepository.findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
 
         final Optional<Web2Secret> oSecret1 = web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS);
@@ -84,22 +82,22 @@ class Web2SecretServiceTests {
         assertThat(oSecret1).isNotEmpty();
         assertAll(
                 () -> assertThat(oSecret1).isEqualTo(oSecret2),
-                () -> assertThat(oSecret1).get().extracting(Secret::getAddress).isEqualTo(SECRET_ADDRESS),
-                () -> assertThat(oSecret1).get().extracting(Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
-                () -> assertThat(oSecret1).get().extracting(Secret::isEncryptedValue).isEqualTo(true),
+                () -> assertThat(oSecret1).get().extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
+                () -> assertThat(oSecret1).get().extracting(Web2Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
+                () -> assertThat(oSecret1).get().extracting(Web2Secret::isEncryptedValue).isEqualTo(true),
                 () -> verifyNoInteractions(encryptionService)
         );
     }
 
     @Test
     void shouldGetEmptyResultIfSecretNotPresent() {
-        when(web2SecretRepository.findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.empty());
 
         assertThat(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS)).isEmpty();
         assertThat(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS, false)).isEmpty();
         verify(web2SecretRepository, times(2))
-                .findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS);
+                .findById(any(Web2SecretHeader.class));
         verifyNoInteractions(encryptionService);
     }
     // endregion
@@ -107,17 +105,16 @@ class Web2SecretServiceTests {
     // region addSecret
     @Test
     void shouldAddSecret() throws SecretAlreadyExistsException {
-        when(web2SecretRepository.findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.empty());
         when(encryptionService.encrypt(PLAIN_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
-        when(web2SecretRepository.save(any())).thenReturn(new Web2Secret(ID, OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true));
+        when(web2SecretRepository.save(any())).thenReturn(new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true));
 
         final Web2Secret newSecret = web2SecretService.addSecret(OWNER_ADDRESS, SECRET_ADDRESS, PLAIN_SECRET_VALUE);
         assertAll(
-                () -> assertThat(newSecret).extracting(Secret::getId).isEqualTo(ID),
-                () -> assertThat(newSecret).extracting(Secret::getAddress).isEqualTo(SECRET_ADDRESS),
-                () -> assertThat(newSecret).extracting(Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
-                () -> assertThat(newSecret).extracting(Secret::isEncryptedValue).isEqualTo(true),
+                () -> assertThat(newSecret).extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
+                () -> assertThat(newSecret).extracting(Web2Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
+                () -> assertThat(newSecret).extracting(Web2Secret::isEncryptedValue).isEqualTo(true),
 
                 () -> verify(encryptionService).encrypt(any()),
                 () -> verify(web2SecretRepository).save(any())
@@ -126,8 +123,8 @@ class Web2SecretServiceTests {
 
     @Test
     void shouldNotAddSecretIfPresent() {
-        final Web2Secret secret = new Web2Secret(ID, OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
-        when(web2SecretRepository.findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS))
+        final Web2Secret secret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(secret));
 
         final SecretAlreadyExistsException exception = assertThrows(SecretAlreadyExistsException.class,
@@ -147,19 +144,17 @@ class Web2SecretServiceTests {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
         final String newSecretValue = "newSecretValue";
         final String newEncryptedSecretValue = "newEncryptedSecretValue";
-        when(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.encrypt(newSecretValue))
                 .thenReturn(newEncryptedSecretValue);
-        final Web2Secret savedSecret = new Web2Secret(ID, OWNER_ADDRESS, SECRET_ADDRESS, newEncryptedSecretValue, true);
+        final Web2Secret savedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, newEncryptedSecretValue, true);
         when(web2SecretRepository.save(any()))
                 .thenReturn(savedSecret);
 
         final Web2Secret newSecret = web2SecretService.updateSecret(OWNER_ADDRESS, SECRET_ADDRESS, newSecretValue);
         assertAll(
-                () -> assertThat(newSecret).extracting(Web2Secret::getId).isEqualTo(ID),
-                () -> assertThat(newSecret).extracting(Web2Secret::getOwnerAddress).isEqualTo(OWNER_ADDRESS),
-                () -> assertThat(newSecret).extracting(Web2Secret::getAddress).isEqualTo(SECRET_ADDRESS),
+                () -> assertThat(newSecret).extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
                 () -> assertThat(newSecret).extracting(Web2Secret::getValue).isEqualTo(newEncryptedSecretValue),
                 () -> assertThat(newSecret).extracting(Web2Secret::isEncryptedValue).isEqualTo(true),
 
@@ -170,7 +165,7 @@ class Web2SecretServiceTests {
 
     @Test
     void shouldNotUpdateSecretIfMissing() {
-        when(web2SecretRepository.findByOwnerAddressAndAddressAllIgnoreCase(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.empty());
 
         final NotAnExistingSecretException exception = assertThrows(NotAnExistingSecretException.class,
@@ -185,7 +180,7 @@ class Web2SecretServiceTests {
     @Test
     void shouldNotUpdateSecretIfSameValue() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE, true);
-        when(web2SecretService.getSecret(OWNER_ADDRESS, SECRET_ADDRESS))
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
         when(encryptionService.encrypt(PLAIN_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
