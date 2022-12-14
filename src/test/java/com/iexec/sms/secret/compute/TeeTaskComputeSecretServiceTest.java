@@ -19,6 +19,7 @@ class TeeTaskComputeSecretServiceTest {
             .onChainObjectType(OnChainObjectType.APPLICATION)
             .onChainObjectAddress(APP_ADDRESS.toLowerCase())
             .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
+            .fixedSecretOwner("")
             .key("0")
             .value(ENCRYPTED_SECRET_VALUE)
             .build();
@@ -53,8 +54,8 @@ class TeeTaskComputeSecretServiceTest {
 
         verify(teeTaskComputeSecretRepository, times(1)).save(computeSecretCaptor.capture());
         final TeeTaskComputeSecret savedTeeTaskComputeSecret = computeSecretCaptor.getValue();
-        Assertions.assertThat(savedTeeTaskComputeSecret.getKey()).isEqualTo("0");
-        Assertions.assertThat(savedTeeTaskComputeSecret.getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
+        Assertions.assertThat(savedTeeTaskComputeSecret.getHeader().getKey()).isEqualTo("0");
+        Assertions.assertThat(savedTeeTaskComputeSecret.getHeader().getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(savedTeeTaskComputeSecret.getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
     }
 
@@ -72,15 +73,15 @@ class TeeTaskComputeSecretServiceTest {
     // region getSecret
     @Test
     void shouldGetSecret() {
-        when(teeTaskComputeSecretRepository.findOne(any()))
+        when(teeTaskComputeSecretRepository.findById(any()))
                 .thenReturn(Optional.of(COMPUTE_SECRET));
         when(encryptionService.decrypt(ENCRYPTED_SECRET_VALUE))
                 .thenReturn(DECRYPTED_SECRET_VALUE);
 
         Optional<TeeTaskComputeSecret> decryptedSecret = teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
         Assertions.assertThat(decryptedSecret).isPresent();
-        Assertions.assertThat(decryptedSecret.get().getKey()).isEqualTo("0");
-        Assertions.assertThat(decryptedSecret.get().getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
+        Assertions.assertThat(decryptedSecret.get().getHeader().getKey()).isEqualTo("0");
+        Assertions.assertThat(decryptedSecret.get().getHeader().getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(decryptedSecret.get().getValue()).isEqualTo(DECRYPTED_SECRET_VALUE);
         verify(encryptionService, Mockito.times(1)).decrypt(any());
     }
