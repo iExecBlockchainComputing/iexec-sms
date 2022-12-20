@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@2.2.1') _
+@Library('global-jenkins-library@2.2.3') _
 
 String repositoryName = 'iexec-sms'
 
