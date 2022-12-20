@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.Embeddable;
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -65,11 +66,11 @@ public class TeeTaskComputeSecretHeader implements Serializable {
         Objects.requireNonNull(key, "key can't be null.");
 
         if (secretOwnerRole == SecretOwnerRole.REQUESTER && !StringUtils.isEmpty(onChainObjectAddress)) {
-            throw new IllegalArgumentException("On-chain object address should be empty for a requester secret.");
+            throw new ValidationException("On-chain object address should be empty for a requester secret.");
         }
 
         if (secretOwnerRole == SecretOwnerRole.APPLICATION_DEVELOPER && !StringUtils.isEmpty(fixedSecretOwner)) {
-            throw new IllegalArgumentException("Fixed secret owner should be empty for an application developer secret.");
+            throw new ValidationException("Fixed secret owner should be empty for an application developer secret.");
         }
 
         this.onChainObjectAddress = onChainObjectAddress == null ? "" : onChainObjectAddress.toLowerCase();

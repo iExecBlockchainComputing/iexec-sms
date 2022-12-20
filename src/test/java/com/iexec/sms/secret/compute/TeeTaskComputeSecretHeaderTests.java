@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import javax.validation.ValidationException;
+
 class TeeTaskComputeSecretHeaderTests {
     private final static String ON_CHAIN_OBJECT_ADDRESS = "onChainObjectAddress";
     private final static String FIXED_SECRET_OWNER = "fixedSecretOwner";
@@ -97,7 +99,7 @@ class TeeTaskComputeSecretHeaderTests {
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 FIXED_SECRET_OWNER,
                 KEY
-        )).isInstanceOf(IllegalArgumentException.class);
+        )).isInstanceOf(ValidationException.class);
     }
 
     @ParameterizedTest
@@ -109,7 +111,7 @@ class TeeTaskComputeSecretHeaderTests {
                 SecretOwnerRole.REQUESTER,
                 "",
                 KEY
-        )).isInstanceOf(IllegalArgumentException.class);
+        )).isInstanceOf(ValidationException.class);
     }
     // endregion
 }
