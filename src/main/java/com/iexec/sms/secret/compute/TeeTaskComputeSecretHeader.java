@@ -20,16 +20,18 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.Embeddable;
-import javax.validation.ValidationException;
+import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.Set;
 
 @Embeddable
+@Slf4j
 @Getter
 @EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -61,10 +63,6 @@ public class TeeTaskComputeSecretHeader implements Serializable {
                                       SecretOwnerRole secretOwnerRole,
                                       String fixedSecretOwner,
                                       String key) {
-        Objects.requireNonNull(onChainObjectType, "On-chain object type can't be null.");
-        Objects.requireNonNull(secretOwnerRole, "Secret owner role can't be null.");
-        Objects.requireNonNull(key, "key can't be null.");
-
         if (secretOwnerRole == SecretOwnerRole.REQUESTER && !StringUtils.isEmpty(onChainObjectAddress)) {
             throw new ValidationException("On-chain object address should be empty for a requester secret.");
         }
@@ -78,5 +76,20 @@ public class TeeTaskComputeSecretHeader implements Serializable {
         this.secretOwnerRole = secretOwnerRole;
         this.fixedSecretOwner = fixedSecretOwner == null ? "" : fixedSecretOwner;
         this.key = key;
+
+        validateFields();
+    }
+
+    private void validateFields() {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            final Validator validator = factory.getValidator();
+            final Set<ConstraintViolation<TeeTaskComputeSecretHeader>> issues = validator.validate(this);
+            if (!issues.isEmpty()) {
+                for (final ConstraintViolation<TeeTaskComputeSecretHeader> issue : issues) {
+                    log.warn(issue.getMessage());
+                }
+                throw new ValidationException("Can't create TeeTaskComputeSecretHeader.");
+            }
+        }
     }
 }

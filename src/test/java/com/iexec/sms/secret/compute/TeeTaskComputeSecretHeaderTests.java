@@ -61,9 +61,9 @@ class TeeTaskComputeSecretHeaderTests {
                 null,
                 ON_CHAIN_OBJECT_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                FIXED_SECRET_OWNER,
+                "",
                 KEY
-        )).isInstanceOf(NullPointerException.class);
+        )).isInstanceOf(ValidationException.class);
     }
 
     @ParameterizedTest
@@ -75,7 +75,7 @@ class TeeTaskComputeSecretHeaderTests {
                 null,
                 FIXED_SECRET_OWNER,
                 KEY
-        )).isInstanceOf(NullPointerException.class);
+        )).isInstanceOf(ValidationException.class);
     }
 
     @ParameterizedTest
@@ -85,9 +85,9 @@ class TeeTaskComputeSecretHeaderTests {
                 objectType,
                 ON_CHAIN_OBJECT_ADDRESS,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
-                FIXED_SECRET_OWNER,
+                "",
                 null
-        )).isInstanceOf(NullPointerException.class);
+        )).isInstanceOf(ValidationException.class);
     }
 
     @ParameterizedTest
