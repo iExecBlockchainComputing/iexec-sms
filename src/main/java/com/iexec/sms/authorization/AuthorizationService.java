@@ -114,7 +114,7 @@ public class AuthorizationService {
 
     public String getChallengeForGetWeb3Secret(String secretAddress) {
         return HashUtils.concatenateAndHash(
-                DOMAIN,
+                Hash.sha3(DOMAIN),
                 secretAddress);
     }
 
