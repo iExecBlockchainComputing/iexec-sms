@@ -49,7 +49,7 @@ public class TeeTaskComputeSecretTest {
                 .onChainObjectType(OnChainObjectType.APPLICATION)
                 .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
                 .fixedSecretOwner("")
-                .key("")
+                .key("key")
                 //.value("")
                 .build();
         assertThatThrownBy(() -> teeTaskComputeSecretRepository.saveAndFlush(secret))
