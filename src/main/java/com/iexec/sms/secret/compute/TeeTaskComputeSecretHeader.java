@@ -73,7 +73,7 @@ public class TeeTaskComputeSecretHeader implements Serializable {
         this.onChainObjectAddress = onChainObjectAddress == null ? "" : onChainObjectAddress.toLowerCase();
         this.onChainObjectType = onChainObjectType;
         this.secretOwnerRole = secretOwnerRole;
-        this.fixedSecretOwner = fixedSecretOwner == null ? "" : fixedSecretOwner;
+        this.fixedSecretOwner = fixedSecretOwner == null ? "" : fixedSecretOwner.toLowerCase();
         this.key = key;
 
         validateFields();
