@@ -17,15 +17,14 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.secret.SecretUtils;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
+import lombok.*;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Define a secret that can be used during the execution of a TEE task.
@@ -47,37 +46,16 @@ import java.io.Serializable;
  * <li>For requesters, it must be a String of at most 64 characters from [0-9A-Za-z-_].
  * </ul>
  */
-@Data
-@NoArgsConstructor
 @Entity
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = {"onChainObjectAddress", "fixedSecretOwner", "key"}) })
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TeeTaskComputeSecret implements Serializable {
 
-    public static final int SECRET_KEY_MIN_LENGTH = 1;
-    public static final int SECRET_KEY_MAX_LENGTH = 64;
+    @NotNull
+    @EmbeddedId
+    private TeeTaskComputeSecretHeader header;
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
-    /**
-     * Represents the blockchain address of the deployed object
-     * (0xapplication, 0xdataset, 0xworkerpool)
-     * <p>
-     * In a future release, it should also handle ENS names.
-     */
-    @NotNull
-    private String onChainObjectAddress; // Will be empty for a secret belonging to a requester
-    @NotNull
-    private OnChainObjectType onChainObjectType;
-    @NotNull
-    private SecretOwnerRole secretOwnerRole;
-    @NotNull
-    private String fixedSecretOwner; // Will be empty for a secret belonging to an application developer
-    @NotNull
-    @Size(min = SECRET_KEY_MIN_LENGTH, max = SECRET_KEY_MAX_LENGTH)
-    private String key;
     @NotNull
     /*
      * Expected behavior of AES encryption is to not expand the data very much.
@@ -102,11 +80,31 @@ public class TeeTaskComputeSecret implements Serializable {
             String fixedSecretOwner,
             String key,
             String value) {
-        this.onChainObjectType = onChainObjectType;
-        this.onChainObjectAddress = onChainObjectAddress;
-        this.secretOwnerRole = secretOwnerRole;
-        this.fixedSecretOwner = fixedSecretOwner;
-        this.key = key;
+        this.header = new TeeTaskComputeSecretHeader(
+                onChainObjectType,
+                onChainObjectAddress,
+                secretOwnerRole,
+                fixedSecretOwner,
+                key
+        );
         this.value = value;
+    }
+
+    public TeeTaskComputeSecret withValue(String newValue) {
+        return new TeeTaskComputeSecret(header, newValue);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final TeeTaskComputeSecret that = (TeeTaskComputeSecret) o;
+        return Objects.equals(header, that.header)
+                && Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(header, value);
     }
 }

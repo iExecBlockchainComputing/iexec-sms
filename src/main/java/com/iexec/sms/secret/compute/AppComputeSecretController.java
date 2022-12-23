@@ -42,8 +42,8 @@ public class AppComputeSecretController {
     static final String INVALID_SECRET_KEY_FORMAT_MSG = "Secret key should contain at most 64 characters from [0-9A-Za-z-_]";
 
     private static final Pattern secretKeyPattern = Pattern.compile("^[\\p{Alnum}-_]{"
-            + TeeTaskComputeSecret.SECRET_KEY_MIN_LENGTH + ","
-            + TeeTaskComputeSecret.SECRET_KEY_MAX_LENGTH + "}$");
+            + TeeTaskComputeSecretHeader.SECRET_KEY_MIN_LENGTH + ","
+            + TeeTaskComputeSecretHeader.SECRET_KEY_MAX_LENGTH + "}$");
 
     public AppComputeSecretController(AuthorizationService authorizationService,
                                       TeeTaskComputeSecretService teeTaskComputeSecretService) {

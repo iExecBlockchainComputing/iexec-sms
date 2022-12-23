@@ -84,6 +84,7 @@ public class TeeSessionTestUtils {
                 .onChainObjectType(OnChainObjectType.APPLICATION)
                 .onChainObjectAddress(appAddress)
                 .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
+                .fixedSecretOwner("")
                 .key(APP_DEVELOPER_SECRET_INDEX)
                 .value(APP_DEVELOPER_SECRET_VALUE)
                 .build();

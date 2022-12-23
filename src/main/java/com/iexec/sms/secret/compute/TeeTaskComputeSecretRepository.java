@@ -18,5 +18,5 @@ package com.iexec.sms.secret.compute;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TeeTaskComputeSecretRepository extends JpaRepository<TeeTaskComputeSecret, String> {
+public interface TeeTaskComputeSecretRepository extends JpaRepository<TeeTaskComputeSecret, TeeTaskComputeSecretHeader> {
 }

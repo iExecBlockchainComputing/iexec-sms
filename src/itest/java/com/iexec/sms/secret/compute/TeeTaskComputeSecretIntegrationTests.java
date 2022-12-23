@@ -145,9 +145,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             Assertions.fail("An app developer secret was expected but none has been retrieved.");
             return;
         }
-        Assertions.assertThat(appDeveloperSecret.get().getId()).isNotBlank();
-        Assertions.assertThat(appDeveloperSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
-        Assertions.assertThat(appDeveloperSecret.get().getKey()).isEqualTo(appDeveloperSecretIndex);
+        Assertions.assertThat(appDeveloperSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
+        Assertions.assertThat(appDeveloperSecret.get().getHeader().getKey()).isEqualTo(appDeveloperSecretIndex);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
@@ -168,9 +167,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             Assertions.fail("An app requester secret was expected but none has been retrieved.");
             return;
         }
-        Assertions.assertThat(requesterSecret.get().getId()).isNotBlank();
-        Assertions.assertThat(requesterSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase("");
-        Assertions.assertThat(requesterSecret.get().getKey()).isEqualTo(requesterSecretKey);
+        Assertions.assertThat(requesterSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase("");
+        Assertions.assertThat(requesterSecret.get().getHeader().getKey()).isEqualTo(requesterSecretKey);
         Assertions.assertThat(requesterSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(requesterSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
@@ -212,7 +210,12 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
         Assertions.assertThat(repository.count()).isEqualTo(keys.size());
         List<TeeTaskComputeSecret> secrets = repository.findAll();
-        Assertions.assertThat(secrets.stream().map(TeeTaskComputeSecret::getKey).collect(Collectors.toList()))
+        final List<String> retrievedKeys = secrets
+                .stream()
+                .map(TeeTaskComputeSecret::getHeader)
+                .map(TeeTaskComputeSecretHeader::getKey)
+                .collect(Collectors.toList());
+        Assertions.assertThat(retrievedKeys)
                 .containsExactlyInAnyOrder("secret-key-1", "secret-key-2", "secret-key-3");
 
     }
