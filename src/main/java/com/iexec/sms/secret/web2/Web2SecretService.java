@@ -50,7 +50,7 @@ public class Web2SecretService extends AbstractSecretService {
 
         final Web2Secret secret = oSecret.get();
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
-        return Optional.ofNullable(decryptedValue);
+        return Optional.of(decryptedValue);
     }
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {

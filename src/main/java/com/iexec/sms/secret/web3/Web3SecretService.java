@@ -46,7 +46,7 @@ public class Web3SecretService extends AbstractSecretService {
             return Optional.empty();
         }
         final String decryptedValue = encryptionService.decrypt(oSecret.get().getValue());
-        return Optional.ofNullable(decryptedValue);
+        return Optional.of(decryptedValue);
     }
 
     public boolean isSecretPresent(String secretAddress) {
