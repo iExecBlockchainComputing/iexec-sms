@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import java.util.Objects;
 
 @MappedSuperclass
 @Getter
@@ -40,7 +41,8 @@ public abstract class Secret {
      * though everything is correctly setup.
      */
     protected Secret(String value) {
-        this.value = value != null ? value.trim() : null;
+        Objects.requireNonNull(value, "Secret value must not be null");
+        this.value = value.trim();
     }
 }
 
