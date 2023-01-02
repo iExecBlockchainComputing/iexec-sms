@@ -32,13 +32,11 @@ import com.iexec.sms.tee.session.scone.cas.SconeSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Security;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Volumes;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 //TODO Rename and move
-@Slf4j
 @Service
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionMakerService {
