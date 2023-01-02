@@ -36,20 +36,21 @@ public class Web3SecretService extends AbstractSecretService {
         this.web3SecretRepository = web3SecretRepository;
     }
 
-    public Optional<Web3Secret> getSecret(String secretAddress) {
+    Optional<Web3Secret> getSecret(String secretAddress) {
         return web3SecretRepository.findById(new Web3SecretHeader(secretAddress));
     }
 
-    public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
+    public Optional<String> getDecryptedValue(String secretAddress) {
         Optional<Web3Secret> oSecret = getSecret(secretAddress);
         if (oSecret.isEmpty()) {
             return Optional.empty();
         }
-        if (shouldDecryptValue) {
-            final String decryptedValue = encryptionService.decrypt(oSecret.get().getValue());
-            return oSecret.map(secret -> secret.withDecryptedValue(decryptedValue));
-        }
-        return oSecret;
+        final String decryptedValue = encryptionService.decrypt(oSecret.get().getValue());
+        return Optional.ofNullable(decryptedValue);
+    }
+
+    public boolean isSecretPresent(String secretAddress) {
+        return getSecret(secretAddress).isPresent();
     }
 
     /*
@@ -57,7 +58,7 @@ public class Web3SecretService extends AbstractSecretService {
      * Stores encrypted secrets
      * */
     public boolean addSecret(String secretAddress, String secretValue) {
-        if (getSecret(secretAddress).isPresent()) {
+        if (isSecretPresent(secretAddress)) {
             log.error("Secret already exists [secretAddress:{}]", secretAddress);
             return false;
         }
@@ -66,7 +67,7 @@ public class Web3SecretService extends AbstractSecretService {
         log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
                 secretAddress, encryptedValue);
 
-        final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue, true);
+        final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         web3SecretRepository.save(web3Secret);
         return true;
     }

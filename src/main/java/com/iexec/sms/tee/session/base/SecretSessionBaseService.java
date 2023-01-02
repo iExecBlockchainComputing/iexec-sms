@@ -25,7 +25,6 @@ import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
-import com.iexec.sms.secret.web2.Web2Secret;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
@@ -138,11 +137,10 @@ public class SecretSessionBaseService {
         List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
             String datasetKey = web3SecretService
-                    .getSecret(taskDescription.getDatasetAddress(), true)
+                    .getDecryptedValue(taskDescription.getDatasetAddress())
                     .orElseThrow(() -> new TeeSessionGenerationException(
                             PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
-                            "Empty dataset secret - taskId: " + taskId))
-                    .getTrimmedValue();
+                            "Empty dataset secret - taskId: " + taskId));
             tokens.put(IEXEC_DATASET_KEY, datasetKey);
             trustedEnv.addAll(List.of(
                     IexecEnvUtils.IEXEC_DATASET_URL,
@@ -316,16 +314,15 @@ public class SecretSessionBaseService {
         if (!shouldEncrypt) {
             return tokens;
         }
-        Optional<Web2Secret> beneficiaryResultEncryptionKeySecret = web2SecretService.getSecret(
+        Optional<String> beneficiaryResultEncryptionKeySecret = web2SecretService.getDecryptedValue(
                 taskDescription.getBeneficiary(),
-                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY,
-                true);
+                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
         if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
                     "Empty beneficiary encryption key - taskId: " + taskId);
         }
-        String publicKeyValue = beneficiaryResultEncryptionKeySecret.get().getTrimmedValue();
+        String publicKeyValue = beneficiaryResultEncryptionKeySecret.get();
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, publicKeyValue); // base64 encoded by client
         return tokens;
     }
@@ -352,10 +349,9 @@ public class SecretSessionBaseService {
         String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
                 ? IEXEC_RESULT_DROPBOX_TOKEN
                 : IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<Web2Secret> requesterStorageTokenSecret = web2SecretService.getSecret(
+        Optional<String> requesterStorageTokenSecret = web2SecretService.getDecryptedValue(
                 taskDescription.getRequester(),
-                keyName,
-                true);
+                keyName);
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());
@@ -363,7 +359,7 @@ public class SecretSessionBaseService {
                     POST_COMPUTE_GET_STORAGE_TOKENS_FAILED,
                     "Empty requester storage token - taskId: " + taskId);
         }
-        String requesterStorageToken = requesterStorageTokenSecret.get().getTrimmedValue();
+        String requesterStorageToken = requesterStorageTokenSecret.get();
         tokens.put(RESULT_STORAGE_PROVIDER, storageProvider);
         tokens.put(RESULT_STORAGE_PROXY, storageProxy);
         tokens.put(RESULT_STORAGE_TOKEN, requesterStorageToken);

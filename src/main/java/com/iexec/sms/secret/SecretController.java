@@ -18,8 +18,10 @@ package com.iexec.sms.secret;
 
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.web2.*;
-import com.iexec.sms.secret.web3.Web3Secret;
+import com.iexec.sms.secret.web2.NotAnExistingSecretException;
+import com.iexec.sms.secret.web2.SameSecretException;
+import com.iexec.sms.secret.web2.SecretAlreadyExistsException;
+import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Slf4j
 @CrossOrigin
@@ -51,8 +52,8 @@ public class SecretController {
 
     @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
     public ResponseEntity<Void> isWeb3SecretSet(@RequestParam String secretAddress) {
-        Optional<Web3Secret> secret = web3SecretService.getSecret(secretAddress);
-        return secret.isPresent() ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        boolean isSecretPresent = web3SecretService.isSecretPresent(secretAddress);
+        return isSecretPresent ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/web3")
@@ -82,8 +83,8 @@ public class SecretController {
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
     public ResponseEntity<Void> isWeb2SecretSet(@RequestParam String ownerAddress,
                                                 @RequestParam String secretName) {
-        Optional<Web2Secret> secret = web2SecretService.getSecret(ownerAddress, secretName);
-        return secret.isPresent() ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        boolean isSecretPresent = web2SecretService.isSecretPresent(ownerAddress, secretName);
+        return isSecretPresent ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/web2")

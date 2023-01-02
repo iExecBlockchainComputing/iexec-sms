@@ -27,25 +27,25 @@ class Web2SecretTests {
 
     private static final String UNENCRYPTED_VALUE = "unencryptedValue";
     private static final String ENCRYPTED_VALUE   = "encryptedValue";
-    private static final Web2Secret UNENCRYPTED_SECRET = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, UNENCRYPTED_VALUE, false);
-    private static final Web2Secret ENCRYPTED_SECRET   = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_VALUE, true);
+    private static final Web2Secret UNENCRYPTED_SECRET = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, UNENCRYPTED_VALUE);
+    private static final Web2Secret ENCRYPTED_SECRET   = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_VALUE);
 
     @Test
     void withEncryptedValue() {
-        Assertions.assertThat(UNENCRYPTED_SECRET.withEncryptedValue(ENCRYPTED_VALUE))
+        Assertions.assertThat(UNENCRYPTED_SECRET.withValue(ENCRYPTED_VALUE))
                 .usingRecursiveComparison()
                 .isEqualTo(ENCRYPTED_SECRET);
-        Assertions.assertThat(ENCRYPTED_SECRET.withEncryptedValue(ENCRYPTED_VALUE))
+        Assertions.assertThat(ENCRYPTED_SECRET.withValue(ENCRYPTED_VALUE))
                 .usingRecursiveComparison()
                 .isEqualTo(ENCRYPTED_SECRET);
     }
 
     @Test
     void withDecryptedValue() {
-        Assertions.assertThat(ENCRYPTED_SECRET.withDecryptedValue(UNENCRYPTED_VALUE))
+        Assertions.assertThat(ENCRYPTED_SECRET.withValue(UNENCRYPTED_VALUE))
                 .usingRecursiveComparison()
                 .isEqualTo(UNENCRYPTED_SECRET);
-        Assertions.assertThat(UNENCRYPTED_SECRET.withDecryptedValue(UNENCRYPTED_VALUE))
+        Assertions.assertThat(UNENCRYPTED_SECRET.withValue(UNENCRYPTED_VALUE))
                 .usingRecursiveComparison()
                 .isEqualTo(UNENCRYPTED_SECRET);
     }

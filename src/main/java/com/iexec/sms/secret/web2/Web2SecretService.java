@@ -37,20 +37,24 @@ public class Web2SecretService extends AbstractSecretService {
         this.web2SecretRepository = web2SecretRepository;
     }
 
-    public Optional<Web2Secret> getSecret(String ownerAddress, String secretAddress) {
+    Optional<Web2Secret> getSecret(String ownerAddress, String secretAddress) {
         return web2SecretRepository.findById(new Web2SecretHeader(ownerAddress, secretAddress));
     }
 
-    public Optional<Web2Secret> getSecret(String ownerAddress, String secretAddress, boolean shouldDecryptValue) {
+    public Optional<String> getDecryptedValue(String ownerAddress, String secretAddress) {
         final Optional<Web2Secret> oSecret = getSecret(ownerAddress, secretAddress);
 
-        if (oSecret.isEmpty() || !shouldDecryptValue) {
-            return oSecret;
+        if (oSecret.isEmpty()) {
+            return Optional.empty();
         }
 
         final Web2Secret secret = oSecret.get();
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
-        return Optional.of(secret.withDecryptedValue(decryptedValue));
+        return Optional.ofNullable(decryptedValue);
+    }
+
+    public boolean isSecretPresent(String ownerAddress, String secretAddress) {
+        return getSecret(ownerAddress, secretAddress).isPresent();
     }
 
     /**
@@ -65,14 +69,14 @@ public class Web2SecretService extends AbstractSecretService {
      *                                      with same {@code ownerAddress}/{@code secretAddress} couple already exists
      */
     public Web2Secret addSecret(String ownerAddress, String secretAddress, String secretValue) throws SecretAlreadyExistsException {
-        final Optional<Web2Secret> oSecret = getSecret(ownerAddress, secretAddress);
-        if (oSecret.isPresent()) {
+        final boolean isSecretPresent = isSecretPresent(ownerAddress, secretAddress);
+        if (isSecretPresent) {
             log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
             throw new SecretAlreadyExistsException(ownerAddress, secretAddress);
         }
 
         final String encryptedValue = encryptionService.encrypt(secretValue);
-        final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue, true);
+        final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
         return web2SecretRepository.save(newSecret);
     }
 
@@ -104,7 +108,7 @@ public class Web2SecretService extends AbstractSecretService {
             throw new SameSecretException(ownerAddress, secretAddress);
         }
 
-        final Web2Secret newSecret = secret.withEncryptedValue(encryptedValue);
+        final Web2Secret newSecret = secret.withValue(encryptedValue);
         return web2SecretRepository.save(newSecret);
     }
 }
