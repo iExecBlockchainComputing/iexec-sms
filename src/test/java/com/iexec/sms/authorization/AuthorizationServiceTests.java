@@ -16,27 +16,26 @@
 
 package com.iexec.sms.authorization;
 
-import static com.iexec.common.chain.ChainTaskStatus.ACTIVE;
-import static com.iexec.common.chain.ChainTaskStatus.UNSET;
-import static com.iexec.sms.authorization.AuthorizationError.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
 import com.iexec.common.chain.ChainDeal;
 import com.iexec.common.chain.ChainTask;
 import com.iexec.common.chain.WorkerpoolAuthorization;
 import com.iexec.common.security.Signature;
 import com.iexec.common.utils.TestUtils;
 import com.iexec.sms.blockchain.IexecHubService;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Optional;
+
+import static com.iexec.common.chain.ChainTaskStatus.ACTIVE;
+import static com.iexec.common.chain.ChainTaskStatus.UNSET;
+import static com.iexec.sms.authorization.AuthorizationError.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 class AuthorizationServiceTests {
 
@@ -169,7 +168,6 @@ class AuthorizationServiceTests {
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenGetDealFailedWithDetails() {
-        ChainDeal chainDeal = TestUtils.getChainDeal();
         ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
