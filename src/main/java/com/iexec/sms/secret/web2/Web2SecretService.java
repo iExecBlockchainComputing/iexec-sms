@@ -71,8 +71,7 @@ public class Web2SecretService extends AbstractSecretService {
      *                                      with same {@code ownerAddress}/{@code secretAddress} couple already exists
      */
     public Web2Secret addSecret(String ownerAddress, String secretAddress, String secretValue) throws SecretAlreadyExistsException {
-        final boolean isSecretPresent = isSecretPresent(ownerAddress, secretAddress);
-        if (isSecretPresent) {
+        if (isSecretPresent(ownerAddress, secretAddress)) {
             log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
             throw new SecretAlreadyExistsException(ownerAddress, secretAddress);
         }
