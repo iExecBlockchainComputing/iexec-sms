@@ -25,7 +25,6 @@ import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -39,7 +38,6 @@ import java.util.Map;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static org.mockito.Mockito.when;
 
-@Slf4j
 class SconeSessionMakerServiceTests {
 
     private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
