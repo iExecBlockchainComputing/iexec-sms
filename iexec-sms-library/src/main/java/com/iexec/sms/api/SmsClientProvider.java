@@ -1,7 +1,6 @@
 package com.iexec.sms.api;
 
 import feign.Logger;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +9,6 @@ import java.util.Map;
  * Manages the {@link SmsClient}, providing an easy way to access SMS
  * and avoiding the need to create a new {@link SmsClient} instance each time.
  */
-@Slf4j
 public class SmsClientProvider {
     private final Map<String, SmsClient> urlToSmsClient = new HashMap<>();
 

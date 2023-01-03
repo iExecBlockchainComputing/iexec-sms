@@ -23,14 +23,12 @@ import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
 import static com.iexec.sms.api.TeeSessionGenerationError.SECURE_SESSION_NO_TEE_PROVIDER;
 
-@Slf4j
 @Service
 public class TeeSessionService {
 
