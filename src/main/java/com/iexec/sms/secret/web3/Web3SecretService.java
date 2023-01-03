@@ -36,6 +36,14 @@ public class Web3SecretService extends AbstractSecretService {
         this.web3SecretRepository = web3SecretRepository;
     }
 
+    /**
+     * Get the secret as it was saved in DB.
+     * Its value should then be encrypted.
+     *
+     * @param secretAddress Address of the secret.
+     * @return An empty {@link Optional} if no secret is found,
+     * an {@link Optional} containing the secret if it exists.
+     */
     Optional<Web3Secret> getSecret(String secretAddress) {
         return web3SecretRepository.findById(new Web3SecretHeader(secretAddress));
     }

@@ -37,6 +37,15 @@ public class Web2SecretService extends AbstractSecretService {
         this.web2SecretRepository = web2SecretRepository;
     }
 
+    /**
+     * Get the secret as it was saved in DB.
+     * Its value should then be encrypted.
+     *
+     * @param ownerAddress  Address of the secret owner.
+     * @param secretAddress Address of the secret.
+     * @return An empty {@link Optional} if no secret is found,
+     * an {@link Optional} containing the secret if it exists.
+     */
     Optional<Web2Secret> getSecret(String ownerAddress, String secretAddress) {
         return web2SecretRepository.findById(new Web2SecretHeader(ownerAddress, secretAddress));
     }
