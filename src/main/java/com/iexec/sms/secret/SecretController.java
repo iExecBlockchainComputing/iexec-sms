@@ -52,8 +52,9 @@ public class SecretController {
 
     @RequestMapping(path = "/web3", method = RequestMethod.HEAD)
     public ResponseEntity<Void> isWeb3SecretSet(@RequestParam String secretAddress) {
-        final boolean isSecretPresent = web3SecretService.isSecretPresent(secretAddress);
-        return isSecretPresent ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        return web3SecretService.isSecretPresent(secretAddress)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/web3")
@@ -83,8 +84,9 @@ public class SecretController {
     @RequestMapping(path = "/web2", method = RequestMethod.HEAD)
     public ResponseEntity<Void> isWeb2SecretSet(@RequestParam String ownerAddress,
                                                 @RequestParam String secretName) {
-        final boolean isSecretPresent = web2SecretService.isSecretPresent(ownerAddress, secretName);
-        return isSecretPresent ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        return web2SecretService.isSecretPresent(ownerAddress, secretName)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/web2")
