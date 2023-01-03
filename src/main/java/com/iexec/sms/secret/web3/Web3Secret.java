@@ -39,15 +39,4 @@ public class Web3Secret extends Secret {
         super(value);
         this.header = header;
     }
-
-    /**
-     * Copies the current {@link Web3Secret} object,
-     * while replacing the old value with a new value.
-     *
-     * @param newValue Value to use for new object.
-     * @return A new {@link Web3Secret} object with new value.
-     */
-    public Web3Secret withValue(String newValue) {
-        return new Web3Secret(header, newValue);
-    }
 }
