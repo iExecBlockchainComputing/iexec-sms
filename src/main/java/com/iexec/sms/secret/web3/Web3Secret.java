@@ -31,34 +31,12 @@ public class Web3Secret extends Secret {
     @EmbeddedId
     private Web3SecretHeader header;
 
-    public Web3Secret(String address, String value, boolean isEncryptedValue) {
-        this(new Web3SecretHeader(address), value, isEncryptedValue);
+    public Web3Secret(String address, String value) {
+        this(new Web3SecretHeader(address), value);
     }
 
-    private Web3Secret(Web3SecretHeader header, String value, boolean isEncryptedValue) {
-        super(value, isEncryptedValue);
+    private Web3Secret(Web3SecretHeader header, String value) {
+        super(value);
         this.header = header;
-    }
-
-    /**
-     * Copies the current {@link Web3Secret} object,
-     * while replacing the old value with a new encrypted value.
-     *
-     * @param newEncryptedValue Value to use for new object.
-     * @return A new {@link Web3Secret} object with new value.
-     */
-    public Web3Secret withEncryptedValue(String newEncryptedValue) {
-        return new Web3Secret(header, newEncryptedValue, true);
-    }
-
-    /**
-     * Copies the current {@link Web3Secret} object,
-     * while replacing the old value with a new decrypted value.
-     *
-     * @param newDecryptedValue Value to use for new object.
-     * @return A new {@link Web3Secret} object with new value.
-     */
-    public Web3Secret withDecryptedValue(String newDecryptedValue) {
-        return new Web3Secret(header, newDecryptedValue, false);
     }
 }

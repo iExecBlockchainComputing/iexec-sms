@@ -17,7 +17,6 @@
 package com.iexec.sms.secret;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,26 +27,22 @@ import java.util.Objects;
 @MappedSuperclass
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class Secret {
     @Column(columnDefinition = "LONGTEXT")
     private String value;
-    private boolean isEncryptedValue;
 
     /**
-     * Get the secret value without possible leading or trailing
+     * Create the secret without possible leading or trailing
      * newline characters. This should be used when putting
      * the secret in the palaemon session. We decided to handle
      * this specific case because it has a good probability to occur
      * (when reading the secret from a file and uploading it to the
      * SMS without any trimming) and it can break the workflow even
      * though everything is correctly setup.
-     * 
-     * @return trimmed secret value
      */
-    public String getTrimmedValue() {
-        Objects.requireNonNull(this.value, "Secret value must not be null");
-        return this.value.trim();
+    protected Secret(String value) {
+        Objects.requireNonNull(value, "Secret value must not be null");
+        this.value = value.trim();
     }
 }
 
