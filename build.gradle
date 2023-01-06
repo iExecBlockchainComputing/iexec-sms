@@ -13,7 +13,10 @@ plugins {
 ext {
     springCloudVersion = '2021.0.0'
     openFeignVersion = '11.7'
-    gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+}
+
+if (!project.hasProperty('gitBranch')) {
+    ext.gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
 allprojects {
