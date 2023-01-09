@@ -30,16 +30,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
+import static com.iexec.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 
 @Service
 @Slf4j
 public class UnTeeSecretService {
 
-
-    private IexecHubService iexecHubService;
-    private Web3SecretService web3SecretService;
-    private Web2SecretsService web2SecretsService;
+    private final IexecHubService iexecHubService;
+    private final Web3SecretService web3SecretService;
+    private final Web2SecretsService web2SecretsService;
 
     public UnTeeSecretService(IexecHubService iexecHubService,
                               Web3SecretService web3SecretService,
@@ -51,10 +50,8 @@ public class UnTeeSecretService {
     }
 
     /*
-    *
-    * Untested yet
-    *
-    * */
+     * Untested yet
+     */
     public Optional<TaskSecrets> getUnTeeTaskSecrets(String chainTaskId) {
         TaskSecrets.TaskSecretsBuilder taskSecretsBuilder = TaskSecrets.builder();
 
@@ -96,6 +93,5 @@ public class UnTeeSecretService {
 
         return Optional.of(taskSecretsBuilder.build());
     }
-
 
 }

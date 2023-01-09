@@ -16,11 +16,11 @@
 
 package com.iexec.sms.tee.session.palaemon;
 
-import com.iexec.common.sms.secret.ReservedSecretKeyName;
 import com.iexec.common.task.TaskDescription;
 import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
+import com.iexec.sms.secret.ReservedSecretKeyName;
 import com.iexec.sms.secret.Secret;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -54,10 +54,10 @@ import java.util.stream.Collectors;
 import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.IEXEC_DATASET_KEY;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
-import static com.iexec.common.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
+import static com.iexec.sms.secret.ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY;
 
 @Slf4j
 @Service
