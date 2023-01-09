@@ -18,7 +18,6 @@ package com.iexec.sms.secret;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.*;
-import com.iexec.sms.secret.web3.Web3Secret;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -67,8 +65,8 @@ class SecretControllerTests {
     //region isWeb3SecretSet
     @Test
     void shouldReturnNoContentWhenWeb3SecretExists() {
-        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS))
-                .thenReturn(Optional.of(mock(Web3Secret.class)));
+        when(web3SecretService.isSecretPresent(WEB3_SECRET_ADDRESS))
+                .thenReturn(true);
         assertThat(secretController.isWeb3SecretSet(WEB3_SECRET_ADDRESS))
                 .isEqualTo(ResponseEntity.noContent().build());
         verifyNoInteractions(authorizationService, web2SecretService);
@@ -76,8 +74,8 @@ class SecretControllerTests {
 
     @Test
     void shouldReturnNotFoundWhenWeb3SecretDoesNotExist() {
-        when(web3SecretService.getSecret(WEB3_SECRET_ADDRESS))
-                .thenReturn(Optional.empty());
+        when(web3SecretService.isSecretPresent(WEB3_SECRET_ADDRESS))
+                .thenReturn(false);
         assertThat(secretController.isWeb3SecretSet(WEB3_SECRET_ADDRESS))
                 .isEqualTo(ResponseEntity.notFound().build());
         verifyNoInteractions(authorizationService, web2SecretService);
@@ -135,8 +133,8 @@ class SecretControllerTests {
     //region isWeb2SecretSet
     @Test
     void shouldReturnNoContentWhenWeb2SecretExists() {
-        when(web2SecretService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
-                .thenReturn(Optional.of(new Web2Secret(WEB2_OWNER_ADDRESS, WEB3_SECRET_ADDRESS, WEB2_SECRET_VALUE, true)));
+        when(web2SecretService.isSecretPresent(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
+                .thenReturn(true);
         assertThat(secretController.isWeb2SecretSet(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
                 .isEqualTo(ResponseEntity.noContent().build());
         verifyNoInteractions(authorizationService, web3SecretService);
@@ -144,8 +142,8 @@ class SecretControllerTests {
 
     @Test
     void shouldReturnNotFoundWhenWeb2SecretDoesNotExist() {
-        when(web2SecretService.getSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
-                .thenReturn(Optional.empty());
+        when(web2SecretService.isSecretPresent(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
+                .thenReturn(false);
         assertThat(secretController.isWeb2SecretSet(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME))
                 .isEqualTo(ResponseEntity.notFound().build());
         verifyNoInteractions(authorizationService, web3SecretService);
@@ -191,7 +189,7 @@ class SecretControllerTests {
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenReturn(new Web2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE, true));
+                .thenReturn(new Web2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE));
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.noContent().build());
         verify(web2SecretService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);

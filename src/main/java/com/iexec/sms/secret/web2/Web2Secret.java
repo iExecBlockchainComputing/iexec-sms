@@ -33,34 +33,23 @@ public class Web2Secret extends Secret {
     @EmbeddedId
     private Web2SecretHeader header;
 
-    public Web2Secret(String ownerAddress, String address, String value, boolean isEncryptedValue) {
-        this(new Web2SecretHeader(ownerAddress, address), value, isEncryptedValue);
+    public Web2Secret(String ownerAddress, String address, String value) {
+        this(new Web2SecretHeader(ownerAddress, address), value);
     }
 
-    private Web2Secret(Web2SecretHeader header, String value, boolean isEncryptedValue) {
-        super(value, isEncryptedValue);
+    private Web2Secret(Web2SecretHeader header, String value) {
+        super(value);
         this.header = header;
     }
 
     /**
      * Copies the current {@link Web2Secret} object,
-     * while replacing the old value with a new encrypted value.
+     * while replacing the old value with a new value.
      *
-     * @param newEncryptedValue Value to use for new object.
+     * @param newValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
-    public Web2Secret withEncryptedValue(String newEncryptedValue) {
-        return new Web2Secret(header, newEncryptedValue, true);
-    }
-
-    /**
-     * Copies the current {@link Web2Secret} object,
-     * while replacing the old value with a new decrypted value.
-     *
-     * @param newDecryptedValue Value to use for new object.
-     * @return A new {@link Web2Secret} object with new value.
-     */
-    public Web2Secret withDecryptedValue(String newDecryptedValue) {
-        return new Web2Secret(header, newDecryptedValue, false);
+    public Web2Secret withValue(String newValue) {
+        return new Web2Secret(header, newValue);
     }
 }
