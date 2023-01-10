@@ -9,7 +9,6 @@ plugins {
 }
 
 ext {
-//    springCloudVersion = '2021.0.5'
     openFeignVersion = '11.7'
 }
 
