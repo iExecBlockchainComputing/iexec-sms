@@ -65,3 +65,9 @@ You can configure the SMS with the following properties:
 | IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB | Required heap size for a worker post-compute enclave (in Giga Bytes). | Positive integer | `4` |
 | IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT | Command executed when starting a container from the TEE enabled worker post-compute image. | String | `java -jar /app/app.jar` |
 | IEXEC_SMS_DISPLAY_DEBUG_SESSION | Whether to display TEE enclaves sessions configuration in SMS logs. | Boolean | `false` |
+
+## Health checks
+
+A `/actuator/health` endpoint is enabled by default and can be accessed on the **IEXEC_SMS_HTTP_PORT**.
+This endpoint allows to define health checks in an orchestrator or a [compose file](https://github.com/compose-spec/compose-spec/blob/master/spec.md#healthcheck).
+No default strategy has been implemented in the [Dockerfile](src/main/resources/Dockerfile.untrusted) at the moment.
