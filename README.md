@@ -68,6 +68,6 @@ You can configure the SMS with the following properties:
 
 ## Health checks
 
-An health endpoint (`/actuator/health`) is enabled by default and can be accessed on the **IEXEC_SMS_HTTP_PORT**.
+A health endpoint (`/actuator/health`) is enabled by default and can be accessed on the **IEXEC_SMS_HTTP_PORT**.
 This endpoint allows to define health checks in an orchestrator or a [compose file](https://github.com/compose-spec/compose-spec/blob/master/spec.md#healthcheck).
 No default strategy has been implemented in the [Dockerfile](src/main/resources/Dockerfile.untrusted) at the moment.
