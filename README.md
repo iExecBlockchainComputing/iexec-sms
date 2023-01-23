@@ -46,7 +46,7 @@ To support:
 
 ### Environment variables (Scone or Gramine TEE framework)
 
-| Environment variable | Description | Type | Default Scone value |  Default Gramine value |
+| Environment variable | Description | Type | Default Scone-configuration value |  Default Gramine-configuration value |
 | --- | --- | --- | --- | --- |
 | `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK` | Define which TEE framework this _iExec SMS_ supports. | `scone` or `gramine` | | |
 | `IEXEC_SMS_PORT` | Server HTTP port. | Positive integer | `13300` | `13300` |
@@ -74,7 +74,8 @@ To support:
 | `IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image. | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
 
 ### Scone specific environment variables
-| Environment variable | Description | Type | Default Scone value  |
+
+| Environment variable | Description | Type | Default Scone-configuration value |
 | --- | --- | --- | --- |
 | `IEXEC_SMS_SSL_KEYSTORE` | Path to the key store that holds the SSL certificate. | String | `src/main/resources/ssl-keystore-dev.p12` |
 | `IEXEC_SMS_SSL_KEYSTORE_PASSWORD` | Password used to access the key store. | String | `whatever` |
@@ -84,9 +85,8 @@ To support:
 | `IEXEC_IGNORED_SGX_ADVISORIES` | List of hardware or software Intel vulnerabilities to ignore. | String | |
 | `IEXEC_SMS_IMAGE_LAS_IMAGE` | Scontain LAS OCI image to be used by workers to execute TEE tasks. LAS performs local attestation which creates a quote that CAS can verify. | String | |
 
-
 ## Health checks
 
-A health endpoint (`/actuator/health`) is enabled by default and can be accessed on the **IEXEC_SMS_HTTP_PORT**.
+A health endpoint (`/actuator/health`) is enabled by default and can be accessed on the `IEXEC_SMS_HTTP_PORT`.
 This endpoint allows to define health checks in an orchestrator or a [compose file](https://github.com/compose-spec/compose-spec/blob/master/spec.md#healthcheck).
 No default strategy has been implemented in the [Dockerfile](Dockerfile) at the moment.
