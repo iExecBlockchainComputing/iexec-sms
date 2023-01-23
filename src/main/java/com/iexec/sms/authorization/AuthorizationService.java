@@ -112,6 +112,7 @@ public class AuthorizationService {
         return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
     }
 
+    //TODO: Remove getChallengeForGetSecret methods
     public String getChallengeForGetWeb3Secret(String secretAddress) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3(DOMAIN),
