@@ -6,8 +6,8 @@ The _iExec Secret Management Service_ (SMS) stores user secrets and provisions t
 
 Two TEE frameworks for TEE tasks can be supported on the iExec platform:
 
-- Scone
-- Gramine
+* Scone
+* Gramine
 
 ### Details
 
@@ -46,44 +46,43 @@ To support:
 
 ### Environment variables (Scone or Gramine TEE framework)
 
-| Environment variable | Description | Type | Default shared value | Default Scone value |  Default Gramine value |
-| --- | --- | --- | --- | --- | --- |
-| IEXEC_SMS_PORT | Server HTTP port. | Positive integer | `13300` |
-| `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK` | Define which TEE framework this _iExec SMS_ supports. | `scone` or `gramine` | |
-| IEXEC_SMS_H2_URL | JDBC URL of the database. | URL | `jdbc:h2:file:/tmp/h2/sms-h2` |
-| IEXEC_SMS_H2_CONSOLE | Whether to enable the H2 console. | Boolean | `false` |
-| IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH  | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` |
-| IEXEC_CHAIN_ID | Chain ID of the blockchain network to connect. | Positive integer | `17` |
-| IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS | URL to connect to the blockchain node. | URL | `http://localhost:8545` |
-| IEXEC_HUB_ADDRESS | Proxy contract address to interact with the iExec on-chain protocol. | String | `0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002` |
-| IEXEC_GAS_PRICE_MULTIPLIER | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` |
-| IEXEC_GAS_PRICE_CAP | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` |
-| IEXEC_IS_SIDECHAIN | Define if iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `false` |
-| IEXEC_SMS_DISPLAY_DEBUG_SESSION | Whether to display TEE enclaves sessions configuration in SMS logs. | Boolean | `false` |
-| `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` |
-| `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | | `8081` | `8080` |
-| `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` |
-| `IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT`|  Secret provisioner server port for retrieving secrets from attested enclaves. | Positive integer | | `18765` | `4433` |
-| IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE | TEE enabled OCI image name for worker pre-compute stage of TEE tasks. | String | |
-| IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT | Fingerprint (aka mrenclave) of the TEE enabled worker pre-compute image. | String | |
-| IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB | Required heap size for a worker pre-compute enclave (in Giga Bytes). | Positive integer | `3` |
-| IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT | Command executed when starting a container from the TEE enabled worker pre-compute image. | String | | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
-| IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE | TEE enabled OCI image name for worker post-compute stage of TEE tasks. | String | |
-| IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT | Fingerprint (aka mrenclave) of the TEE enabled worker post-compute image. | String | |
-| IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB | Required heap size for a worker post-compute enclave (in Giga Bytes). | Positive integer | `3` |
-| IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT | Command executed when starting a container from the TEE enabled worker post-compute image. | String |  | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
+| Environment variable | Description | Type | Default Scone value |  Default Gramine value |
+| --- | --- | --- | --- | --- |
+| `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK` | Define which TEE framework this _iExec SMS_ supports. | `scone` or `gramine` | | |
+| `IEXEC_SMS_PORT` | Server HTTP port. | Positive integer | `13300` | `13300` |
+| `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/tmp/h2/sms-h2` |  `jdbc:h2:file:/tmp/h2/sms-h2` |
+| `IEXEC_SMS_H2_CONSOLE` | Whether to enable the H2 console. | Boolean | `false` | `false` |
+| `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` | `src/main/resources/iexec-sms-aes.key` |
+| `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `17` |  `17` |
+| `IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `http://localhost:8545` | `http://localhost:8545` |
+| `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002` | `0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002` |
+| `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` | `1.0` |
+| `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` | `22000000000` |
+| `IEXEC_IS_SIDECHAIN` | Define if iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `false` | `false` |
+| `IEXEC_SMS_DISPLAY_DEBUG_SESSION` | Whether to display TEE enclaves sessions configuration in SMS logs. | Boolean | `false` | `false` |
+| `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` | `localhost` |
+| `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | `8081` | `8080` |
+| `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` | `localhost` |
+| `IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT`|  Secret provisioner server port for retrieving secrets from attested enclaves. | Positive integer | `18765` | `4433` |
+| `IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage of TEE tasks. | String | | |
+| `IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT` | Fingerprint (aka mrenclave) of the TEE enabled worker pre-compute image. | String | | |
+| `IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB` | Required heap size for a worker pre-compute enclave (in Giga Bytes). | Positive integer | `3` | `3` |
+| `IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker pre-compute image. | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
+| `IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE` | TEE enabled OCI image name for worker post-compute stage of TEE tasks. | String | | |
+| `IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT` | Fingerprint (aka mrenclave) of the TEE enabled worker post-compute image. | String | | |
+| `IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB` | Required heap size for a worker post-compute enclave (in Giga Bytes). | Positive integer | `3` | `3` |
+| `IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image. | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
 
-### Scone specific environment variables (Scone framework only)
-Only set following properties if `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK=scone` is set.
-| Environment variable | Description | Type | Default value |
+### Scone specific environment variables
+| Environment variable | Description | Type | Default Scone value  |
 | --- | --- | --- | --- |
-| IEXEC_SMS_SSL_KEYSTORE | Path to the key store that holds the SSL certificate. | String | `src/main/resources/ssl-keystore-dev.p12` |
-| IEXEC_SMS_SSL_KEYSTORE_PASSWORD | Password used to access the key store. | String | `whatever` |
-| IEXEC_SMS_SSL_KEYSTORE_TYPE | Type of the key store. | Positive integer | `PKCS12` |
-| IEXEC_SMS_SSL_KEYSTORE_ALIAS | Alias that identifies the key in the key store. | String | `iexec-core` |
-| IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS | List of hardware or software Scone vulnerabilities to ignore. | String | |
-| IEXEC_IGNORED_SGX_ADVISORIES | List of hardware or software Intel vulnerabilities to ignore. | String | |
-| IEXEC_SMS_IMAGE_LAS_IMAGE | Scontain LAS OCI image to be used by workers to execute TEE tasks. LAS performs local attestation which creates a quote that CAS can verify. | String | |
+| `IEXEC_SMS_SSL_KEYSTORE` | Path to the key store that holds the SSL certificate. | String | `src/main/resources/ssl-keystore-dev.p12` |
+| `IEXEC_SMS_SSL_KEYSTORE_PASSWORD` | Password used to access the key store. | String | `whatever` |
+| `IEXEC_SMS_SSL_KEYSTORE_TYPE` | Type of the key store. | Positive integer | `PKCS12` |
+| `IEXEC_SMS_SSL_KEYSTORE_ALIAS` | Alias that identifies the key in the key store. | String | `iexec-core` |
+| `IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS` | List of hardware or software Scone vulnerabilities to ignore. | String | |
+| `IEXEC_IGNORED_SGX_ADVISORIES` | List of hardware or software Intel vulnerabilities to ignore. | String | |
+| `IEXEC_SMS_IMAGE_LAS_IMAGE` | Scontain LAS OCI image to be used by workers to execute TEE tasks. LAS performs local attestation which creates a quote that CAS can verify. | String | |
 
 
 ## Health checks
