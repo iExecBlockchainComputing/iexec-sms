@@ -32,7 +32,7 @@ To run properly, the _iExec Secret Management Service_ requires:
 * A Secret Provisioner instance, in charge of provisioning secrets to remote enclaves. Each TEE framework requires its own type of Secret Provisioner.
     * for Scone TEE tasks:
         * a Scontain _Configuration and Attestation Service_ (CAS).
-        * a valid OCI image configuration of a Scontain Local Attestation Service (LAS).
+        * a valid OCI image configuration of a Scontain _Local Attestation Service_ (LAS).
   This service will be deployed by an iExec Worker to compute TEE tasks.
     * for Gramine TEE tasks:
         * an _iExec SPS_ instance.
