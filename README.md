@@ -23,7 +23,7 @@ Two TEE frameworks for TEE tasks can be supported on the iExec platform:
 
 The _iExec Secret Management Service_ is available as an OCI image on [Docker Hub](https://hub.docker.com/r/iexechub/iexec-sms/tags).
 
-One _iExec Secret Management Service_ instance supports only one TEE framework kind of iExec TEE tasks.
+A single _iExec Secret Management Service_ instance supports a single TEE framework.
 To support both Scone and Gramine TEE tasks, two instances of _iExec SMS_ must be configured.
 
 To run properly, the _iExec Secret Management Service_ requires:
