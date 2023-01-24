@@ -4,7 +4,7 @@
 
 The _iExec Secret Management Service_ (SMS) stores user secrets and provisions them to authorized Trusted Execution Environment (TEE) applications running on the iExec network.
 
-Two TEE frameworks for TEE tasks can be supported on the iExec platform:
+Two TEE frameworks for TEE tasks are supported on the iExec platform:
 
 * Scone
 * Gramine
