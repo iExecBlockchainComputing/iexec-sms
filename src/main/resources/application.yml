@@ -1,5 +1,5 @@
 server:
-  port: ${IEXEC_SMS_PORT:13300} # TODO document variable name modification for release
+  port: ${IEXEC_SMS_PORT:13300}
 
 # Not sure it's a good idea but here is a link for an embedded mongodb
 # https://www.baeldung.com/spring-boot-embedded-mongodb
