@@ -34,7 +34,7 @@ To run properly, the _iExec Secret Management Service_ requires:
         * a Scontain _Configuration and Attestation Service_ (CAS).
         * a valid OCI image configuration of a Scontain _Local Attestation Service_ (LAS). This service will be deployed by an iExec Worker to compute TEE tasks.
     * for Gramine TEE tasks:
-        * an _iExec SPS_ instance.
+        * an _iExec Secret Provisioner Service_ (_iExec SPS_) instance.
 
 The _iExec Secret Management Service_ can be started locally for development purpose.
 It is not advised to use an instance with such configuration in production.
