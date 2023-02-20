@@ -17,7 +17,6 @@
 package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.tee.TeeFramework;
-import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
@@ -37,12 +36,9 @@ import java.util.List;
 public class GramineSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private final TeeServicesProperties teeServicesConfig;
 
-    public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService,
-                                      TeeServicesProperties teeServicesConfig) {
+    public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService) {
         this.secretSessionBaseService = secretSessionBaseService;
-        this.teeServicesConfig = teeServicesConfig;
     }
 
     /**
@@ -60,7 +56,8 @@ public class GramineSessionMakerService {
         GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
         GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
 
-        //TODO: Validate command-line arguments from the host (https://github.com/gramineproject/gsc/issues/13)
+        // TODO: Validate command-line arguments from the host
+        // (https://github.com/gramineproject/gsc/issues/13)
         gramineAppEnclave.setCommand("");
         graminePostEnclave.setCommand("");
         // TODO: Remove useless volumes when SPS is ready
