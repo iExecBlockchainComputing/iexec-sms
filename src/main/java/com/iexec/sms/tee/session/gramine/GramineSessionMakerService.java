@@ -58,10 +58,11 @@ public class GramineSessionMakerService {
         GramineSessionBuilder gramineSession = GramineSession.builder()
                 .session(request.getSessionId());
         GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
-        gramineAppEnclave.setCommand(request.getTaskDescription().getAppCommand());
         GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
-        graminePostEnclave.setCommand(teeServicesConfig.getPostComputeProperties().getEntrypoint());
 
+        //TODO: Validate command-line arguments from the host (https://github.com/gramineproject/gsc/issues/13)
+        gramineAppEnclave.setCommand("");
+        graminePostEnclave.setCommand("");
         // TODO: Remove useless volumes when SPS is ready
         gramineAppEnclave.setVolumes(List.of());
         graminePostEnclave.setVolumes(List.of());
