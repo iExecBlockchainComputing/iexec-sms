@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * Remove TLS context on server.
 * Remove `GET /secrets` endpoints.
 * Remove non-TEE workflow.
+* Remove enclave entrypoints from Gramine sessions since already present in manifests of applications.
 ### Quality
 * Refactor secret model.
 * Improve code quality.
