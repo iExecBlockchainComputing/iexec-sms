@@ -4,7 +4,7 @@
     {
       "name": "app",
       "mrenclave": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "command": "/apploader.sh args",
+      "command": "",
       "environment": {
         "IEXEC_TASK_ID": "taskId",
         "IEXEC_IN": "/iexec_in",
@@ -27,7 +27,7 @@
     {
       "name": "post-compute",
       "mrenclave": "mrEnclave3",
-      "command": "entrypoint3",
+      "command": "",
       "environment": {
         "RESULT_TASK_ID": "taskId",
         "RESULT_ENCRYPTION": "yes",
