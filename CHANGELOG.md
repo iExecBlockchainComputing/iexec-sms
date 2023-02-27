@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * Add `GET /up` client method in iexec-sms-library.
 * Return a same `SmsClient` from the `SmsClientProvider` of iexec-sms-library when calling a same SMS URL.
 * Add iExec banner at startup.
+* Show application version on banner.
 ### Bug Fixes
 * Update web3 secret challenge.
 * Remove TLS context on server.
