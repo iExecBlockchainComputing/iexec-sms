@@ -1,4 +1,4 @@
-FROM openjdk:11.0.15-jre-slim
+FROM openjdk:11.0.65-jre-slim
 
 ARG jar
 
