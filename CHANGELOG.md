@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 * Remove `GET /secrets` endpoints.
 * Remove non-TEE workflow.
 * Remove enclave entrypoints from Gramine sessions since already present in manifests of applications.
+* Update Scone transformation parameters to enable health checks in SMS in enclave.
 ### Quality
 * Refactor secret model.
 * Improve code quality.
