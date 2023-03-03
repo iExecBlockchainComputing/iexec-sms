@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [[8.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.0.0) 2023
+## [[8.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.0.0) 2023-03-03
 
 ### New Features
 * Support SMS in enclave for Scone TEE tasks.
@@ -12,7 +12,6 @@ All notable changes to this project will be documented in this file.
 * Add iExec banner at startup.
 * Show application version on banner.
 ### Bug Fixes
-* Update web3 secret challenge.
 * Remove TLS context on server.
 * Remove `GET /secrets` endpoints.
 * Remove non-TEE workflow.
