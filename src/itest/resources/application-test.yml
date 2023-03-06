@@ -1,21 +1,24 @@
-# Those `server` properties are needed so that a random port is chosen for the HTTP listener
-server:
-  http:
-    enabled: false
-  ssl:
-    enabled: false
-
 # Run database in-mem
 spring:
   datasource:
     url: jdbc:h2:mem:db
 
-# `TeeWorkflowConfiguration` needs some dummy value to be instantiated
-tee.workflow:
-  las-image: "none"
-  pre-compute:
-    image: "none"
-    fingerprint: "none"
-  post-compute:
-    image: "none"
-    fingerprint: "none"
+encryption:
+  # Will get previous key or else create one on this path
+  # this file shouldn't be clearly readable outside the enclave (but encrypted content could be copied outside)
+  aesKeyPath: src/test/resources/iexec-sms-aes.key
+
+tee:
+  worker:
+    pre-compute:
+      image: some
+      fingerprint: some
+      heap-size-gb: 3
+      entrypoint: some
+    post-compute:
+      image: some
+      fingerprint: some
+      heap-size-gb: 3
+      entrypoint: some
+  scone:
+    las-image: some

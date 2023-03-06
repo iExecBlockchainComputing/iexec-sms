@@ -1,0 +1,45 @@
+{
+  "session": "sessionId",
+  "enclaves": [
+    {
+      "name": "app",
+      "mrenclave": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "command": "",
+      "environment": {
+        "IEXEC_TASK_ID": "taskId",
+        "IEXEC_IN": "/iexec_in",
+        "IEXEC_OUT": "/iexec_out",
+
+        "IEXEC_DATASET_ADDRESS": "0xDatasetAddress",
+        "IEXEC_DATASET_FILENAME": "datasetName",
+
+        "IEXEC_BOT_SIZE": "1",
+        "IEXEC_BOT_FIRST_INDEX": "0",
+        "IEXEC_BOT_TASK_INDEX": "0",
+
+        "IEXEC_INPUT_FILES_FOLDER": "/iexec_in",
+        "IEXEC_INPUT_FILES_NUMBER": "2",
+        "IEXEC_INPUT_FILE_NAME_1": "file1",
+        "IEXEC_INPUT_FILE_NAME_2": "file2"
+      },
+      "volumes": []
+    },
+    {
+      "name": "post-compute",
+      "mrenclave": "mrEnclave3",
+      "command": "",
+      "environment": {
+        "RESULT_TASK_ID": "taskId",
+        "RESULT_ENCRYPTION": "yes",
+        "RESULT_ENCRYPTION_PUBLIC_KEY": "encryptionPublicKey",
+        "RESULT_STORAGE_PROVIDER": "ipfs",
+        "RESULT_STORAGE_PROXY": "storageProxy",
+        "RESULT_STORAGE_TOKEN": "storageToken",
+        "RESULT_STORAGE_CALLBACK": "no",
+        "RESULT_SIGN_WORKER_ADDRESS": "workerAddress",
+        "RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY": "teeChallengePrivateKey"
+      },
+      "volumes": []
+    }
+  ]
+}

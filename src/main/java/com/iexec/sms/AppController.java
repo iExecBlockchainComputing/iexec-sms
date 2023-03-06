@@ -26,6 +26,7 @@ import java.util.Date;
 @RestController
 public class AppController {
 
+    //TODO: Remove this endpoint, use actuator endpoints instead. Update client too.
     @GetMapping(value = "/up")
     public ResponseEntity<String> isUp() {
         String message = String.format("Up! (%s)", new Date());

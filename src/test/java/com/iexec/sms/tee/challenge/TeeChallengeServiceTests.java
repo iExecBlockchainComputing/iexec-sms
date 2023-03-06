@@ -36,9 +36,9 @@ import org.mockito.MockitoAnnotations;
 
 class TeeChallengeServiceTests {
 
-    private final static String TASK_ID = "0x123";
-    private final static String PLAIN_PRIVATE = "plainPrivate";
-    private final static String ENC_PRIVATE = "encPrivate";
+    private static final String TASK_ID = "0x123";
+    private static final String PLAIN_PRIVATE = "plainPrivate";
+    private static final String ENC_PRIVATE = "encPrivate";
 
     @Mock
     private TeeChallengeRepository teeChallengeRepository;

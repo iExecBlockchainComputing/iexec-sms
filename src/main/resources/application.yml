@@ -1,14 +1,5 @@
 server:
-  port: ${IEXEC_SMS_PORT:15443}
-  http:
-    enabled: ${IEXEC_SMS_HTTP_ENABLED:true}
-    port: ${IEXEC_SMS_HTTP_PORT:13300}
-  ssl:
-    key-store: ${IEXEC_SMS_SSL_KEYSTORE:./src/main/resources/ssl-keystore-dev.p12} #iexec-core dev certificate for dev
-    key-store-password: ${IEXEC_SMS_SSL_KEYSTORE_PASSWORD:whatever}
-    key-store-type: ${IEXEC_SMS_SSL_KEYSTORE_TYPE:PKCS12}
-    key-alias: ${IEXEC_SMS_SSL_KEYSTORE_ALIAS:iexec-core}
-    client-auth: need
+  port: ${IEXEC_SMS_PORT:13300}
 
 # Not sure it's a good idea but here is a link for an embedded mongodb
 # https://www.baeldung.com/spring-boot-embedded-mongodb
@@ -22,8 +13,10 @@ server:
 
 # Embedded H2 inside JVM
 spring:
+  profiles:
+    active: ${IEXEC_SMS_TEE_RUNTIME_FRAMEWORK:} # gramine/scone
   datasource:
-    url: ${IEXEC_SMS_H2_URL:jdbc:h2:file:/tmp/h2/sms-h2} # will get or create /tmp/h2/sms-h2.mv.db
+    url: ${IEXEC_SMS_H2_URL:jdbc:h2:file:/data/sms-h2} # will get or create /data/sms-h2.mv.db
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -39,40 +32,15 @@ spring:
 encryption:
   # Will get previous key or else create one on this path
   # this file shouldn't be clearly readable outside the enclave (but encrypted content could be copied outside)
-  aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:./src/main/resources/iexec-sms-aes.key} # /scone/iexec-sms-aes.key
+  aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/data/iexec-sms-aes.key}
 
 blockchain:
   id: ${IEXEC_CHAIN_ID:17}
   node-address: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:http://localhost:8545}
   hub-address: ${IEXEC_HUB_ADDRESS:0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002}
-  gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means super fast
+  gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
   is-sidechain: ${IEXEC_IS_SIDECHAIN:false}
-
-scone:
-  cas:
-    host: ${IEXEC_SCONE_CAS_HOST:localhost}
-    port: ${IEXEC_SCONE_CAS_PORT:8081}
-    public-host: ${IEXEC_SCONE_CAS_PUBLIC_HOST:localhost}
-    enclave-port: ${IEXEC_SCONE_CAS_ENCLAVE_PORT:18765}
-    palaemon: ${IEXEC_PALAEMON_TEMPLATE:./src/main/resources/palaemonTemplate.vm}
-  attestation:
-    tolerated-insecure-options: ${IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS:} # e.g.: hyperthreading,software-hardening-needed,insecure-igpu,outdated-tcb,debug-mode
-    ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270
-
-# TODO /!\ remove the option of env variable for releases.
-tee.workflow:
-  las-image: ${IEXEC_SMS_IMAGE_LAS_IMAGE:} # e.g.: registry.scontain.com:5050/scone-production/iexec-las:x.y.z
-  pre-compute:
-    image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
-    fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
-    heap-size-gb: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB:4}
-    entrypoint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
-  post-compute:
-      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-post-compute:x.y.z-production
-      fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
-      heap-size-gb: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB:4}
-      entrypoint: ${IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
 
 logging:
   tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}

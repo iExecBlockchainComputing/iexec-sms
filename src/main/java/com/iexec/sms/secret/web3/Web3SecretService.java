@@ -36,33 +36,44 @@ public class Web3SecretService extends AbstractSecretService {
         this.web3SecretRepository = web3SecretRepository;
     }
 
-    public Optional<Web3Secret> getSecret(String secretAddress, boolean shouldDecryptValue) {
-        secretAddress = secretAddress.toLowerCase();
-        Optional<Web3Secret> secret = web3SecretRepository.findWeb3SecretByAddress(secretAddress);
-        if (secret.isEmpty()) {
-            return Optional.empty();
-        }
-        if (shouldDecryptValue) {
-            decryptSecret(secret.get());
-        }
-        return secret;
+    /**
+     * Get the secret as it was saved in DB.
+     * Its value should then be encrypted.
+     *
+     * @param secretAddress Address of the secret.
+     * @return An empty {@link Optional} if no secret is found,
+     * an {@link Optional} containing the secret if it exists.
+     */
+    Optional<Web3Secret> getSecret(String secretAddress) {
+        return web3SecretRepository.findById(new Web3SecretHeader(secretAddress));
     }
 
-    public Optional<Web3Secret> getSecret(String secretAddress) {
-        return getSecret(secretAddress, false);
+    public Optional<String> getDecryptedValue(String secretAddress) {
+        return getSecret(secretAddress)
+                .map(secret -> encryptionService.decrypt(secret.getValue()));
+    }
+
+    public boolean isSecretPresent(String secretAddress) {
+        return getSecret(secretAddress).isPresent();
     }
 
     /*
      *
      * Stores encrypted secrets
      * */
-    public void addSecret(String secretAddress, String secretValue) {
-        secretAddress = secretAddress.toLowerCase();
-        Web3Secret web3Secret = new Web3Secret(secretAddress, secretValue);
-        encryptSecret(web3Secret);
+    public boolean addSecret(String secretAddress, String secretValue) {
+        if (isSecretPresent(secretAddress)) {
+            log.error("Secret already exists [secretAddress:{}]", secretAddress);
+            return false;
+        }
+
+        final String encryptedValue = encryptionService.encrypt(secretValue);
         log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
-                secretAddress, web3Secret.getValue());
+                secretAddress, encryptedValue);
+
+        final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         web3SecretRepository.save(web3Secret);
+        return true;
     }
 
 }

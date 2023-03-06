@@ -112,25 +112,6 @@ public class AuthorizationService {
         return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
     }
 
-    public String getChallengeForGetWeb3Secret(String secretAddress) {
-        return HashUtils.concatenateAndHash(
-                DOMAIN,
-                secretAddress);
-    }
-
-    /*
-    *  Note - These are equals:
-    *  BytesUtils.bytesToString(Hash.sha3(DOMAIN.getBytes())
-    *  Hash.sha3String(DOMAIN)
-    * */
-    public String getChallengeForGetWeb2Secret(String ownerAddress,
-                                               String secretKey) {
-        return HashUtils.concatenateAndHash(
-                Hash.sha3String(DOMAIN),
-                ownerAddress,
-                Hash.sha3String(secretKey));
-    }
-
     public String getChallengeForSetWeb3Secret(String secretAddress,
                                                String secretValue) {
         return HashUtils.concatenateAndHash(

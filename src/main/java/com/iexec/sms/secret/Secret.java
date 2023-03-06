@@ -16,70 +16,33 @@
 
 package com.iexec.sms.secret;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.util.Objects;
 
-@Data
+@MappedSuperclass
 @Getter
-@AllArgsConstructor
-@Entity
-@NoArgsConstructor
-public class Secret {
-
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    private String id;
-
-    private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public abstract class Secret {
     @Column(columnDefinition = "LONGTEXT")
     private String value;
-    private boolean isEncryptedValue;
-
-    /* Clear secrets at construction */
-    public Secret(String address, String value) {
-        this.address = address;
-        this.setValue(value, false);
-    }
-
-    public void setValue(String value, boolean isEncryptedValue) {
-        this.value = value;
-        this.isEncryptedValue = isEncryptedValue;
-    }
 
     /**
-     * Get the secret value without possible leading or trailing
+     * Create the secret without possible leading or trailing
      * newline characters. This should be used when putting
      * the secret in the palaemon session. We decided to handle
      * this specific case because it has a good probability to occur
      * (when reading the secret from a file and uploading it to the
      * SMS without any trimming) and it can break the workflow even
      * though everything is correctly setup.
-     * 
-     * @return trimmed secret value
      */
-    public String getTrimmedValue() {
-        Objects.requireNonNull(this.value, "Secret value must not be null");
-        return this.value.trim();
-    }
-
-    @Override
-    public String toString() {
-        return "Secret{" +
-                "id='" + id + '\'' +
-                ", address='" + address + '\'' +
-                ", value='" + (isEncryptedValue ? value : "<plain text value>") + '\'' +
-                ", isEncryptedValue=" + isEncryptedValue +
-                '}';
+    protected Secret(String value) {
+        Objects.requireNonNull(value, "Secret value must not be null");
+        this.value = value.trim();
     }
 }
 

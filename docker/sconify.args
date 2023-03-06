@@ -1,0 +1,12 @@
+--verbose \
+--name=iexec-sms \
+--base=${IMG_FROM} \
+--from=${IMG_FROM} \
+--to=${IMG_TO} \
+--binary=/usr/local/openjdk-11/bin/java \
+--heap="8G" \
+--stack="8M" \
+--binary-fs \
+--fs-dir=/app \
+--host-path=/etc/hosts \
+--host-path=/etc/resolv.conf \

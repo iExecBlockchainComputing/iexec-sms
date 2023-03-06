@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.0.0) 2023-03-06
+
+### New Features
+* Support SMS in enclave for Scone TEE tasks.
+* Support Gramine framework for TEE tasks.
+* Add `GET /up` client method in iexec-sms-library.
+* Return a same `SmsClient` from the `SmsClientProvider` of iexec-sms-library when calling a same SMS URL.
+* Add iExec banner at startup.
+* Show application version on banner.
+### Bug Fixes
+* Remove TLS context on server.
+* Remove `GET /secrets` endpoints.
+* Remove non-TEE workflow.
+* Remove enclave entrypoints from Gramine sessions since already present in manifests of applications.
+* Update Scone transformation parameters to enable health checks in SMS in enclave.
+### Quality
+* Refactor secret model.
+* Improve code quality.
+### Dependency Upgrades
+* Upgrade to Spring Boot 2.6.14.
+* Upgrade to Gradle 7.6.
+* Upgrade OkHttp to 4.9.0.
+* Upgrade to Java 11.0.16 patch.
+* Upgrade to `iexec-common` 7.0.0.
+* Upgrade to `jenkins-library` 2.4.0.
+
 ## [[7.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v7.3.0) 2023-01-18
 
 * Add endpoint to allow health checks.

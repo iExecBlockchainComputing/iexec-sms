@@ -21,6 +21,7 @@ import com.iexec.common.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.api.SmsClientBuilder;
+import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
 import feign.Logger;
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 import org.web3j.crypto.Hash;
 
 import java.util.Date;
@@ -44,10 +46,13 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
+import static com.iexec.sms.MockChainConfiguration.MOCK_CHAIN_PROFILE;
+import static com.iexec.sms.MockTeeConfiguration.MOCK_TEE_PROFILE;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
+@ActiveProfiles({MOCK_TEE_PROFILE, MOCK_CHAIN_PROFILE, "test"})
 public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS = "0xABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
@@ -66,6 +71,9 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @Autowired
     private TeeTaskComputeSecretRepository repository;
 
+    @Autowired
+    private IexecHubService iexecHubService;
+
     /*
      * Generate random ASCII from seed for re-testability.
      * See also {@link org.apache.commons.lang3.RandomStringUtils#randomAscii(int)}
@@ -83,7 +91,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     }
 
     @BeforeEach
-    private void setUp() {
+    public void setUp() {
         apiClient = SmsClientBuilder.getInstance(Logger.Level.FULL, "http://localhost:" + randomServerPort);
         final Ownable appContract = mock(Ownable.class);
         when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
@@ -137,9 +145,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             Assertions.fail("An app developer secret was expected but none has been retrieved.");
             return;
         }
-        Assertions.assertThat(appDeveloperSecret.get().getId()).isNotBlank();
-        Assertions.assertThat(appDeveloperSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
-        Assertions.assertThat(appDeveloperSecret.get().getKey()).isEqualTo(appDeveloperSecretIndex);
+        Assertions.assertThat(appDeveloperSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
+        Assertions.assertThat(appDeveloperSecret.get().getHeader().getKey()).isEqualTo(appDeveloperSecretIndex);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
@@ -160,9 +167,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             Assertions.fail("An app requester secret was expected but none has been retrieved.");
             return;
         }
-        Assertions.assertThat(requesterSecret.get().getId()).isNotBlank();
-        Assertions.assertThat(requesterSecret.get().getOnChainObjectAddress()).isEqualToIgnoringCase("");
-        Assertions.assertThat(requesterSecret.get().getKey()).isEqualTo(requesterSecretKey);
+        Assertions.assertThat(requesterSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase("");
+        Assertions.assertThat(requesterSecret.get().getHeader().getKey()).isEqualTo(requesterSecretKey);
         Assertions.assertThat(requesterSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(requesterSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
@@ -204,7 +210,12 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         }
         Assertions.assertThat(repository.count()).isEqualTo(keys.size());
         List<TeeTaskComputeSecret> secrets = repository.findAll();
-        Assertions.assertThat(secrets.stream().map(TeeTaskComputeSecret::getKey).collect(Collectors.toList()))
+        final List<String> retrievedKeys = secrets
+                .stream()
+                .map(TeeTaskComputeSecret::getHeader)
+                .map(TeeTaskComputeSecretHeader::getKey)
+                .collect(Collectors.toList());
+        Assertions.assertThat(retrievedKeys)
                 .containsExactlyInAnyOrder("secret-key-1", "secret-key-2", "secret-key-3");
 
     }

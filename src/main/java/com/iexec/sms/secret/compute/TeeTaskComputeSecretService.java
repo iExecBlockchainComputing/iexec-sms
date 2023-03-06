@@ -18,9 +18,6 @@ package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.SerializationUtils;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -48,28 +45,21 @@ public class TeeTaskComputeSecretService {
             SecretOwnerRole secretOwnerRole,
             String secretOwner,
             String secretKey) {
-        onChainObjectAddress = onChainObjectAddress.toLowerCase();
-        final TeeTaskComputeSecret wantedSecret = TeeTaskComputeSecret
-                .builder()
-                .onChainObjectType(onChainObjectType)
-                .onChainObjectAddress(onChainObjectAddress)
-                .secretOwnerRole(secretOwnerRole)
-                .fixedSecretOwner(secretOwner)
-                .key(secretKey)
-                .build();
-        final ExampleMatcher exampleMatcher = ExampleMatcher.matching()
-                .withIgnorePaths("value");
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
+                onChainObjectType,
+                onChainObjectAddress,
+                secretOwnerRole,
+                secretOwner,
+                secretKey
+        );
         final Optional<TeeTaskComputeSecret> oSecret = teeTaskComputeSecretRepository
-                .findOne(Example.of(wantedSecret, exampleMatcher));
+                .findById(header);
         if (oSecret.isEmpty()) {
             return Optional.empty();
         }
         final TeeTaskComputeSecret secret = oSecret.get();
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
-        // deep copy to avoid altering original object
-        //TODO: Improve this out-of-the box cloning to get better performances
-        TeeTaskComputeSecret decryptedSecret = SerializationUtils.clone(secret);
-        decryptedSecret.setValue(decryptedValue);
+        TeeTaskComputeSecret decryptedSecret = secret.withValue(decryptedValue);
         return Optional.of(decryptedSecret);
     }
 
@@ -116,7 +106,6 @@ public class TeeTaskComputeSecretService {
                     " [secret:{}]", secret);
             return false;
         }
-        onChainObjectAddress = onChainObjectAddress.toLowerCase();
         final TeeTaskComputeSecret secret = TeeTaskComputeSecret
                 .builder()
                 .onChainObjectType(onChainObjectType)

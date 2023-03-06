@@ -17,9 +17,9 @@
 package com.iexec.sms.api;
 
 import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.sms.secret.SmsSecretResponse;
-import com.iexec.common.tee.TeeWorkflowSharedConfiguration;
+import com.iexec.common.tee.TeeFramework;
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -34,6 +34,10 @@ import java.util.List;
  */
 public interface SmsClient {
 
+    @RequestLine("GET /up")
+    String isUp();
+
+    // region Secrets
     @RequestLine("POST /apps/{appAddress}/secrets/1")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
@@ -48,9 +52,6 @@ public interface SmsClient {
             @Param("appAddress") String appAddress,
             @Param("secretIndex") String secretIndex
     );
-
-    @RequestLine("GET /cas/url")
-    String getSconeCasUrl();
 
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")
     @Headers("Authorization: {authorization}")
@@ -67,6 +68,12 @@ public interface SmsClient {
             @Param("secretKey") String secretKey
     );
 
+    @RequestLine("HEAD /secrets/web2?ownerAddress={ownerAddress}&secretName={secretName}")
+    void isWeb2SecretSet(
+            @Param("ownerAddress") String ownerAddress,
+            @Param("secretName") String secretName
+    );
+
     @RequestLine("POST /secrets/web2?ownerAddress={ownerAddress}&secretName={secretName}")
     @Headers("Authorization: {authorization}")
     String setWeb2Secret(
@@ -76,6 +83,20 @@ public interface SmsClient {
             String secretValue
     );
 
+    @RequestLine("PUT /secrets/web2?ownerAddress={ownerAddress}&secretName={secretName}")
+    @Headers("Authorization: {authorization}")
+    String updateWeb2Secret(
+            @Param("authorization") String authorization,
+            @Param("ownerAddress") String ownerAddress,
+            @Param("secretName") String secretName,
+            String secretValue
+    );
+
+    @RequestLine("HEAD /secrets/web3?secretAddress={secretAddress}")
+    void isWeb3SecretSet(
+            @Param("secretAddress") String secretAddress
+    );
+
     @RequestLine("POST /secrets/web3?secretAddress={secretAddress}")
     @Headers("Authorization: {authorization}")
     String setWeb3Secret(
@@ -83,25 +104,23 @@ public interface SmsClient {
             @Param("secretAddress") String secretAddress,
             String secretValue
     );
+    // endregion
 
+    // region TEE
     @RequestLine("POST /tee/challenges/{chainTaskId}")
     String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")
-    ApiResponseBody<String, TeeSessionGenerationError> generateTeeSession(
+    ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> generateTeeSession(
             @Param("authorization") String authorization,
             WorkerpoolAuthorization workerpoolAuthorization
     );
 
-    @RequestLine("GET /tee/workflow/config")
-    TeeWorkflowSharedConfiguration getTeeWorkflowConfiguration();
+    @RequestLine("GET /tee/framework")
+    TeeFramework getTeeFramework();
 
-    @RequestLine("POST /untee/secrets")
-    @Headers("Authorization: {authorization}")
-    SmsSecretResponse getUnTeeSecrets(
-            @Param("authorization") String authorization,
-            WorkerpoolAuthorization workerpoolAuthorization
-    );
-
+    @RequestLine("GET /tee/properties/{teeFramework}")
+    <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
+    // endregion
 }

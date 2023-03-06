@@ -16,13 +16,8 @@
 
 package com.iexec.sms.secret.web3;
 
-
 import org.springframework.data.repository.CrudRepository;
 
-import java.util.Optional;
-
-public interface Web3SecretRepository extends CrudRepository<Web3Secret, String> {
-
-    Optional<Web3Secret> findWeb3SecretByAddress(String secretAddress);
+public interface Web3SecretRepository extends CrudRepository<Web3Secret, Web3SecretHeader> {
 
 }
