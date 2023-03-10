@@ -76,6 +76,9 @@ dependencies {
     // It is required to define the dependency version required by web3j until migration to at least Spring Boot 2.7.X
     implementation 'com.squareup.okhttp3:okhttp:4.9.0' // Web3j issue: https://github.com/web3j/web3j/issues/1180
 
+    // observability
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
     // velocity for templating
     implementation 'org.apache.velocity:velocity-engine-core:2.0'
 
