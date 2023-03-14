@@ -9,7 +9,7 @@ plugins {
 }
 
 ext {
-    openFeignVersion = '11.7'
+    openFeignVersion = '11.10'
 }
 
 if (!project.hasProperty('gitBranch')) {
@@ -100,7 +100,6 @@ dependencies {
     testImplementation 'org.testcontainers:mongodb:1.16.0'
 
     // feign
-    implementation "io.github.openfeign:feign-core:$openFeignVersion"
     implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
     implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
 }
