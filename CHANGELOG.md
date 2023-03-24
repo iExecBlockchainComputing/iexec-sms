@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 * Enable Prometheus actuator. (#166)
+### Bug Fixes
+* Remove unused dependencies. (#168)
 ### Dependency Upgrades
 * Upgrade to `feign` 11.10. (#167)
 
