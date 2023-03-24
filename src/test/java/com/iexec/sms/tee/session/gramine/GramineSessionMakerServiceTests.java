@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.testcontainers.shaded.org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.Yaml;
 
 import java.util.Map;
 
