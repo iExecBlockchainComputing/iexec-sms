@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.iexec.sms.tee.session;
 
-import com.iexec.common.task.TaskDescription;
-import com.iexec.common.tee.TeeFramework;
+import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;

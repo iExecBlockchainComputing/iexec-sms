@@ -52,6 +52,7 @@ configurations {
 
 dependencies {
     // iexec
+    implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
     implementation project(':iexec-sms-library')
 
