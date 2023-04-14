@@ -5,11 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
 
 ### New Features
-* Enable Prometheus actuator. (#166)
+- Enable Prometheus actuator. (#166)
 ### Bug Fixes
-* Remove unused dependencies. (#168)
+- Remove unused dependencies. (#168)
 ### Dependency Upgrades
-* Upgrade to `feign` 11.10. (#167)
+- Upgrade to `feign` 11.10. (#167)
+- Upgrade to `iexec-common` 8.0.0. (#169)
+- Upgrade to `iexec-commons-poco` 1.0.2. (#169)
 
 ## [[8.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.0.0) 2023-03-06
 
