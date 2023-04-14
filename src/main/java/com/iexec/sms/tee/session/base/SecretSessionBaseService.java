@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package com.iexec.sms.tee.session.base;
 
-import com.iexec.common.task.TaskDescription;
-import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
+import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
@@ -40,10 +40,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.iexec.common.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
-import static com.iexec.common.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.common.worker.result.ResultUtils.*;
+import static com.iexec.commons.poco.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
+import static com.iexec.commons.poco.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package com.iexec.sms.authorization;
 
-import com.iexec.common.chain.ChainDeal;
-import com.iexec.common.chain.ChainTask;
-import com.iexec.common.chain.WorkerpoolAuthorization;
-import com.iexec.common.security.Signature;
-import com.iexec.common.utils.TestUtils;
+import com.iexec.commons.poco.chain.ChainDeal;
+import com.iexec.commons.poco.chain.ChainTask;
+import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
+import com.iexec.commons.poco.security.Signature;
+import com.iexec.commons.poco.utils.TestUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,8 +31,8 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
-import static com.iexec.common.chain.ChainTaskStatus.ACTIVE;
-import static com.iexec.common.chain.ChainTaskStatus.UNSET;
+import static com.iexec.commons.poco.chain.ChainTaskStatus.ACTIVE;
+import static com.iexec.commons.poco.chain.ChainTaskStatus.UNSET;
 import static com.iexec.sms.authorization.AuthorizationError.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;

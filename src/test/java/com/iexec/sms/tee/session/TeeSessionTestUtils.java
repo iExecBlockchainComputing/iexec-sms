@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.common.precompute.PreComputeUtils;
-import com.iexec.common.task.TaskDescription;
-import com.iexec.common.tee.TeeEnclaveConfiguration;
 import com.iexec.common.utils.IexecEnvUtils;
+import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
