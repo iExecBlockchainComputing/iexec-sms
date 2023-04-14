@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Dependency Upgrades
 - Upgrade to `feign` 11.10. (#167)
 - Upgrade to `iexec-common` 8.0.0. (#169)
-- Upgrade to `iexec-commons-poco` 1.0.2. (#169)
+- Add new `iexec-commons-poco` 1.0.2 dependency. (#169)
 
 ## [[8.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.0.0) 2023-03-06
 
