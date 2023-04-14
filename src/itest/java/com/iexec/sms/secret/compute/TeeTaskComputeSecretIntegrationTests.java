@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.iexec.sms.secret.compute;
 
-import com.iexec.common.contract.generated.Ownable;
-import com.iexec.common.utils.HashUtils;
+import com.iexec.commons.poco.contract.generated.Ownable;
+import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.api.SmsClientBuilder;
@@ -45,7 +45,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import static com.iexec.common.utils.SignatureUtils.signMessageHashAndGetSignature;
+import static com.iexec.commons.poco.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static com.iexec.sms.MockChainConfiguration.MOCK_CHAIN_PROFILE;
 import static com.iexec.sms.MockTeeConfiguration.MOCK_TEE_PROFILE;
 import static org.mockito.Mockito.mock;
