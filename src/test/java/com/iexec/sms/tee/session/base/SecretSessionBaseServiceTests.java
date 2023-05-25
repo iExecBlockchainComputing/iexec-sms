@@ -185,7 +185,7 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IS_DATASET_REQUIRED", true);
         expectedTokens.put("IEXEC_DATASET_KEY", DATASET_KEY);
         expectedTokens.put("IEXEC_DATASET_URL", DATASET_URL);
-        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_NAME);
+        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_ADDRESS);
         expectedTokens.put("IEXEC_DATASET_CHECKSUM", DATASET_CHECKSUM);
         expectedTokens.put("IEXEC_INPUT_FILES_FOLDER", "/iexec_in");
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
@@ -243,7 +243,7 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_IN", "/iexec_in");
         expectedTokens.put("IEXEC_OUT", "/iexec_out");
         expectedTokens.put("IEXEC_DATASET_ADDRESS", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_NAME);
+        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_ADDRESS);
         expectedTokens.put("IEXEC_BOT_SIZE", "1");
         expectedTokens.put("IEXEC_BOT_FIRST_INDEX", "0");
         expectedTokens.put("IEXEC_BOT_TASK_INDEX", "0");
@@ -306,7 +306,7 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_IN", "/iexec_in");
         expectedTokens.put("IEXEC_OUT", "/iexec_out");
         expectedTokens.put("IEXEC_DATASET_ADDRESS", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_NAME);
+        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_ADDRESS);
         expectedTokens.put("IEXEC_BOT_SIZE", "1");
         expectedTokens.put("IEXEC_BOT_FIRST_INDEX", "0");
         expectedTokens.put("IEXEC_BOT_TASK_INDEX", "0");
