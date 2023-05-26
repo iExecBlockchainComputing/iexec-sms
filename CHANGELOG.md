@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Enable Prometheus actuator. (#166)
 ### Bug Fixes
 - Remove unused dependencies. (#168)
+- Use DatasetAddress in `IEXEC_DATASET_FILENAME` environment variable. (#172)
 ### Dependency Upgrades
 - Upgrade to `feign` 11.10. (#167)
 - Upgrade to `iexec-common` 8.1.0-NEXT-SNAPSHOT. (#169 #170 #171)
