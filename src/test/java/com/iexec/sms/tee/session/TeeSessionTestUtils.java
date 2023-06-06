@@ -110,7 +110,7 @@ public class TeeSessionTestUtils {
                 .build();
     }
 
-    public static TaskDescription createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
+    public static TaskDescription.TaskDescriptionBuilder createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
         String appAddress = createEthereumAddress();
         String requesterAddress = createEthereumAddress();
         String beneficiaryAddress = createEthereumAddress();
@@ -133,8 +133,7 @@ public class TeeSessionTestUtils {
                 .secrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2))
                 .botSize(1)
                 .botFirstIndex(0)
-                .botIndex(0)
-                .build();
+                .botIndex(0);
     }
 
     public static Map<String, Object> getPreComputeTokens() {

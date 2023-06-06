@@ -60,7 +60,7 @@ class GramineSessionHandlerServiceTests {
     @Test
     void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
-        TaskDescription taskDescription = mock(TaskDescription.class);
+        TaskDescription taskDescription = TaskDescription.builder().build();
         when(request.getTaskDescription()).thenReturn(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
@@ -92,7 +92,7 @@ class GramineSessionHandlerServiceTests {
     void shouldNotBuildAndPostSessionSincePostSessionFailed()
             throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
-        TaskDescription taskDescription = mock(TaskDescription.class);
+        TaskDescription taskDescription = TaskDescription.builder().build();
         when(request.getTaskDescription()).thenReturn(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
