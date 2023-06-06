@@ -38,6 +38,7 @@ blockchain:
   id: ${IEXEC_CHAIN_ID:17}
   node-address: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:http://localhost:8545}
   hub-address: ${IEXEC_HUB_ADDRESS:0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002}
+  block-time: ${IEXEC_BLOCK_TIME:PT5S}
   gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
   is-sidechain: ${IEXEC_IS_SIDECHAIN:false}

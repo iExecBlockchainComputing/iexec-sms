@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 @Component
 @Getter
 @AllArgsConstructor
@@ -36,6 +38,9 @@ public class BlockchainConfig {
 
     @Value("${blockchain.hub-address}")
     private String hubAddress;
+
+    @Value("${blockchain.block-time}")
+    private Duration blockTime;
 
     @Value("${blockchain.gas-price-multiplier}")
     private float gasPriceMultiplier;
