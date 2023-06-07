@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.1.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.0) 2023-06-07
+
+### New Features
+- Enable Prometheus actuator. (#166)
+### Bug Fixes
+- Remove unused dependencies. (#168)
+- Use DatasetAddress in `IEXEC_DATASET_FILENAME` environment variable. (#172)
+### Dependency Upgrades
+- Upgrade to `feign` 11.10. (#167)
+- Upgrade to `iexec-common` 8.2.0. (#169 #170 #171 #173)
+- Add new `iexec-commons-poco` 3.0.2 dependency. (#169 #170 #171 #173)
+
 ## [[8.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.0.0) 2023-03-06
 
 ### New Features

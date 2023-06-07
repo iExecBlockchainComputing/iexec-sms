@@ -9,7 +9,7 @@ plugins {
 }
 
 ext {
-    openFeignVersion = '11.7'
+    openFeignVersion = '11.10'
 }
 
 if (!project.hasProperty('gitBranch')) {
@@ -52,6 +52,7 @@ configurations {
 
 dependencies {
     // iexec
+    implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
     implementation project(':iexec-sms-library')
 
@@ -76,28 +77,15 @@ dependencies {
     // It is required to define the dependency version required by web3j until migration to at least Spring Boot 2.7.X
     implementation 'com.squareup.okhttp3:okhttp:4.9.0' // Web3j issue: https://github.com/web3j/web3j/issues/1180
 
-    // velocity for templating
-    implementation 'org.apache.velocity:velocity-engine-core:2.0'
-
-    // MongoDB
-    //implementation "org.springframework.boot:spring-boot-starter-data-mongodb"
-    //implementation 'org.springframework.boot:spring-boot-starter'
-    //testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // observability
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
     // test
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation 'org.springframework.security:spring-security-test'
-    // testImplementation 'org.mockito:mockito-inline:2.13.0' // activates mocking final classes/methods
-
-    // test containers
-    testImplementation 'org.testcontainers:junit-jupiter:1.16.0'
-    testImplementation 'org.testcontainers:testcontainers:1.16.0'
-    testImplementation 'org.testcontainers:mongodb:1.16.0'
 
     // feign
-    implementation "io.github.openfeign:feign-core:$openFeignVersion"
     implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
     implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
 }
