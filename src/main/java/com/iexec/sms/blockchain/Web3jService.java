@@ -24,7 +24,7 @@ public class Web3jService extends Web3jAbstractService {
 
     public Web3jService(BlockchainConfig blockchainConfig) {
         super(
-                blockchainConfig.getChainId(),
+                blockchainConfig.getId(),
                 blockchainConfig.getNodeAddress(),
                 blockchainConfig.getBlockTime(),
                 blockchainConfig.getGasPriceMultiplier(),

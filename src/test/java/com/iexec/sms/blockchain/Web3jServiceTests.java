@@ -23,6 +23,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -30,8 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = {
         "blockchain.id=134",
         "blockchain.is-sidechain=true",
-        "blockchain.node-ddress=https://bellecour.iex.ec",
-        "blockchain.hub-ddress=0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f",
+        "blockchain.node-address=https://bellecour.iex.ec",
+        "blockchain.hub-address=0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f",
         "blockchain.block-time=PT5S",
         "blockchain.gas-price-multiplier=1.0",
         "blockchain.gas-price-cap=22000000000" })
@@ -39,6 +41,15 @@ class Web3jServiceTests {
     @Autowired
     private BlockchainConfig blockchainConfig;
 
+    @Test
+    void checkBlockchainConfig() {
+        BlockchainConfig expectedConfig = new BlockchainConfig(
+                134, true, "https://bellecour.iex.ec",
+                "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f", Duration.ofSeconds(5),
+                1.0f, 22_000_000_000L
+        );
+        assertThat(blockchainConfig).isEqualTo(expectedConfig);
+    }
     @Test
     void shouldCreateInstance() {
         assertThat(new Web3jService(blockchainConfig)).isNotNull();

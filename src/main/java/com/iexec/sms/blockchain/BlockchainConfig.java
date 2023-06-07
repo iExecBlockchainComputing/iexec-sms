@@ -26,11 +26,11 @@ import java.time.Duration;
 @ConstructorBinding
 @ConfigurationProperties(prefix = "blockchain")
 public class BlockchainConfig {
-    int chainId;
+    int id;
+    boolean isSidechain;
     String nodeAddress;
     String hubAddress;
     Duration blockTime;
     float gasPriceMultiplier;
     long gasPriceCap;
-    boolean isSidechain;
 }
