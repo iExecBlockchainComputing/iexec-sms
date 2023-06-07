@@ -52,12 +52,13 @@ To support:
 | `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/tmp/h2/sms-h2` |  `jdbc:h2:file:/tmp/h2/sms-h2` |
 | `IEXEC_SMS_H2_CONSOLE` | Whether to enable the H2 console. | Boolean | `false` | `false` |
 | `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` | `src/main/resources/iexec-sms-aes.key` |
-| `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `17` |  `17` |
-| `IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `http://localhost:8545` | `http://localhost:8545` |
-| `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002` | `0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002` |
+| `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `134` |  `134` |
+| `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `true` | `true` |
+| `IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` | `https://bellecour.iex.ec` |
+| `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` |
+| `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` | `PT5S` |
 | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` | `1.0` |
 | `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` | `22000000000` |
-| `IEXEC_IS_SIDECHAIN` | Define if iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `false` | `false` |
 | `IEXEC_SMS_DISPLAY_DEBUG_SESSION` | Whether to display TEE enclaves sessions configuration in SMS logs. | Boolean | `false` | `false` |
 | `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` | `localhost` |
 | `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | `8081` | `8080` |
@@ -89,3 +90,7 @@ To support:
 A health endpoint (`/actuator/health`) is enabled by default and can be accessed on the `IEXEC_SMS_PORT`.
 This endpoint allows to define health checks in an orchestrator or a [compose file](https://github.com/compose-spec/compose-spec/blob/master/spec.md#healthcheck).
 No default strategy has been implemented in the [Dockerfile](Dockerfile) at the moment.
+
+## License
+
+This repository code is released under the [Apache License 2.0](LICENSE).

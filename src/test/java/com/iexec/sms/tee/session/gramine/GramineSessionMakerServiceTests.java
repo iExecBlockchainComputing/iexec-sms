@@ -64,7 +64,7 @@ class GramineSessionMakerServiceTests {
         TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
                 .fingerprint(APP_FINGERPRINT)
                 .build();
-        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
+        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
         when(postComputeProperties.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
         when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);

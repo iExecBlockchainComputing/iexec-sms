@@ -63,7 +63,7 @@ class SconeSessionHandlerServiceTests {
     void shouldBuildAndPostSessionWithLogs(CapturedOutput output)
             throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
-        TaskDescription taskDescription = mock(TaskDescription.class);
+        TaskDescription taskDescription = TaskDescription.builder().build();
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn("sessionContent");
@@ -86,7 +86,7 @@ class SconeSessionHandlerServiceTests {
     void shouldBuildAndPostSessionWithoutLogs(CapturedOutput output)
             throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
-        TaskDescription taskDescription = mock(TaskDescription.class);
+        TaskDescription taskDescription = TaskDescription.builder().build();
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn("sessionContent");
@@ -122,7 +122,7 @@ class SconeSessionHandlerServiceTests {
     void shouldNotBuildAndPostSessionSincePostSessionFailed()
             throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
-        TaskDescription taskDescription = mock(TaskDescription.class);
+        TaskDescription taskDescription = TaskDescription.builder().build();
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
@@ -139,7 +139,7 @@ class SconeSessionHandlerServiceTests {
     void shouldNotBuildAndPostSessionSinceNoResponse()
             throws TeeSessionGenerationException {
         TeeSessionRequest request = mock(TeeSessionRequest.class);
-        TaskDescription taskDescription = mock(TaskDescription.class);
+        TaskDescription taskDescription = TaskDescription.builder().build();
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);

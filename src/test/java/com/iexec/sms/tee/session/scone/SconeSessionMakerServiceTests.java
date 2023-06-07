@@ -73,7 +73,7 @@ class SconeSessionMakerServiceTests {
                 .fingerprint(APP_FINGERPRINT)
                 .entrypoint(APP_ENTRYPOINT)
                 .build();
-        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig));
+        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
         when(preComputeProperties.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
         when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
