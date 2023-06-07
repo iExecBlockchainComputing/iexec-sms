@@ -16,39 +16,21 @@
 
 package com.iexec.sms.blockchain;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import lombok.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
 import java.time.Duration;
 
-@Component
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
+@Value
+@ConstructorBinding
+@ConfigurationProperties(prefix = "blockchain")
 public class BlockchainConfig {
-
-    @Value("${blockchain.id}")
-    private Integer chainId;
-
-    @Value("${blockchain.node-address}")
-    private String nodeAddress;
-
-    @Value("${blockchain.hub-address}")
-    private String hubAddress;
-
-    @Value("${blockchain.block-time}")
-    private Duration blockTime;
-
-    @Value("${blockchain.gas-price-multiplier}")
-    private float gasPriceMultiplier;
-
-    @Value("${blockchain.gas-price-cap}")
-    private long gasPriceCap;
-
-    @Value("${blockchain.is-sidechain}")
-    private boolean isSidechain;
-
+    int chainId;
+    String nodeAddress;
+    String hubAddress;
+    Duration blockTime;
+    float gasPriceMultiplier;
+    long gasPriceCap;
+    boolean isSidechain;
 }
