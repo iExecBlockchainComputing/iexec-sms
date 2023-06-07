@@ -89,3 +89,7 @@ To support:
 A health endpoint (`/actuator/health`) is enabled by default and can be accessed on the `IEXEC_SMS_PORT`.
 This endpoint allows to define health checks in an orchestrator or a [compose file](https://github.com/compose-spec/compose-spec/blob/master/spec.md#healthcheck).
 No default strategy has been implemented in the [Dockerfile](Dockerfile) at the moment.
+
+## License
+
+This repository code is released under the [Apache License 2.0](LICENSE).
