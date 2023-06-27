@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
 
+## [[8.1.2]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.2) 2023-06-27
+
+### Dependency Upgrades
+- Upgrade to `iexec-commons-poco` 3.0.5. (#178)
+
 ## [[8.1.1]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.1) 2023-06-23
 
 ### Dependency Upgrades
