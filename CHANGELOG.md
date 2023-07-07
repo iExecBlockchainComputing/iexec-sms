@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
 
+### New Features
+- Remove `nexus.intra.iex.ec` repository. (#180)
+
 ## [[8.1.2]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.2) 2023-06-27
 
 ### Dependency Upgrades
