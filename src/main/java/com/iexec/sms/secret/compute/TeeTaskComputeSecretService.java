@@ -28,7 +28,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class TeeTaskComputeSecretService {
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.teeTaskCompute.";
+    private static final String METRICS_PREFIX = "iexec.sms.secrets.compute.";
 
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;

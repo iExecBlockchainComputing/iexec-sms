@@ -23,7 +23,7 @@ class TeeTaskComputeSecretServiceTest {
     private static final String APP_ADDRESS = "appAddress";
     private static final String DECRYPTED_SECRET_VALUE = "I'm a secret.";
     private static final String ENCRYPTED_SECRET_VALUE = "I'm an encrypted secret.";
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.teeTaskCompute.";
+    private static final String METRICS_PREFIX = "iexec.sms.secrets.compute.";
     private static final TeeTaskComputeSecret COMPUTE_SECRET = TeeTaskComputeSecret
             .builder()
             .onChainObjectType(OnChainObjectType.APPLICATION)
