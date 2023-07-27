@@ -40,7 +40,7 @@ public class Web3SecretService extends AbstractSecretService {
         super(encryptionService);
         this.web3SecretRepository = web3SecretRepository;
 
-        Metrics.gauge(METRICS_PREFIX + "stored", this, web3SecretService -> web3SecretRepository.count());
+        Metrics.gauge(METRICS_PREFIX + "stored", web3SecretRepository, Web3SecretRepository::count);
     }
 
     @PostConstruct

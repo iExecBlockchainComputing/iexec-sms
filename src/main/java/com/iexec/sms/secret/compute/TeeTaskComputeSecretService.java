@@ -40,7 +40,7 @@ public class TeeTaskComputeSecretService {
         this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
         this.encryptionService = encryptionService;
 
-        Metrics.gauge(METRICS_PREFIX + "stored", this, teeTaskComputeSecretService -> teeTaskComputeSecretRepository.count());
+        Metrics.gauge(METRICS_PREFIX + "stored", teeTaskComputeSecretRepository, TeeTaskComputeSecretRepository::count);
     }
 
     @PostConstruct

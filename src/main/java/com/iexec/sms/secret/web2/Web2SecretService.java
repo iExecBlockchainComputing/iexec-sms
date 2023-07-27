@@ -43,7 +43,7 @@ public class Web2SecretService extends AbstractSecretService {
         super(encryptionService);
         this.web2SecretRepository = web2SecretRepository;
 
-        Metrics.gauge(METRICS_PREFIX + "stored", this, web2SecretService -> web2SecretRepository.count());
+        Metrics.gauge(METRICS_PREFIX + "stored", web2SecretRepository, Web2SecretRepository::count);
     }
 
     @PostConstruct
