@@ -20,21 +20,36 @@ package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.AbstractSecretService;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class Web2SecretService extends AbstractSecretService {
+    private static final String METRICS_PREFIX = "iexec.sms.secrets.web2.";
+
     private final Web2SecretRepository web2SecretRepository;
+
+    private final Counter addedSecretsSinceStart = Metrics.counter(METRICS_PREFIX + "added");
 
     protected Web2SecretService(EncryptionService encryptionService,
                                 Web2SecretRepository web2SecretRepository) {
         super(encryptionService);
         this.web2SecretRepository = web2SecretRepository;
+
+        Metrics.gauge(METRICS_PREFIX + "stored", web2SecretRepository, Web2SecretRepository::count);
+    }
+
+    @PostConstruct
+    void init() {
+        final long initialSecretsCount = web2SecretRepository.count();
+        Metrics.counter(METRICS_PREFIX + "initial").increment(initialSecretsCount);
     }
 
     /**
@@ -78,7 +93,9 @@ public class Web2SecretService extends AbstractSecretService {
 
         final String encryptedValue = encryptionService.encrypt(secretValue);
         final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
-        return web2SecretRepository.save(newSecret);
+        final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
+        addedSecretsSinceStart.increment();
+        return savedSecret;
     }
 
     /**
