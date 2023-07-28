@@ -238,9 +238,11 @@ class Web2SecretServiceTests {
     void storedCount(long expectedCount) {
         when(web2SecretRepository.count()).thenReturn(expectedCount);
 
-        assertStoredCount(expectedCount);
+        assertAll(
+                () -> assertStoredCount(expectedCount),
 
-        verify(web2SecretRepository).count();
+                () -> verify(web2SecretRepository).count()
+        );
     }
     // endregion
 
