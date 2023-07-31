@@ -1,8 +1,16 @@
-@Library('global-jenkins-library@2.4.0') _
+@Library('global-jenkins-library@2.6.0') _
 
 String repositoryName = 'iexec-sms'
 
 buildInfo = getBuildInfo()
+
+// Override properties defined in getBuildInfo and add parameters
+if (!buildInfo.isPullRequestBuild) {
+  properties([
+    buildDiscarder(logRotator(numToKeepStr: '10')),
+    parameters([booleanParam(description: 'Build TEE images', name: 'BUILD_TEE')])
+  ])
+}
 
 buildJavaProject(
         buildInfo: buildInfo,
@@ -15,6 +23,11 @@ buildJavaProject(
         developVisibility: 'iex.ec',
         preProductionVisibility: 'docker.io',
         productionVisibility: 'docker.io')
+
+if (!buildInfo.isPullRequestBuild && !params.BUILD_TEE) {
+  currentBuild.result = 'SUCCESS'
+  return
+}
 
 sconeBuildUnlocked(
         nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
