@@ -5,6 +5,7 @@ String repositoryName = 'iexec-sms'
 buildInfo = getBuildInfo()
 
 // Override properties defined in getBuildInfo and add parameters
+// Define BUILD_TEE parameter for non-PR builds (isPullRequestBuild is false)
 if (!buildInfo.isPullRequestBuild) {
   properties([
     buildDiscarder(logRotator(numToKeepStr: '10')),
@@ -24,8 +25,9 @@ buildJavaProject(
         preProductionVisibility: 'docker.io',
         productionVisibility: 'docker.io')
 
+// BUILD_TEE parameter only exists for non-PR builds (isPullRequestBuild is false)
+// If BUILD_TEE is false, TEE builds won't be executed and we return here
 if (!buildInfo.isPullRequestBuild && !params.BUILD_TEE) {
-  currentBuild.result = 'SUCCESS'
   return
 }
 
