@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 - Export metrics on secrets counts. (#181)
 ### Quality
 - Remove `nexus.intra.iex.ec` repository. (#180)
-- Parameterize build of TEE applications while PR is not started. This allows faster builds. (#182)
+- Parameterize build of TEE applications while PR is not started. This allows faster builds. (#182 #184)
 
 ## [[8.1.2]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.2) 2023-06-27
 
