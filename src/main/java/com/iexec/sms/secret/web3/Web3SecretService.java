@@ -18,35 +18,38 @@ package com.iexec.sms.secret.web3;
 
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Metrics;
+import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web3SecretService extends AbstractSecretService {
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.web3.";
-
+public class Web3SecretService {
     private final Web3SecretRepository web3SecretRepository;
-    private final Counter addedSecretsSinceStart = Metrics.counter(METRICS_PREFIX + "added");
+    private final EncryptionService encryptionService;
+    private final MeasuredSecretService measuredSecretService;
 
+    @Autowired
     public Web3SecretService(Web3SecretRepository web3SecretRepository,
                              EncryptionService encryptionService) {
-        super(encryptionService);
         this.web3SecretRepository = web3SecretRepository;
+        this.encryptionService = encryptionService;
 
-        Metrics.gauge(METRICS_PREFIX + "stored", web3SecretRepository, Web3SecretRepository::count);
+        this.measuredSecretService = new MeasuredSecretService(
+                "web3",
+                "iexec.sms.secrets.web3.",
+                web3SecretRepository);
     }
 
-    @PostConstruct
-    void init() {
-        final long initialSecretsCount = web3SecretRepository.count();
-        Metrics.counter(METRICS_PREFIX + "initial").increment(initialSecretsCount);
+    protected Web3SecretService(Web3SecretRepository web3SecretRepository,
+                              EncryptionService encryptionService,
+                              MeasuredSecretService measuredSecretService) {
+        this.web3SecretRepository = web3SecretRepository;
+        this.encryptionService = encryptionService;
+        this.measuredSecretService = measuredSecretService;
     }
 
     /**
@@ -86,8 +89,7 @@ public class Web3SecretService extends AbstractSecretService {
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         web3SecretRepository.save(web3Secret);
-        addedSecretsSinceStart.increment();
+        measuredSecretService.newlyAddedSecret();
         return true;
     }
-
 }

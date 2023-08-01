@@ -19,37 +19,40 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Metrics;
+import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web2SecretService extends AbstractSecretService {
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.web2.";
+public class Web2SecretService {
 
     private final Web2SecretRepository web2SecretRepository;
+    private final EncryptionService encryptionService;
+    private final MeasuredSecretService measuredSecretService;
 
-    private final Counter addedSecretsSinceStart = Metrics.counter(METRICS_PREFIX + "added");
-
+    @Autowired
     protected Web2SecretService(EncryptionService encryptionService,
                                 Web2SecretRepository web2SecretRepository) {
-        super(encryptionService);
         this.web2SecretRepository = web2SecretRepository;
+        this.encryptionService = encryptionService;
 
-        Metrics.gauge(METRICS_PREFIX + "stored", web2SecretRepository, Web2SecretRepository::count);
+        this.measuredSecretService = new MeasuredSecretService(
+                "web2",
+                "iexec.sms.secrets.web2.",
+                web2SecretRepository);
     }
 
-    @PostConstruct
-    void init() {
-        final long initialSecretsCount = web2SecretRepository.count();
-        Metrics.counter(METRICS_PREFIX + "initial").increment(initialSecretsCount);
+    protected Web2SecretService(Web2SecretRepository web2SecretRepository,
+                             EncryptionService encryptionService,
+                             MeasuredSecretService measuredSecretService) {
+        this.web2SecretRepository = web2SecretRepository;
+        this.encryptionService = encryptionService;
+        this.measuredSecretService = measuredSecretService;
     }
 
     /**
@@ -94,7 +97,7 @@ public class Web2SecretService extends AbstractSecretService {
         final String encryptedValue = encryptionService.encrypt(secretValue);
         final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        addedSecretsSinceStart.increment();
+        measuredSecretService.newlyAddedSecret();
         return savedSecret;
     }
 
