@@ -21,8 +21,8 @@ import lombok.Value;
 
 @Value
 @Builder
-public class SmsMetric {
-    SecretsMetric web2SecretsMetric;
-    SecretsMetric web3SecretsMetric;
-    SecretsMetric computeSecretsMetric;
+public class SmsMetrics {
+    SecretsMetrics web2SecretsMetrics;
+    SecretsMetrics web3SecretsMetrics;
+    SecretsMetrics computeSecretsMetrics;
 }

@@ -32,7 +32,7 @@ public class MetricsController {
     }
 
     @GetMapping("/metrics")
-    public ResponseEntity<SmsMetric> getSmsMetrics() {
+    public ResponseEntity<SmsMetrics> getSmsMetrics() {
         return ok(metricsService.getSmsMetric());
     }
 }

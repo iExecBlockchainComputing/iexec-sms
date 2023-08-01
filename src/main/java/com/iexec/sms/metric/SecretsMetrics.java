@@ -21,7 +21,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class SecretsMetric {
+public class SecretsMetrics {
     String secretsType;
     long initialCount;
     long storedCount;

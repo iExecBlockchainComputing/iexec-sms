@@ -16,53 +16,41 @@
 
 package com.iexec.sms.metric;
 
+import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MetricsService {
-    private final CompositeMeterRegistry metricsRegistry;
 
-    public MetricsService() {
-        this.metricsRegistry = Metrics.globalRegistry;
+    private final Web2SecretService web2SecretService;
+    private final Web3SecretService web3SecretService;
+    private final TeeTaskComputeSecretService teeTaskComputeSecretService;
+
+    public MetricsService(Web2SecretService web2SecretService,
+                          Web3SecretService web3SecretService,
+                          TeeTaskComputeSecretService teeTaskComputeSecretService) {
+        this.web2SecretService = web2SecretService;
+        this.web3SecretService = web3SecretService;
+        this.teeTaskComputeSecretService = teeTaskComputeSecretService;
     }
 
-    public SmsMetric getSmsMetric() {
-        return SmsMetric.builder()
-                .web2SecretsMetric(getWeb2SecretsMetrics())
-                .web3SecretsMetric(getWeb3SecretsMetrics())
-                .computeSecretsMetric(getComputeSecretsMetrics())
+    public SmsMetrics getSmsMetric() {
+        return SmsMetrics.builder()
+                .web2SecretsMetrics(getSecretsMetrics("web2", web2SecretService))
+                .web3SecretsMetrics(getSecretsMetrics("web3", web3SecretService))
+                .computeSecretsMetrics(getSecretsMetrics("compute", teeTaskComputeSecretService))
                 .build();
     }
 
-    private SecretsMetric getWeb2SecretsMetrics() {
-        return SecretsMetric.builder()
-                .secretsType("web2")
-                .initialCount((long)metricsRegistry.find(Web2SecretService.INITIAL_SECRETS_COUNT_KEY).counter().count())
-                .addedSinceStartCount((long)metricsRegistry.find(Web2SecretService.ADDED_SECRETS_SINCE_START_COUNT_KEY).counter().count())
-                .storedCount((long)metricsRegistry.find(Web2SecretService.STORED_SECRETS_COUNT_KEY).gauge().value())
-                .build();
-    }
-
-    private SecretsMetric getWeb3SecretsMetrics() {
-        return SecretsMetric.builder()
-                .secretsType("web3")
-                .initialCount((long)metricsRegistry.find(Web3SecretService.INITIAL_SECRETS_COUNT_KEY).counter().count())
-                .addedSinceStartCount((long)metricsRegistry.find(Web3SecretService.ADDED_SECRETS_SINCE_START_COUNT_KEY).counter().count())
-                .storedCount((long)metricsRegistry.find(Web3SecretService.STORED_SECRETS_COUNT_KEY).gauge().value())
-                .build();
-    }
-
-    private SecretsMetric getComputeSecretsMetrics() {
-        return SecretsMetric.builder()
-                .secretsType("compute")
-                .initialCount((long)metricsRegistry.find(TeeTaskComputeSecretService.INITIAL_SECRETS_COUNT_KEY).counter().count())
-                .addedSinceStartCount((long)metricsRegistry.find(TeeTaskComputeSecretService.ADDED_SECRETS_SINCE_START_COUNT_KEY).counter().count())
-                .storedCount((long)metricsRegistry.find(TeeTaskComputeSecretService.STORED_SECRETS_COUNT_KEY).gauge().value())
+    private SecretsMetrics getSecretsMetrics(String secretsType, MeasuredSecretService secretService) {
+        return SecretsMetrics.builder()
+                .secretsType(secretsType)
+                .initialCount(secretService.getInitialSecretsCount())
+                .addedSinceStartCount(secretService.getAddedSecretsSinceStartCount())
+                .storedCount(secretService.getStoredSecretsCount())
                 .build();
     }
 
