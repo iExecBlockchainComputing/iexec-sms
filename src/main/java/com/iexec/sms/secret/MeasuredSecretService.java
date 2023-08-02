@@ -17,12 +17,27 @@
 package com.iexec.sms.secret;
 
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import lombok.Getter;
-import org.springframework.data.repository.CrudRepository;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
+
+/**
+ * Centralisation of all secrets metrics for a type of secret.
+ * <p>
+ * E.g., initial count, number of secrets added since start and currently stored secrets
+ * for `web2Secrets` are metrics that can be retrieved there.
+ * <p>
+ * Stored secrets count is a scheduled operation, so it can reflect a previous state.
+ * That's required to avoid any kind of DDoS.
+ */
 @Getter
+@Slf4j
 public class MeasuredSecretService {
     private static final String INITIAL_SECRETS_COUNT_POSTFIX = "initial";
     private static final String ADDED_SECRETS_SINCE_START_COUNT_POSTFIX = "added";
@@ -30,42 +45,43 @@ public class MeasuredSecretService {
 
     private final String secretsType;
     private final String metricsPrefix;
-    private final CrudRepository<?, ?> repository;
+    private final Supplier<Long> storedSecretsCountGetter;
+    private final ScheduledExecutorService secretsCountExecutorService;
+    private final long storedSecretsCountPeriod;
 
-    private final Counter initialSecretsCounter;
+    private Counter initialSecretsCounter;
+    private AtomicLong storedSecretsCount;
     private final Counter addedSecretsSinceStartCounter;
-    private final Gauge storedSecretsGauge;
 
     public MeasuredSecretService(String secretsType,
                                  String metricsPrefix,
-                                 CrudRepository<?, ?> repository) {
+                                 Supplier<Long> storedSecretsCountGetter,
+                                 ScheduledExecutorService secretsCountExecutorService,
+                                 long storedSecretsCountPeriod) {
         this.secretsType = secretsType;
         this.metricsPrefix = metricsPrefix;
-        this.repository = repository;
+        this.storedSecretsCountGetter = storedSecretsCountGetter;
+        this.secretsCountExecutorService = secretsCountExecutorService;
+        this.storedSecretsCountPeriod = storedSecretsCountPeriod;
 
-        final long initialSecretsCount = repository.count();
-        this.initialSecretsCounter = Metrics.counter(getInitialSecretsCountKey());
+        this.addedSecretsSinceStartCounter = Metrics.counter(metricsPrefix + ADDED_SECRETS_SINCE_START_COUNT_POSTFIX);
+    }
+
+    @PostConstruct
+    void init() {
+        final long initialSecretsCount = storedSecretsCountGetter.get();
+        this.initialSecretsCounter = Metrics.counter(metricsPrefix + INITIAL_SECRETS_COUNT_POSTFIX);
         this.initialSecretsCounter.increment(initialSecretsCount);
 
-        this.addedSecretsSinceStartCounter = Metrics.counter(getAddedSecretsSinceStartCountKey());
+        this.storedSecretsCount = Metrics.gauge(metricsPrefix + STORED_SECRETS_COUNT_POSTFIX, new AtomicLong(initialSecretsCount));
 
-        Metrics.gauge(getStoredSecretsCountKey(), repository, CrudRepository::count);
-        this.storedSecretsGauge = Metrics.globalRegistry.find(getStoredSecretsCountKey()).gauge();
+        secretsCountExecutorService.scheduleAtFixedRate(
+                this::countStoredSecrets,
+                storedSecretsCountPeriod,
+                storedSecretsCountPeriod,
+                TimeUnit.SECONDS
+        );
     }
-
-    // region Get metrics keys
-    private String getInitialSecretsCountKey() {
-        return metricsPrefix + INITIAL_SECRETS_COUNT_POSTFIX;
-    }
-
-    private String getAddedSecretsSinceStartCountKey() {
-        return metricsPrefix + ADDED_SECRETS_SINCE_START_COUNT_POSTFIX;
-    }
-
-    private String getStoredSecretsCountKey() {
-        return metricsPrefix + STORED_SECRETS_COUNT_POSTFIX;
-    }
-    // endregion
 
     // region Get metrics
     public long getInitialSecretsCount() {
@@ -77,11 +93,21 @@ public class MeasuredSecretService {
     }
 
     public long getStoredSecretsCount() {
-        return (long) storedSecretsGauge.value();
+        return storedSecretsCount.get();
     }
     // endregion
 
+    /**
+     * Indicate to this service a new secret has been added to the DB,
+     * so it can update its counter.
+     */
     public void newlyAddedSecret() {
         addedSecretsSinceStartCounter.increment();
+    }
+
+    private void countStoredSecrets() {
+        final Long count = storedSecretsCountGetter.get();
+        log.debug("Counting secrets [type:{}, count:{}]", secretsType, count);
+        storedSecretsCount.set(count);
     }
 }

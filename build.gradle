@@ -85,6 +85,9 @@ dependencies {
     // feign
     implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
     implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
+
+    // awaitility
+    testImplementation 'org.awaitility:awaitility'
 }
 
 sourceSets {

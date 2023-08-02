@@ -20,7 +20,6 @@ package com.iexec.sms.secret.web3;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -32,24 +31,12 @@ public class Web3SecretService {
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
 
-    @Autowired
-    public Web3SecretService(Web3SecretRepository web3SecretRepository,
-                             EncryptionService encryptionService) {
-        this.web3SecretRepository = web3SecretRepository;
-        this.encryptionService = encryptionService;
-
-        this.measuredSecretService = new MeasuredSecretService(
-                "web3",
-                "iexec.sms.secrets.web3.",
-                web3SecretRepository);
-    }
-
     protected Web3SecretService(Web3SecretRepository web3SecretRepository,
-                              EncryptionService encryptionService,
-                              MeasuredSecretService measuredSecretService) {
+                                EncryptionService encryptionService,
+                                MeasuredSecretService web3MeasuredSecretService) {
         this.web3SecretRepository = web3SecretRepository;
         this.encryptionService = encryptionService;
-        this.measuredSecretService = measuredSecretService;
+        this.measuredSecretService = web3MeasuredSecretService;
     }
 
     /**

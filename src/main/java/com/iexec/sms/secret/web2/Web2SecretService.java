@@ -21,7 +21,6 @@ package com.iexec.sms.secret.web2;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -35,24 +34,12 @@ public class Web2SecretService {
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
 
-    @Autowired
-    protected Web2SecretService(EncryptionService encryptionService,
-                                Web2SecretRepository web2SecretRepository) {
-        this.web2SecretRepository = web2SecretRepository;
-        this.encryptionService = encryptionService;
-
-        this.measuredSecretService = new MeasuredSecretService(
-                "web2",
-                "iexec.sms.secrets.web2.",
-                web2SecretRepository);
-    }
-
     protected Web2SecretService(Web2SecretRepository web2SecretRepository,
-                             EncryptionService encryptionService,
-                             MeasuredSecretService measuredSecretService) {
+                                EncryptionService encryptionService,
+                                MeasuredSecretService web2MeasuredSecretService) {
         this.web2SecretRepository = web2SecretRepository;
         this.encryptionService = encryptionService;
-        this.measuredSecretService = measuredSecretService;
+        this.measuredSecretService = web2MeasuredSecretService;
     }
 
     /**

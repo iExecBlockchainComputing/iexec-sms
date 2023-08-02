@@ -19,7 +19,6 @@ package com.iexec.sms.secret.compute;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -31,24 +30,12 @@ public class TeeTaskComputeSecretService {
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
 
-    @Autowired
-    public TeeTaskComputeSecretService(
-            TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
-            EncryptionService encryptionService) {
-        this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
-        this.encryptionService = encryptionService;
-        this.measuredSecretService = new MeasuredSecretService(
-                "compute",
-                "iexec.sms.secrets.compute.",
-                teeTaskComputeSecretRepository);
-    }
-
     protected TeeTaskComputeSecretService(TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
-                                       EncryptionService encryptionService,
-                                       MeasuredSecretService measuredSecretService) {
+                                          EncryptionService encryptionService,
+                                          MeasuredSecretService computeMeasuredSecretService) {
         this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
         this.encryptionService = encryptionService;
-        this.measuredSecretService = measuredSecretService;
+        this.measuredSecretService = computeMeasuredSecretService;
     }
 
     /**

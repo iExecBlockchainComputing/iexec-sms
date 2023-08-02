@@ -19,25 +19,26 @@ package com.iexec.sms.secret;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.repository.CrudRepository;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 class MeasuredSecretServiceTests {
     private static final String SECRETS_TYPE = "tests_secrets";
     private static final String METRICS_PREFIX = "iexec.sms.secrets.tests_secrets";
     private static final long INITIAL_COUNT = 5L;
 
-    @Mock
-    private CrudRepository<?, ?> repository;
+    private final AtomicLong count = new AtomicLong(INITIAL_COUNT);
 
     private MeasuredSecretService measuredSecretService;
 
@@ -49,9 +50,14 @@ class MeasuredSecretServiceTests {
         Metrics.globalRegistry.add(meterRegistry);
 
         MockitoAnnotations.openMocks(this);
-        when(repository.count()).thenReturn(INITIAL_COUNT);
 
-        this.measuredSecretService = new MeasuredSecretService(SECRETS_TYPE, METRICS_PREFIX, repository);
+        this.measuredSecretService = new MeasuredSecretService(
+                SECRETS_TYPE,
+                METRICS_PREFIX,
+                count::get, // Simulating a repo `count` method
+                Executors.newSingleThreadScheduledExecutor(),
+                1);
+        measuredSecretService.init();
     }
 
     @AfterEach
@@ -74,9 +80,12 @@ class MeasuredSecretServiceTests {
 
     @ParameterizedTest
     @ValueSource(longs = {-1, 0, 10, Long.MAX_VALUE})
-    void shouldGetStoredSecretsCount(long storedCount) {
-        when(repository.count()).thenReturn(storedCount);
+    void shouldGetStoredSecretsCount(long storedCount) throws InterruptedException {
+        count.set(storedCount);
 
-        assertThat(measuredSecretService.getStoredSecretsCount()).isEqualTo(storedCount);
+        // The value requires at least 1 second to be updated by the scheduled executor
+        Awaitility.await()
+                .timeout(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> assertThat(measuredSecretService.getStoredSecretsCount()).isEqualTo(storedCount));
     }
 }
