@@ -32,9 +32,11 @@ import static org.mockito.Mockito.mock;
 
 class MetricsServiceTests {
     private static final String TEST_SECRETS_TYPE = "testSecrets";
+    private static final String TEST_SECRETS_METRICS_PREFIX = "iexec.sms.secrets.test.";
 
     private final MeasuredSecretService measuredSecretService = Mockito.spy(new MeasuredSecretService(
             TEST_SECRETS_TYPE,
+            TEST_SECRETS_METRICS_PREFIX,
             mock(CrudRepository.class)
     ) {
         @Override
