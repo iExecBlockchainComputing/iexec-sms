@@ -21,17 +21,22 @@ import com.iexec.sms.metric.SecretsMetrics;
 import com.iexec.sms.metric.SmsMetrics;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 class MetricsServiceTests {
     private static final String TEST_SECRETS_TYPE = "testSecrets";
 
-    private final MeasuredSecretService measuredSecretService = Mockito.spy(new MeasuredSecretService(TEST_SECRETS_TYPE) {
+    private final MeasuredSecretService measuredSecretService = Mockito.spy(new MeasuredSecretService(
+            TEST_SECRETS_TYPE,
+            mock(CrudRepository.class)
+    ) {
         @Override
         public String getMetricsPrefix() {
             return "testSecretsPrefix";
