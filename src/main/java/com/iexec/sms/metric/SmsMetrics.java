@@ -19,10 +19,10 @@ package com.iexec.sms.metric;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @Builder
 public class SmsMetrics {
-    SecretsMetrics web2SecretsMetrics;
-    SecretsMetrics web3SecretsMetrics;
-    SecretsMetrics computeSecretsMetrics;
+    List<SecretsMetrics> secretsMetrics;
 }

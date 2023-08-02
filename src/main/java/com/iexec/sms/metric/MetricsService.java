@@ -17,37 +17,34 @@
 package com.iexec.sms.metric;
 
 import com.iexec.sms.secret.MeasuredSecretService;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
-import com.iexec.sms.secret.web2.Web2SecretService;
-import com.iexec.sms.secret.web3.Web3SecretService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MetricsService {
 
-    private final Web2SecretService web2SecretService;
-    private final Web3SecretService web3SecretService;
-    private final TeeTaskComputeSecretService teeTaskComputeSecretService;
+    private final List<MeasuredSecretService> measuredSecretServices;
 
-    public MetricsService(Web2SecretService web2SecretService,
-                          Web3SecretService web3SecretService,
-                          TeeTaskComputeSecretService teeTaskComputeSecretService) {
-        this.web2SecretService = web2SecretService;
-        this.web3SecretService = web3SecretService;
-        this.teeTaskComputeSecretService = teeTaskComputeSecretService;
+    public MetricsService(List<MeasuredSecretService> measuredSecretServices) {
+        this.measuredSecretServices = measuredSecretServices;
     }
 
     public SmsMetrics getSmsMetric() {
+        final List<SecretsMetrics> secretsMetrics = measuredSecretServices
+                .stream()
+                .map(this::getSecretsMetrics)
+                .collect(Collectors.toList());
+
         return SmsMetrics.builder()
-                .web2SecretsMetrics(getSecretsMetrics("web2", web2SecretService))
-                .web3SecretsMetrics(getSecretsMetrics("web3", web3SecretService))
-                .computeSecretsMetrics(getSecretsMetrics("compute", teeTaskComputeSecretService))
+                .secretsMetrics(secretsMetrics)
                 .build();
     }
 
-    private SecretsMetrics getSecretsMetrics(String secretsType, MeasuredSecretService secretService) {
+    private SecretsMetrics getSecretsMetrics(MeasuredSecretService secretService) {
         return SecretsMetrics.builder()
-                .secretsType(secretsType)
+                .secretsType(secretService.getSecretsType())
                 .initialCount(secretService.getInitialSecretsCount())
                 .addedSinceStartCount(secretService.getAddedSecretsSinceStartCount())
                 .storedCount(secretService.getStoredSecretsCount())
