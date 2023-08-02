@@ -17,8 +17,10 @@
 package com.iexec.sms.metric;
 
 import com.iexec.sms.secret.MeasuredSecretService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,8 +29,18 @@ public class MetricsService {
 
     private final List<MeasuredSecretService> measuredSecretServices;
 
+    @Autowired
+    public MetricsService() {
+        this.measuredSecretServices = new ArrayList<>();
+    }
+
     public MetricsService(List<MeasuredSecretService> measuredSecretServices) {
         this.measuredSecretServices = measuredSecretServices;
+    }
+
+    public MeasuredSecretService registerNewMeasuredSecretService(MeasuredSecretService service) {
+        measuredSecretServices.add(service);
+        return service;
     }
 
     public SmsMetrics getSmsMetrics() {
