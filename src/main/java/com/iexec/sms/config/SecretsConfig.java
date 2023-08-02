@@ -64,6 +64,10 @@ public class SecretsConfig {
                 scheduledExecutorService, storedSecretsCountPeriod);
     }
 
+    /**
+     * A single threaded scheduled executor is required for measuring secrets count in DB.
+     * It avoids having lots of thread requesting the DB.
+     */
     @Bean
     ScheduledExecutorService secretsCountExecutorService() {
         return Executors.newSingleThreadScheduledExecutor();
