@@ -31,7 +31,7 @@ public class MetricsService {
         this.measuredSecretServices = measuredSecretServices;
     }
 
-    public SmsMetrics getSmsMetric() {
+    public SmsMetrics getSmsMetrics() {
         final List<SecretsMetrics> secretsMetrics = measuredSecretServices
                 .stream()
                 .map(this::getSecretsMetrics)
