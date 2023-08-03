@@ -106,8 +106,13 @@ public class MeasuredSecretService {
     }
 
     private void countStoredSecrets() {
-        final Long count = storedSecretsCountGetter.get();
-        log.debug("Counting secrets [type:{}, count:{}]", secretsType, count);
-        storedSecretsCount.set(count);
+        try {
+            final Long count = storedSecretsCountGetter.get();
+            log.debug("Counting secrets [type:{}, count:{}]", secretsType, count);
+            storedSecretsCount.set(count);
+        } catch (RuntimeException e) {
+            log.error("Secrets count has failed [type:{}]", secretsType, e);
+            storedSecretsCount.set(-1);
+        }
     }
 }
