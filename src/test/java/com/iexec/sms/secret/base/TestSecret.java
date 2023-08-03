@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,40 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.web3;
+package com.iexec.sms.secret.base;
 
-import com.iexec.sms.secret.base.AbstractSecret;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+
+import static com.iexec.sms.secret.base.TestSecretHeader.TEST_SECRET_HEADER;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Web3Secret extends AbstractSecret<Web3Secret, Web3SecretHeader> {
-    @EmbeddedId
-    private Web3SecretHeader header;
+class TestSecret extends AbstractSecret<TestSecret, TestSecretHeader> {
+    public static final String PLAIN_SECRET_VALUE = "plainSecretValue";
+    public static final String ENCRYPTED_SECRET_VALUE = "encryptedSecretValue";
 
-    public Web3Secret(Web3SecretHeader header, String value) {
+    @Transient
+    public static final TestSecret TEST_SECRET = new TestSecret(TEST_SECRET_HEADER, ENCRYPTED_SECRET_VALUE);
+
+    @NotNull
+    @EmbeddedId
+    private TestSecretHeader header;
+
+    public TestSecret(TestSecretHeader header, String value) {
         super(value);
         this.header = header;
     }
 
     @Override
-    public Web3Secret withValue(String newValue) {
-        return new Web3Secret(header, newValue);
+    protected TestSecret withValue(String newValue) {
+        return new TestSecret(header, newValue);
     }
 }

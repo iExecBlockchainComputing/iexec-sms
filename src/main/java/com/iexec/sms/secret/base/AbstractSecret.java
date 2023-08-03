@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,37 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret;
+package com.iexec.sms.secret.base;
 
+import com.iexec.sms.secret.SecretUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Objects;
 
 @MappedSuperclass
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class Secret {
-    @Column(columnDefinition = "LONGTEXT")
+public abstract class AbstractSecret<S extends AbstractSecret<S, H>, H extends AbstractSecretHeader> implements Serializable {
+    /*
+     * Expected behavior of AES encryption is to not expand the data very much.
+     * Final size might be padded to the next block, plus another padding might
+     * be necessary for the IV (https://stackoverflow.com/a/93463).
+     * In addition to that, it is worth mentioning that current implementation
+     * encrypts the input and produces a Base64 result (stored as-is in
+     * database) which causes an overhead of ~33%
+     * (https://en.wikipedia.org/wiki/Base64).
+     * <p>
+     * For these reasons and for simplicity purposes, we reserve twice the size
+     * of `SECRET_MAX_SIZE` in storage.
+     */
+    @NotNull
+    @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
     private String value;
 
     /**
@@ -40,9 +56,11 @@ public abstract class Secret {
      * SMS without any trimming) and it can break the workflow even
      * though everything is correctly setup.
      */
-    protected Secret(String value) {
+    protected AbstractSecret(String value) {
         Objects.requireNonNull(value, "Secret value must not be null");
         this.value = value.trim();
     }
+
+    protected abstract S withValue(String newValue);
 }
 

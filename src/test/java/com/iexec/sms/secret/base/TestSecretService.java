@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret.web3;
+package com.iexec.sms.secret.base;
 
-
+import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
-import com.iexec.sms.secret.base.AbstractSecretService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
-@Slf4j
-@Service
-public class Web3SecretService extends AbstractSecretService<Web3Secret, Web3SecretHeader> {
-    protected Web3SecretService(Web3SecretRepository web3SecretRepository,
+class TestSecretService extends AbstractSecretService<TestSecret, TestSecretHeader> {
+
+    protected TestSecretService(TestSecretRepository repository,
                                 EncryptionService encryptionService,
-                                MeasuredSecretService web3MeasuredSecretService) {
-        super(web3SecretRepository, encryptionService, web3MeasuredSecretService);
+                                MeasuredSecretService measuredSecretService) {
+        super(repository, encryptionService, measuredSecretService);
     }
 
     @Override
-    protected Web3Secret createSecret(Web3SecretHeader header, String value) {
-        return new Web3Secret(header, value);
+    protected TestSecret createSecret(TestSecretHeader header, String value) {
+        return new TestSecret(header, value);
     }
 }

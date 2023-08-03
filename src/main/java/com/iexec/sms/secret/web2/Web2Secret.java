@@ -18,7 +18,7 @@
 
 package com.iexec.sms.secret.web2;
 
-import com.iexec.sms.secret.Secret;
+import com.iexec.sms.secret.base.AbstractSecret;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,15 +29,11 @@ import javax.persistence.Entity;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Web2Secret extends Secret {
+public class Web2Secret extends AbstractSecret<Web2Secret, Web2SecretHeader> {
     @EmbeddedId
     private Web2SecretHeader header;
 
-    public Web2Secret(String ownerAddress, String address, String value) {
-        this(new Web2SecretHeader(ownerAddress, address), value);
-    }
-
-    private Web2Secret(Web2SecretHeader header, String value) {
+    public Web2Secret(Web2SecretHeader header, String value) {
         super(value);
         this.header = header;
     }
@@ -49,6 +45,7 @@ public class Web2Secret extends Secret {
      * @param newValue Value to use for new object.
      * @return A new {@link Web2Secret} object with new value.
      */
+    @Override
     public Web2Secret withValue(String newValue) {
         return new Web2Secret(header, newValue);
     }

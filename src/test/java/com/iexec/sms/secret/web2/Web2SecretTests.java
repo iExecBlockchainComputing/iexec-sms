@@ -24,11 +24,12 @@ import org.junit.jupiter.api.Test;
 class Web2SecretTests {
     private static final String OWNER_ADDRESS = "ownerAddress";
     private static final String SECRET_ADDRESS = "secretAddress";
+    private static final Web2SecretHeader HEADER = new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS);
 
     private static final String VALUE = "value";
     private static final String NEW_VALUE = "newValue";
-    private static final Web2Secret SECRET = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, VALUE);
-    private static final Web2Secret NEW_SECRET = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, NEW_VALUE);
+    private static final Web2Secret SECRET = new Web2Secret(HEADER, VALUE);
+    private static final Web2Secret NEW_SECRET = new Web2Secret(HEADER, NEW_VALUE);
 
     @Test
     void withValue() {

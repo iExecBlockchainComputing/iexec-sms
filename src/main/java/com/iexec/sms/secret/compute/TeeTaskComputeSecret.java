@@ -16,14 +16,12 @@
 
 package com.iexec.sms.secret.compute;
 
-import com.iexec.sms.secret.SecretUtils;
+import com.iexec.sms.secret.base.AbstractSecret;
 import lombok.*;
 
-import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -49,28 +47,11 @@ import java.util.Objects;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class TeeTaskComputeSecret implements Serializable {
+public class TeeTaskComputeSecret extends AbstractSecret<TeeTaskComputeSecret, TeeTaskComputeSecretHeader> {
 
     @NotNull
     @EmbeddedId
     private TeeTaskComputeSecretHeader header;
-
-    @NotNull
-    /*
-     * Expected behavior of AES encryption is to not expand the data very much.
-     * Final size might be padded to the next block, plus another padding might
-     * be necessary for the IV (https://stackoverflow.com/a/93463).
-     * In addition to that, it is worth mentioning that current implementation
-     * encrypts the input and produces a Base64 result (stored as-is in
-     * database) which causes an overhead of ~33%
-     * (https://en.wikipedia.org/wiki/Base64).
-     * <p>
-     * For these reasons and for simplicity purposes, we reserve twice the size
-     * of `SECRET_MAX_SIZE` in storage.
-     */
-    @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
-    private String value;
 
     @Builder
     public TeeTaskComputeSecret(
@@ -80,6 +61,7 @@ public class TeeTaskComputeSecret implements Serializable {
             String fixedSecretOwner,
             String key,
             String value) {
+        super(value);
         this.header = new TeeTaskComputeSecretHeader(
                 onChainObjectType,
                 onChainObjectAddress,
@@ -87,9 +69,14 @@ public class TeeTaskComputeSecret implements Serializable {
                 fixedSecretOwner,
                 key
         );
-        this.value = value;
     }
 
+    public TeeTaskComputeSecret(TeeTaskComputeSecretHeader header, String value) {
+        super(value);
+        this.header = header;
+    }
+
+    @Override
     public TeeTaskComputeSecret withValue(String newValue) {
         return new TeeTaskComputeSecret(header, newValue);
     }
@@ -100,11 +87,11 @@ public class TeeTaskComputeSecret implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         final TeeTaskComputeSecret that = (TeeTaskComputeSecret) o;
         return Objects.equals(header, that.header)
-                && Objects.equals(value, that.value);
+                && Objects.equals(getValue(), that.getValue());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(header, value);
+        return Objects.hash(header, getValue());
     }
 }

@@ -25,11 +25,10 @@ import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.ReservedSecretKeyName;
-import com.iexec.sms.secret.compute.OnChainObjectType;
-import com.iexec.sms.secret.compute.SecretOwnerRole;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
+import com.iexec.sms.secret.compute.*;
+import com.iexec.sms.secret.web2.Web2SecretHeader;
 import com.iexec.sms.secret.web2.Web2SecretService;
+import com.iexec.sms.secret.web3.Web3SecretHeader;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -56,7 +55,6 @@ import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class SecretSessionBaseServiceTests {
@@ -99,22 +97,30 @@ class SecretSessionBaseServiceTests {
         TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
         String beneficiary = request.getTaskDescription().getBeneficiary();
+        final Web3SecretHeader datasetSecretHeader = new Web3SecretHeader(DATASET_ADDRESS);
+        final Web2SecretHeader resultEncryptionKeyHeader = new Web2SecretHeader(
+                beneficiary,
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+        final Web2SecretHeader ipfsTokenHeader = new Web2SecretHeader(
+                taskDescription.getRequester(),
+                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN
+        );
 
         // pre
         when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
-        when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
+        when(web3SecretService.getDecryptedValue(datasetSecretHeader))
                 .thenReturn(Optional.of(DATASET_KEY));
         // post
         when(postComputeProperties.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretService.getDecryptedValue(
-                beneficiary,
-                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
-                .thenReturn(Optional.of(ENCRYPTION_PUBLIC_KEY));
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(),
-                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(Optional.of(STORAGE_TOKEN));
+                resultEncryptionKeyHeader
+                )
+        ).thenReturn(Optional.of(ENCRYPTION_PUBLIC_KEY));
+        when(web2SecretService.getDecryptedValue(
+                ipfsTokenHeader
+        )).thenReturn(Optional.of(STORAGE_TOKEN));
         TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
@@ -173,7 +179,7 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(taskDescription);
         when(preComputeProperties.getFingerprint())
                 .thenReturn(PRE_COMPUTE_FINGERPRINT);
-        when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
+        when(web3SecretService.getDecryptedValue(new Web3SecretHeader(DATASET_ADDRESS)))
                 .thenReturn(Optional.of(DATASET_KEY));
 
         SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
@@ -257,12 +263,12 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_REQUESTER_SECRET_2", REQUESTER_SECRET_VALUE_2);
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
 
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, appAddress,
-                SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
-                requesterAddress, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
-                requesterAddress, REQUESTER_SECRET_KEY_2);
+        verify(teeTaskComputeSecretService).getDecryptedValue(new TeeTaskComputeSecretHeader(OnChainObjectType.APPLICATION, appAddress,
+                SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX));
+        verify(teeTaskComputeSecretService).getDecryptedValue(new TeeTaskComputeSecretHeader(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
+                requesterAddress, REQUESTER_SECRET_KEY_1));
+        verify(teeTaskComputeSecretService).getDecryptedValue(new TeeTaskComputeSecretHeader(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
+                requesterAddress, REQUESTER_SECRET_KEY_2));
     }
 
     @Test
@@ -288,14 +294,15 @@ class SecretSessionBaseServiceTests {
                 .botFirstIndex(0)
                 .botIndex(0)
                 .build();
-        TeeSessionRequest request = createSessionRequest(taskDescription);
-
-        when(teeTaskComputeSecretService.getSecret(
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
-                APP_DEVELOPER_SECRET_INDEX))
+                APP_DEVELOPER_SECRET_INDEX);
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+
+        when(teeTaskComputeSecretService.getDecryptedValue(header))
                 .thenReturn(Optional.empty());
 
         SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
@@ -316,10 +323,7 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILE_NAME_2", INPUT_FILE_NAME_2);
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
 
-        verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(appAddress),
-                eq(SecretOwnerRole.APPLICATION_DEVELOPER), eq(""), any());
-        verify(teeTaskComputeSecretService, never()).getSecret(eq(OnChainObjectType.APPLICATION), eq(""),
-                eq(SecretOwnerRole.REQUESTER), any(), any());
+        verify(teeTaskComputeSecretService).getDecryptedValue(header);
     }
 
     @Test
@@ -362,15 +366,29 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
         String requesterAddress = request.getTaskDescription().getRequester();
 
+        final TeeTaskComputeSecretHeader header1 = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                "",
+                SecretOwnerRole.REQUESTER,
+                requesterAddress,
+                REQUESTER_SECRET_KEY_1
+        );
+        final TeeTaskComputeSecretHeader header2 = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                "",
+                SecretOwnerRole.REQUESTER,
+                requesterAddress,
+                REQUESTER_SECRET_KEY_2
+        );
+
         addRequesterSecret(requesterAddress, REQUESTER_SECRET_KEY_1, REQUESTER_SECRET_VALUE_1);
         addRequesterSecret(requesterAddress, REQUESTER_SECRET_KEY_2, REQUESTER_SECRET_VALUE_2);
         SecretEnclaveBase enclaveBase = assertDoesNotThrow(() -> teeSecretsService.getAppTokens(request));
-        verify(teeTaskComputeSecretService, times(2))
-                .getSecret(eq(OnChainObjectType.APPLICATION), eq(""), eq(SecretOwnerRole.REQUESTER), any(), any());
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
-                requesterAddress, REQUESTER_SECRET_KEY_1);
-        verify(teeTaskComputeSecretService).getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
-                requesterAddress, REQUESTER_SECRET_KEY_2);
+
+        // 2x REQUESTER + 1x empty APPLICATION_DEVELOPER
+        verify(teeTaskComputeSecretService, times(3)).getDecryptedValue(any());
+        verify(teeTaskComputeSecretService).getDecryptedValue(header1);
+        verify(teeTaskComputeSecretService).getDecryptedValue(header2);
         assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(
                 Map.of(
                         IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_1,
@@ -385,10 +403,17 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(taskDescription);
         String requesterAddress = request.getTaskDescription().getRequester();
 
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                "",
+                SecretOwnerRole.REQUESTER,
+                requesterAddress,
+                REQUESTER_SECRET_KEY_1
+        );
+
         addRequesterSecret(requesterAddress, REQUESTER_SECRET_KEY_1, REQUESTER_SECRET_VALUE_1);
         SecretEnclaveBase enclaveBase = assertDoesNotThrow(() -> teeSecretsService.getAppTokens(request));
-        verify(teeTaskComputeSecretService).getSecret(eq(OnChainObjectType.APPLICATION), eq(""),
-                eq(SecretOwnerRole.REQUESTER), any(), any());
+        verify(teeTaskComputeSecretService).getDecryptedValue(header);
         assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(
                 Map.of(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + "1", REQUESTER_SECRET_VALUE_1));
     }
@@ -401,15 +426,18 @@ class SecretSessionBaseServiceTests {
 
         String requesterAddress = request.getTaskDescription().getRequester();
 
+        final Web2SecretHeader encryptionKeyHeader = new Web2SecretHeader(
+                request.getTaskDescription().getBeneficiary(),
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+        final Web2SecretHeader ipfsTokenHeader = new Web2SecretHeader(
+                requesterAddress,
+                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+
         when(postComputeProperties.getFingerprint())
                 .thenReturn(POST_COMPUTE_FINGERPRINT);
-        when(web2SecretService.getDecryptedValue(
-                request.getTaskDescription().getBeneficiary(),
-                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
+        when(web2SecretService.getDecryptedValue(encryptionKeyHeader))
                 .thenReturn(Optional.of(ENCRYPTION_PUBLIC_KEY));
-        when(web2SecretService.getDecryptedValue(
-                requesterAddress,
-                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN))
+        when(web2SecretService.getDecryptedValue(ipfsTokenHeader))
                 .thenReturn(Optional.of(STORAGE_TOKEN));
 
         TeeChallenge challenge = TeeChallenge.builder()
@@ -476,8 +504,9 @@ class SecretSessionBaseServiceTests {
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
         final String secretValue = "Secret value";
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(),
-                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN))
+        final Web2SecretHeader ipfsTokenHeader = new Web2SecretHeader(taskDescription.getRequester(),
+                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+        when(web2SecretService.getDecryptedValue(ipfsTokenHeader))
                 .thenReturn(Optional.of(secretValue));
 
         final Map<String, String> tokens = assertDoesNotThrow(
@@ -500,8 +529,9 @@ class SecretSessionBaseServiceTests {
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
 
         final String secretValue = "Secret value";
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(),
-                ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN))
+        final Web2SecretHeader dropboxHeader = new Web2SecretHeader(taskDescription.getRequester(),
+                ReservedSecretKeyName.IEXEC_RESULT_DROPBOX_TOKEN);
+        when(web2SecretService.getDecryptedValue(dropboxHeader))
                 .thenReturn(Optional.of(secretValue));
 
         final Map<String, String> tokens = assertDoesNotThrow(
@@ -521,8 +551,9 @@ class SecretSessionBaseServiceTests {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(),
-                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN))
+        final Web2SecretHeader ipfsTokenHeader = new Web2SecretHeader(taskDescription.getRequester(),
+                ReservedSecretKeyName.IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+        when(web2SecretService.getDecryptedValue(ipfsTokenHeader))
                 .thenReturn(Optional.empty());
 
         final TeeSessionGenerationException exception = assertThrows(
@@ -646,9 +677,10 @@ class SecretSessionBaseServiceTests {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
         String beneficiary = request.getTaskDescription().getBeneficiary();
-        when(web2SecretService.getDecryptedValue(
+        final Web2SecretHeader encryptionKeyHeader = new Web2SecretHeader(
                 beneficiary,
-                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+        when(web2SecretService.getDecryptedValue(encryptionKeyHeader))
                 .thenReturn(Optional.of(ENCRYPTION_PUBLIC_KEY));
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(
@@ -680,9 +712,10 @@ class SecretSessionBaseServiceTests {
     void shouldNotGetPostComputeEncryptionTokensSinceEmptyBeneficiaryKey() {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
-        when(web2SecretService.getDecryptedValue(
+        final Web2SecretHeader encryptionKeyHeader = new Web2SecretHeader(
                 request.getTaskDescription().getBeneficiary(),
-                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
+                ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+        when(web2SecretService.getDecryptedValue(encryptionKeyHeader))
                 .thenReturn(Optional.empty());
 
         final TeeSessionGenerationException exception = assertThrows(
@@ -697,17 +730,29 @@ class SecretSessionBaseServiceTests {
 
     // region utils
     private void addApplicationDeveloperSecret(String appAddress) {
-        TeeTaskComputeSecret applicationDeveloperSecret = getApplicationDeveloperSecret(appAddress);
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, appAddress,
-                SecretOwnerRole.APPLICATION_DEVELOPER, "", APP_DEVELOPER_SECRET_INDEX))
-                .thenReturn(Optional.of(applicationDeveloperSecret));
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                appAddress,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
+                "",
+                APP_DEVELOPER_SECRET_INDEX
+        );
+        final TeeTaskComputeSecret applicationDeveloperSecret = getApplicationDeveloperSecret(appAddress);
+        when(teeTaskComputeSecretService.getDecryptedValue(header))
+                .thenReturn(Optional.of(applicationDeveloperSecret.getValue()));
     }
 
     private void addRequesterSecret(String requesterAddress, String secretKey, String secretValue) {
-        TeeTaskComputeSecret requesterSecret = getRequesterSecret(requesterAddress, secretKey, secretValue);
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER,
-                requesterAddress, secretKey))
-                .thenReturn(Optional.of(requesterSecret));
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                "",
+                SecretOwnerRole.REQUESTER,
+                requesterAddress,
+                secretKey
+        );
+        final TeeTaskComputeSecret requesterSecret = getRequesterSecret(requesterAddress, secretKey, secretValue);
+        when(teeTaskComputeSecretService.getDecryptedValue(header))
+                .thenReturn(Optional.of(requesterSecret.getValue()));
     }
     // endregion
 

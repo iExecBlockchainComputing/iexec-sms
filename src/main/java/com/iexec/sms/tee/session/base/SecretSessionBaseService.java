@@ -21,11 +21,10 @@ import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.api.config.TeeServicesProperties;
-import com.iexec.sms.secret.compute.OnChainObjectType;
-import com.iexec.sms.secret.compute.SecretOwnerRole;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
-import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
+import com.iexec.sms.secret.compute.*;
+import com.iexec.sms.secret.web2.Web2SecretHeader;
 import com.iexec.sms.secret.web2.Web2SecretService;
+import com.iexec.sms.secret.web3.Web3SecretHeader;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -137,7 +136,7 @@ public class SecretSessionBaseService {
         List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
             String datasetKey = web3SecretService
-                    .getDecryptedValue(taskDescription.getDatasetAddress())
+                    .getDecryptedValue(new Web3SecretHeader(taskDescription.getDatasetAddress()))
                     .orElseThrow(() -> new TeeSessionGenerationException(
                             PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
                             "Empty dataset secret - taskId: " + taskId));
@@ -219,13 +218,14 @@ public class SecretSessionBaseService {
 
         if (applicationAddress != null) {
             final String secretIndex = "1";
-            String appDeveloperSecret = teeTaskComputeSecretService.getSecret(
-                    OnChainObjectType.APPLICATION,
-                    applicationAddress.toLowerCase(),
-                    SecretOwnerRole.APPLICATION_DEVELOPER,
-                    "",
-                    secretIndex)
-                    .map(TeeTaskComputeSecret::getValue)
+            String appDeveloperSecret = teeTaskComputeSecretService.getDecryptedValue(
+                            new TeeTaskComputeSecretHeader(
+                                    OnChainObjectType.APPLICATION,
+                                    applicationAddress.toLowerCase(),
+                                    SecretOwnerRole.APPLICATION_DEVELOPER,
+                                    "",
+                                    secretIndex)
+                    )
                     .orElse(EMPTY_YML_VALUE);
             if (!StringUtils.isEmpty(appDeveloperSecret)) {
                 tokens.put("IEXEC_APP_DEVELOPER_SECRET", appDeveloperSecret);
@@ -251,13 +251,15 @@ public class SecretSessionBaseService {
                 log.warn("Invalid entry found in deal parameters secrets map", e);
                 continue;
             }
-            String requesterSecret = teeTaskComputeSecretService.getSecret(
-                    OnChainObjectType.APPLICATION,
-                    "",
-                    SecretOwnerRole.REQUESTER,
-                    taskDescription.getRequester().toLowerCase(),
-                    secretEntry.getValue())
-                    .map(TeeTaskComputeSecret::getValue)
+            String requesterSecret = teeTaskComputeSecretService.getDecryptedValue(
+                            new TeeTaskComputeSecretHeader(
+                                    OnChainObjectType.APPLICATION,
+                                    "",
+                                    SecretOwnerRole.REQUESTER,
+                                    taskDescription.getRequester().toLowerCase(),
+                                    secretEntry.getValue()
+                            )
+                    )
                     .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
         }
@@ -315,8 +317,11 @@ public class SecretSessionBaseService {
             return tokens;
         }
         Optional<String> beneficiaryResultEncryptionKeySecret = web2SecretService.getDecryptedValue(
-                taskDescription.getBeneficiary(),
-                IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY);
+                new Web2SecretHeader(
+                        taskDescription.getBeneficiary(),
+                        IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY
+                )
+        );
         if (beneficiaryResultEncryptionKeySecret.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
@@ -350,8 +355,11 @@ public class SecretSessionBaseService {
                 ? IEXEC_RESULT_DROPBOX_TOKEN
                 : IEXEC_RESULT_IEXEC_IPFS_TOKEN;
         Optional<String> requesterStorageTokenSecret = web2SecretService.getDecryptedValue(
-                taskDescription.getRequester(),
-                keyName);
+                new Web2SecretHeader(
+                        taskDescription.getRequester(),
+                        keyName
+                )
+        );
         if (requesterStorageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());

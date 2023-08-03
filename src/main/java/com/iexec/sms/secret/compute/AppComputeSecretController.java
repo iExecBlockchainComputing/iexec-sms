@@ -19,6 +19,7 @@ package com.iexec.sms.secret.compute;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
+import com.iexec.sms.secret.exception.SecretAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +34,8 @@ import java.util.regex.Pattern;
 @CrossOrigin
 @RestController
 public class AppComputeSecretController {
-    private final AuthorizationService authorizationService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
+    private final AuthorizationService authorizationService;
 
     private static final ApiResponseBody<String, List<String>> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
@@ -45,10 +46,9 @@ public class AppComputeSecretController {
             + TeeTaskComputeSecretHeader.SECRET_KEY_MIN_LENGTH + ","
             + TeeTaskComputeSecretHeader.SECRET_KEY_MAX_LENGTH + "}$");
 
-    public AppComputeSecretController(AuthorizationService authorizationService,
-                                      TeeTaskComputeSecretService teeTaskComputeSecretService) {
-        this.authorizationService = authorizationService;
+    public AppComputeSecretController(TeeTaskComputeSecretService teeTaskComputeSecretService, AuthorizationService authorizationService) {
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
+        this.authorizationService = authorizationService;
     }
 
     // region App developer endpoints
@@ -74,9 +74,16 @@ public class AppComputeSecretController {
                     .body(createErrorPayload("Secret size should not exceed 4 Kb"));
         }
 
-        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue);
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                appAddress,
+                SecretOwnerRole.APPLICATION_DEVELOPER,
+                "",
+                secretIndex
+        );
+        String challenge = getChallenge(header, secretValue);
 
-        if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
+        if (!isCorrectlySigned(challenge, authorization, header)) {
             log.error("Unauthorized to addAppDeveloperComputeComputeSecret" +
                             " [appAddress: {}, expectedChallenge: {}]",
                     appAddress, challenge);
@@ -85,12 +92,9 @@ public class AppComputeSecretController {
                     .body(invalidAuthorizationPayload);
         }
 
-        if (teeTaskComputeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                appAddress,
-                SecretOwnerRole.APPLICATION_DEVELOPER,
-                "",
-                secretIndex)) {
+        try {
+            teeTaskComputeSecretService.addSecret(header, secretValue);
+        } catch (SecretAlreadyExistsException e) {
             log.error("Can't add app developer secret as it already exists" +
                             " [appAddress:{}, secretIndex:{}]",
                     appAddress, secretIndex);
@@ -98,15 +102,6 @@ public class AppComputeSecretController {
                     .status(HttpStatus.CONFLICT)
                     .body(createErrorPayload("Secret already exists"));
         }
-
-        teeTaskComputeSecretService.encryptAndSaveSecret(
-                OnChainObjectType.APPLICATION,
-                appAddress,
-                SecretOwnerRole.APPLICATION_DEVELOPER,
-                "",
-                secretIndex,
-                secretValue
-        );
         return ResponseEntity.noContent().build();
     }
 
@@ -124,11 +119,13 @@ public class AppComputeSecretController {
         }
 
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                appAddress,
-                SecretOwnerRole.APPLICATION_DEVELOPER,
-                "",
-                secretIndex
+                new TeeTaskComputeSecretHeader(
+                        OnChainObjectType.APPLICATION,
+                        appAddress,
+                        SecretOwnerRole.APPLICATION_DEVELOPER,
+                        "",
+                        secretIndex
+                )
         );
         if (isSecretPresent) {
             log.debug("App developer secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
@@ -167,13 +164,19 @@ public class AppComputeSecretController {
                     .body(createErrorPayload(INVALID_SECRET_KEY_FORMAT_MSG));
         }
 
-        String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
+        final TeeTaskComputeSecretHeader header = new TeeTaskComputeSecretHeader(
+                OnChainObjectType.APPLICATION,
+                "",
+                SecretOwnerRole.REQUESTER,
                 requesterAddress,
-                secretKey,
+                secretKey
+        );
+        String challenge = getChallenge(
+                header,
                 secretValue
         );
 
-        if (!authorizationService.isSignedByHimself(challenge, authorization, requesterAddress)) {
+        if (!isCorrectlySigned(challenge, authorization, header)) {
             log.error("Unauthorized to addRequesterAppComputeSecret" +
                             " [requesterAddress:{}, expectedChallenge:{}]",
                     requesterAddress, challenge);
@@ -189,12 +192,11 @@ public class AppComputeSecretController {
                     .body(createErrorPayload(badRequestErrors));
         }
 
-        if (teeTaskComputeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                "",
-                SecretOwnerRole.REQUESTER,
-                requesterAddress,
-                secretKey)) {
+        try {
+            teeTaskComputeSecretService.addSecret(
+                    header,
+                    secretValue);
+        } catch (SecretAlreadyExistsException e) {
             log.debug("Can't add requester secret as it already exists" +
                             " [requesterAddress:{}, secretIndex:{}]",
                     requesterAddress, secretKey);
@@ -202,15 +204,6 @@ public class AppComputeSecretController {
                     .status(HttpStatus.CONFLICT)
                     .body(createErrorPayload("Secret already exists"));
         }
-
-        teeTaskComputeSecretService.encryptAndSaveSecret(
-                OnChainObjectType.APPLICATION,
-                "",
-                SecretOwnerRole.REQUESTER,
-                requesterAddress,
-                secretKey,
-                secretValue
-        );
         return ResponseEntity.noContent().build();
     }
 
@@ -244,11 +237,13 @@ public class AppComputeSecretController {
         }
 
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                "",
-                SecretOwnerRole.REQUESTER,
-                requesterAddress,
-                secretKey
+                new TeeTaskComputeSecretHeader(
+                        OnChainObjectType.APPLICATION,
+                        "",
+                        SecretOwnerRole.REQUESTER,
+                        requesterAddress,
+                        secretKey
+                )
         );
 
         String messageDetails = MessageFormat.format("[requester: {0}, secretIndex: {1}]",
@@ -274,5 +269,33 @@ public class AppComputeSecretController {
                 .<T, List<String>>builder()
                 .error(errors)
                 .build();
+    }
+
+    public String getChallenge(TeeTaskComputeSecretHeader header, String value) {
+        if (header.getSecretOwnerRole() == SecretOwnerRole.APPLICATION_DEVELOPER) {
+            return authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(
+                    header.getOnChainObjectAddress(),
+                    header.getKey(),
+                    value
+            );
+        } else if (header.getSecretOwnerRole() == SecretOwnerRole.REQUESTER) {
+            return authorizationService.getChallengeForSetRequesterAppComputeSecret(
+                    header.getFixedSecretOwner(),
+                    header.getKey(),
+                    value
+            );
+        }
+
+        throw new IllegalArgumentException("Unknown secret owner role, can't get challenge [header:" + header + "]");
+    }
+
+    public boolean isCorrectlySigned(String challenge, String authorization, TeeTaskComputeSecretHeader header) {
+        if (header.getSecretOwnerRole() == SecretOwnerRole.APPLICATION_DEVELOPER) {
+            return authorizationService.isSignedByOwner(challenge, authorization, header.getOnChainObjectAddress());
+        } else if (header.getSecretOwnerRole() == SecretOwnerRole.REQUESTER) {
+            return authorizationService.isSignedByHimself(challenge, authorization, header.getFixedSecretOwner());
+        }
+
+        throw new IllegalArgumentException("Unknown secret owner role, can't check signature [header:" + header + "]");
     }
 }

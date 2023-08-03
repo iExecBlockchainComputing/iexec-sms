@@ -16,23 +16,25 @@
 
 package com.iexec.sms.secret.web2;
 
+import com.iexec.sms.secret.base.AbstractSecretHeader;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Embeddable;
-import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Web2SecretHeader implements Serializable {
+@EqualsAndHashCode
+public class Web2SecretHeader implements AbstractSecretHeader {
     private static final long serialVersionUID = -6126999592529129002L;
     private String ownerAddress;
     private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
 
-    Web2SecretHeader(String ownerAddress, String address) {
+    public Web2SecretHeader(String ownerAddress, String address) {
         Objects.requireNonNull(ownerAddress, "Web2 secret owner address can't be null.");
         Objects.requireNonNull(address, "Web2 secret address can't be null.");
 
