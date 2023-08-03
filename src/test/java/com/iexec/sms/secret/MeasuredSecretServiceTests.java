@@ -39,6 +39,7 @@ class MeasuredSecretServiceTests {
     private static final long INITIAL_COUNT = 5L;
 
     private final AtomicLong count = new AtomicLong(INITIAL_COUNT);
+    private boolean shouldThrowDatabaseAccessException;
 
     private MeasuredSecretService measuredSecretService;
 
@@ -46,6 +47,8 @@ class MeasuredSecretServiceTests {
 
     @BeforeEach
     void beforeEach() {
+        this.shouldThrowDatabaseAccessException = false;
+
         meterRegistry = new SimpleMeterRegistry();
         Metrics.globalRegistry.add(meterRegistry);
 
@@ -54,7 +57,12 @@ class MeasuredSecretServiceTests {
         this.measuredSecretService = new MeasuredSecretService(
                 SECRETS_TYPE,
                 METRICS_PREFIX,
-                count::get, // Simulating a repo `count` method
+                () -> {
+                    if (!shouldThrowDatabaseAccessException) {
+                        return count.get();
+                    }
+                    throw new RuntimeException("Mocked data access exception");
+                }, // Simulating a repo `count` method
                 Executors.newSingleThreadScheduledExecutor(),
                 1);
         measuredSecretService.init();
@@ -87,5 +95,15 @@ class MeasuredSecretServiceTests {
         Awaitility.await()
                 .timeout(5, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(measuredSecretService.getStoredSecretsCount()).isEqualTo(storedCount));
+    }
+
+    @Test
+    void shouldNotGetStoredSecretsCount() {
+        this.shouldThrowDatabaseAccessException = true;
+
+        // The value requires at least 1 second to be updated by the scheduled executor
+        Awaitility.await()
+                .timeout(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> assertThat(measuredSecretService.getStoredSecretsCount()).isEqualTo(-1));
     }
 }
