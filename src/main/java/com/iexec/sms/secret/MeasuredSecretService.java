@@ -36,7 +36,6 @@ import java.util.function.Supplier;
  * Stored secrets count is a scheduled operation, so it can reflect a previous state.
  * That's required to avoid any kind of DDoS.
  */
-@Getter
 @Slf4j
 public class MeasuredSecretService {
     private static final String INITIAL_SECRETS_COUNT_POSTFIX = "initial";
