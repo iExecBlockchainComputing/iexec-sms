@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 ### Quality
 - Remove `nexus.intra.iex.ec` repository. (#180)
 - Parameterize build of TEE applications while PR is not started. This allows faster builds. (#182 #184)
+- Update `sconify.sh` script and use latest `5.7.1-wal` sconifier. (#186)
+### Dependency Upgrades
+- Upgrade to `jenkins-library` 2.6.0. (#182)
 
 ## [[8.1.2]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.2) 2023-06-27
 
