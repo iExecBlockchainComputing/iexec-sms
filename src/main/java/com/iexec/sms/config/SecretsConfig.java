@@ -61,7 +61,8 @@ public class SecretsConfig {
                 "compute",
                 "iexec.sms.secrets.compute.",
                 teeTaskComputeSecretRepository::count,
-                scheduledExecutorService, storedSecretsCountPeriod);
+                scheduledExecutorService,
+                storedSecretsCountPeriod);
     }
 
     /**
