@@ -67,4 +67,11 @@ class SecretsConfigTests {
         );
     }
     // endregion
+
+    // region storageMetricsExecutorService
+    @Test
+    void shouldGetStorageMetricsExecutorService() {
+        assertThat(secretsConfig.storageMetricsExecutorService()).isEqualTo(storageMetricsExecutorService);
+    }
+    // endregion
 }
