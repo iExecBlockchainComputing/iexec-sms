@@ -24,11 +24,32 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PreDestroy;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class SecretsConfig {
+    private final ScheduledExecutorService storageMetricsExecutorService;
+
+    public SecretsConfig() {
+        this.storageMetricsExecutorService = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    @PreDestroy
+    void shutdown() throws InterruptedException {
+        storageMetricsExecutorService.shutdown();
+        try {
+            if (!storageMetricsExecutorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                storageMetricsExecutorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            storageMetricsExecutorService.shutdownNow();
+            throw e;
+        }
+    }
+
     @Bean
     MeasuredSecretService web2MeasuredSecretService(Web2SecretRepository web2SecretRepository,
                                                     ScheduledExecutorService scheduledExecutorService,
@@ -71,6 +92,6 @@ public class SecretsConfig {
      */
     @Bean
     ScheduledExecutorService storageMetricsExecutorService() {
-        return Executors.newSingleThreadScheduledExecutor();
+        return storageMetricsExecutorService;
     }
 }
