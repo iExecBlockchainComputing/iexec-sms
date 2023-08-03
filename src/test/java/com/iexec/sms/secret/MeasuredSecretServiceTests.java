@@ -80,7 +80,7 @@ class MeasuredSecretServiceTests {
 
     @ParameterizedTest
     @ValueSource(longs = {-1, 0, 10, Long.MAX_VALUE})
-    void shouldGetStoredSecretsCount(long storedCount) throws InterruptedException {
+    void shouldGetStoredSecretsCount(long storedCount) {
         count.set(storedCount);
 
         // The value requires at least 1 second to be updated by the scheduled executor
