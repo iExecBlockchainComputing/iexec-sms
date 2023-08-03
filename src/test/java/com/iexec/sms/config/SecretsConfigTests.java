@@ -16,6 +16,7 @@
 
 package com.iexec.sms.config;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class SecretsConfigTests {
     private final ScheduledExecutorService storageMetricsExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -49,15 +50,14 @@ class SecretsConfigTests {
 
     @Test
     void shouldShutdownWhenScheduledTasks() throws InterruptedException {
-        storageMetricsExecutorService.scheduleAtFixedRate(() -> {
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }, 0, 10, TimeUnit.MILLISECONDS);
-
-        TimeUnit.MILLISECONDS.sleep(50);   // Let's wait a bit for executor to have a queue of tasks
+        storageMetricsExecutorService.scheduleAtFixedRate(
+                () -> Awaitility.await()
+                        .timeout(10, TimeUnit.SECONDS)
+                        .until(storageMetricsExecutorService::isTerminated),    // Should not stop before the executor
+                0,
+                10,
+                TimeUnit.MILLISECONDS
+        );
 
         secretsConfig.shutdown();
 
