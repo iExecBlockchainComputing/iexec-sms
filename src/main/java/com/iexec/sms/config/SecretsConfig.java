@@ -37,6 +37,10 @@ public class SecretsConfig {
         this.storageMetricsExecutorService = Executors.newSingleThreadScheduledExecutor();
     }
 
+    SecretsConfig(ScheduledExecutorService storageMetricsExecutorService) {
+        this.storageMetricsExecutorService = storageMetricsExecutorService;
+    }
+
     @PreDestroy
     void shutdown() throws InterruptedException {
         storageMetricsExecutorService.shutdown();
