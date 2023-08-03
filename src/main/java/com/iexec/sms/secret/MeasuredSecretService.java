@@ -46,8 +46,8 @@ public class MeasuredSecretService {
     private final String secretsType;
     private final String metricsPrefix;
     private final Supplier<Long> storedSecretsCountGetter;
-    private final ScheduledExecutorService secretsCountExecutorService;
-    private final long storedSecretsCountPeriod;
+    private final ScheduledExecutorService storageMetricsExecutorService;
+    private final int storedSecretsCountPeriod;
 
     private Counter initialSecretsCounter;
     private AtomicLong storedSecretsCount;
@@ -56,12 +56,12 @@ public class MeasuredSecretService {
     public MeasuredSecretService(String secretsType,
                                  String metricsPrefix,
                                  Supplier<Long> storedSecretsCountGetter,
-                                 ScheduledExecutorService secretsCountExecutorService,
-                                 long storedSecretsCountPeriod) {
+                                 ScheduledExecutorService storageMetricsExecutorService,
+                                 int storedSecretsCountPeriod) {
         this.secretsType = secretsType;
         this.metricsPrefix = metricsPrefix;
         this.storedSecretsCountGetter = storedSecretsCountGetter;
-        this.secretsCountExecutorService = secretsCountExecutorService;
+        this.storageMetricsExecutorService = storageMetricsExecutorService;
         this.storedSecretsCountPeriod = storedSecretsCountPeriod;
 
         this.addedSecretsSinceStartCounter = Metrics.counter(metricsPrefix + ADDED_SECRETS_SINCE_START_COUNT_POSTFIX);
@@ -75,7 +75,7 @@ public class MeasuredSecretService {
 
         this.storedSecretsCount = Metrics.gauge(metricsPrefix + STORED_SECRETS_COUNT_POSTFIX, new AtomicLong(initialSecretsCount));
 
-        secretsCountExecutorService.scheduleAtFixedRate(
+        storageMetricsExecutorService.scheduleAtFixedRate(
                 this::countStoredSecrets,
                 storedSecretsCountPeriod,
                 storedSecretsCountPeriod,

@@ -32,7 +32,7 @@ public class SecretsConfig {
     @Bean
     MeasuredSecretService web2MeasuredSecretService(Web2SecretRepository web2SecretRepository,
                                                     ScheduledExecutorService scheduledExecutorService,
-                                                    @Value("secrets.stored.count-period") long storedSecretsCountPeriod) {
+                                                    @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
         return new MeasuredSecretService(
                 "web2",
                 "iexec.sms.secrets.web2.",
@@ -44,7 +44,7 @@ public class SecretsConfig {
     @Bean
     MeasuredSecretService web3MeasuredSecretService(Web3SecretRepository web3SecretRepository,
                                                     ScheduledExecutorService scheduledExecutorService,
-                                                    @Value("secrets.stored.count-period") long storedSecretsCountPeriod) {
+                                                    @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
         return new MeasuredSecretService(
                 "web3",
                 "iexec.sms.secrets.web3.",
@@ -56,7 +56,7 @@ public class SecretsConfig {
     @Bean
     MeasuredSecretService computeMeasuredSecretService(TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
                                                        ScheduledExecutorService scheduledExecutorService,
-                                                       @Value("secrets.stored.count-period") long storedSecretsCountPeriod) {
+                                                       @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
         return new MeasuredSecretService(
                 "compute",
                 "iexec.sms.secrets.compute.",
@@ -65,11 +65,11 @@ public class SecretsConfig {
     }
 
     /**
-     * A single threaded scheduled executor is required for measuring secrets count in DB.
+     * A single threaded scheduled executor is required for measuring metrics in DB.
      * It avoids having lots of thread requesting the DB.
      */
     @Bean
-    ScheduledExecutorService secretsCountExecutorService() {
+    ScheduledExecutorService storageMetricsExecutorService() {
         return Executors.newSingleThreadScheduledExecutor();
     }
 }
