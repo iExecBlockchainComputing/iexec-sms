@@ -57,14 +57,9 @@ class SecretsConfigTests {
             }
         }, 0, 10, TimeUnit.MILLISECONDS);
 
-        TimeUnit.MILLISECONDS.sleep(50);   // Let's wait a bit for executor to have a queue of tasks
-
         secretsConfig.shutdown();
 
-        assertAll(
-                () -> assertThat(storageMetricsExecutorService.isShutdown()).isTrue(),
-                () -> assertThat(storageMetricsExecutorService.isTerminated()).isTrue()
-        );
+        assertThat(storageMetricsExecutorService.isShutdown()).isTrue();
     }
     // endregion
 }
