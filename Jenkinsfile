@@ -38,6 +38,6 @@ sconeBuildUnlocked(
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args',
-        sconifyImage:    'sconecuratedimages/iexec-sconify-image',
-        sconifyVersion:  '5.7.0-wal'
+        sconifyImage:    'scone-debug/iexec-sconify-image-unlocked',
+        sconifyVersion:  '5.7.1-wal'
 )
