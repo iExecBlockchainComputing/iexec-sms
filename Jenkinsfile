@@ -39,5 +39,5 @@ sconeBuildUnlocked(
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args',
         sconifyImage:    'scone-debug/iexec-sconify-image-unlocked',
-        sconifyVersion:  '5.7.1-wal'
+        sconifyVersion:  '5.7.2-wal'
 )
