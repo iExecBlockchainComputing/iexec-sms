@@ -3,7 +3,7 @@
 cd $(dirname $0)
 
 SCONE_IMG_NAME=scone-debug/iexec-sconify-image-unlocked
-SCONE_IMG_VERSION=5.7.1-wal
+SCONE_IMG_VERSION=5.7.2-wal
 
 IMG_TO=${IMG_FROM}-sconify-${SCONE_IMG_VERSION}-debug
 
