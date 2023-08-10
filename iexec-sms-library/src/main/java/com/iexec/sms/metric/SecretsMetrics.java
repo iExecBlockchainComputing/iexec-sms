@@ -16,14 +16,15 @@
 
 package com.iexec.sms.metric;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
-@Value
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
 public class SecretsMetrics {
-    String secretsType;
-    long initialCount;
-    long storedCount;
-    long addedSinceStartCount;
+    private String secretsType;
+    private long initialCount;
+    private long storedCount;
+    private long addedSinceStartCount;
 }
