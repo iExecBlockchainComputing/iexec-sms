@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Parameterize build of TEE applications while PR is not started. This allows faster builds. (#182 #184)
 - Refactor secrets measures. (#185)
 - Update `sconify.sh` script and use latest `5.7.2-wal` sconifier. (#186 #187 #188)
+- Add `/metrics` endpoint. (#183)
 ### Dependency Upgrades
 - Upgrade to `jenkins-library` 2.6.0. (#182)
 
