@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,14 @@ package com.iexec.sms.metric;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.List;
+import java.util.Map;
 
 @Value
 @Builder
 public class SmsMetrics {
-    List<SecretsMetrics> secretsMetrics;
+    /**
+     * A map of secrets metrics, whose key is the type of secrets it holds
+     * and value is the metrics themselves.
+     */
+    Map<String, SecretsMetrics> secretsMetrics;
 }

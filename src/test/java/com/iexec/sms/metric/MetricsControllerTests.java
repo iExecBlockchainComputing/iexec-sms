@@ -24,7 +24,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -60,7 +60,7 @@ class MetricsControllerTests {
                 .build();
         final SmsMetrics metrics = SmsMetrics
                 .builder()
-                .secretsMetrics(List.of(secretsMetrics))
+                .secretsMetrics(Map.of(SECRETS_TYPE, secretsMetrics))
                 .build();
         when(metricsService.getSmsMetrics()).thenReturn(metrics);
 

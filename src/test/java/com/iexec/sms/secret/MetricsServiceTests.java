@@ -24,6 +24,7 @@ import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -75,14 +76,14 @@ class MetricsServiceTests {
         doReturn(storedCount ).when(measuredSecretService).getStoredSecretsCount();
 
         final SmsMetrics smsMetrics = metricsService.getSmsMetrics();
-        final List<SecretsMetrics> secretsMetrics = smsMetrics.getSecretsMetrics();
+        final Map<String, SecretsMetrics> secretsMetrics = smsMetrics.getSecretsMetrics();
 
         assertAll(
                 () -> assertThat(secretsMetrics).hasSize(1),
-                () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getSecretsType         ).isEqualTo(SECRETS_TYPE),
-                () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getInitialCount        ).isEqualTo(initialCount),
-                () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getAddedSinceStartCount).isEqualTo(addedCount),
-                () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getStoredCount         ).isEqualTo(storedCount)
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getSecretsType         ).isEqualTo(SECRETS_TYPE),
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getInitialCount        ).isEqualTo(initialCount),
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getAddedSinceStartCount).isEqualTo(addedCount),
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getStoredCount         ).isEqualTo(storedCount)
         );
     }
     // endregion

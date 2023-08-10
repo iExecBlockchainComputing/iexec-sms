@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,10 +46,13 @@ public class MetricsService {
     }
 
     public SmsMetrics getSmsMetrics() {
-        final List<SecretsMetrics> secretsMetrics = measuredSecretServices
+        final Map<String, SecretsMetrics> secretsMetrics = measuredSecretServices
                 .stream()
                 .map(this::getSecretsMetrics)
-                .collect(Collectors.toList());
+                .collect(Collectors.toMap(
+                        SecretsMetrics::getSecretsType,
+                        Function.identity()
+                ));
 
         return SmsMetrics.builder()
                 .secretsMetrics(secretsMetrics)
