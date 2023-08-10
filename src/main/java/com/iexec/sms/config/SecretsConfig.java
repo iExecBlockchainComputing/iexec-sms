@@ -16,6 +16,7 @@
 
 package com.iexec.sms.config;
 
+import com.iexec.sms.metric.MetricsService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
 import com.iexec.sms.secret.web2.Web2SecretRepository;
@@ -31,13 +32,17 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class SecretsConfig {
+    private final MetricsService metricsService;
     private final ScheduledExecutorService storageMetricsExecutorService;
 
-    public SecretsConfig() {
+    public SecretsConfig(MetricsService metricsService) {
+        this.metricsService = metricsService;
         this.storageMetricsExecutorService = Executors.newSingleThreadScheduledExecutor();
     }
 
-    SecretsConfig(ScheduledExecutorService storageMetricsExecutorService) {
+    SecretsConfig(MetricsService metricsService,
+                  ScheduledExecutorService storageMetricsExecutorService) {
+        this.metricsService = metricsService;
         this.storageMetricsExecutorService = storageMetricsExecutorService;
     }
 
@@ -57,33 +62,42 @@ public class SecretsConfig {
     @Bean
     MeasuredSecretService web2MeasuredSecretService(Web2SecretRepository web2SecretRepository,
                                                     @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
-        return new MeasuredSecretService(
-                "web2",
-                "iexec.sms.secrets.web2.",
-                web2SecretRepository::count,
-                storageMetricsExecutorService,
-                storedSecretsCountPeriod);
+        return metricsService.registerNewMeasuredSecretService(
+                new MeasuredSecretService(
+                        "web2",
+                        "iexec.sms.secrets.web2.",
+                        web2SecretRepository::count,
+                        storageMetricsExecutorService,
+                        storedSecretsCountPeriod
+                )
+        );
     }
 
     @Bean
     MeasuredSecretService web3MeasuredSecretService(Web3SecretRepository web3SecretRepository,
                                                     @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
-        return new MeasuredSecretService(
-                "web3",
-                "iexec.sms.secrets.web3.",
-                web3SecretRepository::count,
-                storageMetricsExecutorService,
-                storedSecretsCountPeriod);
+        return metricsService.registerNewMeasuredSecretService(
+                new MeasuredSecretService(
+                        "web3",
+                        "iexec.sms.secrets.web3.",
+                        web3SecretRepository::count,
+                        storageMetricsExecutorService,
+                        storedSecretsCountPeriod
+                )
+        );
     }
 
     @Bean
     MeasuredSecretService computeMeasuredSecretService(TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
                                                        @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
-        return new MeasuredSecretService(
-                "compute",
-                "iexec.sms.secrets.compute.",
-                teeTaskComputeSecretRepository::count,
-                storageMetricsExecutorService,
-                storedSecretsCountPeriod);
+        return metricsService.registerNewMeasuredSecretService(
+                new MeasuredSecretService(
+                        "compute",
+                        "iexec.sms.secrets.compute.",
+                        teeTaskComputeSecretRepository::count,
+                        storageMetricsExecutorService,
+                        storedSecretsCountPeriod
+                )
+        );
     }
 }

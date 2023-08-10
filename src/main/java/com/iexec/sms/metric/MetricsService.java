@@ -35,7 +35,7 @@ public class MetricsService {
     }
 
     public MetricsService(List<MeasuredSecretService> measuredSecretServices) {
-        this.measuredSecretServices = measuredSecretServices;
+        this.measuredSecretServices = new ArrayList<>(measuredSecretServices);
     }
 
     public MeasuredSecretService registerNewMeasuredSecretService(MeasuredSecretService service) {

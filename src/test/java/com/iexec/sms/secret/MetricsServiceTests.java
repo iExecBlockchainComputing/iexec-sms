@@ -21,6 +21,7 @@ import com.iexec.sms.metric.SecretsMetrics;
 import com.iexec.sms.metric.SmsMetrics;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -44,10 +45,27 @@ class MetricsServiceTests {
             1
     ));
 
-    private final MetricsService metricsService = new MetricsService(List.of(measuredSecretService));
+    // region registerNewMeasuredSecretService
+    @Test
+    void shouldRegisterNewMeasuredSecretService() {
+        final MetricsService metricsService = new MetricsService();
 
+        final List<MeasuredSecretService> measuredSecretServices =
+                ((List<MeasuredSecretService>) ReflectionTestUtils.getField(metricsService, "measuredSecretServices"));
+
+        assertThat(measuredSecretServices).isEmpty();
+
+        metricsService.registerNewMeasuredSecretService(measuredSecretService);
+
+        assertThat(measuredSecretServices).hasSize(1);
+    }
+    // endregion
+
+    // region getSmsMetrics
     @Test
     void shouldGetMetrics() {
+        final MetricsService metricsService = new MetricsService(List.of(measuredSecretService));
+
         final long initialCount = 1;
         final long addedCount = 2;
         final long storedCount = 3;
@@ -67,4 +85,5 @@ class MetricsServiceTests {
                 () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getStoredCount         ).isEqualTo(storedCount)
         );
     }
+    // endregion
 }
