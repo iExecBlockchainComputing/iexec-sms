@@ -16,17 +16,19 @@
 
 package com.iexec.sms.metric;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-@Value
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SmsMetrics {
     /**
      * A map of secrets metrics, whose key is the type of secrets it holds
      * and value is the metrics themselves.
      */
-    Map<String, SecretsMetrics> secretsMetrics;
+    private Map<String, SecretsMetrics> secretsMetrics;
 }
