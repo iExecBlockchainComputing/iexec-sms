@@ -17,16 +17,9 @@
 package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.encryption.EncryptionService;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.jupiter.api.AfterEach;
+import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -38,8 +31,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class Web3SecretServiceTests {
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.web3.";
-
     String secretAddress = "secretAddress".toLowerCase();
     String plainSecretValue = "plainSecretValue";
     String encryptedSecretValue = "encryptedSecretValue";
@@ -48,36 +39,15 @@ class Web3SecretServiceTests {
     private EncryptionService encryptionService;
     @Mock
     private Web3SecretRepository web3SecretRepository;
+    @Mock
+    private MeasuredSecretService measuredSecretService;
     @InjectMocks
     private Web3SecretService web3SecretService;
 
-    private MeterRegistry meterRegistry;
-
     @BeforeEach
     void beforeEach() {
-        meterRegistry = new SimpleMeterRegistry();
-        Metrics.globalRegistry.add(meterRegistry);
-
         MockitoAnnotations.openMocks(this);
     }
-
-    @AfterEach
-    void afterEach() {
-        meterRegistry.clear();
-        Metrics.globalRegistry.clear();
-    }
-
-    // region init
-    @Test
-    void shouldRegisterCounter() {
-        final long initialCount = 5L;
-        when(web3SecretRepository.count()).thenReturn(initialCount);
-
-        web3SecretService.init();
-
-        assertInitialCount(initialCount);
-    }
-    // endregion
 
     // region addSecret
     @Test
@@ -85,7 +55,7 @@ class Web3SecretServiceTests {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
         assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
-        assertAddedCount(0);
+        verify(measuredSecretService, times(0)).newlyAddedSecret();
         verifyNoInteractions(encryptionService);
         verify(web3SecretRepository, never()).save(any());
     }
@@ -95,7 +65,7 @@ class Web3SecretServiceTests {
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
         assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isTrue();
-        assertAddedCount(1);
+        verify(measuredSecretService).newlyAddedSecret();
         verify(encryptionService).encrypt(any());
         verify(web3SecretRepository).save(any());
     }
@@ -144,47 +114,6 @@ class Web3SecretServiceTests {
         assertThat(web3SecretService.getSecret(secretAddress)).isEmpty();
         verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
         verifyNoInteractions(encryptionService);
-    }
-    // endregion
-
-    // region stored count
-    @ParameterizedTest
-    @ValueSource(longs = {-1, 0, 10, Long.MAX_VALUE})
-    void storedCount(long expectedCount) {
-        when(web3SecretRepository.count()).thenReturn(expectedCount);
-
-        assertStoredCount(expectedCount);
-
-        verify(web3SecretRepository).count();
-    }
-    // endregion
-
-    // region utils
-    void assertInitialCount(long expectedCount) {
-        final Counter initialCounter = meterRegistry.find(METRICS_PREFIX + "initial")
-                .counter();
-
-        assertThat(initialCounter)
-                .extracting(Counter::count)
-                .isEqualTo((double) expectedCount);
-    }
-
-    void assertAddedCount(long expectedCount) {
-        final Counter addedCounter = meterRegistry.find(METRICS_PREFIX + "added")
-                .counter();
-
-        assertThat(addedCounter)
-                .extracting(Counter::count)
-                .isEqualTo((double) expectedCount);
-    }
-
-    void assertStoredCount(long expectedCount) {
-        final Gauge storedGauge = meterRegistry.find(METRICS_PREFIX + "stored")
-                .gauge();
-
-        assertThat(storedGauge)
-                .extracting(Gauge::value)
-                .isEqualTo((double) expectedCount);
     }
     // endregion
 }

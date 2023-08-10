@@ -17,36 +17,25 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Metrics;
+import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class TeeTaskComputeSecretService {
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.compute.";
-
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
-    private final Counter addedSecretsSinceStart = Metrics.counter(METRICS_PREFIX + "added");
+    private final MeasuredSecretService measuredSecretService;
 
-    protected TeeTaskComputeSecretService(
-            TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
-            EncryptionService encryptionService) {
+    protected TeeTaskComputeSecretService(TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
+                                          EncryptionService encryptionService,
+                                          MeasuredSecretService computeMeasuredSecretService) {
         this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
         this.encryptionService = encryptionService;
-
-        Metrics.gauge(METRICS_PREFIX + "stored", teeTaskComputeSecretRepository, TeeTaskComputeSecretRepository::count);
-    }
-
-    @PostConstruct
-    void init() {
-        final long initialSecretsCount = teeTaskComputeSecretRepository.count();
-        Metrics.counter(METRICS_PREFIX + "initial").increment(initialSecretsCount);
+        this.measuredSecretService = computeMeasuredSecretService;
     }
 
     /**
@@ -132,7 +121,7 @@ public class TeeTaskComputeSecretService {
         log.info("Adding new tee task compute secret" +
                         " [secret:{}]", secret);
         teeTaskComputeSecretRepository.save(secret);
-        addedSecretsSinceStart.increment();
+        measuredSecretService.newlyAddedSecret();
         return true;
     }
 }
