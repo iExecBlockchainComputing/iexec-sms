@@ -20,6 +20,7 @@ import com.iexec.common.web.ApiResponseBody;
 import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.config.TeeServicesProperties;
+import com.iexec.sms.metric.SmsMetrics;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
@@ -122,5 +123,10 @@ public interface SmsClient {
 
     @RequestLine("GET /tee/properties/{teeFramework}")
     <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
+    // endregion
+
+    // region Metrics
+    @RequestLine("GET /metrics")
+    SmsMetrics getMetrics();
     // endregion
 }
