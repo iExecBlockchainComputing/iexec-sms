@@ -18,6 +18,7 @@ package com.iexec.sms.metric;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
 public class SmsMetrics {
     /**
      * A map of secrets metrics, whose key is the type of secrets it holds
