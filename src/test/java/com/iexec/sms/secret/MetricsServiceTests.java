@@ -21,29 +21,28 @@ import com.iexec.sms.metric.SecretsMetrics;
 import com.iexec.sms.metric.SmsMetrics;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 
 class MetricsServiceTests {
-    private static final String TEST_SECRETS_TYPE = "testSecrets";
-    private static final String TEST_SECRETS_METRICS_PREFIX = "iexec.sms.secrets.test.";
+    private static final String SECRETS_TYPE = "testSecrets";
+    private static final String METRICS_PREFIX = "iexec.sms.secrets.tests_secrets.";
+    private static final long INITIAL_COUNT = 5L;
 
+    private final AtomicLong count = new AtomicLong(INITIAL_COUNT);
     private final MeasuredSecretService measuredSecretService = Mockito.spy(new MeasuredSecretService(
-            TEST_SECRETS_TYPE,
-            TEST_SECRETS_METRICS_PREFIX,
-            mock(CrudRepository.class)
-    ) {
-        @Override
-        public String getMetricsPrefix() {
-            return "testSecretsPrefix";
-        }
-    });
+            SECRETS_TYPE,
+            METRICS_PREFIX,
+            count::get, // Simulating a repo `count` method
+            Executors.newSingleThreadScheduledExecutor(),
+            1
+    ));
 
     private final MetricsService metricsService = new MetricsService(List.of(measuredSecretService));
 
@@ -62,7 +61,7 @@ class MetricsServiceTests {
 
         assertAll(
                 () -> assertThat(secretsMetrics).hasSize(1),
-                () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getSecretsType         ).isEqualTo(TEST_SECRETS_TYPE),
+                () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getSecretsType         ).isEqualTo(SECRETS_TYPE),
                 () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getInitialCount        ).isEqualTo(initialCount),
                 () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getAddedSinceStartCount).isEqualTo(addedCount),
                 () -> assertThat(secretsMetrics.get(0)).extracting(SecretsMetrics::getStoredCount         ).isEqualTo(storedCount)

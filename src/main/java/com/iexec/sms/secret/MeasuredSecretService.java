@@ -42,6 +42,7 @@ public class MeasuredSecretService {
     private static final String ADDED_SECRETS_SINCE_START_COUNT_POSTFIX = "added";
     private static final String STORED_SECRETS_COUNT_POSTFIX = "stored";
 
+    @Getter
     private final String secretsType;
     private final String metricsPrefix;
     private final Supplier<Long> storedSecretsCountGetter;

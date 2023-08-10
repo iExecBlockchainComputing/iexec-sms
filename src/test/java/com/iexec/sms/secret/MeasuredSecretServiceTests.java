@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class MeasuredSecretServiceTests {
     private static final String SECRETS_TYPE = "tests_secrets";
-    private static final String METRICS_PREFIX = "iexec.sms.secrets.tests_secrets";
+    private static final String METRICS_PREFIX = "iexec.sms.secrets.tests_secrets.";
     private static final long INITIAL_COUNT = 5L;
 
     private final AtomicLong count = new AtomicLong(INITIAL_COUNT);
