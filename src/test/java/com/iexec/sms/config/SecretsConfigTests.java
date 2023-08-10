@@ -16,17 +16,24 @@
 
 package com.iexec.sms.config;
 
+import com.iexec.sms.secret.MeasuredSecretService;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
+import com.iexec.sms.secret.web2.Web2SecretRepository;
+import com.iexec.sms.secret.web3.Web3SecretRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.Mockito.mock;
 
 class SecretsConfigTests {
+    private static final int STORED_SECRETS_COUNT_PERIOD = 30;
     private final ScheduledExecutorService storageMetricsExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     private SecretsConfig secretsConfig;
@@ -60,6 +67,50 @@ class SecretsConfigTests {
         secretsConfig.shutdown();
 
         assertThat(storageMetricsExecutorService.isShutdown()).isTrue();
+    }
+    // endregion
+
+    // region MeasuredSecretService bean definitions
+    @Test
+    void web2MeasuredSecretService() {
+        final Web2SecretRepository repository = mock(Web2SecretRepository.class);
+        final MeasuredSecretService measuredSecretService = secretsConfig.web2MeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+
+        final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
+        final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
+
+        assertAll(
+                () -> assertThat(secretsType).isEqualTo("web2"),
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.web2.")
+        );
+    }
+
+    @Test
+    void web3MeasuredSecretService() {
+        final Web3SecretRepository repository = mock(Web3SecretRepository.class);
+        final MeasuredSecretService measuredSecretService = secretsConfig.web3MeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+
+        final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
+        final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
+
+        assertAll(
+                () -> assertThat(secretsType).isEqualTo("web3"),
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.web3.")
+        );
+    }
+
+    @Test
+    void computeMeasuredSecretService() {
+        final TeeTaskComputeSecretRepository repository = mock(TeeTaskComputeSecretRepository.class);
+        final MeasuredSecretService measuredSecretService = secretsConfig.computeMeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+
+        final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
+        final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
+
+        assertAll(
+                () -> assertThat(secretsType).isEqualTo("compute"),
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.compute.")
+        );
     }
     // endregion
 }
