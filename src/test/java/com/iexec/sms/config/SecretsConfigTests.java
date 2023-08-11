@@ -16,12 +16,15 @@
 
 package com.iexec.sms.config;
 
+import com.iexec.sms.metric.MetricsService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
 import com.iexec.sms.secret.web2.Web2SecretRepository;
 import com.iexec.sms.secret.web3.Web3SecretRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.Executors;
@@ -30,17 +33,24 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class SecretsConfigTests {
     private static final int STORED_SECRETS_COUNT_PERIOD = 30;
     private final ScheduledExecutorService storageMetricsExecutorService = Executors.newSingleThreadScheduledExecutor();
 
+    @Mock
+    private MetricsService metricsService;
+
     private SecretsConfig secretsConfig;
 
     @BeforeEach
     void init() {
-        this.secretsConfig = new SecretsConfig(storageMetricsExecutorService);
+        MockitoAnnotations.openMocks(this);
+        this.secretsConfig = new SecretsConfig(metricsService, storageMetricsExecutorService);
+
+        when(metricsService.registerNewMeasuredSecretService(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     // region shutdown
@@ -81,7 +91,8 @@ class SecretsConfigTests {
 
         assertAll(
                 () -> assertThat(secretsType).isEqualTo("web2"),
-                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.web2.")
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.web2."),
+                () -> verify(metricsService).registerNewMeasuredSecretService(measuredSecretService)
         );
     }
 
@@ -95,7 +106,8 @@ class SecretsConfigTests {
 
         assertAll(
                 () -> assertThat(secretsType).isEqualTo("web3"),
-                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.web3.")
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.web3."),
+                () -> verify(metricsService).registerNewMeasuredSecretService(measuredSecretService)
         );
     }
 
@@ -109,7 +121,8 @@ class SecretsConfigTests {
 
         assertAll(
                 () -> assertThat(secretsType).isEqualTo("compute"),
-                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.compute.")
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.compute."),
+                () -> verify(metricsService).registerNewMeasuredSecretService(measuredSecretService)
         );
     }
     // endregion
