@@ -71,7 +71,7 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     // H2
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    runtimeOnly 'com.h2database:h2:1.4.200'
+    implementation 'com.h2database:h2:1.4.200'
 
     // Spring Doc
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.3'
