@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -30,7 +31,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class Web3SecretServiceTests {
-
     String secretAddress = "secretAddress".toLowerCase();
     String plainSecretValue = "plainSecretValue";
     String encryptedSecretValue = "encryptedSecretValue";
@@ -39,19 +39,23 @@ class Web3SecretServiceTests {
     private EncryptionService encryptionService;
     @Mock
     private Web3SecretRepository web3SecretRepository;
+    @Mock
+    private MeasuredSecretService measuredSecretService;
     @InjectMocks
     private Web3SecretService web3SecretService;
 
     @BeforeEach
-    void init() {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
     }
 
+    // region addSecret
     @Test
     void shouldNotAddSecretIfPresent() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
         assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
+        verify(measuredSecretService, times(0)).newlyAddedSecret();
         verifyNoInteractions(encryptionService);
         verify(web3SecretRepository, never()).save(any());
     }
@@ -61,10 +65,13 @@ class Web3SecretServiceTests {
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
         assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isTrue();
+        verify(measuredSecretService).newlyAddedSecret();
         verify(encryptionService).encrypt(any());
         verify(web3SecretRepository).save(any());
     }
+    // endregion
 
+    // region getDecryptedValue
     @Test
     void shouldGetDecryptedValue() {
         Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
@@ -80,6 +87,16 @@ class Web3SecretServiceTests {
         verify(encryptionService).decrypt(any());
     }
 
+    @Test
+    void shouldGetEmptyValueIfSecretNotPresent() {
+        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
+        assertThat(web3SecretService.getDecryptedValue(secretAddress)).isEmpty();
+        verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
+        verifyNoInteractions(encryptionService);
+    }
+    // endregion
+
+    // region getSecret
     @Test
     void shouldGetEncryptedSecret() {
         Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
@@ -98,13 +115,5 @@ class Web3SecretServiceTests {
         verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
         verifyNoInteractions(encryptionService);
     }
-
-    @Test
-    void shouldGetEmptyValueIfSecretNotPresent() {
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
-        assertThat(web3SecretService.getDecryptedValue(secretAddress)).isEmpty();
-        verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
-        verifyNoInteractions(encryptionService);
-    }
-
+    // endregion
 }

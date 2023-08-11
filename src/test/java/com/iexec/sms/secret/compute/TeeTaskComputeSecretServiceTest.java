@@ -1,6 +1,7 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.MeasuredSecretService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,12 +31,16 @@ class TeeTaskComputeSecretServiceTest {
     @Mock
     EncryptionService encryptionService;
 
+    @Mock
+    MeasuredSecretService measuredSecretService;
+
     @InjectMocks
     @Spy
     TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     @Captor
     ArgumentCaptor<TeeTaskComputeSecret> computeSecretCaptor;
+
 
     @BeforeEach
     void beforeEach() {
@@ -50,13 +55,16 @@ class TeeTaskComputeSecretServiceTest {
         when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
 
-        teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
+        final boolean secretAdded = teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
 
+        Assertions.assertThat(secretAdded).isTrue();
         verify(teeTaskComputeSecretRepository, times(1)).save(computeSecretCaptor.capture());
+
         final TeeTaskComputeSecret savedTeeTaskComputeSecret = computeSecretCaptor.getValue();
         Assertions.assertThat(savedTeeTaskComputeSecret.getHeader().getKey()).isEqualTo("0");
         Assertions.assertThat(savedTeeTaskComputeSecret.getHeader().getOnChainObjectAddress()).isEqualTo(APP_ADDRESS.toLowerCase());
         Assertions.assertThat(savedTeeTaskComputeSecret.getValue()).isEqualTo(ENCRYPTED_SECRET_VALUE);
+        verify(measuredSecretService).newlyAddedSecret();
     }
 
     @Test
@@ -67,6 +75,7 @@ class TeeTaskComputeSecretServiceTest {
         teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
 
         verify(teeTaskComputeSecretRepository, times(0)).save(computeSecretCaptor.capture());
+        verify(measuredSecretService, times(0)).newlyAddedSecret();
     }
     // endregion
 

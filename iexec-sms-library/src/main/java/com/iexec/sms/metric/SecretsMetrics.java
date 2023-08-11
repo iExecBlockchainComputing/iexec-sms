@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.secret;
+package com.iexec.sms.metric;
 
-import com.iexec.sms.encryption.EncryptionService;
+import lombok.*;
 
-public abstract class AbstractSecretService {
-
-    protected final EncryptionService encryptionService;
-
-    protected AbstractSecretService(EncryptionService encryptionService) {
-        this.encryptionService = encryptionService;
-    }
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+public class SecretsMetrics {
+    private String secretsType;
+    private long initialCount;
+    private long storedCount;
+    private long addedSinceStartCount;
 }

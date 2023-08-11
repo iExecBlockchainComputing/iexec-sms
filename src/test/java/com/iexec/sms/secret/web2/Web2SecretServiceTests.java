@@ -19,6 +19,7 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -43,8 +44,12 @@ class Web2SecretServiceTests {
     @Mock
     private EncryptionService encryptionService;
 
+    @Mock
+    private MeasuredSecretService measuredSecretService;
+
     @InjectMocks
     private Web2SecretService web2SecretService;
+
 
     @BeforeEach
     void beforeEach() {
@@ -118,6 +123,7 @@ class Web2SecretServiceTests {
         assertAll(
                 () -> assertThat(newSecret).extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
                 () -> assertThat(newSecret).extracting(Web2Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
+                () -> verify(measuredSecretService).newlyAddedSecret(),
 
                 () -> verify(encryptionService).encrypt(any()),
                 () -> verify(web2SecretRepository).save(any())
@@ -135,6 +141,8 @@ class Web2SecretServiceTests {
         assertAll(
                 () -> assertEquals(OWNER_ADDRESS, exception.getOwnerAddress()),
                 () -> assertEquals(SECRET_ADDRESS, exception.getSecretAddress()),
+                () -> verify(measuredSecretService, times(0)).newlyAddedSecret(),
+
                 () -> verify(encryptionService, never()).encrypt(PLAIN_SECRET_VALUE),
                 () -> verify(web2SecretRepository, never()).save(any())
         );

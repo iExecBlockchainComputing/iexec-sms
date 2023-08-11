@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +28,14 @@ import java.util.Optional;
 public class TeeTaskComputeSecretService {
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
+    private final MeasuredSecretService measuredSecretService;
 
-    protected TeeTaskComputeSecretService(
-            TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
-            EncryptionService encryptionService) {
+    protected TeeTaskComputeSecretService(TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
+                                          EncryptionService encryptionService,
+                                          MeasuredSecretService computeMeasuredSecretService) {
         this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
         this.encryptionService = encryptionService;
+        this.measuredSecretService = computeMeasuredSecretService;
     }
 
     /**
@@ -118,6 +121,7 @@ public class TeeTaskComputeSecretService {
         log.info("Adding new tee task compute secret" +
                         " [secret:{}]", secret);
         teeTaskComputeSecretRepository.save(secret);
+        measuredSecretService.newlyAddedSecret();
         return true;
     }
 }

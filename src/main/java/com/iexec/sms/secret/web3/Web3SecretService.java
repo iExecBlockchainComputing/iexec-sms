@@ -18,7 +18,7 @@ package com.iexec.sms.secret.web3;
 
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
+import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -26,14 +26,17 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web3SecretService extends AbstractSecretService {
-
+public class Web3SecretService {
     private final Web3SecretRepository web3SecretRepository;
+    private final EncryptionService encryptionService;
+    private final MeasuredSecretService measuredSecretService;
 
-    public Web3SecretService(Web3SecretRepository web3SecretRepository,
-                             EncryptionService encryptionService) {
-        super(encryptionService);
+    protected Web3SecretService(Web3SecretRepository web3SecretRepository,
+                                EncryptionService encryptionService,
+                                MeasuredSecretService web3MeasuredSecretService) {
         this.web3SecretRepository = web3SecretRepository;
+        this.encryptionService = encryptionService;
+        this.measuredSecretService = web3MeasuredSecretService;
     }
 
     /**
@@ -73,7 +76,7 @@ public class Web3SecretService extends AbstractSecretService {
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         web3SecretRepository.save(web3Secret);
+        measuredSecretService.newlyAddedSecret();
         return true;
     }
-
 }

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.2.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.2.0) 2023-08-11
+
+### New Features
+- Export metrics on secrets counts. (#181)
+### Quality
+- Remove `nexus.intra.iex.ec` repository. (#180)
+- Parameterize build of TEE applications while PR is not started. This allows faster builds. (#182 #184)
+- Refactor secrets measures. (#185)
+- Update `sconify.sh` script and use latest `5.7.2-wal` sconifier. (#186 #187 #188)
+- Add `/metrics` endpoint. (#183)
+### Dependency Upgrades
+- Upgrade to `jenkins-library` 2.6.0. (#182)
+
 ## [[8.1.2]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.1.2) 2023-06-27
 
 ### Dependency Upgrades
