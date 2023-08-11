@@ -18,11 +18,13 @@ package com.iexec.sms.metric;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
+@RequestMapping("/metrics")
 public class MetricsController {
 
     private final MetricsService metricsService;
@@ -31,7 +33,7 @@ public class MetricsController {
         this.metricsService = metricsService;
     }
 
-    @GetMapping("/metrics")
+    @GetMapping
     public ResponseEntity<SmsMetrics> getSmsMetrics() {
         return ok(metricsService.getSmsMetrics());
     }
