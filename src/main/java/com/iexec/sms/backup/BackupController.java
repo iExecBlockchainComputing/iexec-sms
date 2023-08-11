@@ -16,21 +16,23 @@
 
 package com.iexec.sms.backup;
 
+import lombok.extern.slf4j.Slf4j;
+import org.h2.message.DbException;
 import org.h2.tools.Backup;
 import org.h2.tools.Restore;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 @RestController
 @RequestMapping("/backup")
+@Slf4j
 public class BackupController {
     private final DataSource dataSource;
 
@@ -39,22 +41,24 @@ public class BackupController {
     }
 
     @GetMapping
-    public ResponseEntity<byte[]> backup() throws SQLException, IOException {
+    public ResponseEntity<Void> backup() throws SQLException {
         try (Statement statement = dataSource.getConnection().createStatement()) {
             statement.execute("SHUTDOWN");
         }
-        Backup.execute("/data/backup.zip", "/data", "sms-h2", false);
-        final byte[] backupContent = Files.readAllBytes(Path.of("/data/backup.zip"));
+        Backup.execute("/backup/backup.zip", "/data", "sms-h2", false);
         return ResponseEntity
-                .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=backup.zip")
-                .body(backupContent);
+                .noContent()
+                .build();
     }
 
     @PostMapping
-    public ResponseEntity<Void> restore(@RequestBody byte[] backupContent) throws IOException {
-        Files.write(Path.of("/data/restore.zip"), backupContent);
-        Restore.execute("/data/restore.zip", "/data", "sms-h2");
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> restore() {
+        try {
+            Restore.execute("/backup/backup.zip", "/data", "sms-h2");
+            return ResponseEntity.ok().build();
+        } catch (DbException e) {
+            log.error("Can't restore DB", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

@@ -24,7 +24,6 @@ import com.iexec.sms.metric.SmsMetrics;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
-import feign.Response;
 
 import java.util.List;
 
@@ -133,10 +132,9 @@ public interface SmsClient {
 
     // region Backup & Restore
     @RequestLine("GET /backup")
-    Response backup();
+    void backup();
 
     @RequestLine("POST /backup")
-    @Headers("Content-Disposition: attachment")
-    void restore(byte[] backupContent);
+    void restore();
     // endregion
 }
