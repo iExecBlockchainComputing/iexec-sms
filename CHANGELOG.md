@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
 
+### Dependency Upgrades
+- Upgrade to `eclipse-temurin` 11.0.20. (#191)
+
 ## [[8.2.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.2.0) 2023-08-11
 
 ### New Features
