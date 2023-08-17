@@ -1,4 +1,4 @@
-FROM openjdk:11.0.16-jre-slim
+FROM eclipse-temurin:11.0.20_8-jre-focal
 
 ARG jar
 
