@@ -51,8 +51,8 @@ class MetricsServiceTests {
     void shouldRegisterNewMeasuredSecretService() {
         final MetricsService metricsService = new MetricsService();
 
-        final List<MeasuredSecretService> measuredSecretServices =
-                ((List<MeasuredSecretService>) ReflectionTestUtils.getField(metricsService, "measuredSecretServices"));
+        final List<?> measuredSecretServices =
+                (List<?>) ReflectionTestUtils.getField(metricsService, "measuredSecretServices");
 
         assertThat(measuredSecretServices).isEmpty();
 
