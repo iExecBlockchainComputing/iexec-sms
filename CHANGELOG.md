@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Dependency Upgrades
 - Upgrade to `eclipse-temurin` 11.0.20. (#191)
+- Upgrade to Spring Boot 2.7.14. (#192)
+- Upgrade to Spring Dependency Management Plugin 1.1.3. (#192)
 
 ## [[8.2.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.2.0) 2023-08-11
 
