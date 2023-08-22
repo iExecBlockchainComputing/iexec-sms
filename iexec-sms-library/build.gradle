@@ -10,6 +10,7 @@ dependencies {
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
     testImplementation "org.assertj:assertj-core:3.22.0"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation 'org.mockito:mockito-junit-jupiter:4.7.0'
 }
 

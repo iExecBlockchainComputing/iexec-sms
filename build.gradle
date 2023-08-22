@@ -82,14 +82,13 @@ dependencies {
     // observability
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
-    // test
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-    }
-
     // feign
     implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
     implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
+
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // awaitility
     testImplementation 'org.awaitility:awaitility'
