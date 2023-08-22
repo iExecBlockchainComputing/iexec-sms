@@ -42,6 +42,17 @@ allprojects {
     }
 }
 
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+            srcDir 'src/itest/java'
+        }
+        resources.srcDir 'src/itest/resources'
+    }
+}
+
 configurations {
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
@@ -82,17 +93,6 @@ dependencies {
 
     // awaitility
     testImplementation 'org.awaitility:awaitility'
-}
-
-sourceSets {
-    integrationTest {
-        java {
-            compileClasspath += sourceSets.main.output
-            runtimeClasspath += sourceSets.main.output
-            srcDir 'src/itest/java'
-        }
-        resources.srcDir 'src/itest/resources'
-    }
 }
 
 springBoot {
