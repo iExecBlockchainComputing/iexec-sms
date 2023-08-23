@@ -109,7 +109,7 @@ test {
     useJUnitPlatform()
 }
 
-task itest(type:Test) {
+tasks.register('itest', Test) {
     group       'Verification'
     description 'Runs the integration tests.'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
@@ -152,7 +152,7 @@ ext.jarPathForOCI  = relativePath(tasks.bootJar.outputs.files.singleFile)
 ext.gitShortCommit = 'git rev-parse --short=8 HEAD'.execute().text.trim()
 ext.ociImageName   = 'local/' + ['bash', '-c', 'basename $(git config --get remote.origin.url) .git'].execute().text.trim()
 
-task buildImage(type: Exec) {
+tasks.register('buildImage', Exec) {
     group       'Build'
     description 'Builds an OCI image from a Dockerfile.'
     dependsOn   bootJar
@@ -166,7 +166,7 @@ task buildImage(type: Exec) {
     }
 }
 
-task buildSconeImage(type: Exec) {
+tasks.register('buildSconeImage', Exec) {
     group       "Build"
     description "Build an OCI image compatible with scontain TEE framework"
     dependsOn   buildImage
