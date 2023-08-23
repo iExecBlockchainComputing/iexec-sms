@@ -118,9 +118,6 @@ tasks.register('itest', Test) {
     useJUnitPlatform()
 }
 
-jacoco {
-    toolVersion = '0.8.7'
-}
 // sonarqube code coverage requires jacoco XML report
 jacocoTestReport {
     reports {
