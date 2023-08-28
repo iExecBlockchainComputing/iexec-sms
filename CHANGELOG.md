@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
 
+### Quality
+- Upgrade to Gradle 8.2.1 with up-to-date plugins. (#193)
 ### Dependency Upgrades
 - Upgrade to `eclipse-temurin` 11.0.20. (#191)
 - Upgrade to Spring Boot 2.7.14. (#192)
