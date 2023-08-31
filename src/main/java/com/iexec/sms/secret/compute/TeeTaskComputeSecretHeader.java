@@ -19,6 +19,7 @@ package com.iexec.sms.secret.compute;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 public class TeeTaskComputeSecretHeader implements Serializable {
     public static final int SECRET_KEY_MIN_LENGTH = 1;
     public static final int SECRET_KEY_MAX_LENGTH = 64;

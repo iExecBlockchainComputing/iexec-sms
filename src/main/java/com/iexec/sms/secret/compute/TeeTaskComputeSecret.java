@@ -107,4 +107,11 @@ public class TeeTaskComputeSecret implements Serializable {
     public int hashCode() {
         return Objects.hash(header, value);
     }
+
+    @Override
+    public String toString() {
+        return "TeeTaskComputeSecret{" +
+                "header=" + header +
+                '}';
+    }
 }

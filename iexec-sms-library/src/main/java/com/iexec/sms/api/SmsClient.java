@@ -136,5 +136,8 @@ public interface SmsClient {
 
     @RequestLine("POST /backup")
     void restore();
+
+    @RequestLine("DELETE /backup")
+    void reset();
     // endregion
 }

@@ -18,6 +18,10 @@ package com.iexec.sms.api;
 
 import com.iexec.common.utils.FeignBuilder;
 import feign.Logger;
+import feign.Request;
+import feign.Retryer;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Creates Feign client instances to query REST endpoints described in {@link SmsClient}.
@@ -35,6 +39,8 @@ public class SmsClientBuilder {
      */
     public static SmsClient getInstance(Logger.Level logLevel, String url) {
         return FeignBuilder.createBuilder(logLevel)
+                .retryer(Retryer.NEVER_RETRY)
+                .options(new Request.Options(10, TimeUnit.MINUTES, 30, TimeUnit.MINUTES, true))
                 .target(SmsClient.class, url);
     }
 

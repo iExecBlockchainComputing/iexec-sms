@@ -16,36 +16,52 @@
 
 package com.iexec.sms.backup;
 
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
+import com.iexec.sms.secret.web2.Web2SecretRepository;
+import com.iexec.sms.secret.web3.Web3SecretRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.h2.message.DbException;
-import org.h2.tools.Backup;
-import org.h2.tools.Restore;
+import org.h2.tools.RunScript;
+import org.h2.tools.Script;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.sql.DataSource;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 @RestController
 @RequestMapping("/backup")
 @Slf4j
 public class BackupController {
-    private final DataSource dataSource;
 
-    public BackupController(DataSource dataSource) {
-        this.dataSource = dataSource;
+    private final Web2SecretRepository web2SecretRepository;
+    private final Web3SecretRepository web3SecretRepository;
+    private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
+
+    private final String datasourceUrl;
+    private final String datasourceUsername;
+    private final String datasourcePassword;
+
+    public BackupController(Web2SecretRepository web2SecretRepository,
+                            Web3SecretRepository web3SecretRepository,
+                            TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
+                            @Value("${spring.datasource.url}")String datasourceUrl,
+                            @Value("${spring.datasource.username}")String datasourceUsername,
+                            @Value("${spring.datasource.password}")String datasourcePassword) {
+        this.web2SecretRepository = web2SecretRepository;
+        this.web3SecretRepository = web3SecretRepository;
+        this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
+        this.datasourceUrl = datasourceUrl;
+        this.datasourceUsername = datasourceUsername;
+        this.datasourcePassword = datasourcePassword;
     }
 
     @GetMapping
     public ResponseEntity<Void> backup() throws SQLException {
-        try (Statement statement = dataSource.getConnection().createStatement()) {
-            statement.execute("SHUTDOWN");
-        }
-        Backup.execute("/backup/backup.zip", "/data", "sms-h2", false);
+        final long start = System.currentTimeMillis();
+        Script.process(datasourceUrl, datasourceUsername, datasourcePassword, "/backup/backup.sql", "", "");
+        final long stop = System.currentTimeMillis();
+        log.info("Backup took {} ms", stop - start);
         return ResponseEntity
                 .noContent()
                 .build();
@@ -54,11 +70,23 @@ public class BackupController {
     @PostMapping
     public ResponseEntity<Void> restore() {
         try {
-            Restore.execute("/backup/backup.zip", "/data", "sms-h2");
+            final long start = System.currentTimeMillis();
+            RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword, "/backup/backup.sql", Charset.defaultCharset(), true);
+            final long stop = System.currentTimeMillis();
+            log.info("Restore took {} ms", stop - start);
             return ResponseEntity.ok().build();
-        } catch (DbException e) {
+        } catch (SQLException e) {
             log.error("Can't restore DB", e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> reset() {
+        web2SecretRepository.deleteAll();
+        web3SecretRepository.deleteAll();
+        teeTaskComputeSecretRepository.deleteAll();
+
+        return ResponseEntity.noContent().build();
     }
 }

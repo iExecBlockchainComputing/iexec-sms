@@ -24,6 +24,9 @@ spring:
     hibernate:
       ddl-auto: update
       database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
   h2:
     console:
       enabled: ${IEXEC_SMS_H2_CONSOLE:false} # http://localhost:13300/h2-console/
@@ -32,7 +35,7 @@ spring:
 encryption:
   # Will get previous key or else create one on this path
   # this file shouldn't be clearly readable outside the enclave (but encrypted content could be copied outside)
-  aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/data/iexec-sms-aes.key}
+  aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/backup/iexec-sms-aes.key}
 
 blockchain:
   id: ${IEXEC_CHAIN_ID:134}
