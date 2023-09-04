@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
 
+### Bug Fixes
+- Fix and harmonize `Dockerfile entrypoint` in all Spring Boot applications. (#194)
 ### Quality
 - Upgrade to Gradle 8.2.1 with up-to-date plugins. (#193)
 ### Dependency Upgrades
