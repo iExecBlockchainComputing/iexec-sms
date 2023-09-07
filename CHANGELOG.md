@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Fix and harmonize `Dockerfile entrypoint` in all Spring Boot applications. (#194)
 ### Quality
 - Upgrade to Gradle 8.2.1 with up-to-date plugins. (#193)
+- Use `JpaRepository` in all repository classes for improved features. (#195)
 ### Dependency Upgrades
 - Upgrade to `eclipse-temurin` 11.0.20. (#191)
 - Upgrade to Spring Boot 2.7.14. (#192)
