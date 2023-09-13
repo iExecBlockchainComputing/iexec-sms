@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade to Gradle 8.2.1 with up-to-date plugins. (#193)
 - Use `JpaRepository` in all repository classes for improved features. (#195)
 - Remove session display option to prevent information leaks. (#197)
+- Immutable classes for TEE enclaves and sessions manipulations. (#198)
 ### Dependency Upgrades
 - Upgrade to `eclipse-temurin` 11.0.20. (#191)
 - Upgrade to Spring Boot 2.7.14. (#192)
