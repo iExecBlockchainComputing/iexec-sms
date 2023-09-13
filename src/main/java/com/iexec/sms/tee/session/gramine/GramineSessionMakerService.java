@@ -56,14 +56,6 @@ public class GramineSessionMakerService {
         GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
         GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
 
-        // TODO: Validate command-line arguments from the host
-        // (https://github.com/gramineproject/gsc/issues/13)
-        gramineAppEnclave.setCommand("");
-        graminePostEnclave.setCommand("");
-        // TODO: Remove useless volumes when SPS is ready
-        gramineAppEnclave.setVolumes(List.of());
-        graminePostEnclave.setVolumes(List.of());
-
         return gramineSession.enclaves(List.of(
                 // No pre-compute for now
                 gramineAppEnclave,
@@ -75,7 +67,12 @@ public class GramineSessionMakerService {
         return GramineEnclave.builder()
                 .name(enclaveBase.getName())
                 .mrenclave(enclaveBase.getMrenclave())
+                // TODO: Validate command-line arguments from the host
+                // (https://github.com/gramineproject/gsc/issues/13)
+                .command("")
                 .environment(enclaveBase.getEnvironment())
+                // TODO: Remove useless volumes when SPS is ready
+                .volumes(List.of())
                 .build();
     }
 
