@@ -102,12 +102,15 @@ public class TeeSessionTestUtils {
     }
 
     public static TeeSessionRequest createSessionRequest(TaskDescription taskDescription) {
+        return createSessionRequestBuilder(taskDescription).build();
+    }
+
+    public static TeeSessionRequest.TeeSessionRequestBuilder createSessionRequestBuilder(TaskDescription taskDescription) {
         return TeeSessionRequest.builder()
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
-                .taskDescription(taskDescription)
-                .build();
+                .taskDescription(taskDescription);
     }
 
     public static TaskDescription.TaskDescriptionBuilder createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {

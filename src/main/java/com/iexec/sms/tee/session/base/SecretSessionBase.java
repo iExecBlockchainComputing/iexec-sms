@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,13 @@
 
 package com.iexec.sms.tee.session.base;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Value;
 
+@Value
 @Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class SecretSessionBase {
-
-    private SecretEnclaveBase preCompute;
-    private SecretEnclaveBase appCompute;
-    private SecretEnclaveBase postCompute;
-
+    SecretEnclaveBase preCompute;
+    SecretEnclaveBase appCompute;
+    SecretEnclaveBase postCompute;
 }
