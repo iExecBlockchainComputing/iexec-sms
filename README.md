@@ -59,7 +59,6 @@ To support:
 | `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` | `PT5S` |
 | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` | `1.0` |
 | `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` | `22000000000` |
-| `IEXEC_SMS_DISPLAY_DEBUG_SESSION` | Whether to display TEE enclaves sessions configuration in SMS logs. | Boolean | `false` | `false` |
 | `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` | `localhost` |
 | `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | `8081` | `8080` |
 | `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` | `localhost` |

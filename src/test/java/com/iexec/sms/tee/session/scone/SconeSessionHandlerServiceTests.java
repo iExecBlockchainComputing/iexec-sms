@@ -18,7 +18,6 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
@@ -47,8 +46,6 @@ class SconeSessionHandlerServiceTests {
     @Mock
     private CasClient apiClient;
     @Mock
-    private TeeSessionLogConfiguration teeSessionLogConfiguration;
-    @Mock
     private CasConfiguration casConfiguration;
     @InjectMocks
     private SconeSessionHandlerService sessionHandlerService;
@@ -68,18 +65,12 @@ class SconeSessionHandlerServiceTests {
         SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
-                .thenReturn(true);
         when(apiClient.postSession(casSession.toString()))
                 .thenReturn(ResponseEntity.created(null).body("sessionId"));
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
-        // Testing output here since it reflects a business feature (ability to
-        // catch a
-        // session in debug mode)
-        assertTrue(output.getOut()
-                .contains("Session content [taskId:null]\nsessionContent\n"));
+        assertTrue(output.getOut().isEmpty());
     }
 
     @Test
@@ -91,16 +82,11 @@ class SconeSessionHandlerServiceTests {
         SconeSession casSession = mock(SconeSession.class);
         when(casSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
-                .thenReturn(false);
         when(apiClient.postSession(casSession.toString()))
                 .thenReturn(ResponseEntity.created(null).body("sessionId"));
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
-        // Testing output here since it reflects a business feature (ability to
-        // catch a
-        // session in debug mode)
         assertTrue(output.getOut().isEmpty());
     }
 
@@ -126,8 +112,6 @@ class SconeSessionHandlerServiceTests {
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
-                .thenReturn(true);
         when(apiClient.postSession(casSession.toString()))
                 .thenReturn(ResponseEntity.internalServerError().build());
 
@@ -143,8 +127,6 @@ class SconeSessionHandlerServiceTests {
         when(request.getTaskDescription()).thenReturn(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
         when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled())
-                .thenReturn(true);
         when(apiClient.postSession(casSession.toString()))
                 .thenReturn(null);
 

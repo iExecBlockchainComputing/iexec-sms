@@ -19,7 +19,6 @@ package com.iexec.sms.tee.session.gramine;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
-import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
@@ -34,14 +33,11 @@ import org.springframework.stereotype.Component;
 public class GramineSessionHandlerService implements TeeSessionHandler {
     private final GramineSessionMakerService sessionService;
     private final SpsConfiguration spsConfiguration;
-    private final TeeSessionLogConfiguration teeSessionLogConfiguration;
 
     public GramineSessionHandlerService(GramineSessionMakerService sessionService,
-            SpsConfiguration spsConfiguration,
-            TeeSessionLogConfiguration teeSessionLogConfiguration) {
+            SpsConfiguration spsConfiguration) {
         this.sessionService = sessionService;
         this.spsConfiguration = spsConfiguration;
-        this.teeSessionLogConfiguration = teeSessionLogConfiguration;
     }
 
     /**
@@ -55,10 +51,6 @@ public class GramineSessionHandlerService implements TeeSessionHandler {
     public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         GramineSession session = sessionService.generateSession(request);
-        if (teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
-            log.info("Session content [taskId:{}]\n{}",
-                    request.getTaskDescription().getChainTaskId(), session);
-        }
 
         try {
             spsConfiguration.getInstance().postSession(session);
