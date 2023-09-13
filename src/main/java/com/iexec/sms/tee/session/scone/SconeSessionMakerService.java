@@ -79,7 +79,7 @@ public class SconeSessionMakerService {
     @NonNull
     public SconeSession generateSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
-        List<String> policy = Arrays.asList("CREATOR");
+        List<String> policy = List.of("CREATOR");
         Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
         Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
         Volume postComputeTmpVolume = new Volume("post-compute-tmp",
@@ -93,32 +93,32 @@ public class SconeSessionMakerService {
         // pre (optional)
         if (baseSession.getPreCompute() != null) {
             SconeEnclave sconePreEnclave = toSconeEnclave(
-                    baseSession.getPreCompute());
-            sconePreEnclave
-                    .setCommand(teeServicesConfig.getPreComputeProperties().getEntrypoint());
-            addJavaEnvVars(sconePreEnclave);
+                    baseSession.getPreCompute(),
+                    teeServicesConfig.getPreComputeProperties().getEntrypoint(),
+                    true);
             services.add(sconePreEnclave);
-            images.add(new SconeSession.Image(sconePreEnclave.getImageName(),
-                    Arrays.asList(iexecInVolume)));
+            images.add(new SconeSession.Image(
+                    sconePreEnclave.getImageName(),
+                    List.of(iexecInVolume)));
         }
         // app
         SconeEnclave sconeAppEnclave = toSconeEnclave(
-                baseSession.getAppCompute());
-        sconeAppEnclave
-                .setCommand(request.getTaskDescription().getAppCommand());
+                baseSession.getAppCompute(),
+                request.getTaskDescription().getAppCommand(),
+                false);
         services.add(sconeAppEnclave);
-        images.add(new SconeSession.Image(sconeAppEnclave.getImageName(),
-                Arrays.asList(iexecInVolume, iexecOutVolume)));
+        images.add(new SconeSession.Image(
+                sconeAppEnclave.getImageName(),
+                List.of(iexecInVolume, iexecOutVolume)));
         // post
         SconeEnclave sconePostEnclave = toSconeEnclave(
-                baseSession.getPostCompute());
-        sconePostEnclave
-                .setCommand(teeServicesConfig.getPostComputeProperties().getEntrypoint());
-        addJavaEnvVars(sconePostEnclave);
+                baseSession.getPostCompute(),
+                teeServicesConfig.getPostComputeProperties().getEntrypoint(),
+                true);
         services.add(sconePostEnclave);
-        images.add(new SconeSession.Image(sconePostEnclave.getImageName(),
-                Arrays.asList(iexecOutVolume,
-                        postComputeTmpVolume)));
+        images.add(new SconeSession.Image(
+                sconePostEnclave.getImageName(),
+                List.of(iexecOutVolume, postComputeTmpVolume)));
 
         return SconeSession.builder()
                 .name(request.getSessionId())
@@ -135,24 +135,25 @@ public class SconeSessionMakerService {
                 .build();
     }
 
-    private void addJavaEnvVars(SconeEnclave sconeEnclave) {
-        Map<String, String> additionalJavaEnv = Map.of("LD_LIBRARY_PATH",
-                "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib",
-                "JAVA_TOOL_OPTIONS", "-Xmx256m");
-        HashMap<String, Object> newEnvironment = new HashMap<>();
-        newEnvironment.putAll(sconeEnclave.getEnvironment());
-        newEnvironment.putAll(additionalJavaEnv);
-        sconeEnclave.setEnvironment(newEnvironment);
-    }
-
-    private SconeEnclave toSconeEnclave(SecretEnclaveBase enclaveBase) {
+    private SconeEnclave toSconeEnclave(SecretEnclaveBase enclaveBase, String command, boolean addJavaEnvVars) {
+        final HashMap<String, Object> enclaveEnvironment = new HashMap<>(enclaveBase.getEnvironment());
+        if (addJavaEnvVars) {
+            enclaveEnvironment.putAll(
+                    Map.of(
+                            "LD_LIBRARY_PATH",
+                            "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib",
+                            "JAVA_TOOL_OPTIONS",
+                            "-Xmx256m"
+                    )
+            );
+        }
         return SconeEnclave.builder()
                 .name(enclaveBase.getName())
                 .imageName(enclaveBase.getName() + "-image")
-                .mrenclaves(Arrays.asList(enclaveBase.getMrenclave()))
+                .mrenclaves(List.of(enclaveBase.getMrenclave()))
                 .pwd("/")
-                // TODO .command(command)
-                .environment(enclaveBase.getEnvironment())
+                .command(command)
+                .environment(enclaveEnvironment)
                 .build();
     }
 

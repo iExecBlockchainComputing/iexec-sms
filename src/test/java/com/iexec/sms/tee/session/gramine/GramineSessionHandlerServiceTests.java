@@ -33,6 +33,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 
+import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -56,9 +57,8 @@ class GramineSessionHandlerServiceTests {
 
     @Test
     void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
-        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = TaskDescription.builder().build();
-        when(request.getTaskDescription()).thenReturn(taskDescription);
+        TeeSessionRequest request = createSessionRequest(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(spsSession);
@@ -73,7 +73,7 @@ class GramineSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSinceBuildSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSessionRequest request = mock(TeeSessionRequest.class);
+        TeeSessionRequest request = TeeSessionRequest.builder().build();
         TeeSessionGenerationException teeSessionGenerationException = new TeeSessionGenerationException(
                 TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED, "some error");
         when(sessionService.generateSession(request)).thenThrow(teeSessionGenerationException);
@@ -85,9 +85,8 @@ class GramineSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSincePostSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = TaskDescription.builder().build();
-        when(request.getTaskDescription()).thenReturn(taskDescription);
+        TeeSessionRequest request = createSessionRequest(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(spsSession);

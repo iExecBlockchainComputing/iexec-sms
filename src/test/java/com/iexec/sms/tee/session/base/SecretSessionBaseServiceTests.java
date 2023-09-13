@@ -559,9 +559,10 @@ class SecretSessionBaseServiceTests {
     @NullSource
     @ValueSource(strings = { "" })
     void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
+                .workerAddress(emptyWorkerAddress)
+                .build();
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
-        sessionRequest.setWorkerAddress(emptyWorkerAddress);
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
@@ -576,9 +577,10 @@ class SecretSessionBaseServiceTests {
     @NullSource
     @ValueSource(strings = { "" })
     void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
+                .enclaveChallenge(emptyEnclaveChallenge)
+                .build();
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
-        sessionRequest.setEnclaveChallenge(emptyEnclaveChallenge);
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,

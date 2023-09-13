@@ -18,10 +18,11 @@ package com.iexec.sms.ssl;
 
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.ssl.SSLContexts;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
 import javax.net.ssl.SSLContext;
 import java.io.File;
@@ -33,25 +34,16 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
 @Slf4j
-@Configuration
+@Value
+@ConstructorBinding
+@ConfigurationProperties(prefix = "tee.ssl")
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SslConfig {
 
-    private final String sslKeystore;
-    private final String sslKeystoreType;
-    private final String sslKeyAlias;
-    private final char[] sslKeystorePasswordChar;
-
-    public SslConfig(
-            @Value("${tee.ssl.key-store}") String sslKeystore,
-            @Value("${tee.ssl.key-store-type}") String sslKeystoreType,
-            @Value("${tee.ssl.key-alias}") String sslKeyAlias,
-            @Value("${tee.ssl.key-store-password}") String sslKeystorePassword) {
-        this.sslKeystore = sslKeystore;
-        this.sslKeystoreType = sslKeystoreType;
-        this.sslKeyAlias = sslKeyAlias;
-        this.sslKeystorePasswordChar = sslKeystorePassword.toCharArray();
-    }
+    String keystore;
+    String keystoreType;
+    String keyAlias;
+    char[] keystorePassword;
 
     /*
      * Generates new SSLContext on each call
@@ -59,11 +51,11 @@ public class SslConfig {
     public SSLContext getFreshSslContext() {
         try {
             return SSLContexts.custom()
-                    .setKeyStoreType(sslKeystoreType)
-                    .loadKeyMaterial(new File(sslKeystore),
-                            sslKeystorePasswordChar,
-                            sslKeystorePasswordChar,
-                            (aliases, socket) -> sslKeyAlias)
+                    .setKeyStoreType(keystoreType)
+                    .loadKeyMaterial(new File(keystore),
+                            keystorePassword,
+                            keystorePassword,
+                            (aliases, socket) -> keyAlias)
                     .loadTrustMaterial(null, (chain, authType) -> true)////TODO: Add CAS certificate to truststore
                     .build();
         } catch (IOException | NoSuchAlgorithmException | KeyStoreException | UnrecoverableKeyException | CertificateException | KeyManagementException e) {

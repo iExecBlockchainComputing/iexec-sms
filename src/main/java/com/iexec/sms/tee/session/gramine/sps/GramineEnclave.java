@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,22 +22,19 @@ import lombok.*;
 import java.util.List;
 import java.util.Map;
 
+@Value
 @Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class GramineEnclave {
 
     @JsonProperty("name")
-    private String name;
+    String name;
     @JsonProperty("mrenclave")
-    private String mrenclave;
+    String mrenclave;
     @JsonProperty("command")
-    private String command;
+    String command;
     @JsonProperty("environment")
-    private Map<String, Object> environment;
+    Map<String, Object> environment;
     @JsonProperty("volumes")
-    private List<String> volumes;
+    List<String> volumes;
 
 }
