@@ -51,8 +51,6 @@ metrics:
   storage:
     refresh-interval: ${IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL:30}  # In seconds
 
-logging:
-  tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
 #  level:
 #    org.springframework: DEBUG
 #    org.apache.http: DEBUG
