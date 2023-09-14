@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade to Spring Boot 2.7.14. (#192)
 - Upgrade to Spring Dependency Management Plugin 1.1.3. (#192)
 - Upgrade to `H2` 2.2.222. (#196)
+- Upgrade to `jenkins-library` 2.7.3. (#199)
 
 ## [[8.2.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.2.0) 2023-08-11
 

@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@2.6.0') _
+@Library('global-jenkins-library@2.7.3') _
 
 String repositoryName = 'iexec-sms'
 
@@ -21,11 +21,7 @@ buildJavaProject(
         shouldPublishJars: true,
         shouldPublishDockerImages: true,
         dockerfileDir: '.',
-        buildContext: '.',
-        preDevelopVisibility: 'iex.ec',
-        developVisibility: 'iex.ec',
-        preProductionVisibility: 'docker.io',
-        productionVisibility: 'docker.io')
+        buildContext: '.')
 
 // BUILD_TEE parameter only exists if addParameters is true
 // If BUILD_TEE is false, TEE builds won't be executed and we return here
