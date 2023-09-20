@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 - Fix and harmonize `Dockerfile entrypoint` in all Spring Boot applications. (#194)
+- Check authorization before working with web2 or web3 secrets. (#200)
 ### Quality
 - Upgrade to Gradle 8.2.1 with up-to-date plugins. (#193)
 - Use `JpaRepository` in all repository classes for improved features. (#195)
