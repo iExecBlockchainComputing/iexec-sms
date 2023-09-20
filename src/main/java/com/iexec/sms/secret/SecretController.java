@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,15 +61,15 @@ public class SecretController {
     public ResponseEntity<String> addWeb3Secret(@RequestHeader String authorization,
                                                 @RequestParam String secretAddress,
                                                 @RequestBody String secretValue) {
-        if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
-        }
-
         String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, secretAddress)) {
             log.error("Unauthorized to addWeb3Secret [expectedChallenge:{}]", challenge);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         if (!web3SecretService.addSecret(secretAddress, secretValue)) {
@@ -94,15 +94,15 @@ public class SecretController {
                                                 @RequestParam String ownerAddress,
                                                 @RequestParam String secretName,
                                                 @RequestBody String secretValue) {
-        if (!SecretUtils.isSecretSizeValid(secretValue)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
-        }
-
         String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, secretValue);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
             log.error("Unauthorized to addWeb2Secret [expectedChallenge:{}]", challenge);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!SecretUtils.isSecretSizeValid(secretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         try {
@@ -118,15 +118,15 @@ public class SecretController {
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
-        if (!SecretUtils.isSecretSizeValid(newSecretValue)) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
-        }
-
         String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
             log.error("Unauthorized to updateWeb2Secret [expectedChallenge:{}]", challenge);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (!SecretUtils.isSecretSizeValid(newSecretValue)) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
         try {
