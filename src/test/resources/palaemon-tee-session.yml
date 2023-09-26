@@ -16,7 +16,7 @@ services:
     pwd: '/'
     command: 'entrypoint1'
     environment:
-      LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
+      LD_LIBRARY_PATH: '/opt/java/openjdk/lib/server:/opt/java/openjdk/lib:/opt/java/openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
       IEXEC_TASK_ID: 'taskId'
       IEXEC_PRE_COMPUTE_OUT: '/iexec_in'
@@ -63,7 +63,7 @@ services:
     pwd: '/'
     command: 'entrypoint3'
     environment:
-      LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
+      LD_LIBRARY_PATH: '/opt/java/openjdk/lib/server:/opt/java/openjdk/lib:/opt/java/openjdk/../lib'
       JAVA_TOOL_OPTIONS: '-Xmx256m'
       RESULT_TASK_ID: 'taskId'
       RESULT_ENCRYPTION: 'yes'

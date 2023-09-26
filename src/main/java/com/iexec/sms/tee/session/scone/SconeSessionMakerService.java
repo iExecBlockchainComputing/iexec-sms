@@ -140,7 +140,7 @@ public class SconeSessionMakerService {
             enclaveEnvironment.putAll(
                     Map.of(
                             "LD_LIBRARY_PATH",
-                            "/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib",
+                            "/opt/java/openjdk/lib/server:/opt/java/openjdk/lib:/opt/java/openjdk/../lib",
                             "JAVA_TOOL_OPTIONS",
                             "-Xmx256m"
                     )
