@@ -41,17 +41,6 @@ import java.util.*;
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionMakerService {
 
-    // Internal values required for setting up a palaemon session
-    // Generic
-    static final String TOLERATED_INSECURE_OPTIONS = "TOLERATED_INSECURE_OPTIONS";
-    static final String IGNORED_SGX_ADVISORIES = "IGNORED_SGX_ADVISORIES";
-    static final String APP_ARGS = "APP_ARGS";
-
-    // PreCompute
-    static final String PRE_COMPUTE_ENTRYPOINT = "PRE_COMPUTE_ENTRYPOINT";
-    // PostCompute
-    static final String POST_COMPUTE_ENTRYPOINT = "POST_COMPUTE_ENTRYPOINT";
-
     private final SecretSessionBaseService secretSessionBaseService;
     private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
