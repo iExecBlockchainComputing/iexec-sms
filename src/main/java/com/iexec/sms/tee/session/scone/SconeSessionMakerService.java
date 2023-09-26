@@ -79,7 +79,6 @@ public class SconeSessionMakerService {
     @NonNull
     public SconeSession generateSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
-        List<String> policy = List.of("CREATOR");
         Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
         Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
         Volume postComputeTmpVolume = new Volume("post-compute-tmp",
@@ -123,7 +122,7 @@ public class SconeSessionMakerService {
         return SconeSession.builder()
                 .name(request.getSessionId())
                 .version("0.3")
-                .accessPolicy(new AccessPolicy(policy, policy))
+                .accessPolicy(new AccessPolicy(List.of("CREATOR"), List.of("NONE")))
                 .services(services)
                 .images(images)
                 .volumes(Arrays.asList(new Volumes(iexecInVolume.getName()),

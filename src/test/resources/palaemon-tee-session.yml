@@ -6,7 +6,7 @@ access_policy:
   read:
    - CREATOR
   update:
-   - CREATOR
+   - NONE
 
 services:
 
