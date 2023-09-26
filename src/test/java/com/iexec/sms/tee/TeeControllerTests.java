@@ -70,9 +70,7 @@ class TeeControllerTests {
     @Mock
     TeeServicesProperties teeServicesConfig;
 
-    @Mock
     TeeAppProperties preComputeProperties;
-    @Mock
     TeeAppProperties postComputeProperties;
 
     @InjectMocks

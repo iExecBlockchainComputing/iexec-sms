@@ -25,6 +25,7 @@ import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -38,6 +39,7 @@ import java.util.Map;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static org.mockito.Mockito.when;
 
+@Slf4j
 class SconeSessionMakerServiceTests {
 
     private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
@@ -45,10 +47,18 @@ class SconeSessionMakerServiceTests {
     private static final String APP_ENTRYPOINT = "appEntrypoint";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
 
-    @Mock
-    private TeeAppProperties preComputeProperties;
-    @Mock
-    private TeeAppProperties postComputeProperties;
+    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("PRE_COMPUTE_IMAGE")
+            .fingerprint(PRE_COMPUTE_FINGERPRINT)
+            .entrypoint(PRE_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
+    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("POST_COMPUTE_IMAGE")
+            .fingerprint(POST_COMPUTE_FINGERPRINT)
+            .entrypoint(POST_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
     @Mock
     private SconeServicesProperties teeServicesConfig;
     @Mock
@@ -74,9 +84,6 @@ class SconeSessionMakerServiceTests {
                 .entrypoint(APP_ENTRYPOINT)
                 .build();
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
-
-        when(preComputeProperties.getEntrypoint()).thenReturn(PRE_COMPUTE_ENTRYPOINT);
-        when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
 
         SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")
@@ -148,7 +155,7 @@ class SconeSessionMakerServiceTests {
                         .build());
 
         SconeSession actualCasSession = palaemonSessionService.generateSession(request);
-        System.out.println(actualCasSession.toString());
+        log.info(actualCasSession.toString());
         Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
         String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
