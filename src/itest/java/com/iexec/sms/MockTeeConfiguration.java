@@ -1,9 +1,7 @@
 package com.iexec.sms;
 
-import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -19,10 +17,4 @@ public class MockTeeConfiguration {
     private TeeSessionHandler teeSessionHandler;
     @MockBean
     private TeeServicesProperties teeServicesProperties;
-    @MockBean
-    @Qualifier("preComputeProperties")
-    private TeeAppProperties preComputeProperties;
-    @MockBean
-    @Qualifier("postComputeProperties")
-    private TeeAppProperties postComputeProperties;
 }
