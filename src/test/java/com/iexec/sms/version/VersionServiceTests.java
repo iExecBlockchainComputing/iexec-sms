@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.utils.version;
+package com.iexec.sms.version;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
@@ -27,7 +26,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.info.BuildProperties;
 
-public class VersionServiceTest {
+class VersionServiceTests {
 
     @Mock
     private BuildProperties buildProperties;
@@ -41,18 +40,10 @@ public class VersionServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings={"x.y.z", "x.y.z-rc"})
-    void testNonSnapshotVersion(String version) {
+    @ValueSource(strings={"x.y.z", "x.y.z-rc", "x.y.z-NEXT-SNAPSHOT"})
+    void testVersions(String version) {
         Mockito.when(buildProperties.getVersion()).thenReturn(version);
         Assertions.assertEquals(version, versionService.getVersion());
-        Assertions.assertFalse(versionService.isSnapshot());
-    }
-
-    @Test
-    void testSnapshotVersion() {
-        Mockito.when(buildProperties.getVersion()).thenReturn("x.y.z-NEXT-SNAPSHOT");
-        Assertions.assertEquals("x.y.z-NEXT-SNAPSHOT", versionService.getVersion());
-        Assertions.assertTrue(versionService.isSnapshot());
     }
 
 }
