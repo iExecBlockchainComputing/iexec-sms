@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Immutable classes for TEE enclaves and sessions manipulations. (#198)
 - Immutable `TeeAppProperties` class with `@Builder` pattern. (#201)
 - Fix Scone generated sessions permissions. (#202)
+- Remove `VersionService#isSnapshot`. (#204)
 ### Dependency Upgrades
 - Upgrade to `eclipse-temurin` 11.0.20. (#191)
 - Upgrade to Spring Boot 2.7.14. (#192)
