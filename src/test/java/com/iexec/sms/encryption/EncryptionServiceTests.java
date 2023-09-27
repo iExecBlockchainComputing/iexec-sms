@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,20 @@
 
 package com.iexec.sms.encryption;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import static org.assertj.core.api.Assertions.assertThat;
 
+ @Slf4j
 class EncryptionServiceTests {
 
     @TempDir
     public File tempDir;
-  
-    @Mock
-    private EncryptionConfiguration encryptionConfiguration;
-
-    @InjectMocks
-    private EncryptionService encryptionService;
 
     @Test
     void shouldCreateAesKey() {
@@ -42,9 +37,23 @@ class EncryptionServiceTests {
         // File createdFile = new File(tempDir, "aesKey");
         String aesKeyPath = tempDir.getAbsolutePath() + "aesKey";
 
-        EncryptionService service = new EncryptionService(
-                new EncryptionConfiguration(aesKeyPath));
+        EncryptionService service = new EncryptionService(new EncryptionConfiguration(aesKeyPath));
 
         assertThat(service.decrypt(service.encrypt(data))).isEqualTo(data);
+    }
+
+    @Test
+    void encryptDecrypt() {
+        String aesKeyPath = tempDir.getAbsolutePath() + "aesKey";
+
+        EncryptionService service = new EncryptionService(new EncryptionConfiguration(aesKeyPath));
+
+        for (int i = 0; i < 10 ; i++) {
+            String data = RandomStringUtils.randomAlphanumeric(1, 4096);
+            String encryptedData = service.encrypt(data);
+            String decryptedData = service.decrypt(encryptedData);
+            assertThat(decryptedData).isEqualTo(data);
+        }
+
     }
 }

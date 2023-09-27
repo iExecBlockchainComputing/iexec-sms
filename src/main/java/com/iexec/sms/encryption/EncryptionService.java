@@ -17,7 +17,7 @@
 package com.iexec.sms.encryption;
 
 
-import com.iexec.common.security.CipherHelper;
+import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
 import java.io.File;
+import java.util.Base64;
 
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
 
@@ -51,7 +52,7 @@ public class EncryptionService {
         boolean shouldGenerateKey = !new File(aesKeyPath).exists();
 
         if (shouldGenerateKey) {
-            byte[] newAesKey = CipherHelper.generateAesKey();
+            byte[] newAesKey = Base64.getEncoder().encode(CipherUtils.generateAesKey());
 
             if (newAesKey == null) {
                 throw new ExceptionInInitializerError("Failed to generate AES key");
@@ -61,32 +62,37 @@ public class EncryptionService {
             }
         }
 
-        byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+        byte[] parsedKey = FileHelper.readFileBytes(aesKeyPath);
 
-        if (aesKey == null) {
+        if (parsedKey == null) {
             throw new ExceptionInInitializerError("Failed to load AES key");
         }
 
         log.info("AES key loaded [isNewAesKey:{}, aesKeyPath:{}, aesKeyHash:{}]",
-                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
+                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(parsedKey)));
 
-        return aesKey;
+        return parsedKey;
     }
 
     public String encrypt(String data) {
-        byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
-        if (encryptedData != null) {
-            return new String(encryptedData);
+        try {
+            log.info("encrypting data {}", data);
+            String encryptedData = Base64.getEncoder().encodeToString(CipherUtils.aesEncrypt(data.getBytes(), aesKey));
+            log.info("encrypted data {}", encryptedData);
+            return encryptedData;
+        } catch(Exception e) {
+            log.warn("Operation failed", e);
+            return "";
         }
-        return "";
     }
 
     public String decrypt(String encryptedData) {
-        byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
-        if (decryptedData != null) {
-            return new String(decryptedData);
+        try {
+            return new String(CipherUtils.aesDecrypt(Base64.getDecoder().decode(encryptedData), aesKey));
+        } catch (Exception e) {
+            log.warn("Operation failed", e);
+            return "";
         }
-        return "";
     }
 
 }
