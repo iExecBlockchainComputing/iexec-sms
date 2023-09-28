@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
+
+### Bug Fixes
+- Fix and harmonize `Dockerfile entrypoint` in all Spring Boot applications. (#194)
+- Check authorization before working with web2 or web3 secrets. (#200)
+### Quality
+- Upgrade to Gradle 8.2.1 with up-to-date plugins. (#193)
+- Use `JpaRepository` in all repository classes for improved features. (#195)
+- Remove session display option to prevent information leaks. (#197)
+- Immutable classes for TEE enclaves and sessions manipulations. (#198)
+- Immutable `TeeAppProperties` class with `@Builder` pattern. (#201)
+- Fix Scone generated sessions permissions. (#202)
+- Remove `VersionService#isSnapshot`. (#204)
+### Dependency Upgrades
+- Upgrade to `eclipse-temurin` 11.0.20. (#191)
+- Upgrade to Spring Boot 2.7.14. (#192)
+- Upgrade to Spring Dependency Management Plugin 1.1.3. (#192)
+- Upgrade to `H2` 2.2.222. (#196)
+- Upgrade to `jenkins-library` 2.7.3. (#199)
+- Upgrade to `iexec-common` 8.3.0. (#203)
+- Upgrade to `iexec-common-poco` 3.1.0. (#203)
+
 ## [[8.2.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.2.0) 2023-08-11
 
 ### New Features

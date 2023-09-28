@@ -17,19 +17,18 @@
 package com.iexec.sms.tee.session.generic;
 
 import com.iexec.commons.poco.task.TaskDescription;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
-@Data
+import javax.validation.constraints.NotNull;
+
+@Value
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class TeeSessionRequest {
-
-    private String sessionId;
-    private TaskDescription taskDescription;
-    private String workerAddress;
-    private String enclaveChallenge;
+    @NotNull
+    String sessionId;
+    @NotNull
+    TaskDescription taskDescription;
+    String workerAddress;
+    String enclaveChallenge;
 }

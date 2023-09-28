@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package com.iexec.sms.tee.challenge;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface TeeChallengeRepository extends CrudRepository<TeeChallenge, String> {
+public interface TeeChallengeRepository extends JpaRepository<TeeChallenge, String> {
     Optional<TeeChallenge> findByTaskId(String taskId);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.session;
+package com.iexec.sms.version;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.stereotype.Service;
 
-import lombok.Getter;
+@Service
+public class VersionService {
 
-@Getter
-@Component
-public class TeeSessionLogConfiguration {
+    private final BuildProperties buildProperties;
 
-    @Value("${logging.tee.display-debug-session}")
-    boolean displayDebugSessionEnabled;
+    VersionService(BuildProperties buildProperties) {
+        this.buildProperties = buildProperties;
+    }
+
+    public String getVersion() {
+        return buildProperties.getVersion();
+    }
+
 }

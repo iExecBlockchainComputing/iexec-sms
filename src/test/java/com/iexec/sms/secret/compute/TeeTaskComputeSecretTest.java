@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-public class TeeTaskComputeSecretTest {
+class TeeTaskComputeSecretTest {
 
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
 
@@ -63,9 +63,9 @@ public class TeeTaskComputeSecretTest {
         teeTaskComputeSecretRepository.save(requesterSecret);
         final TeeTaskComputeSecretHeader requesterSecretHeader = requesterSecret.getHeader();
         assertThat(teeTaskComputeSecretRepository.count()).isEqualTo(2);
-        assertThat(teeTaskComputeSecretRepository.getById(appDeveloperSecretHeader))
+        assertThat(teeTaskComputeSecretRepository.getReferenceById(appDeveloperSecretHeader))
                 .isEqualTo(appDeveloperSecret);
-        assertThat(teeTaskComputeSecretRepository.getById(requesterSecretHeader))
+        assertThat(teeTaskComputeSecretRepository.getReferenceById(requesterSecretHeader))
                 .isEqualTo(requesterSecret);
     }
 

@@ -40,10 +40,18 @@ import static org.mockito.Mockito.when;
 
 @Slf4j
 class GramineSessionMakerServiceTests {
-    @Mock
-    private TeeAppProperties preComputeProperties;
-    @Mock
-    private TeeAppProperties postComputeProperties;
+    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("PRE_COMPUTE_IMAGE")
+            .fingerprint(PRE_COMPUTE_FINGERPRINT)
+            .entrypoint(PRE_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
+    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("POST_COMPUTE_IMAGE")
+            .fingerprint(POST_COMPUTE_FINGERPRINT)
+            .entrypoint(POST_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
     @Mock
     private GramineServicesProperties teeServicesConfig;
     @Mock
@@ -66,9 +74,6 @@ class GramineSessionMakerServiceTests {
                 .build();
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
-        when(postComputeProperties.getFingerprint()).thenReturn(POST_COMPUTE_FINGERPRINT);
-        when(postComputeProperties.getEntrypoint()).thenReturn(POST_COMPUTE_ENTRYPOINT);
-
         SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
                 .name("app")
                 .mrenclave(APP_FINGERPRINT)
@@ -88,7 +93,7 @@ class GramineSessionMakerServiceTests {
                 .build();
         SecretEnclaveBase postCompute = SecretEnclaveBase.builder()
                 .name("post-compute")
-                .mrenclave("mrEnclave3")
+                .mrenclave(POST_COMPUTE_FINGERPRINT)
                 .environment(Map.ofEntries(
                         Map.entry("RESULT_TASK_ID", "taskId"),
                         Map.entry("RESULT_ENCRYPTION", "yes"),

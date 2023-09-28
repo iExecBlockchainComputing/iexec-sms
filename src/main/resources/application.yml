@@ -24,6 +24,10 @@ spring:
     hibernate:
       ddl-auto: update
       database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        # Protect column names with quotes to avoid interpreting them as SQL keywords
+        globally_quoted_identifiers: true
   h2:
     console:
       enabled: ${IEXEC_SMS_H2_CONSOLE:false} # http://localhost:13300/h2-console/
@@ -47,8 +51,6 @@ metrics:
   storage:
     refresh-interval: ${IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL:30}  # In seconds
 
-logging:
-  tee.display-debug-session: ${IEXEC_SMS_DISPLAY_DEBUG_SESSION:false}
 #  level:
 #    org.springframework: DEBUG
 #    org.apache.http: DEBUG

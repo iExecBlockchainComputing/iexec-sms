@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,25 +26,22 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Value
 @Builder
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class SconeEnclave {
 
     @JsonProperty("name")
-    private String name;
+    String name;
     @JsonProperty("image_name")
-    private String imageName;
+    String imageName;
     @JsonProperty("mrenclaves")
-    private List<String> mrenclaves;
+    List<String> mrenclaves;
     @JsonProperty("pwd")
-    private String pwd;
+    String pwd;
     @JsonProperty("command")
-    private String command;
+    String command;
     @JsonProperty("environment")
-    private Map<String, Object> environment;
+    Map<String, Object> environment;
 
   @Override
   public String toString() {

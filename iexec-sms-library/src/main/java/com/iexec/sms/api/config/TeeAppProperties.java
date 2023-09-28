@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,23 @@
 
 package com.iexec.sms.api.config;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.Builder;
+import lombok.Value;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
+@Builder
+@JsonDeserialize(builder = TeeAppProperties.TeeAppPropertiesBuilder.class)
 public class TeeAppProperties {
-    private String image;
-    private String fingerprint;
-    private String entrypoint;
+    String image;
+    String fingerprint;
+    String entrypoint;
     /**
      * Represents the app heap size, in bytes.
      */
-    private long heapSizeInBytes;
+    long heapSizeInBytes;
+
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class TeeAppPropertiesBuilder{}
 }

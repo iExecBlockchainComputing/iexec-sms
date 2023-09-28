@@ -18,7 +18,6 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.sms.api.TeeSessionGenerationError;
-import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
@@ -34,6 +33,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 
+import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,8 +46,6 @@ class GramineSessionHandlerServiceTests {
     private GramineSessionMakerService sessionService;
     @Mock
     private SpsConfiguration spsConfiguration;
-    @Mock
-    private TeeSessionLogConfiguration teeSessionLogConfiguration;
     @InjectMocks
     private GramineSessionHandlerService sessionHandlerService;
 
@@ -59,27 +57,23 @@ class GramineSessionHandlerServiceTests {
 
     @Test
     void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
-        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = TaskDescription.builder().build();
-        when(request.getTaskDescription()).thenReturn(taskDescription);
+        TeeSessionRequest request = createSessionRequest(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(spsSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
         SpsApiClient spsClient = mock(SpsApiClient.class);
         when(spsClient.postSession(spsSession)).thenReturn("sessionId");
         when(spsConfiguration.getInstance()).thenReturn(spsClient);
 
         assertEquals(SPS_URL, sessionHandlerService.buildAndPostSession(request));
-        // Testing output here since it reflects a business feature (ability to catch a
-        // session in debug mode)
-        assertTrue(output.getOut().contains("Session content [taskId:null]\nsessionContent\n"));
+        assertTrue(output.getOut().isEmpty());
     }
 
     @Test
     void shouldNotBuildAndPostSessionSinceBuildSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSessionRequest request = mock(TeeSessionRequest.class);
+        TeeSessionRequest request = TeeSessionRequest.builder().build();
         TeeSessionGenerationException teeSessionGenerationException = new TeeSessionGenerationException(
                 TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED, "some error");
         when(sessionService.generateSession(request)).thenThrow(teeSessionGenerationException);
@@ -91,13 +85,11 @@ class GramineSessionHandlerServiceTests {
     @Test
     void shouldNotBuildAndPostSessionSincePostSessionFailed()
             throws TeeSessionGenerationException {
-        TeeSessionRequest request = mock(TeeSessionRequest.class);
         TaskDescription taskDescription = TaskDescription.builder().build();
-        when(request.getTaskDescription()).thenReturn(taskDescription);
+        TeeSessionRequest request = createSessionRequest(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
         when(spsSession.toString()).thenReturn("sessionContent");
         when(sessionService.generateSession(request)).thenReturn(spsSession);
-        when(teeSessionLogConfiguration.isDisplayDebugSessionEnabled()).thenReturn(true);
         SpsApiClient spsClient = mock(SpsApiClient.class);
         when(spsConfiguration.getInstance()).thenReturn(spsClient);
         FeignException apiClientException = mock(FeignException.class);

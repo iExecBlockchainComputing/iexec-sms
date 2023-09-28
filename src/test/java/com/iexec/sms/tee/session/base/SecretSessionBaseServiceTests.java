@@ -68,16 +68,24 @@ class SecretSessionBaseServiceTests {
             .heapSize(1)
             .build();
 
+    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("PRE_COMPUTE_IMAGE")
+            .fingerprint(PRE_COMPUTE_FINGERPRINT)
+            .entrypoint(PRE_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
+    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("POST_COMPUTE_IMAGE")
+            .fingerprint(POST_COMPUTE_FINGERPRINT)
+            .entrypoint(POST_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
     @Mock
     private Web3SecretService web3SecretService;
     @Mock
     private Web2SecretService web2SecretService;
     @Mock
     private TeeChallengeService teeChallengeService;
-    @Mock
-    private TeeAppProperties preComputeProperties;
-    @Mock
-    private TeeAppProperties postComputeProperties;
     @Mock
     private TeeServicesProperties teeServicesConfig;
     @Mock
@@ -101,13 +109,9 @@ class SecretSessionBaseServiceTests {
         String beneficiary = request.getTaskDescription().getBeneficiary();
 
         // pre
-        when(preComputeProperties.getFingerprint())
-                .thenReturn(PRE_COMPUTE_FINGERPRINT);
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
                 .thenReturn(Optional.of(DATASET_KEY));
         // post
-        when(postComputeProperties.getFingerprint())
-                .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretService.getDecryptedValue(
                 beneficiary,
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
@@ -171,8 +175,6 @@ class SecretSessionBaseServiceTests {
     void shouldGetPreComputeTokens() throws Exception {
         TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
-        when(preComputeProperties.getFingerprint())
-                .thenReturn(PRE_COMPUTE_FINGERPRINT);
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
                 .thenReturn(Optional.of(DATASET_KEY));
 
@@ -205,8 +207,6 @@ class SecretSessionBaseServiceTests {
                         .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
                         .build())
                 .build();
-        when(preComputeProperties.getFingerprint())
-                .thenReturn(PRE_COMPUTE_FINGERPRINT);
 
         SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
@@ -401,8 +401,6 @@ class SecretSessionBaseServiceTests {
 
         String requesterAddress = request.getTaskDescription().getRequester();
 
-        when(postComputeProperties.getFingerprint())
-                .thenReturn(POST_COMPUTE_FINGERPRINT);
         when(web2SecretService.getDecryptedValue(
                 request.getTaskDescription().getBeneficiary(),
                 ReservedSecretKeyName.IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
@@ -559,9 +557,10 @@ class SecretSessionBaseServiceTests {
     @NullSource
     @ValueSource(strings = { "" })
     void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
+                .workerAddress(emptyWorkerAddress)
+                .build();
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
-        sessionRequest.setWorkerAddress(emptyWorkerAddress);
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
@@ -576,9 +575,10 @@ class SecretSessionBaseServiceTests {
     @NullSource
     @ValueSource(strings = { "" })
     void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
+                .enclaveChallenge(emptyEnclaveChallenge)
+                .build();
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
-        sessionRequest.setEnclaveChallenge(emptyEnclaveChallenge);
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,

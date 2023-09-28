@@ -23,7 +23,6 @@ import com.iexec.sms.api.config.TeeAppProperties;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
 
 class TeeWorkerInternalConfigurationTests {
     private final static String IMAGE = "image";
@@ -32,6 +31,20 @@ class TeeWorkerInternalConfigurationTests {
     private final static String LAS_IMAGE = "lasImage";
     private final static long HEAP_SIZE_GB = 3;
     private final static long HEAP_SIZE_B = 3221225472L;
+
+    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("preComputeImage")
+            .fingerprint("preComputeFingerprint")
+            .entrypoint("preComputeEntrypoint")
+            .heapSizeInBytes(1L)
+            .build();
+    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("postComputeImage")
+            .fingerprint("postComputeFingerprint")
+            .entrypoint("postComputeEntrypoint")
+            .heapSizeInBytes(1L)
+            .build();
+
 
     private final TeeWorkerInternalConfiguration teeWorkerInternalConfiguration =
             new TeeWorkerInternalConfiguration();
@@ -73,9 +86,6 @@ class TeeWorkerInternalConfigurationTests {
     // region gramineServicesProperties
     @Test
     void gramineServicesProperties() {
-        TeeAppProperties preComputeProperties = mock(TeeAppProperties.class);
-        TeeAppProperties postComputeProperties = mock(TeeAppProperties.class);
-
         GramineServicesProperties properties =
                 teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
 
@@ -88,9 +98,6 @@ class TeeWorkerInternalConfigurationTests {
     // region sconeServicesProperties
     @Test
     void sconeServicesProperties() {
-        TeeAppProperties preComputeProperties = mock(TeeAppProperties.class);
-        TeeAppProperties postComputeProperties = mock(TeeAppProperties.class);
-
         SconeServicesProperties properties =
                 teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
 

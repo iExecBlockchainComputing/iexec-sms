@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.iexec.sms.secret.web3;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface Web3SecretRepository extends CrudRepository<Web3Secret, Web3SecretHeader> {
+public interface Web3SecretRepository extends JpaRepository<Web3Secret, Web3SecretHeader> {
 
 }

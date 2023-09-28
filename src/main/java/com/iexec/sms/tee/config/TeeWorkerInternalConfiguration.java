@@ -47,12 +47,12 @@ public class TeeWorkerInternalConfiguration {
             @Value("${tee.worker.pre-compute.heap-size-gb}")
             @Positive(message = "pre-compute heap size must be provided")
             long preComputeHeapSizeInGB) {
-        return new TeeAppProperties(
-                preComputeImage,
-                preComputeFingerprint,
-                preComputeEntrypoint,
-                DataSize.ofGigabytes(preComputeHeapSizeInGB).toBytes()
-        );
+        return TeeAppProperties.builder()
+                .image(preComputeImage)
+                .fingerprint(preComputeFingerprint)
+                .entrypoint(preComputeEntrypoint)
+                .heapSizeInBytes(DataSize.ofGigabytes(preComputeHeapSizeInGB).toBytes())
+                .build();
     }
 
     @Bean
@@ -69,12 +69,12 @@ public class TeeWorkerInternalConfiguration {
             @Value("${tee.worker.post-compute.heap-size-gb}")
             @Positive(message = "post-compute heap size must be provided")
             long postComputeHeapSizeInGB) {
-        return new TeeAppProperties(
-                postComputeImage,
-                postComputeFingerprint,
-                postComputeEntrypoint,
-                DataSize.ofGigabytes(postComputeHeapSizeInGB).toBytes()
-        );
+        return TeeAppProperties.builder()
+                .image(postComputeImage)
+                .fingerprint(postComputeFingerprint)
+                .entrypoint(postComputeEntrypoint)
+                .heapSizeInBytes(DataSize.ofGigabytes(postComputeHeapSizeInGB).toBytes())
+                .build();
     }
 
     @Bean

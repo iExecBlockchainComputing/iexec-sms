@@ -28,7 +28,7 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class Secret {
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
     private String value;
 
     /**

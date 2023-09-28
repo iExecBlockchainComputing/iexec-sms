@@ -19,7 +19,6 @@ package com.iexec.sms.tee.session.scone;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
-import com.iexec.sms.tee.session.TeeSessionLogConfiguration;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
@@ -36,16 +35,13 @@ import org.springframework.stereotype.Component;
 public class SconeSessionHandlerService implements TeeSessionHandler {
     private final SconeSessionMakerService sessionService;
     private final CasClient apiClient;
-    private final TeeSessionLogConfiguration teeSessionLogConfiguration;
     private final CasConfiguration casConfiguration;
 
     public SconeSessionHandlerService(SconeSessionMakerService sessionService,
             CasClient apiClient,
-            TeeSessionLogConfiguration teeSessionLogConfiguration,
             CasConfiguration casConfiguration) {
         this.sessionService = sessionService;
         this.apiClient = apiClient;
-        this.teeSessionLogConfiguration = teeSessionLogConfiguration;
         this.casConfiguration = casConfiguration;
     }
 
@@ -60,10 +56,6 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
     public String buildAndPostSession(TeeSessionRequest request)
             throws TeeSessionGenerationException {
         SconeSession session = sessionService.generateSession(request);
-        if (teeSessionLogConfiguration.isDisplayDebugSessionEnabled()) {
-            log.info("Session content [taskId:{}]\n{}",
-                    request.getTaskDescription().getChainTaskId(), session);
-        }
         ResponseEntity<String> postSession = apiClient.postSession(session.toString());
 
         if (postSession == null) {
