@@ -148,7 +148,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(appDeveloperSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
         Assertions.assertThat(appDeveloperSecret.get().getHeader().getKey()).isEqualTo(appDeveloperSecretIndex);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
-        Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
+        Assertions.assertThat(encryptionService.decrypt(appDeveloperSecret.get().getValue())).isEqualTo(secretValue);
 
         final Optional<TeeTaskComputeSecret> requesterSecret = repository.findOne(
                 Example.of(TeeTaskComputeSecret
@@ -170,7 +170,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         Assertions.assertThat(requesterSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase("");
         Assertions.assertThat(requesterSecret.get().getHeader().getKey()).isEqualTo(requesterSecretKey);
         Assertions.assertThat(requesterSecret.get().getValue()).isNotEqualTo(secretValue);
-        Assertions.assertThat(requesterSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
+        Assertions.assertThat(encryptionService.decrypt(requesterSecret.get().getValue())).isEqualTo(secretValue);
 
         // We shouldn't be able to add a new secrets to the database with the same IDs
         try {
