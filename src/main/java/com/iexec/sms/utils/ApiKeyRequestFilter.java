@@ -17,9 +17,9 @@
 package com.iexec.sms.utils;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.filter.GenericFilterBean;
 
-import lombok.extern.slf4j.Slf4j;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -35,7 +35,7 @@ import java.io.IOException;
  * If this filter is activated and the caller does not enter an API Key, then a 401 will be raised
  */
 @Slf4j
-public class ApiKeyRequestFilter  extends GenericFilterBean {
+public class ApiKeyRequestFilter extends GenericFilterBean {
 
 
     private static final String API_KEY_HEADER_NAME = "X-API-KEY"; //Name of header in which api key is expected
@@ -44,11 +44,11 @@ public class ApiKeyRequestFilter  extends GenericFilterBean {
     @Getter
     private boolean isEnabled = false;
 
-    public ApiKeyRequestFilter(String apiKey){
-        if (null != apiKey && !apiKey.isBlank()){
+    public ApiKeyRequestFilter(String apiKey) {
+        if (null != apiKey && !apiKey.isBlank()) {
             this.apiKey = apiKey;
             this.isEnabled = true;
-        }else{
+        } else {
             log.warn("API Key filter is not enabled");
         }
     }
@@ -60,7 +60,7 @@ public class ApiKeyRequestFilter  extends GenericFilterBean {
         if (this.isEnabled()) {
             HttpServletRequest req = (HttpServletRequest) request;
             String key = req.getHeader(API_KEY_HEADER_NAME) == null ? "" : req.getHeader(API_KEY_HEADER_NAME);
-            if ( key.isBlank() || !key.equalsIgnoreCase(this.getApiKey()) ) {
+            if (key.isBlank() || !key.equalsIgnoreCase(this.getApiKey())) {
                 HttpServletResponse resp = (HttpServletResponse) response;
                 String error = "You are not authorized to access this endpoint";
 
@@ -68,10 +68,10 @@ public class ApiKeyRequestFilter  extends GenericFilterBean {
                 resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentLength(error.length());
                 response.getWriter().write(error);
-            }else{
+            } else {
                 chain.doFilter(request, response);
             }
-        }else{
+        } else {
             chain.doFilter(request, response);
         }
     }

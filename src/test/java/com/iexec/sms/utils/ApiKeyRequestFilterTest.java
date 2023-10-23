@@ -16,6 +16,7 @@
 
 package com.iexec.sms.utils;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -28,17 +29,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ApiKeyRequestFilterTest {
 
     private final String apiKey = "e54fdf4s56df4g";
+    private MockHttpServletRequest req;
+    private MockHttpServletResponse res;
+    private MockFilterChain chain;
+
+    @BeforeEach
+    public void init() {
+        req = new MockHttpServletRequest();
+        res = new MockHttpServletResponse();
+        chain = new MockFilterChain();
+    }
 
     @Test
     void shouldPassTheFilterWhenFilterIsActiveAndApiKeyIsCorrect() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
         req.addHeader("X-API-KEY", apiKey);
-
-        filter.doFilter(req,res,chain);
+        filter.doFilter(req, res, chain);
 
         assertEquals(HttpServletResponse.SC_OK, res.getStatus());
     }
@@ -46,11 +52,7 @@ class ApiKeyRequestFilterTest {
     @Test
     void shouldPassTheFilterWhenTheFilterIsInactiveDueToAnApiKeyConfiguredToNull() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(null);
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
-        filter.doFilter(req,res,chain);
+        filter.doFilter(req, res, chain);
 
         assertEquals(HttpServletResponse.SC_OK, res.getStatus());
     }
@@ -58,11 +60,7 @@ class ApiKeyRequestFilterTest {
     @Test
     void shouldPassTheFilterWhenTheFilterIsInactiveDueToAnApiKeyConfiguredToBlank() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter("");
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
-        filter.doFilter(req,res,chain);
+        filter.doFilter(req, res, chain);
 
         assertEquals(HttpServletResponse.SC_OK, res.getStatus());
     }
@@ -70,11 +68,7 @@ class ApiKeyRequestFilterTest {
     @Test
     void shouldNotPassTheFilterWhenFilterIsActiveAndApiKeyIsNotFilled() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
-        filter.doFilter(req,res,chain);
+        filter.doFilter(req, res, chain);
 
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.getStatus());
     }
@@ -82,13 +76,8 @@ class ApiKeyRequestFilterTest {
     @Test
     void shouldNotPassTheFilterWhenFilterIsActiveAndApiKeyIsIncorrect() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        MockHttpServletResponse res = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
         req.addHeader("X-API-KEY", "INCORRECT API KEY");
-
-        filter.doFilter(req,res,chain);
+        filter.doFilter(req, res, chain);
 
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.getStatus());
     }
