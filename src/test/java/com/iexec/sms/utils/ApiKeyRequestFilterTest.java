@@ -44,7 +44,7 @@ class ApiKeyRequestFilterTest {
     }
 
     @Test
-    void shouldPassTheFilterWhenFilterIsInactive() throws Exception {
+    void shouldPassTheFilterWhenTheFilterIsInactiveDueToAnApiKeyConfiguredToNull() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(null);
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
@@ -56,11 +56,37 @@ class ApiKeyRequestFilterTest {
     }
 
     @Test
+    void shouldPassTheFilterWhenTheFilterIsInactiveDueToAnApiKeyConfiguredToBlank() throws Exception {
+        ApiKeyRequestFilter filter = new ApiKeyRequestFilter("");
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req,res,chain);
+
+        assertEquals(HttpServletResponse.SC_OK, res.getStatus());
+    }
+
+    @Test
+    void shouldNotPassTheFilterWhenFilterIsActiveAndApiKeyIsNotFilled() throws Exception {
+        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
+        MockHttpServletRequest req = new MockHttpServletRequest();
+        MockHttpServletResponse res = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(req,res,chain);
+
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, res.getStatus());
+    }
+
+    @Test
     void shouldNotPassTheFilterWhenFilterIsActiveAndApiKeyIsIncorrect() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
         MockHttpServletRequest req = new MockHttpServletRequest();
         MockHttpServletResponse res = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
+
+        req.addHeader("X-API-KEY", "INCORRECT API KEY");
 
         filter.doFilter(req,res,chain);
 
