@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
+- Add a security filter to activate an API Key mechanism on endpoints. (#207)
 
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
 
