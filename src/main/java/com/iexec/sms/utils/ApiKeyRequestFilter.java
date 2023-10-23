@@ -31,7 +31,10 @@ import java.io.IOException;
  * ApiKeyRequestFilter is a security filter that can be activated to protect endpoints.
  * <p>
  * It is based on the use of an API Key that the caller must fill in via the X-API-KEY header.
- * If this filter is activated and the caller does not enter an API Key, then a 401 will be raised
+ * <p>
+ * If an API Key is configured, the filter will be activated and requests will have to present a valid API Key,
+ * if this is not the case,  a 401 message is sent.
+ * If no API Key is configured, then the filter will not be activated and requests will run unchecked.
  */
 @Slf4j
 public class ApiKeyRequestFilter extends GenericFilterBean {
