@@ -16,7 +16,6 @@
 
 package com.iexec.sms.utils;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -39,16 +38,17 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
 
 
     private static final String API_KEY_HEADER_NAME = "X-API-KEY"; //Name of header in which api key is expected
-    @Getter
-    private String apiKey = ""; //The filter API Key
-    @Getter
-    private boolean isEnabled = false;
+    private final String apiKey; //The filter API Key
+
+    private final boolean isEnabled;
 
     public ApiKeyRequestFilter(String apiKey) {
         if (null != apiKey && !apiKey.isBlank()) {
             this.apiKey = apiKey;
             this.isEnabled = true;
         } else {
+            this.apiKey = null;
+            this.isEnabled = false;
             log.warn("API Key filter is not enabled");
         }
     }
@@ -57,10 +57,11 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        if (this.isEnabled()) {
+        if (this.isEnabled) {
             HttpServletRequest req = (HttpServletRequest) request;
-            String key = req.getHeader(API_KEY_HEADER_NAME) == null ? "" : req.getHeader(API_KEY_HEADER_NAME);
-            if (key.isBlank() || !key.equalsIgnoreCase(this.getApiKey())) {
+
+            String key = req.getHeader(API_KEY_HEADER_NAME);
+            if (!this.apiKey.equalsIgnoreCase(key)) {
                 HttpServletResponse resp = (HttpServletResponse) response;
                 String error = "You are not authorized to access this endpoint";
 
