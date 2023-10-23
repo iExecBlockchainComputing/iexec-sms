@@ -18,6 +18,9 @@ package com.iexec.sms.utils;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -40,28 +43,15 @@ class ApiKeyRequestFilterTest {
         chain = new MockFilterChain();
     }
 
-    @Test
-    void shouldPassTheFilterWhenFilterIsActiveAndApiKeyIsCorrect() throws Exception {
-        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
-        req.addHeader("X-API-KEY", apiKey);
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", apiKey})
+    void shouldBeOk(String requestApiKey) throws Exception {
+        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(requestApiKey);
+        if (null != requestApiKey && !requestApiKey.isBlank()) {
+            req.addHeader("X-API-KEY", requestApiKey);
+        }
         filter.doFilter(req, res, chain);
-
-        assertEquals(HttpServletResponse.SC_OK, res.getStatus());
-    }
-
-    @Test
-    void shouldPassTheFilterWhenTheFilterIsInactiveDueToAnApiKeyConfiguredToNull() throws Exception {
-        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(null);
-        filter.doFilter(req, res, chain);
-
-        assertEquals(HttpServletResponse.SC_OK, res.getStatus());
-    }
-
-    @Test
-    void shouldPassTheFilterWhenTheFilterIsInactiveDueToAnApiKeyConfiguredToBlank() throws Exception {
-        ApiKeyRequestFilter filter = new ApiKeyRequestFilter("");
-        filter.doFilter(req, res, chain);
-
         assertEquals(HttpServletResponse.SC_OK, res.getStatus());
     }
 
