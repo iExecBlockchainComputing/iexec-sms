@@ -16,6 +16,7 @@
 
 package com.iexec.sms.admin;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -29,6 +30,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Slf4j
 class AdminControllerTests {
 
     @Mock
@@ -58,7 +60,7 @@ class AdminControllerTests {
             @Override
             public String createDatabaseBackupFile() {
                 try {
-                    System.out.println("Long createDatabaseBackupFile action is running ...");
+                    log.info("Long createDatabaseBackupFile action is running ...");
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -67,17 +69,17 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> one = new ArrayList<>();
-        ResponseEntity<String> two;
+        final List<ResponseEntity<String>> firstResponse = new ArrayList<>();
+        ResponseEntity<String> secondResponse;
         Thread thread = new Thread(() -> {
-            one.add(adminControllerForSemaphore.createBackup());
+            firstResponse.add(adminControllerForSemaphore.createBackup());
         });
         thread.start();
 
-        two = adminControllerForSemaphore.createBackup();
+        secondResponse = adminControllerForSemaphore.createBackup();
 
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, one.get(0).getStatusCode());
-        assertEquals(HttpStatus.OK, two.getStatusCode());
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, firstResponse.get(0).getStatusCode());
+        assertEquals(HttpStatus.OK, secondResponse.getStatusCode());
     }
 
     @Test
@@ -86,7 +88,7 @@ class AdminControllerTests {
             @Override
             public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
-                    System.out.println("Long restoreDatabaseFromBackupFile action is running ...");
+                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -95,16 +97,16 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> one = new ArrayList<>();
-        ResponseEntity<String> two;
+        final List<ResponseEntity<String>> firstResponse = new ArrayList<>();
+        ResponseEntity<String> secondResponse;
         Thread thread = new Thread(() -> {
-            one.add(adminControllerForSemaphore.restoreBackup("", ""));
+            firstResponse.add(adminControllerForSemaphore.restoreBackup("", ""));
         });
         thread.start();
 
-        two = adminControllerForSemaphore.restoreBackup("", "");
+        secondResponse = adminControllerForSemaphore.restoreBackup("", "");
 
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, one.get(0).getStatusCode());
-        assertEquals(HttpStatus.OK, two.getStatusCode());
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, firstResponse.get(0).getStatusCode());
+        assertEquals(HttpStatus.OK, secondResponse.getStatusCode());
     }
 }
