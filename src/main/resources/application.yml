@@ -1,15 +1,16 @@
 server:
   port: ${IEXEC_SMS_PORT:13300}
+  admin-api-key: ${IEXEC_SMS_ADMIN_API_KEY:}
 
-# Not sure it's a good idea but here is a link for an embedded mongodb
-# https://www.baeldung.com/spring-boot-embedded-mongodb
-#spring:
-#  data:
-#    mongodb:
-#      database: iexec-sms
-#      host: ${IEXEC_SMS_MONGO_HOST:localhost}
-#      port: ${IEXEC_SMS_MONGO_PORT:37017}
-      #ssl-enabled: true
+  # Not sure it's a good idea but here is a link for an embedded mongodb
+  # https://www.baeldung.com/spring-boot-embedded-mongodb
+  #spring:
+  #  data:
+  #    mongodb:
+  #      database: iexec-sms
+  #      host: ${IEXEC_SMS_MONGO_HOST:localhost}
+  #      port: ${IEXEC_SMS_MONGO_PORT:37017}
+  #ssl-enabled: true
 
 # Embedded H2 inside JVM
 spring:
