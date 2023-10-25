@@ -33,7 +33,7 @@ import java.io.IOException;
  * It is based on the use of an API Key that the caller must fill in via the X-API-KEY header.
  * <p>
  * If an API Key is configured, the filter will be activated and requests will have to present a valid API Key,
- * if this is not the case,  a 401 message is sent.
+ * if this is not the case, a 401 message is sent.
  * If no API Key is configured, then the filter will not be activated and requests will run unchecked.
  */
 @Slf4j
