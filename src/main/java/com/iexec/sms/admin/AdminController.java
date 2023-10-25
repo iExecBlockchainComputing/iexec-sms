@@ -38,15 +38,15 @@ public class AdminController {
         this.adminService = adminService;
     }
 
-    /*
+    /**
      * Endpoint to initiate a database backup.
-     *
+     * <p>
      * This method allows the client to trigger a database backup operation.
      * The backup process will create a snapshot of the current database
      * and store it for future recovery purposes.
      *
      * @return A response entity indicating the status and details of the backup operation.
-     *
+     * <p>
      * HTTP 201 (Created) - If the backup request is successful.
      * HTTP 429 (Too Many Requests) - If another operation (backup/restore/delete) is already in progress.
      * HTTP 500 (Internal Server Error) - If an unexpected error occurs during the restore process.
