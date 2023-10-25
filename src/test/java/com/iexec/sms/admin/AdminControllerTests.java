@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +44,6 @@ class AdminControllerTests {
         MockitoAnnotations.openMocks(this);
     }
 
-
     @Test
     void testBackupInAdminController() {
         assertEquals(HttpStatus.OK, adminController.createBackup().getStatusCode());
@@ -55,13 +55,13 @@ class AdminControllerTests {
     }
 
     @Test
-    void testSemaphoreBackupInAdminController() {
-        AdminController adminControllerForSemaphore = new AdminController(new AdminService() {
+    void testTooManyRequestOnBackupInAdminController() throws InterruptedException {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
             @Override
             public String createDatabaseBackupFile() {
                 try {
                     log.info("Long createDatabaseBackupFile action is running ...");
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -69,27 +69,39 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> firstResponse = new ArrayList<>();
-        ResponseEntity<String> secondResponse;
-        Thread thread = new Thread(() -> {
-            firstResponse.add(adminControllerForSemaphore.createBackup());
+        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+
+        Thread firstThread = new Thread(() -> {
+            responses.add(adminControllerWithLongAction.createBackup());
         });
-        thread.start();
 
-        secondResponse = adminControllerForSemaphore.createBackup();
+        Thread secondThread = new Thread(() -> {
+            responses.add(adminControllerWithLongAction.createBackup());
+        });
 
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, firstResponse.get(0).getStatusCode());
-        assertEquals(HttpStatus.OK, secondResponse.getStatusCode());
+        firstThread.start();
+        secondThread.start();
+        responses.add(adminControllerWithLongAction.createBackup());
+
+        secondThread.join();
+        firstThread.join();
+
+
+        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
+
+        assertEquals(1, code200);
+        assertEquals(2, code429);
     }
 
     @Test
-    void testSemaphoreInRestoreAdminController() {
-        AdminController adminControllerForSemaphore = new AdminController(new AdminService() {
+    void testTooManyRequestOnRestoreAdminController() throws InterruptedException {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
             @Override
             public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
                     log.info("Long restoreDatabaseFromBackupFile action is running ...");
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -97,16 +109,28 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> firstResponse = new ArrayList<>();
-        ResponseEntity<String> secondResponse;
-        Thread thread = new Thread(() -> {
-            firstResponse.add(adminControllerForSemaphore.restoreBackup("", ""));
+        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+
+        Thread firstThread = new Thread(() -> {
+            responses.add(adminControllerWithLongAction.restoreBackup("", ""));
         });
-        thread.start();
 
-        secondResponse = adminControllerForSemaphore.restoreBackup("", "");
+        Thread secondThread = new Thread(() -> {
+            responses.add(adminControllerWithLongAction.restoreBackup("", ""));
+        });
 
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, firstResponse.get(0).getStatusCode());
-        assertEquals(HttpStatus.OK, secondResponse.getStatusCode());
+        firstThread.start();
+        secondThread.start();
+        responses.add(adminControllerWithLongAction.restoreBackup("", ""));
+
+        secondThread.join();
+        firstThread.join();
+
+
+        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
+
+        assertEquals(1, code200);
+        assertEquals(2, code429);
     }
 }

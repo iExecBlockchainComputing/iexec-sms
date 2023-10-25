@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @RestController("/admin")
 public class AdminController {
 
-    private final Semaphore lock = new Semaphore(1);
+    private final ReentrantLock rLock = new ReentrantLock(true);
 
     private final AdminService adminService;
 
@@ -50,7 +50,9 @@ public class AdminController {
             Thread.currentThread().interrupt();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } finally {
-            lock.release();
+            if (rLock.isHeldByCurrentThread()) {
+                rLock.unlock();
+            }
         }
     }
 
@@ -66,11 +68,14 @@ public class AdminController {
             Thread.currentThread().interrupt();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } finally {
-            lock.release();
+            if (rLock.isHeldByCurrentThread()) {
+                rLock.unlock();
+            }
         }
     }
 
     private boolean tryToAcquireLock() throws InterruptedException {
-        return lock.tryAcquire(100, TimeUnit.MILLISECONDS);
+        return rLock.tryLock(100, TimeUnit.MILLISECONDS);
     }
+
 }
