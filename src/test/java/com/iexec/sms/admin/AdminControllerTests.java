@@ -44,14 +44,10 @@ class AdminControllerTests {
         MockitoAnnotations.openMocks(this);
     }
 
+    // region backup
     @Test
     void testBackupInAdminController() {
         assertEquals(HttpStatus.OK, adminController.createBackup().getStatusCode());
-    }
-
-    @Test
-    void testRestoreInAdminController() {
-        assertEquals(HttpStatus.OK, adminController.restoreBackup("", "").getStatusCode());
     }
 
     @Test
@@ -93,6 +89,13 @@ class AdminControllerTests {
         assertEquals(1, code200);
         assertEquals(2, code429);
     }
+    // endregion
+
+    // region restore-backup
+    @Test
+    void testRestoreInAdminController() {
+        assertEquals(HttpStatus.OK, adminController.restoreBackup("", "").getStatusCode());
+    }
 
     @Test
     void testTooManyRequestOnRestoreAdminController() throws InterruptedException {
@@ -133,4 +136,5 @@ class AdminControllerTests {
         assertEquals(1, code200);
         assertEquals(2, code429);
     }
+    // endregion
 }
