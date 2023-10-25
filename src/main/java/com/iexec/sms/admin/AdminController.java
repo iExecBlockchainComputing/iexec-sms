@@ -49,7 +49,7 @@ public class AdminController {
      * <p>
      * HTTP 201 (Created) - If the backup has been successfully created.
      * HTTP 429 (Too Many Requests) - If another operation (backup/restore/delete) is already in progress.
-     * HTTP 500 (Internal Server Error) - If an unexpected error occurs during the restore process.
+     * HTTP 500 (Internal Server Error) - If an unexpected error occurs during the backup process.
      */
     @PostMapping("/backup")
     public ResponseEntity<String> createBackup() {
@@ -73,7 +73,7 @@ public class AdminController {
      * Endpoint to restore a database backup.
      * <p>
      * This method allows the client to initiate the restoration of a database backup
-     * from a specified dump file, identified by the {@code fileName}, locate in a location specified by the {@code storageID}.
+     * from a specified dump file, identified by the {@code fileName}, located in a location specified by the {@code storageID}.
      *
      * @param storageID The unique identifier for the storage location of the dump in hexadecimal.
      * @param fileName  The name of the dump file to be restored.
