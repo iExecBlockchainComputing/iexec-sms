@@ -23,13 +23,17 @@ class AdminServiceTests {
 
     private final AdminService adminService = new AdminService();
 
+    // region backup
     @Test
     void shouldReturnNotImplementedWhenCallingBackup() {
         Assertions.assertEquals("createDatabaseBackupFile is not implemented", adminService.createDatabaseBackupFile());
     }
+    // endregion
 
+    // region restore-backup
     @Test
     void shouldReturnNotImplementedWhenCallingRestore() {
         Assertions.assertEquals("restoreDatabaseFromBackupFile is not implemented", adminService.restoreDatabaseFromBackupFile("", ""));
     }
+    // endregion
 }
