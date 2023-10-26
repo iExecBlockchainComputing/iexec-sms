@@ -26,6 +26,10 @@ public class AdminService {
         return "createDatabaseBackupFile is not implemented";
     }
 
+    public String replicateDatabaseBackupFile(String storageID, String fileName) {
+        return "replicateDatabaseBackupFile is not implemented";
+    }
+
     public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
         return "restoreDatabaseFromBackupFile is not implemented";
     }

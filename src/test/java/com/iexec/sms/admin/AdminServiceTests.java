@@ -16,8 +16,9 @@
 
 package com.iexec.sms.admin;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AdminServiceTests {
 
@@ -26,14 +27,21 @@ class AdminServiceTests {
     // region backup
     @Test
     void shouldReturnNotImplementedWhenCallingBackup() {
-        Assertions.assertEquals("createDatabaseBackupFile is not implemented", adminService.createDatabaseBackupFile());
+        assertEquals("createDatabaseBackupFile is not implemented", adminService.createDatabaseBackupFile());
+    }
+    // endregion
+
+    // region replicate-backup
+    @Test
+    void shouldReturnNotImplementedWhenCallingReplicate() {
+        assertEquals("replicateDatabaseBackupFile is not implemented", adminService.replicateDatabaseBackupFile("", ""));
     }
     // endregion
 
     // region restore-backup
     @Test
     void shouldReturnNotImplementedWhenCallingRestore() {
-        Assertions.assertEquals("restoreDatabaseFromBackupFile is not implemented", adminService.restoreDatabaseFromBackupFile("", ""));
+        assertEquals("restoreDatabaseFromBackupFile is not implemented", adminService.restoreDatabaseFromBackupFile("", ""));
     }
     // endregion
 }

@@ -19,21 +19,35 @@ package com.iexec.sms.admin;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.nio.file.FileSystemNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 class AdminControllerTests {
 
+    private static final String STORAGE_ID = "storageID";
+    private static final String FILE_NAME = "backup.sql";
+
+    @Mock
+    private ReentrantLock rLock;
     @Mock
     private AdminService adminService;
     @InjectMocks
@@ -46,12 +60,25 @@ class AdminControllerTests {
 
     // region backup
     @Test
-    void testBackupInAdminController() {
+    void testBackup() {
         assertEquals(HttpStatus.OK, adminController.createBackup().getStatusCode());
     }
 
     @Test
-    void testTooManyRequestOnBackupInAdminController() throws InterruptedException {
+    void testInternalServerErrorOnBackup() {
+        when(adminService.createDatabaseBackupFile()).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.createBackup().getStatusCode());
+    }
+
+    @Test
+    void testInterruptedThreadErrorOnBackup() throws InterruptedException {
+        ReflectionTestUtils.setField(adminController, "rLock", rLock);
+        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.createBackup().getStatusCode());
+    }
+
+    @Test
+    void testTooManyRequestOnBackup() throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
             @Override
             public String createDatabaseBackupFile() {
@@ -67,13 +94,8 @@ class AdminControllerTests {
 
         final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
 
-        Thread firstThread = new Thread(() -> {
-            responses.add(adminControllerWithLongAction.createBackup());
-        });
-
-        Thread secondThread = new Thread(() -> {
-            responses.add(adminControllerWithLongAction.createBackup());
-        });
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
 
         firstThread.start();
         secondThread.start();
@@ -91,40 +113,60 @@ class AdminControllerTests {
     }
     // endregion
 
-    // region restore-backup
+    // region replicate-backup
     @Test
-    void testRestoreInAdminController() {
-        assertEquals(HttpStatus.OK, adminController.restoreBackup("", "").getStatusCode());
+    void testReplicate() {
+        assertEquals(HttpStatus.OK, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBadRequestParameters")
+    void testBadRequestOnReplicate(String storageID, String fileName) {
+        assertEquals(HttpStatus.BAD_REQUEST, adminController.replicateBackup(storageID, fileName).getStatusCode());
     }
 
     @Test
-    void testTooManyRequestOnRestoreAdminController() throws InterruptedException {
+    void testInternalServerErrorOnReplicate() {
+        when(adminService.replicateDatabaseBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testInterruptedThreadOnReplicate() throws InterruptedException {
+        ReflectionTestUtils.setField(adminController, "rLock", rLock);
+        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testNotFoundOnReplicate() {
+        when(adminService.replicateDatabaseBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        assertEquals(HttpStatus.NOT_FOUND, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testTooManyRequestOnReplicate() throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
             @Override
-            public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
+            public String replicateDatabaseBackupFile(String storageId, String fileName) {
                 try {
-                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
+                    log.info("Long replicateDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                return adminService.restoreDatabaseFromBackupFile("", "");
+                return adminService.replicateDatabaseBackupFile(storageId, fileName);
             }
         });
 
         final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
 
-        Thread firstThread = new Thread(() -> {
-            responses.add(adminControllerWithLongAction.restoreBackup("", ""));
-        });
-
-        Thread secondThread = new Thread(() -> {
-            responses.add(adminControllerWithLongAction.restoreBackup("", ""));
-        });
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(STORAGE_ID, FILE_NAME)));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(STORAGE_ID, FILE_NAME)));
 
         firstThread.start();
         secondThread.start();
-        responses.add(adminControllerWithLongAction.restoreBackup("", ""));
+        responses.add(adminControllerWithLongAction.replicateBackup(STORAGE_ID, FILE_NAME));
 
         secondThread.join();
         firstThread.join();
@@ -137,4 +179,81 @@ class AdminControllerTests {
         assertEquals(2, code429);
     }
     // endregion
+
+    // region restore-backup
+    @Test
+    void testRestore() {
+        assertEquals(HttpStatus.OK, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBadRequestParameters")
+    void testBadRequestOnRestore(String storageID, String fileName) {
+        assertEquals(HttpStatus.BAD_REQUEST, adminController.restoreBackup(storageID, fileName).getStatusCode());
+    }
+
+    @Test
+    void testInternalServerErrorOnRestore() {
+        when(adminService.restoreDatabaseFromBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testInterruptedThreadOnRestore() throws InterruptedException {
+        ReflectionTestUtils.setField(adminController, "rLock", rLock);
+        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testNotFoundOnRestore() {
+        when(adminService.restoreDatabaseFromBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        assertEquals(HttpStatus.NOT_FOUND, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testTooManyRequestOnRestore() throws InterruptedException {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
+            @Override
+            public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
+                try {
+                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return adminService.restoreDatabaseFromBackupFile(storageId, fileName);
+            }
+        });
+
+        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(STORAGE_ID, FILE_NAME)));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(STORAGE_ID, FILE_NAME)));
+
+        firstThread.start();
+        secondThread.start();
+        responses.add(adminControllerWithLongAction.restoreBackup(STORAGE_ID, FILE_NAME));
+
+        secondThread.join();
+        firstThread.join();
+
+
+        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
+
+        assertEquals(1, code200);
+        assertEquals(2, code429);
+    }
+    // endregion
+
+    private static Stream<Arguments> provideBadRequestParameters() {
+        return Stream.of(
+                Arguments.of(null, null),
+                Arguments.of("", ""),
+                Arguments.of(" ", " "),
+                Arguments.of(STORAGE_ID, " "),
+                Arguments.of(" ", FILE_NAME)
+        );
+    }
 }
