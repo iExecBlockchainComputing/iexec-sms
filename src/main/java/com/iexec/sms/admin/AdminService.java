@@ -16,11 +16,26 @@
 package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 public class AdminService {
+
+    private final String datasourceUrl;
+    private final String datasourceUsername;
+    private final String datasourcePassword;
+
+    public AdminService(
+            @Value("${spring.datasource.url}") String datasourceUrl,
+            @Value("${spring.datasource.username}") String datasourceUsername,
+            @Value("${spring.datasource.password}") String datasourcePassword
+    ) {
+        this.datasourceUrl = datasourceUrl;
+        this.datasourceUsername = datasourceUsername;
+        this.datasourcePassword = datasourcePassword;
+    }
 
     public String createDatabaseBackupFile() {
         return "createDatabaseBackupFile is not implemented";

@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AdminServiceTests {
 
-    private final AdminService adminService = new AdminService();
+    private final AdminService adminService = new AdminService("", "", "");
 
     // region backup
     @Test
