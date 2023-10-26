@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Add a security filter to activate an API Key mechanism on endpoints. (#207)
 - Create admin endpoints foundation. (#208 #209)
+- Add the ability to trigger a backup via a dedicated endpoint (#)
 
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
 

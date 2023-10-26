@@ -16,19 +16,75 @@
 
 package com.iexec.sms.admin;
 
-import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
+
+import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 class AdminServiceTests {
 
-    private final AdminService adminService = new AdminService();
+
+    private final AdminService adminService = new AdminService("", "", "");
+
+    @TempDir
+    File tempStorageLocation;
 
     // region backup
     @Test
-    void shouldReturnNotImplementedWhenCallingBackup() {
-        assertEquals("createDatabaseBackupFile is not implemented", adminService.createDatabaseBackupFile());
+    void shouldReturnTrueWhenAllParametersAreValid() {
+        AdminService adminServiceSpy = Mockito.spy(adminService);
+
+        Mockito.doReturn(true).when(adminServiceSpy).databaseDump(any());
+        assertTrue(adminServiceSpy.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
     }
+
+    @Test
+    void shouldReturnFalseWhenAllParametersAreValidButBackupFailed() {
+        AdminService adminServiceSpy = Mockito.spy(adminService);
+
+        Mockito.doReturn(false).when(adminServiceSpy).databaseDump(any());
+        assertFalse(adminServiceSpy.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldReturnFalseWhenEmptyOrNUllStorageLocation(String location) {
+        assertFalse(adminService.createDatabaseBackupFile(location, "backup.sql"));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldReturnFalseWhenEmptyOrNUllBackupFileName(String fileName) {
+        assertFalse(adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), fileName));
+    }
+
+    @Test
+    void shouldReturnFalseWhenStorageLocationDoesNotExist() {
+        assertFalse(adminService.createDatabaseBackupFile("/nonexistent/directory/", "backup.sql"));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldReturnFalseWhenEmptyOrNUllFullBackupFileName(String fullBackupFileName) {
+        assertFalse(adminService.databaseDump(fullBackupFileName));
+    }
+
+    @Test
+    void shouldReturnFalseWhenBackupFileNameDoesNotExist() {
+        assertFalse(adminService.databaseDump("/nonexistent/directory/backup.sql"));
+    }
+
     // endregion
 
     // region replicate-backup

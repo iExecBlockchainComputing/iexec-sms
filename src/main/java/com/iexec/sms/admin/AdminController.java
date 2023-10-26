@@ -32,6 +32,20 @@ import java.util.concurrent.locks.ReentrantLock;
 @RestController("/admin")
 public class AdminController {
 
+    /**
+     * The directory where the database backup file will be stored.
+     * The value of this constant should be a valid, existing directory path.
+     */
+    private static final String BACKUP_STORAGE_LOCATION = "/work/";
+
+    /**
+     * The name of the database backup file.
+     */
+    private static final String BACKUP_FILENAME = "backup.sql";
+
+    /**
+     * We want to perform one operation at a time. This  ReentrantLock is used to set up the lock mechanism.
+     */
     private final ReentrantLock rLock = new ReentrantLock(true);
 
     private final AdminService adminService;
@@ -58,7 +72,10 @@ public class AdminController {
     public ResponseEntity<String> createBackup() {
         try {
             if (tryToAcquireLock()) {
-                return ResponseEntity.ok(adminService.createDatabaseBackupFile());
+                if (adminService.createDatabaseBackupFile(BACKUP_STORAGE_LOCATION, BACKUP_FILENAME)) {
+                    return ResponseEntity.status(HttpStatus.CREATED).build();
+                }
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             } else {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
