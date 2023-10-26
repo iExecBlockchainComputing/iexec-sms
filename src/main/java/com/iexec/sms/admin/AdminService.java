@@ -27,11 +27,9 @@ public class AdminService {
     private final String datasourceUsername;
     private final String datasourcePassword;
 
-    public AdminService(
-            @Value("${spring.datasource.url}") String datasourceUrl,
-            @Value("${spring.datasource.username}") String datasourceUsername,
-            @Value("${spring.datasource.password}") String datasourcePassword
-    ) {
+    public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
+                        @Value("${spring.datasource.username}") String datasourceUsername,
+                        @Value("${spring.datasource.password}") String datasourcePassword) {
         this.datasourceUrl = datasourceUrl;
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
