@@ -71,14 +71,13 @@ public class AdminController {
     @PostMapping("/backup")
     public ResponseEntity<String> createBackup() {
         try {
-            if (tryToAcquireLock()) {
-                if (adminService.createDatabaseBackupFile(BACKUP_STORAGE_LOCATION, BACKUP_FILENAME)) {
-                    return ResponseEntity.status(HttpStatus.CREATED).build();
-                }
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            } else {
+            if (!tryToAcquireLock()) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
+            if (adminService.createDatabaseBackupFile(BACKUP_STORAGE_LOCATION, BACKUP_FILENAME)) {
+                return ResponseEntity.status(HttpStatus.CREATED).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

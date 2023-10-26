@@ -57,14 +57,14 @@ class AdminServiceTests {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldReturnFalseWhenEmptyOrNUllStorageLocation(String location) {
+    void shouldReturnFalseWhenEmptyOrNullStorageLocation(String location) {
         assertFalse(adminService.createDatabaseBackupFile(location, "backup.sql"));
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldReturnFalseWhenEmptyOrNUllBackupFileName(String fileName) {
+    void shouldReturnFalseWhenEmptyOrNullBackupFileName(String fileName) {
         assertFalse(adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), fileName));
     }
 
@@ -76,7 +76,7 @@ class AdminServiceTests {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldReturnFalseWhenEmptyOrNUllFullBackupFileName(String fullBackupFileName) {
+    void shouldReturnFalseWhenEmptyOrNullFullBackupFileName(String fullBackupFileName) {
         assertFalse(adminService.databaseDump(fullBackupFileName));
     }
 
