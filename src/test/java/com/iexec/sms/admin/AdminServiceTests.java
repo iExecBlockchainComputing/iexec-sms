@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 class AdminServiceTests {
-
-
+    
     private final AdminService adminService = new AdminService("", "", "");
 
     @TempDir

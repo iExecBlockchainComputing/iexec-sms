@@ -23,12 +23,16 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Slf4j
 @Service
 public class AdminService {
 
-
+    // Used to print formatted date in log
+    private final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
@@ -65,7 +69,7 @@ public class AdminService {
         }
 
         // Check if storageLocation is an existing directory, we don't want to create it.
-        File directory = new File(storageLocation);
+        final File directory = new File(storageLocation);
         if (!directory.exists() || !directory.isDirectory()) {
             log.error("storageLocation must be an existing directory.");
             return false;
@@ -84,12 +88,14 @@ public class AdminService {
             log.error("fullBackupFileName must not be empty.");
             return false;
         }
+
         try {
             log.info("Starting the backup process {}", fullBackupFileName);
             final long start = System.currentTimeMillis();
             Script.process(datasourceUrl, datasourceUsername, datasourcePassword, fullBackupFileName, "DROP", "");
             final long stop = System.currentTimeMillis();
-            log.info("Backup took {} ms", stop - start);
+            final long size = (new File(fullBackupFileName)).length();
+            log.info("New backup created [timestamp {}, duration {} ms, size {}]", dateFormat.format(new Date(start)), stop - start, size);
         } catch (SQLException e) {
             log.error("SQL error occurred during backup : " + e.getMessage());
             return false;
