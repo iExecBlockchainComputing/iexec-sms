@@ -16,7 +16,6 @@
 
 package com.iexec.sms.admin;
 
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 class AdminServiceTests {
-    
+
     private final AdminService adminService = new AdminService("", "", "");
 
     @TempDir

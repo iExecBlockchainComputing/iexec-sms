@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -163,6 +165,25 @@ public class AdminController {
         } finally {
             tryToReleaseLock();
         }
+    }
+
+    /**
+     * Converts {@code storageID} to an ascii string and checks if it is an existing folder.
+     *
+     * @param storageID The hexadecimal representation of an ascii String
+     * @return The storage path if it exists, throws a {@code FileSystemNotFoundException} otherwise.
+     */
+    String getStoragePathFromID(String storageID) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < storageID.length(); i += 2) {
+            String str = storageID.substring(i, i + 2);
+            sb.append((char) Integer.parseInt(str, 16));
+        }
+        final String output = sb.toString();
+        if (!Files.isDirectory(Path.of(output))) {
+            throw new FileSystemNotFoundException("Storage ID " + storageID + " does not match an existing folder");
+        }
+        return output;
     }
 
     private boolean tryToAcquireLock() throws InterruptedException {
