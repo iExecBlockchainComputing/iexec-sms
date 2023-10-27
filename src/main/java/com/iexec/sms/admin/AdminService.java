@@ -64,8 +64,8 @@ public class AdminService {
             return false;
         }
         // Ensure that storageLocation ends with a slash
-        if (!storageLocation.endsWith("/")) {
-            storageLocation += "/";
+        if (!storageLocation.endsWith(File.separator)) {
+            storageLocation += File.separator;
         }
 
         // Check if storageLocation is an existing directory, we don't want to create it.
@@ -84,7 +84,7 @@ public class AdminService {
      */
     boolean databaseDump(String fullBackupFileName) {
 
-        if (fullBackupFileName == null || fullBackupFileName.isEmpty()) {
+        if (StringUtils.isBlank(fullBackupFileName)) {
             log.error("fullBackupFileName must not be empty.");
             return false;
         }
@@ -94,7 +94,7 @@ public class AdminService {
             final long start = System.currentTimeMillis();
             Script.process(datasourceUrl, datasourceUsername, datasourcePassword, fullBackupFileName, "DROP", "");
             final long stop = System.currentTimeMillis();
-            final long size = (new File(fullBackupFileName)).length();
+            final long size = new File(fullBackupFileName).length();
             log.info("New backup created [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]", dateFormat.format(new Date(start)), stop - start, size, fullBackupFileName);
         } catch (SQLException e) {
             log.error("SQL error occurred during backup", e);
