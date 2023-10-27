@@ -19,6 +19,7 @@ package com.iexec.sms.admin;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -30,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -79,7 +82,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnBackup() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
             @Override
             public String createDatabaseBackupFile() {
                 try {
@@ -146,7 +149,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnReplicate() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
             @Override
             public String replicateDatabaseBackupFile(String storageId, String fileName) {
                 try {
@@ -213,7 +216,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnRestore() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService() {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
             @Override
             public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
@@ -244,6 +247,29 @@ class AdminControllerTests {
 
         assertEquals(1, code200);
         assertEquals(2, code429);
+    }
+    // endregion
+
+    // region getStoragePathFromID
+    @Test
+    void testFileSystemNotFoundExceptionOnGetStoragePathFromID() {
+        String storageID = convertToHex("/void");
+        assertThrowsExactly(FileSystemNotFoundException.class, () -> adminController.getStoragePathFromID(storageID));
+    }
+
+    @Test
+    void testGetStoragePathFromID(@TempDir Path tempDir) {
+        String storageID = convertToHex(tempDir.toString());
+        assertEquals(tempDir.toString(), adminController.getStoragePathFromID(storageID));
+    }
+
+    private String convertToHex(String str) {
+        char[] chars = str.toCharArray();
+        StringBuilder hex = new StringBuilder();
+        for (char ch : chars) {
+            hex.append(Integer.toHexString(ch));
+        }
+        return hex.toString();
     }
     // endregion
 
