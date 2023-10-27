@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -63,35 +65,29 @@ class AdminControllerTests {
 
     // region backup
     @Test
-    void testBackup() {
-        assertEquals(HttpStatus.OK, adminController.createBackup().getStatusCode());
+    void shouldReturnCreatedWhenBackupSuccess() {
+        Mockito.doReturn(true).when(adminService).createDatabaseBackupFile(any(), any());
+        assertEquals(HttpStatus.CREATED, adminController.createBackup().getStatusCode());
     }
 
     @Test
-    void testInternalServerErrorOnBackup() {
-        when(adminService.createDatabaseBackupFile()).thenThrow(RuntimeException.class);
+    void shouldReturnErrorWhenBackupFail() {
+        Mockito.doReturn(false).when(adminService).createDatabaseBackupFile(any(), any());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.createBackup().getStatusCode());
     }
 
     @Test
-    void testInterruptedThreadErrorOnBackup() throws InterruptedException {
-        ReflectionTestUtils.setField(adminController, "rLock", rLock);
-        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.createBackup().getStatusCode());
-    }
-
-    @Test
-    void testTooManyRequestOnBackup() throws InterruptedException {
+    void shouldReturnTooManyRequestWhenBackupProcessIsAlreadyRunning() throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
             @Override
-            public String createDatabaseBackupFile() {
+            public boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
                 try {
                     log.info("Long createDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                return adminService.createDatabaseBackupFile();
+                return true;
             }
         });
 
@@ -108,10 +104,10 @@ class AdminControllerTests {
         firstThread.join();
 
 
-        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code201 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.CREATED).count();
         long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
 
-        assertEquals(1, code200);
+        assertEquals(1, code201);
         assertEquals(2, code429);
     }
     // endregion
