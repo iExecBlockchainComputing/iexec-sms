@@ -24,8 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -118,19 +118,26 @@ public class AdminService {
     boolean restoreDatabaseFromBackupFile(String storagePath, String backupFileName) {
         try {
             final String fullBackupFileName = storagePath + File.separator + backupFileName;
-            if (!isPathInBaseDirectory(fullBackupFileName)) {
-                throw new FileSystemNotFoundException("Backup file " + fullBackupFileName + " not found");
+            // checks on backup file to restore
+            final File backupFile = new File(fullBackupFileName);
+            final String backupFilePath = backupFile.getCanonicalPath();
+            if (!backupFilePath.startsWith(storagePath)) {
+                throw new IOException("Backup file is outside of storage file system");
+            } else if (!backupFile.exists()) {
+                throw new IOException("Backup file does not exist");
             }
+            final long size = backupFilePath.length();
             final long start = System.currentTimeMillis();
             RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
                     fullBackupFileName, Charset.defaultCharset(), true);
             final long stop = System.currentTimeMillis();
-            final long size = new File(fullBackupFileName).length();
             log.warn("Backup has been restored [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]",
                     dateFormat.format(new Date(start)), stop - start, size, fullBackupFileName);
             return true;
         } catch (DbException e) {
             log.error("RunScript error occurred during restore", e);
+        } catch (IOException e) {
+            log.error("Failed to read backup file size");
         } catch (SQLException e) {
             log.error("SQL error occurred during restore", e);
         }
