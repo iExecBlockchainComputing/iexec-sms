@@ -46,7 +46,7 @@ public class AdminController {
     private static final String BACKUP_FILENAME = "backup.sql";
 
     /**
-     * We want to perform one operation at a time. This  ReentrantLock is used to set up the lock mechanism.
+     * We want to perform one operation at a time. This ReentrantLock is used to set up the lock mechanism.
      */
     private final ReentrantLock rLock = new ReentrantLock(true);
 

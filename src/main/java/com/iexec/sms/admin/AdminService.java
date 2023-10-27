@@ -16,8 +16,8 @@
 package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.Script;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -54,12 +54,12 @@ public class AdminService {
      */
     boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
         // Check for missing or empty storageLocation parameter
-        if (storageLocation == null || storageLocation.isEmpty()) {
+        if (StringUtils.isBlank(storageLocation)) {
             log.error("storageLocation must not be empty.");
             return false;
         }
         // Check for missing or empty backupFileName parameter
-        if (backupFileName == null || backupFileName.isEmpty()) {
+        if (StringUtils.isBlank(backupFileName)) {
             log.error("backupFileName must not be empty.");
             return false;
         }
@@ -71,7 +71,7 @@ public class AdminService {
         // Check if storageLocation is an existing directory, we don't want to create it.
         final File directory = new File(storageLocation);
         if (!directory.exists() || !directory.isDirectory()) {
-            log.error("storageLocation must be an existing directory.");
+            log.error("storageLocation must be an existing directory [storageLocation:{}]", storageLocation);
             return false;
         }
 
@@ -90,14 +90,14 @@ public class AdminService {
         }
 
         try {
-            log.info("Starting the backup process {}", fullBackupFileName);
+            log.info("Starting the backup process [fullBackupFileName:{}]", fullBackupFileName);
             final long start = System.currentTimeMillis();
             Script.process(datasourceUrl, datasourceUsername, datasourcePassword, fullBackupFileName, "DROP", "");
             final long stop = System.currentTimeMillis();
             final long size = (new File(fullBackupFileName)).length();
-            log.info("New backup created [timestamp {}, duration {} ms, size {}]", dateFormat.format(new Date(start)), stop - start, size);
+            log.info("New backup created [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]", dateFormat.format(new Date(start)), stop - start, size, fullBackupFileName);
         } catch (SQLException e) {
-            log.error("SQL error occurred during backup : " + e.getMessage());
+            log.error("SQL error occurred during backup", e);
             return false;
         }
         return true;
