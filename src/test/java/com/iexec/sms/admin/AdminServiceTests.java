@@ -17,20 +17,37 @@
 package com.iexec.sms.admin;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
 import java.io.File;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
+@ExtendWith(OutputCaptureExtension.class)
 class AdminServiceTests {
 
-    private final AdminService adminService = new AdminService("", "", "");
+    @Bean
+    public DataSource dataSource() {
+        return DataSourceBuilder.create()
+                .url("jdbc:h2:mem:test")
+                .username("sa")
+                .password("")
+                .build();
+    }
+
+    private final AdminService adminService = new AdminService("jdbc:h2:mem:test", "sa", "");
 
     @TempDir
     File tempStorageLocation;
@@ -95,7 +112,23 @@ class AdminServiceTests {
     // region restore-backup
     @Test
     void shouldReturnNotImplementedWhenCallingRestore() {
-        assertEquals("restoreDatabaseFromBackupFile is not implemented", adminService.restoreDatabaseFromBackupFile("", ""));
+        final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(new File(backupFile).exists());
+        adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
+    }
+
+    @Test
+    void withDbException(CapturedOutput output) {
+        adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(output.getOut().contains("RunScript error occurred during restore"));
+    }
+
+    @Test
+    void withSQLException(CapturedOutput output) {
+        AdminService corruptAdminService = new AdminService("url", "username", "password");
+        corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(output.getOut().contains("SQL error occurred during restore"));
     }
     // endregion
 }

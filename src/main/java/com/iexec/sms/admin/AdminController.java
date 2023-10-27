@@ -19,10 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
@@ -31,7 +28,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-@RestController("/admin")
+@RestController
+@RequestMapping("/admin")
 public class AdminController {
 
     /**
@@ -115,7 +113,8 @@ public class AdminController {
             if (!tryToAcquireLock()) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
-            return ResponseEntity.ok(adminService.replicateDatabaseBackupFile(storageID, fileName));
+            final String storagePath = getStoragePathFromID(storageID);
+            return ResponseEntity.ok(adminService.replicateDatabaseBackupFile(storagePath, fileName));
         } catch (FileSystemNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (InterruptedException e) {
@@ -146,7 +145,7 @@ public class AdminController {
      * </ul>
      */
     @PostMapping("/{storageID}/restore-backup")
-    public ResponseEntity<String> restoreBackup(@PathVariable String storageID, @RequestParam String fileName) {
+    ResponseEntity<Void> restoreBackup(@PathVariable String storageID, @RequestParam String fileName) {
         try {
             if (StringUtils.isBlank(storageID) || StringUtils.isBlank(fileName)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -154,7 +153,11 @@ public class AdminController {
             if (!tryToAcquireLock()) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
-            return ResponseEntity.ok(adminService.restoreDatabaseFromBackupFile(storageID, fileName));
+            final String storagePath = getStoragePathFromID(storageID);
+            if (adminService.restoreDatabaseFromBackupFile(storagePath, fileName)) {
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (FileSystemNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (InterruptedException e) {

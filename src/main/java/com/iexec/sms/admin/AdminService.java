@@ -17,11 +17,14 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.h2.message.DbException;
+import org.h2.tools.RunScript;
 import org.h2.tools.Script;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -103,11 +106,26 @@ public class AdminService {
         return true;
     }
 
-    public String replicateDatabaseBackupFile(String storageID, String fileName) {
+    public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
         return "replicateDatabaseBackupFile is not implemented";
     }
 
-    public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
-        return "restoreDatabaseFromBackupFile is not implemented";
+    public boolean restoreDatabaseFromBackupFile(String storagePath, String backupFileName) {
+        try {
+            final String fullBackupFileName = storagePath + File.separator + backupFileName;
+            final long start = System.currentTimeMillis();
+            RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
+                    fullBackupFileName, Charset.defaultCharset(), true);
+            final long stop = System.currentTimeMillis();
+            final long size = new File(fullBackupFileName).length();
+            log.warn("Backup has been restored [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]",
+                    dateFormat.format(new Date(start)), stop - start, size, fullBackupFileName);
+            return true;
+        } catch (DbException e) {
+            log.error("RunScript error occurred during restore", e);
+        } catch (SQLException e) {
+            log.error("SQL error occurred during restore", e);
+        }
+        return false;
     }
 }
