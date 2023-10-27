@@ -121,6 +121,22 @@ class AdminServiceTests {
     }
 
     @Test
+    void shouldFailToRestoreWithBackupFileMissing(CapturedOutput output) {
+        assertAll(
+                () -> assertFalse(adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql")),
+                () -> assertTrue(output.getOut().contains("Backup file does not exist"))
+        );
+    }
+
+    @Test
+    void shouldFailToRestoreWithBackupFileOutOfStorage(CapturedOutput output) {
+        assertAll(
+                () -> assertFalse(adminService.restoreDatabaseFromBackupFile("/backup", "backup.sql")),
+                () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
+        );
+    }
+
+    @Test
     @Disabled
     void withDbException(CapturedOutput output) {
         adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");

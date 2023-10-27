@@ -121,7 +121,7 @@ public class AdminService {
             // checks on backup file to restore
             final File backupFile = new File(fullBackupFileName);
             final String backupFilePath = backupFile.getCanonicalPath();
-            if (!backupFilePath.startsWith(storagePath)) {
+            if (!backupFilePath.startsWith(storageFolder)) {
                 throw new IOException("Backup file is outside of storage file system");
             } else if (!backupFile.exists()) {
                 throw new IOException("Backup file does not exist");
@@ -137,7 +137,7 @@ public class AdminService {
         } catch (DbException e) {
             log.error("RunScript error occurred during restore", e);
         } catch (IOException e) {
-            log.error("Failed to read backup file size");
+            log.error("Failed to read backup file size", e);
         } catch (SQLException e) {
             log.error("SQL error occurred during restore", e);
         }
