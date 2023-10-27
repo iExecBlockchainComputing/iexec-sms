@@ -70,7 +70,7 @@ public class AdminService {
 
         // Check if storageLocation is an existing directory, we don't want to create it.
         final File directory = new File(storageLocation);
-        if (!directory.exists() || !directory.isDirectory()) {
+        if (!directory.isDirectory()) {
             log.error("storageLocation must be an existing directory [storageLocation:{}]", storageLocation);
             return false;
         }
