@@ -25,6 +25,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -39,13 +41,16 @@ public class AdminService {
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
+    private final String storageFolder;
 
     public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
-                        @Value("${spring.datasource.password}") String datasourcePassword) {
+                        @Value("${spring.datasource.password}") String datasourcePassword,
+                        @Value("${spring.datasource.storage-folder}") String storageFolder) {
         this.datasourceUrl = datasourceUrl;
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
+        this.storageFolder = storageFolder;
     }
 
     /**
@@ -110,9 +115,12 @@ public class AdminService {
         return "replicateDatabaseBackupFile is not implemented";
     }
 
-    public boolean restoreDatabaseFromBackupFile(String storagePath, String backupFileName) {
+    boolean restoreDatabaseFromBackupFile(String storagePath, String backupFileName) {
         try {
             final String fullBackupFileName = storagePath + File.separator + backupFileName;
+            if (!isPathInBaseDirectory(fullBackupFileName)) {
+                throw new FileSystemNotFoundException("Backup file " + fullBackupFileName + " not found");
+            }
             final long start = System.currentTimeMillis();
             RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
                     fullBackupFileName, Charset.defaultCharset(), true);
@@ -127,5 +135,11 @@ public class AdminService {
             log.error("SQL error occurred during restore", e);
         }
         return false;
+    }
+
+    boolean isPathInBaseDirectory(String pathToCheck) {
+        Path base = Path.of(storageFolder).toAbsolutePath().normalize();
+        Path toCheck = Path.of(pathToCheck).toAbsolutePath().normalize();
+        return toCheck.startsWith(base);
     }
 }

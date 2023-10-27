@@ -78,7 +78,7 @@ class AdminControllerTests {
 
     @Test
     void shouldReturnTooManyRequestWhenBackupProcessIsAlreadyRunning() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
             public boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
                 try {
@@ -147,7 +147,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
             public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
                 try {
@@ -219,7 +219,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnRestore(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
             public boolean restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {

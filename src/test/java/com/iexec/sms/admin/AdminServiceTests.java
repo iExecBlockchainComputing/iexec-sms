@@ -47,7 +47,7 @@ class AdminServiceTests {
                 .build();
     }
 
-    private final AdminService adminService = new AdminService("jdbc:h2:mem:test", "sa", "");
+    private final AdminService adminService = new AdminService("jdbc:h2:mem:test", "sa", "", "/tmp/");
 
     @TempDir
     File tempStorageLocation;
@@ -111,11 +111,12 @@ class AdminServiceTests {
 
     // region restore-backup
     @Test
-    void shouldReturnNotImplementedWhenCallingRestore() {
+    void shouldRestoreBackup(CapturedOutput output) {
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertTrue(new File(backupFile).exists());
         adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(output.getOut().contains("Backup has been restored"));
     }
 
     @Test
@@ -126,9 +127,18 @@ class AdminServiceTests {
 
     @Test
     void withSQLException(CapturedOutput output) {
-        AdminService corruptAdminService = new AdminService("url", "username", "password");
+        AdminService corruptAdminService = new AdminService("url", "username", "password", "/tmp/");
         corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertTrue(output.getOut().contains("SQL error occurred during restore"));
     }
     // endregion
+
+    @Test
+    void testIsPathInBaseDirectory() {
+        assertAll(
+                () -> assertFalse(adminService.isPathInBaseDirectory("/tmp/../../backup.sql")),
+                () -> assertTrue(adminService.isPathInBaseDirectory("/tmp/backup.sql")),
+                () -> assertTrue(adminService.isPathInBaseDirectory("/tmp/backup-copy.sql"))
+        );
+    }
 }
