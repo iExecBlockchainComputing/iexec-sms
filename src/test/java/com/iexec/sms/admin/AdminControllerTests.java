@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 class AdminControllerTests {
 
     private static final String STORAGE_ID = "storageID";
+    private static final String STORAGE_PATH = "/storage";
     private static final String FILE_NAME = "backup.sql";
 
     @Mock
@@ -78,7 +79,7 @@ class AdminControllerTests {
 
     @Test
     void shouldReturnTooManyRequestWhenBackupProcessIsAlreadyRunning() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
             public boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
                 try {
@@ -145,7 +146,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnReplicate() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
             public String replicateDatabaseBackupFile(String storageId, String fileName) {
                 try {
@@ -212,7 +213,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnRestore() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
             public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
@@ -266,6 +267,78 @@ class AdminControllerTests {
             hex.append(Integer.toHexString(ch));
         }
         return hex.toString();
+    }
+    // endregion
+
+    // region delete-backup
+    @Test
+    void testDelete(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        when(adminService.deleteBackupFileFromStorage(tempDir.toString(), FILE_NAME)).thenReturn(true);
+        assertEquals(HttpStatus.OK, adminController.restoreBackup(storageID, FILE_NAME).getStatusCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBadRequestParameters")
+    void testBadRequestOnDelete(String storageID, String fileName) {
+        assertEquals(HttpStatus.BAD_REQUEST, adminController.deleteBackup(storageID, fileName).getStatusCode());
+    }
+
+    @Test
+    void testInternalServerErrorOnDelete(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        when(adminService.deleteBackupFileFromStorage(tempDir.toString(), FILE_NAME)).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testInterrupterThreadOnDelete() throws InterruptedException {
+        ReflectionTestUtils.setField(adminController, "rLock", rLock);
+        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.deleteBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testNotFoundOnDelete() {
+        final String storageID = convertToHex(STORAGE_PATH);
+        when(adminService.deleteBackupFileFromStorage(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        assertEquals(HttpStatus.NOT_FOUND, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testTooManyRequestOnDelete(@TempDir Path tempDir) throws InterruptedException {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+            @Override
+            public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+                try {
+                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return true;
+            }
+        });
+
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final String storageID = convertToHex(tempDir.toString());
+
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME)));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME)));
+
+        firstThread.start();
+        secondThread.start();
+        responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME));
+
+        secondThread.join();
+        firstThread.join();
+
+
+        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
+
+        assertEquals(1, code200);
+        assertEquals(2, code429);
     }
     // endregion
 

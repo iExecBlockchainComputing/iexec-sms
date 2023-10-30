@@ -22,6 +22,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -36,13 +40,16 @@ public class AdminService {
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
+    private final String storageFolder;
 
     public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
-                        @Value("${spring.datasource.password}") String datasourcePassword) {
+                        @Value("${spring.datasource.password}") String datasourcePassword,
+                        @Value("${spring.datasource.storage-folder}") String storageFolder) {
         this.datasourceUrl = datasourceUrl;
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
+        this.storageFolder = storageFolder;
     }
 
     /**
@@ -53,21 +60,13 @@ public class AdminService {
      * @return {@code true} if the backup was successful; {@code false} if any error occurs.
      */
     boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
-        // Check for missing or empty storageLocation parameter
-        if (StringUtils.isBlank(storageLocation)) {
-            log.error("storageLocation must not be empty.");
-            return false;
-        }
-        // Check for missing or empty backupFileName parameter
-        if (StringUtils.isBlank(backupFileName)) {
-            log.error("backupFileName must not be empty.");
+        // Ensure that storageLocation and backupFileName are not blanks
+        boolean validation = commonsParametersValidation(storageLocation, backupFileName);
+        if (!validation) {
             return false;
         }
         // Ensure that storageLocation ends with a slash
-        if (!storageLocation.endsWith(File.separator)) {
-            storageLocation += File.separator;
-        }
-
+        storageLocation = normalizePathWithSeparator(storageLocation);
         // Check if storageLocation is an existing directory, we don't want to create it.
         final File directory = new File(storageLocation);
         if (!directory.isDirectory()) {
@@ -109,5 +108,81 @@ public class AdminService {
 
     public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
         return "restoreDatabaseFromBackupFile is not implemented";
+    }
+
+    /**
+     * Delete a backup of the H2 database from a location
+     *
+     * @param storageLocation The location of the backup file.
+     * @param backupFileName  The name of the backup file.
+     * @return {@code true} if the deletion was successful; {@code false} if any error occurs.
+     */
+    public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+
+        // Ensure that storageLocation and backupFileName are not blanks
+        boolean validation = commonsParametersValidation(storageLocation, backupFileName);
+        if (!validation) {
+            return false;
+        }
+        // Ensure that storageLocation correspond to an authorised area
+        if (!isPathInBaseDirectory(storageLocation)) {
+            log.error("Backup file is outside of storage file system [storageLocation:{}]", storageLocation);
+            return false;
+        }
+        // Ensure that storageLocation ends with a slash
+        storageLocation = normalizePathWithSeparator(storageLocation);
+
+        String fullBackupFileName = storageLocation + backupFileName;
+        try {
+            Path fileToDeletePath = Paths.get(fullBackupFileName);
+            if (!fileToDeletePath.toFile().exists()) {
+                log.error("Backup file does not exist[fullBackupFileName:{}]", fullBackupFileName);
+                return false;
+            }
+            log.info("Starting the delete process [fullBackupFileName:{}]", fullBackupFileName);
+            final long start = System.currentTimeMillis();
+            Files.delete(fileToDeletePath);
+            final long stop = System.currentTimeMillis();
+            log.info("Successfully deleted backup [timestamp:{}, fullBackupFileName:{}, duration:{} ms]", dateFormat.format(new Date(start)), fullBackupFileName, stop - start);
+            return true;
+        } catch (IOException e) {
+            log.error("An error occurred while deleting backup [fullBackupFileName:{}]", fullBackupFileName, e);
+        }
+        return false;
+    }
+
+
+    boolean commonsParametersValidation(String storageLocation, String backupFileName) {
+        // Check for missing or empty storageLocation parameter
+        if (StringUtils.isBlank(storageLocation)) {
+            log.error("storageLocation must not be empty.");
+            return false;
+        }
+        // Check for missing or empty backupFileName parameter
+        if (StringUtils.isBlank(backupFileName)) {
+            log.error("backupFileName must not be empty.");
+            return false;
+        }
+        return true;
+    }
+
+    boolean isPathInBaseDirectory(String pathToCheck) {
+        Path base = Path.of(storageFolder).toAbsolutePath().normalize();
+        Path toCheck = Path.of(pathToCheck).toAbsolutePath().normalize();
+        return toCheck.startsWith(base);
+    }
+
+    /**
+     * Ensures that a given path string ends with a file separator by adding one if it's missing.
+     *
+     * @param path The path string to normalize.
+     * @return The normalized path with a trailing file separator.
+     */
+    String normalizePathWithSeparator(String path) {
+        if (!path.endsWith(File.separator)) {
+            path += File.separator;
+        }
+
+        return path;
     }
 }

@@ -19,10 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
@@ -155,6 +152,49 @@ public class AdminController {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
             return ResponseEntity.ok(adminService.restoreDatabaseFromBackupFile(storageID, fileName));
+        } catch (FileSystemNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } finally {
+            tryToReleaseLock();
+        }
+    }
+
+    /**
+     * Endpoint to delete a database backup.
+     * <p>
+     * This method allows the client to initiate the deletion of a database backup
+     * from a specified dump file, identified by the {@code fileName}, located in a location specified by the {@code storageID}.
+     *
+     * @param storageID The unique identifier for the storage location of the dump in hexadecimal.
+     * @param fileName  The name of the dump file to be deleted.
+     * @return A response entity indicating the status and details of the delete operation.
+     * <ul>
+     * <li>HTTP 200 (OK) - If the backup has been successfully deleted.
+     * <li>HTTP 400 (Bad Request) - If {@code fileName} is missing or {@code storageID} does not match an existing directory.
+     * <li>HTTP 404 (Not Found) - If the backup file specified by {@code fileName} does not exist.
+     * <li>HTTP 429 (Too Many Requests) - If another operation (backup/restore/replicate) is already in progress.
+     * <li>HTTP 500 (Internal Server Error) - If an unexpected error occurs during the restore process.
+     * </ul>
+     */
+    @DeleteMapping("/{storageID}/delete-backup")
+    ResponseEntity<Void> deleteBackup(@PathVariable String storageID, @RequestParam String fileName) {
+        try {
+            if (StringUtils.isBlank(storageID) || StringUtils.isBlank(fileName)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            if (!tryToAcquireLock()) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+            }
+            final String storagePath = getStoragePathFromID(storageID);
+            if (adminService.deleteBackupFileFromStorage(storagePath, fileName)) {
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (FileSystemNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (InterruptedException e) {
