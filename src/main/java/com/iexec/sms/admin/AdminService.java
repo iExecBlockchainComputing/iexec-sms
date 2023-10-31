@@ -124,15 +124,17 @@ public class AdminService {
         if (!validation) {
             return false;
         }
+
+        // Ensure that storageLocation ends with a slash
+        storageLocation = normalizePathWithSeparator(storageLocation);
+        String fullBackupFileName = storageLocation + backupFileName;
+
         // Ensure that storageLocation correspond to an authorised area
-        if (!isPathInBaseDirectory(storageLocation)) {
+        if (!fullBackupFileName.startsWith(storageFolder) || !isPathInBaseDirectory(storageLocation)) {
             log.error("Backup file is outside of storage file system [storageLocation:{}]", storageLocation);
             return false;
         }
-        // Ensure that storageLocation ends with a slash
-        storageLocation = normalizePathWithSeparator(storageLocation);
 
-        String fullBackupFileName = storageLocation + backupFileName;
         try {
             Path fileToDeletePath = Paths.get(fullBackupFileName);
             if (!fileToDeletePath.toFile().exists()) {
