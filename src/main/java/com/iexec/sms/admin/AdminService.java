@@ -118,29 +118,25 @@ public class AdminService {
      * @return {@code true} if the deletion was successful; {@code false} if any error occurs.
      */
     public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
-
-        // Ensure that storageLocation and backupFileName are not blanks
-        boolean validation = commonsParametersValidation(storageLocation, backupFileName);
-        if (!validation) {
-            return false;
-        }
-
-        // Ensure that storageLocation ends with a slash
-        storageLocation = normalizePathWithSeparator(storageLocation);
-        String fullBackupFileName = storageLocation + backupFileName;
-
-        // Ensure that storageLocation correspond to an authorised area
-        if (!fullBackupFileName.startsWith(storageFolder) || !isPathInBaseDirectory(storageLocation)) {
-            log.error("Backup file is outside of storage file system [storageLocation:{}]", storageLocation);
-            return false;
-        }
-
         try {
-            Path fileToDeletePath = Paths.get(fullBackupFileName);
-            if (!fileToDeletePath.toFile().exists()) {
-                log.error("Backup file does not exist[fullBackupFileName:{}]", fullBackupFileName);
+            // Ensure that storageLocation and backupFileName are not blanks
+            boolean validation = commonsParametersValidation(storageLocation, backupFileName);
+            if (!validation) {
                 return false;
             }
+            // Ensure that storageLocation ends with a slash
+            storageLocation = normalizePathWithSeparator(storageLocation);
+            String fullBackupFileName = storageLocation + backupFileName;
+
+            final File backupFile = new File(fullBackupFileName);
+            final String backupFilePath = backupFile.getCanonicalPath();
+            // Ensure that storageLocation correspond to an authorised area
+            if (!backupFilePath.startsWith(storageFolder) || !isPathInBaseDirectory(backupFilePath)) {
+                throw new IOException("Backup file is outside of storage file system");
+            } else if (!backupFile.exists()) {
+                throw new IOException("Backup file does not exist");
+            }
+            Path fileToDeletePath = Paths.get(fullBackupFileName);
             log.info("Starting the delete process [fullBackupFileName:{}]", fullBackupFileName);
             final long start = System.currentTimeMillis();
             Files.delete(fileToDeletePath);
@@ -148,7 +144,7 @@ public class AdminService {
             log.info("Successfully deleted backup [timestamp:{}, fullBackupFileName:{}, duration:{} ms]", dateFormat.format(new Date(start)), fullBackupFileName, stop - start);
             return true;
         } catch (IOException e) {
-            log.error("An error occurred while deleting backup [fullBackupFileName:{}]", fullBackupFileName, e);
+            log.error("An error occurred while deleting backup", e);
         }
         return false;
     }

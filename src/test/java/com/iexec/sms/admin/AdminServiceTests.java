@@ -16,7 +16,6 @@
 
 package com.iexec.sms.admin;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -32,10 +31,8 @@ import org.springframework.context.annotation.Bean;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -139,20 +136,6 @@ class AdminServiceTests {
                 () -> assertFalse(adminService.deleteBackupFileFromStorage("", backupFileName)),
                 () -> assertTrue(output.getOut().contains("Backup file does not exist"))
         );
-    }
-
-    @Test
-    @Disabled("Can't lock file on linux")
-    void shouldFailedDeleteWithBackupFileCantDelete(CapturedOutput output) throws IOException {
-        final String backupFileName = "backupLock.sql";
-        final Path tmpFile = Files.createFile(tempStorageLocation.toPath().resolve(backupFileName));
-
-
-        try (FileChannel ignored = FileChannel.open(tmpFile, StandardOpenOption.WRITE)) {
-            assertAll(
-                    () -> assertFalse(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName))
-            );
-        }
     }
 
     @Test
