@@ -131,7 +131,7 @@ public class AdminService {
             final File backupFile = new File(fullBackupFileName);
             final String backupFilePath = backupFile.getCanonicalPath();
             // Ensure that storageLocation correspond to an authorised area
-            if (!backupFilePath.startsWith(storageFolder) || !isPathInBaseDirectory(backupFilePath)) {
+            if (!backupFilePath.startsWith(storageFolder)) {
                 throw new IOException("Backup file is outside of storage file system");
             } else if (!backupFile.exists()) {
                 throw new IOException("Backup file does not exist");
@@ -162,12 +162,6 @@ public class AdminService {
             return false;
         }
         return true;
-    }
-
-    boolean isPathInBaseDirectory(String pathToCheck) {
-        Path base = Path.of(storageFolder).toAbsolutePath().normalize();
-        Path toCheck = Path.of(pathToCheck).toAbsolutePath().normalize();
-        return toCheck.startsWith(base);
     }
 
     /**

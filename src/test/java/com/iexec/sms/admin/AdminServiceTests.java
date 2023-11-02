@@ -151,15 +151,6 @@ class AdminServiceTests {
     //region utils
 
     @Test
-    void testIsPathInBaseDirectory() {
-        assertAll(
-                () -> assertFalse(adminService.isPathInBaseDirectory("/tmp/../../backup.sql")),
-                () -> assertTrue(adminService.isPathInBaseDirectory("/tmp/backup.sql")),
-                () -> assertTrue(adminService.isPathInBaseDirectory("/tmp/backup-copy.sql"))
-        );
-    }
-
-    @Test
     void testNormalizePathWithSeparator() {
         String path1 = "test/path/";
         String path2 = "test/path";
