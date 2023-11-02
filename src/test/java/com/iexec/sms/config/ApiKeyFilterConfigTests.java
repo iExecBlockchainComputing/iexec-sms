@@ -29,13 +29,13 @@ class ApiKeyFilterConfigTests {
 
     @Test
     void shouldCreateFilterWhenAPIKeyIsFilled() {
-        runner.withPropertyValues("server.admin-api-key=879")
+        runner.withPropertyValues("admin.api-key=879")
                 .run(context -> assertThat(context).hasSingleBean(ApiKeyFilterConfig.class));
     }
 
     @Test
     void shouldNotCreateFilterWhenAPIKeyIsNotFilled() {
-        runner.withPropertyValues("server.admin-api-key=")
+        runner.withPropertyValues("admin.api-key=")
                 .run(context -> assertThat(context).doesNotHaveBean(ApiKeyFilterConfig.class));
     }
 }

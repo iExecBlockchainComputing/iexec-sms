@@ -52,6 +52,8 @@ To support:
 | `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/tmp/h2/sms-h2` |  `jdbc:h2:file:/tmp/h2/sms-h2` |
 | `IEXEC_SMS_H2_CONSOLE` | Whether to enable the H2 console. | Boolean | `false` | `false` |
 | `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` | `src/main/resources/iexec-sms-aes.key` |
+| `IEXEC_SMS_ADMIN_API_KEY` | API key used to authorize calls to `/admin` endpoints. | String | | |
+| `IEXEC_SMS_ADMIN_STORAGE_LOCATION` | Storage location where to persist replicated backups. It must be an absolute directory path. | String | `/backup` | `/backup` |
 | `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `134` |  `134` |
 | `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `true` | `true` |
 | `IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` | `https://bellecour.iex.ec` |
