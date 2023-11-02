@@ -105,7 +105,7 @@ class AdminServiceTests {
     // region replicate-backup
     @Test
     void shouldReturnNotImplementedWhenCallingReplicate() {
-        assertEquals("replicateDatabaseBackupFile is not implemented", adminService.replicateDatabaseBackupFile("", ""));
+        assertFalse(adminService.replicateDatabaseBackupFile("", ""));
     }
     // endregion
 
@@ -183,16 +183,6 @@ class AdminServiceTests {
     //region utils
 
     @Test
-    void testNormalizePathWithSeparator() {
-        String path1 = "test/path/";
-        String path2 = "test/path";
-        assertAll(
-                () -> assertEquals(path1, adminService.normalizePathWithSeparator(path1)),
-                () -> assertEquals(path1, adminService.normalizePathWithSeparator(path2))
-        );
-    }
-
-    @Test
     void testCommonsParametersValidation() {
         // Valid case
         final String validStorageLocation = "test/path/";
@@ -201,10 +191,10 @@ class AdminServiceTests {
         final String emptyBackupFileName = "";
 
         assertAll(
-                () -> assertTrue(adminService.commonsParametersValidation(validStorageLocation, validBackupFileName)),
-                () -> assertFalse(adminService.commonsParametersValidation(emptyStorageLocation, validBackupFileName)),
-                () -> assertFalse(adminService.commonsParametersValidation(validStorageLocation, emptyBackupFileName)),
-                () -> assertFalse(adminService.commonsParametersValidation(emptyStorageLocation, emptyBackupFileName))
+                () -> assertTrue(adminService.checkCommonParameters(validStorageLocation, validBackupFileName)),
+                () -> assertFalse(adminService.checkCommonParameters(emptyStorageLocation, validBackupFileName)),
+                () -> assertFalse(adminService.checkCommonParameters(validStorageLocation, emptyBackupFileName)),
+                () -> assertFalse(adminService.checkCommonParameters(emptyStorageLocation, emptyBackupFileName))
         );
     }
     // endregion

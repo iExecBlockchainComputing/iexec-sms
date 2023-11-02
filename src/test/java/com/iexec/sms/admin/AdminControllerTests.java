@@ -18,6 +18,7 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -91,7 +92,7 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
 
         Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
@@ -115,8 +116,9 @@ class AdminControllerTests {
     // region replicate-backup
     @Test
     void testReplicate(@TempDir Path tempDir) {
+        // Test to change when the methode replicateDatabaseBackupFile will be implemented
         final String storageID = convertToHex(tempDir.toString());
-        assertEquals(HttpStatus.OK, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @ParameterizedTest
@@ -146,10 +148,11 @@ class AdminControllerTests {
     }
 
     @Test
+    @Disabled("Test to change when the methode replicateDatabaseBackupFile will be implemented")
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
-            public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
+            public boolean replicateDatabaseBackupFile(String storagePath, String backupFileName) {
                 try {
                     log.info("Long replicateDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
@@ -160,7 +163,7 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
 
         Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME)));

@@ -63,21 +63,26 @@ public class AdminService {
      * @return {@code true} if the backup was successful; {@code false} if any error occurs.
      */
     boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
-        // Ensure that storageLocation and backupFileName are not blanks
-        boolean validation = commonsParametersValidation(storageLocation, backupFileName);
-        if (!validation) {
-            return false;
-        }
-        // Ensure that storageLocation ends with a slash
-        storageLocation = normalizePathWithSeparator(storageLocation);
-        // Check if storageLocation is an existing directory, we don't want to create it.
-        final File directory = new File(storageLocation);
-        if (!directory.isDirectory()) {
-            log.error("storageLocation must be an existing directory [storageLocation:{}]", storageLocation);
-            return false;
-        }
+        try {
+            // Ensure that storageLocation and backupFileName are not blanks
+            boolean validation = checkCommonParameters(storageLocation, backupFileName);
+            if (!validation) {
+                return false;
+            }
+            // Check if storageLocation is an existing directory, we don't want to create it.
+            final File directory = new File(storageLocation);
+            if (!directory.isDirectory()) {
+                log.error("storageLocation must be an existing directory [storageLocation:{}]", storageLocation);
+                return false;
+            }
+            final File backupFile = new File(storageLocation + File.separator + backupFileName);
+            final String backupFileLocation = backupFile.getCanonicalPath();
 
-        return databaseDump(storageLocation + backupFileName);
+            return databaseDump(backupFileLocation);
+        } catch (IOException e) {
+            log.error("An error occurred while creating backup", e);
+        }
+        return false;
     }
 
     /**
@@ -105,8 +110,8 @@ public class AdminService {
         return true;
     }
 
-    public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
-        return "replicateDatabaseBackupFile is not implemented";
+    boolean replicateDatabaseBackupFile(String storagePath, String backupFileName) {
+        return false;
     }
 
     /**
@@ -154,18 +159,15 @@ public class AdminService {
     public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
         try {
             // Ensure that storageLocation and backupFileName are not blanks
-            boolean validation = commonsParametersValidation(storageLocation, backupFileName);
+            boolean validation = checkCommonParameters(storageLocation, backupFileName);
             if (!validation) {
                 return false;
             }
-            // Ensure that storageLocation ends with a slash
-            storageLocation = normalizePathWithSeparator(storageLocation);
-            String fullBackupFileName = storageLocation + backupFileName;
-
+            String fullBackupFileName = storageLocation + File.separator + backupFileName;
             final File backupFile = new File(fullBackupFileName);
-            final String backupFilePath = backupFile.getCanonicalPath();
+            final String backupFileLocation = backupFile.getCanonicalPath();
             // Ensure that storageLocation correspond to an authorised area
-            if (!backupFilePath.startsWith(adminStorageLocation)) {
+            if (!backupFileLocation.startsWith(adminStorageLocation)) {
                 throw new IOException("Backup file is outside of storage file system");
             } else if (!backupFile.exists()) {
                 throw new FileSystemNotFoundException("Backup file does not exist");
@@ -184,7 +186,7 @@ public class AdminService {
     }
 
 
-    boolean commonsParametersValidation(String storageLocation, String backupFileName) {
+    boolean checkCommonParameters(String storageLocation, String backupFileName) {
         // Check for missing or empty storageLocation parameter
         if (StringUtils.isBlank(storageLocation)) {
             log.error("storageLocation must not be empty.");
@@ -198,17 +200,4 @@ public class AdminService {
         return true;
     }
 
-    /**
-     * Ensures that a given path string ends with a file separator by adding one if it's missing.
-     *
-     * @param path The path string to normalize.
-     * @return The normalized path with a trailing file separator.
-     */
-    String normalizePathWithSeparator(String path) {
-        if (!path.endsWith(File.separator)) {
-            path += File.separator;
-        }
-
-        return path;
-    }
 }

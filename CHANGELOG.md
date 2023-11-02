@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add H2 database connection informations and storage ID decoding method. (#210)
 - Add the ability to trigger a backup via a dedicated endpoint. (#211)
 - Add the ability to trigger a database restore via a dedicated endpoint. (#212)
-- Add the ability to trigger a delete via a dedicated endpoint. (#)
+- Add the ability to trigger a delete via a dedicated endpoint. (#213)
 
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
 
