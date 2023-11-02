@@ -26,8 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -168,7 +168,7 @@ public class AdminService {
             if (!backupFilePath.startsWith(adminStorageLocation)) {
                 throw new IOException("Backup file is outside of storage file system");
             } else if (!backupFile.exists()) {
-                throw new IOException("Backup file does not exist");
+                throw new FileSystemNotFoundException("Backup file does not exist");
             }
             Path fileToDeletePath = Paths.get(fullBackupFileName);
             log.info("Starting the delete process [fullBackupFileName:{}]", fullBackupFileName);

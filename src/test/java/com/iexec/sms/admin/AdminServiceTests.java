@@ -32,8 +32,8 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.Path;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -161,13 +161,12 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailedDeleteWithBackupFileMissing(CapturedOutput output) {
-        final String backupFileName = "backup.sql";
-        assertAll(
-                () -> assertFalse(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName)),
-                () -> assertFalse(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), "")),
-                () -> assertFalse(adminService.deleteBackupFileFromStorage("", backupFileName)),
-                () -> assertTrue(output.getOut().contains("Backup file does not exist"))
+    void shouldFailedDeleteWithBackupFileMissing() throws IOException {
+        final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
+        assertThrows(
+                FileSystemNotFoundException.class,
+                () -> adminService.deleteBackupFileFromStorage(backupStorageLocation, "backup.sql"),
+                "Backup file does not exist"
         );
     }
 
