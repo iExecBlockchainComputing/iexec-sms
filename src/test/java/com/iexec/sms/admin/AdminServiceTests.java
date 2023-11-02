@@ -31,8 +31,9 @@ import org.springframework.context.annotation.Bean;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
+import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +51,7 @@ class AdminServiceTests {
     }
 
     private final AdminService adminService = new AdminService("jdbc:h2:mem:test", "sa", "", "/tmp/");
+
     @TempDir
     File tempStorageLocation;
 
@@ -58,7 +60,6 @@ class AdminServiceTests {
     void shouldReturnTrueWhenAllParametersAreValid() {
         assertTrue(adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
     }
-
 
     @Test
     void shouldReturnFalseWhenAllParametersAreValidButBackupFailed() {
@@ -110,8 +111,40 @@ class AdminServiceTests {
 
     // region restore-backup
     @Test
-    void shouldReturnNotImplementedWhenCallingRestore() {
-        assertEquals("restoreDatabaseFromBackupFile is not implemented", adminService.restoreDatabaseFromBackupFile("", ""));
+    void shouldRestoreBackup(CapturedOutput output) {
+        final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(new File(backupFile).exists());
+        adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(output.getOut().contains("Backup has been restored"));
+    }
+
+    @Test
+    void shouldFailToRestoreWithBackupFileMissing() throws IOException {
+        final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
+        assertThrows(
+                FileSystemNotFoundException.class,
+                () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql"),
+                "Backup file does not exist"
+        );
+    }
+
+    @Test
+    void shouldFailToRestoreWithBackupFileOutOfStorage(CapturedOutput output) {
+        assertAll(
+                () -> assertFalse(adminService.restoreDatabaseFromBackupFile("/backup", "backup.sql")),
+                () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
+        );
+    }
+
+    @Test
+    void withSQLException(CapturedOutput output) {
+        final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
+        AdminService corruptAdminService = new AdminService("url", "username", "password", "/tmp/");
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(new File(backupFile).exists());
+        corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertTrue(output.getOut().contains("SQL error occurred during restore"));
     }
     // endregion
 

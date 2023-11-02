@@ -48,7 +48,6 @@ import static org.mockito.Mockito.when;
 @Slf4j
 class AdminControllerTests {
 
-    private static final String STORAGE_ID = "storageID";
     private static final String STORAGE_PATH = "/storage";
     private static final String FILE_NAME = "backup.sql";
 
@@ -115,8 +114,9 @@ class AdminControllerTests {
 
     // region replicate-backup
     @Test
-    void testReplicate() {
-        assertEquals(HttpStatus.OK, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    void testReplicate(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        assertEquals(HttpStatus.OK, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @ParameterizedTest
@@ -127,46 +127,48 @@ class AdminControllerTests {
 
     @Test
     void testInternalServerErrorOnReplicate() {
-        when(adminService.replicateDatabaseBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(RuntimeException.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME)).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
     }
 
     @Test
     void testInterruptedThreadOnReplicate() throws InterruptedException {
         ReflectionTestUtils.setField(adminController, "rLock", rLock);
         when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
     }
 
     @Test
     void testNotFoundOnReplicate() {
-        when(adminService.replicateDatabaseBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
-        assertEquals(HttpStatus.NOT_FOUND, adminController.replicateBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+        final String storageID = convertToHex(STORAGE_PATH);
+        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        assertEquals(HttpStatus.NOT_FOUND, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
-    void testTooManyRequestOnReplicate() throws InterruptedException {
+    void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
-            public String replicateDatabaseBackupFile(String storageId, String fileName) {
+            public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
                 try {
                     log.info("Long replicateDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                return adminService.replicateDatabaseBackupFile(storageId, fileName);
+                return adminService.replicateDatabaseBackupFile(storagePath, backupFileName);
             }
         });
 
         final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final String storageID = convertToHex(tempDir.toString());
 
-        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(STORAGE_ID, FILE_NAME)));
-        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(STORAGE_ID, FILE_NAME)));
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME)));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME)));
 
         firstThread.start();
         secondThread.start();
-        responses.add(adminControllerWithLongAction.replicateBackup(STORAGE_ID, FILE_NAME));
+        responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME));
 
         secondThread.join();
         firstThread.join();
@@ -182,8 +184,10 @@ class AdminControllerTests {
 
     // region restore-backup
     @Test
-    void testRestore() {
-        assertEquals(HttpStatus.OK, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    void testRestore(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        when(adminService.restoreDatabaseFromBackupFile(tempDir.toString(), FILE_NAME)).thenReturn(true);
+        assertEquals(HttpStatus.OK, adminController.restoreBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @ParameterizedTest
@@ -193,47 +197,50 @@ class AdminControllerTests {
     }
 
     @Test
-    void testInternalServerErrorOnRestore() {
-        when(adminService.restoreDatabaseFromBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(RuntimeException.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+    void testInternalServerErrorOnRestore(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        when(adminService.restoreDatabaseFromBackupFile(tempDir.toString(), FILE_NAME)).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
-    void testInterruptedThreadOnRestore() throws InterruptedException {
+    void testInterrupterThreadOnRestore() throws InterruptedException {
         ReflectionTestUtils.setField(adminController, "rLock", rLock);
         when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
     }
 
     @Test
     void testNotFoundOnRestore() {
-        when(adminService.restoreDatabaseFromBackupFile(STORAGE_ID, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
-        assertEquals(HttpStatus.NOT_FOUND, adminController.restoreBackup(STORAGE_ID, FILE_NAME).getStatusCode());
+        final String storageID = convertToHex(STORAGE_PATH);
+        when(adminService.restoreDatabaseFromBackupFile(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        assertEquals(HttpStatus.NOT_FOUND, adminController.restoreBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
-    void testTooManyRequestOnRestore() throws InterruptedException {
+    void testTooManyRequestOnRestore(@TempDir Path tempDir) throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
-            public String restoreDatabaseFromBackupFile(String storageId, String fileName) {
+            public boolean restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
                     log.info("Long restoreDatabaseFromBackupFile action is running ...");
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                return adminService.restoreDatabaseFromBackupFile(storageId, fileName);
+                return true;
             }
         });
 
-        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final String storageID = convertToHex(tempDir.toString());
 
-        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(STORAGE_ID, FILE_NAME)));
-        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(STORAGE_ID, FILE_NAME)));
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(storageID, FILE_NAME)));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(storageID, FILE_NAME)));
 
         firstThread.start();
         secondThread.start();
-        responses.add(adminControllerWithLongAction.restoreBackup(STORAGE_ID, FILE_NAME));
+        responses.add(adminControllerWithLongAction.restoreBackup(storageID, FILE_NAME));
 
         secondThread.join();
         firstThread.join();
@@ -260,7 +267,7 @@ class AdminControllerTests {
         assertEquals(tempDir.toString(), adminController.getStoragePathFromID(storageID));
     }
 
-    private String convertToHex(String str) {
+    private static String convertToHex(String str) {
         char[] chars = str.toCharArray();
         StringBuilder hex = new StringBuilder();
         for (char ch : chars) {
@@ -347,7 +354,7 @@ class AdminControllerTests {
                 Arguments.of(null, null),
                 Arguments.of("", ""),
                 Arguments.of(" ", " "),
-                Arguments.of(STORAGE_ID, " "),
+                Arguments.of(STORAGE_PATH, " "),
                 Arguments.of(" ", FILE_NAME)
         );
     }
