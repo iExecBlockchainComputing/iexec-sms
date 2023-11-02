@@ -25,12 +25,12 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConditionalOnExpression(
-        "T(org.apache.commons.lang3.StringUtils).isNotEmpty('${server.admin-api-key:}')"
+        "T(org.apache.commons.lang3.StringUtils).isNotEmpty('${admin.api-key:}')"
 )
 public class ApiKeyFilterConfig {
 
     @Bean
-    public FilterRegistrationBean<ApiKeyRequestFilter> filterRegistrationBean(@Value("${server.admin-api-key}") String apiKey) {
+    public FilterRegistrationBean<ApiKeyRequestFilter> filterRegistrationBean(@Value("${admin.api-key}") String apiKey) {
         FilterRegistrationBean<ApiKeyRequestFilter> registrationBean = new FilterRegistrationBean<>();
         ApiKeyRequestFilter apiKeyRequestFilter = new ApiKeyRequestFilter(apiKey);
 

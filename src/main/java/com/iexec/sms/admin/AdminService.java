@@ -17,7 +17,6 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.h2.message.DbException;
 import org.h2.tools.RunScript;
 import org.h2.tools.Script;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -41,16 +41,16 @@ public class AdminService {
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
-    private final String storageFolder;
+    private final String adminStorageLocation;
 
     public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
                         @Value("${spring.datasource.password}") String datasourcePassword,
-                        @Value("${spring.datasource.storage-folder}") String storageFolder) {
+                        @Value("${admin.storage-location}") String adminStorageLocation) {
         this.datasourceUrl = datasourceUrl;
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
-        this.storageFolder = storageFolder;
+        this.adminStorageLocation = adminStorageLocation;
     }
 
     /**
@@ -115,38 +115,38 @@ public class AdminService {
         return "replicateDatabaseBackupFile is not implemented";
     }
 
-    boolean restoreDatabaseFromBackupFile(String storagePath, String backupFileName) {
+    /**
+     * Restores a backup from provided inputs.
+     * <p>
+     * The location is checked against a configuration property value provided by an admin.
+     *
+     * @param storageLocation Where to find the backup file
+     * @param backupFileName  The file to restore
+     * @return {@code true} if the restoration was successful, {@code false} otherwise.
+     */
+    boolean restoreDatabaseFromBackupFile(String storageLocation, String backupFileName) {
         try {
-            final String fullBackupFileName = storagePath + File.separator + backupFileName;
             // checks on backup file to restore
-            final File backupFile = new File(fullBackupFileName);
-            final String backupFilePath = backupFile.getCanonicalPath();
-            if (!backupFilePath.startsWith(storageFolder)) {
+            final File backupFile = new File(storageLocation + File.separator + backupFileName);
+            final String backupFileLocation = backupFile.getCanonicalPath();
+            if (!backupFileLocation.startsWith(adminStorageLocation)) {
                 throw new IOException("Backup file is outside of storage file system");
             } else if (!backupFile.exists()) {
-                throw new IOException("Backup file does not exist");
+                throw new FileSystemNotFoundException("Backup file does not exist");
             }
-            final long size = backupFilePath.length();
+            final long size = backupFileLocation.length();
             final long start = System.currentTimeMillis();
             RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
-                    fullBackupFileName, Charset.defaultCharset(), true);
+                    backupFileLocation, Charset.defaultCharset(), true);
             final long stop = System.currentTimeMillis();
             log.warn("Backup has been restored [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]",
-                    dateFormat.format(new Date(start)), stop - start, size, fullBackupFileName);
+                    dateFormat.format(new Date(start)), stop - start, size, backupFileLocation);
             return true;
-        } catch (DbException e) {
-            log.error("RunScript error occurred during restore", e);
         } catch (IOException e) {
-            log.error("Failed to read backup file size", e);
+            log.error("Invalid backup file location", e);
         } catch (SQLException e) {
             log.error("SQL error occurred during restore", e);
         }
         return false;
-    }
-
-    boolean isPathInBaseDirectory(String pathToCheck) {
-        Path base = Path.of(storageFolder).toAbsolutePath().normalize();
-        Path toCheck = Path.of(pathToCheck).toAbsolutePath().normalize();
-        return toCheck.startsWith(base);
     }
 }

@@ -16,7 +16,6 @@
 
 package com.iexec.sms.admin;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,6 +30,8 @@ import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -121,10 +122,12 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToRestoreWithBackupFileMissing(CapturedOutput output) {
-        assertAll(
-                () -> assertFalse(adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql")),
-                () -> assertTrue(output.getOut().contains("Backup file does not exist"))
+    void shouldFailToRestoreWithBackupFileMissing() throws IOException {
+        final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
+        assertThrows(
+                FileSystemNotFoundException.class,
+                () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql"),
+                "Backup file does not exist"
         );
     }
 
@@ -137,13 +140,6 @@ class AdminServiceTests {
     }
 
     @Test
-    @Disabled
-    void withDbException(CapturedOutput output) {
-        adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(output.getOut().contains("RunScript error occurred during restore"));
-    }
-
-    @Test
     void withSQLException(CapturedOutput output) {
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
         AdminService corruptAdminService = new AdminService("url", "username", "password", "/tmp/");
@@ -153,13 +149,4 @@ class AdminServiceTests {
         assertTrue(output.getOut().contains("SQL error occurred during restore"));
     }
     // endregion
-
-    @Test
-    void testIsPathInBaseDirectory() {
-        assertAll(
-                () -> assertFalse(adminService.isPathInBaseDirectory("/tmp/../../backup.sql")),
-                () -> assertTrue(adminService.isPathInBaseDirectory("/tmp/backup.sql")),
-                () -> assertTrue(adminService.isPathInBaseDirectory("/tmp/backup-copy.sql"))
-        );
-    }
 }
