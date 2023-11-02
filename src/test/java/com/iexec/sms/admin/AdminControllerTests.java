@@ -282,7 +282,7 @@ class AdminControllerTests {
     void testDelete(@TempDir Path tempDir) {
         final String storageID = convertToHex(tempDir.toString());
         when(adminService.deleteBackupFileFromStorage(tempDir.toString(), FILE_NAME)).thenReturn(true);
-        assertEquals(HttpStatus.OK, adminController.restoreBackup(storageID, FILE_NAME).getStatusCode());
+        assertEquals(HttpStatus.OK, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @ParameterizedTest
