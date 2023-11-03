@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -172,12 +171,11 @@ public class AdminService {
             } else if (!backupFile.exists()) {
                 throw new FileSystemNotFoundException("Backup file does not exist");
             }
-            Path fileToDeletePath = Paths.get(fullBackupFileName);
-            log.info("Starting the delete process [fullBackupFileName:{}]", fullBackupFileName);
+            log.info("Starting the delete process [backupFileLocation:{}]", backupFileLocation);
             final long start = System.currentTimeMillis();
-            Files.delete(fileToDeletePath);
+            Files.delete(Paths.get(backupFileLocation));
             final long stop = System.currentTimeMillis();
-            log.info("Successfully deleted backup [timestamp:{}, fullBackupFileName:{}, duration:{} ms]", dateFormat.format(new Date(start)), fullBackupFileName, stop - start);
+            log.info("Successfully deleted backup [timestamp:{}, backupFileLocation:{}, duration:{} ms]", dateFormat.format(new Date(start)), backupFileLocation, stop - start);
             return true;
         } catch (IOException e) {
             log.error("An error occurred while deleting backup", e);

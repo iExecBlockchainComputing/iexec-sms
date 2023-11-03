@@ -183,7 +183,7 @@ class AdminServiceTests {
     //region utils
 
     @Test
-    void testCommonsParametersValidation() {
+    void testCheckCommonParametersValidation() {
         // Valid case
         final String validStorageLocation = "test/path/";
         final String validBackupFileName = "backup.sql";
