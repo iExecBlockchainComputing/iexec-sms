@@ -184,7 +184,7 @@ public class AdminService {
      * @param backupFileName  The name of the backup file.
      * @return {@code true} if the deletion was successful, {@code false} if any error occurs.
      */
-    public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+    boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
         try {
             // Ensure that storageLocation and backupFileName are not blanks
             boolean validation = checkCommonParameters(storageLocation, backupFileName);
