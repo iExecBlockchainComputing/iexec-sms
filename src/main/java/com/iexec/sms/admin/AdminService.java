@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -59,7 +61,7 @@ public class AdminService {
      *
      * @param storageLocation The location where the backup file will be saved, must be an existing directory.
      * @param backupFileName  The name of the backup file.
-     * @return {@code true} if the backup was successful; {@code false} if any error occurs.
+     * @return {@code true} if the backup was successful, {@code false} if any error occurs.
      */
     boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
         try {
@@ -86,7 +88,7 @@ public class AdminService {
 
     /**
      * @param fullBackupFileName complete fileName (location and filename)
-     * @return {@code true} if the backup was successful; {@code false} if any error occurs.
+     * @return {@code true} if the backup was successful, {@code false} if any error occurs.
      */
     boolean databaseDump(String fullBackupFileName) {
 
@@ -101,7 +103,8 @@ public class AdminService {
             Script.process(datasourceUrl, datasourceUsername, datasourcePassword, fullBackupFileName, "DROP", "");
             final long stop = System.currentTimeMillis();
             final long size = new File(fullBackupFileName).length();
-            log.info("New backup created [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]", dateFormat.format(new Date(start)), stop - start, size, fullBackupFileName);
+            log.info("New backup created [fullBackupFileName:{}, timestamp:{}, duration:{} ms, size:{}]",
+                    fullBackupFileName, dateFormat.format(new Date(start)), stop - start, size);
         } catch (SQLException e) {
             log.error("SQL error occurred during backup", e);
             return false;
@@ -109,7 +112,34 @@ public class AdminService {
         return true;
     }
 
-    boolean replicateDatabaseBackupFile(String storagePath, String backupFileName) {
+    /**
+     * Replicates a backup to the persistent storage.
+     * <p>
+     * The {@code backupStorageLocation/backupFileName} is replicated to {@code replicateStorageLocation/replicateFileName}.
+     *
+     * @param backupStorageLocation    Location of backup to replicate
+     * @param backupFileName           Name of backup file to replicate
+     * @param replicateStorageLocation Location of replicated backup
+     * @param replicateFileName        Name of replicated backup file
+     * @return {@code true} if the replication was successful, {@code false} if any error occurs.
+     */
+    boolean replicateDatabaseBackupFile(String backupStorageLocation, String backupFileName, String replicateStorageLocation, String replicateFileName) {
+        try {
+            final Path fullBackupFilePath = Path.of(backupStorageLocation, backupFileName).toRealPath();
+            final String backupFileLocation = checkBackupFileLocation(
+                    replicateStorageLocation + File.separator + replicateFileName,
+                    "Replicated backup file destination is outside of storage file system");
+            final long size = fullBackupFilePath.toFile().length();
+            log.info("Starting the replicate process [backupFileLocation:{}]", backupFileLocation);
+            final long start = System.currentTimeMillis();
+            Files.copy(fullBackupFilePath, Path.of(backupFileLocation), StandardCopyOption.COPY_ATTRIBUTES);
+            final long stop = System.currentTimeMillis();
+            log.info("Backup has been replicated [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                    backupFileLocation, dateFormat.format(start), stop - start, size);
+            return true;
+        } catch (IOException e) {
+            log.error("Error occurred during copy", e);
+        }
         return false;
     }
 
@@ -120,25 +150,24 @@ public class AdminService {
      *
      * @param storageLocation Where to find the backup file
      * @param backupFileName  The file to restore
-     * @return {@code true} if the restoration was successful, {@code false} otherwise.
+     * @return {@code true} if the restoration was successful, {@code false} if any error occurs.
      */
     boolean restoreDatabaseFromBackupFile(String storageLocation, String backupFileName) {
         try {
-            // checks on backup file to restore
-            final File backupFile = new File(storageLocation + File.separator + backupFileName);
-            final String backupFileLocation = backupFile.getCanonicalPath();
-            if (!backupFileLocation.startsWith(adminStorageLocation)) {
-                throw new IOException("Backup file is outside of storage file system");
-            } else if (!backupFile.exists()) {
+            final String backupFileLocation = checkBackupFileLocation(
+                    storageLocation + File.separator + backupFileName,
+                    "Backup file is outside of storage file system");
+            if (!Path.of(backupFileLocation).toFile().exists()) {
                 throw new FileSystemNotFoundException("Backup file does not exist");
             }
             final long size = backupFileLocation.length();
+            log.info("Starting the restore process [backupFileLocation:{}]", backupFileLocation);
             final long start = System.currentTimeMillis();
             RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
                     backupFileLocation, Charset.defaultCharset(), true);
             final long stop = System.currentTimeMillis();
-            log.warn("Backup has been restored [timestamp:{}, duration:{} ms, size:{}, fullBackupFileName:{}]",
-                    dateFormat.format(new Date(start)), stop - start, size, backupFileLocation);
+            log.warn("Backup has been restored [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                    backupFileLocation, dateFormat.format(new Date(start)), stop - start, size);
             return true;
         } catch (IOException e) {
             log.error("Invalid backup file location", e);
@@ -153,34 +182,43 @@ public class AdminService {
      *
      * @param storageLocation The location of the backup file.
      * @param backupFileName  The name of the backup file.
-     * @return {@code true} if the deletion was successful; {@code false} if any error occurs.
+     * @return {@code true} if the deletion was successful, {@code false} if any error occurs.
      */
-    public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+    boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
         try {
             // Ensure that storageLocation and backupFileName are not blanks
             boolean validation = checkCommonParameters(storageLocation, backupFileName);
             if (!validation) {
                 return false;
             }
-            String fullBackupFileName = storageLocation + File.separator + backupFileName;
-            final File backupFile = new File(fullBackupFileName);
-            final String backupFileLocation = backupFile.getCanonicalPath();
-            // Ensure that storageLocation correspond to an authorised area
-            if (!backupFileLocation.startsWith(adminStorageLocation)) {
-                throw new IOException("Backup file is outside of storage file system");
-            } else if (!backupFile.exists()) {
+            final String backupFileLocation = checkBackupFileLocation(
+                    storageLocation + File.separator + backupFileName,
+                    "Backup file is outside of storage file system");
+            final Path backupFileLocationPath = Path.of(backupFileLocation);
+            if (!backupFileLocationPath.toFile().exists()) {
                 throw new FileSystemNotFoundException("Backup file does not exist");
             }
             log.info("Starting the delete process [backupFileLocation:{}]", backupFileLocation);
             final long start = System.currentTimeMillis();
-            Files.delete(Paths.get(backupFileLocation));
+            Files.delete(backupFileLocationPath);
             final long stop = System.currentTimeMillis();
-            log.info("Successfully deleted backup [timestamp:{}, backupFileLocation:{}, duration:{} ms]", dateFormat.format(new Date(start)), backupFileLocation, stop - start);
+            log.info("Successfully deleted backup [backupFileLocation:{}, timestamp:{}, duration:{} ms]",
+                    backupFileLocation, dateFormat.format(new Date(start)), stop - start);
             return true;
         } catch (IOException e) {
             log.error("An error occurred while deleting backup", e);
         }
         return false;
+    }
+
+    String checkBackupFileLocation(String fullBackupFileName, String errorMessage) throws IOException {
+        final File backupFile = new File(fullBackupFileName);
+        final String backupFileLocation = backupFile.getCanonicalPath();
+        // Ensure that storageLocation correspond to an authorised area
+        if (!backupFileLocation.startsWith(adminStorageLocation)) {
+            throw new IOException(errorMessage);
+        }
+        return backupFileLocation;
     }
 
 

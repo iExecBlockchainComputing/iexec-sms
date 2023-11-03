@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +98,7 @@ public class AdminController {
      * </ul>
      */
     @PostMapping("/{storageID}/replicate-backup")
-    public ResponseEntity<Void> replicateBackup(@PathVariable String storageID, @RequestParam String fileName) {
+    ResponseEntity<Void> replicateBackup(@PathVariable String storageID, @RequestParam String fileName) {
         return performOperation(storageID, fileName, BackupAction.REPLICATE);
     }
 
@@ -177,7 +178,8 @@ public class AdminController {
                     operationSuccessful = adminService.deleteBackupFileFromStorage(storagePath, fileName);
                     break;
                 case REPLICATE:
-                    operationSuccessful = adminService.replicateDatabaseBackupFile(storagePath, fileName);
+                    operationSuccessful = adminService.replicateDatabaseBackupFile(
+                            BACKUP_STORAGE_LOCATION, BACKUP_FILENAME, storagePath, fileName);
                     break;
                 default:
                     break;

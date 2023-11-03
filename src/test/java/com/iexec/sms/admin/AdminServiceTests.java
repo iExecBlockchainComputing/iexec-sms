@@ -104,8 +104,47 @@ class AdminServiceTests {
 
     // region replicate-backup
     @Test
-    void shouldReturnNotImplementedWhenCallingReplicate() {
-        assertFalse(adminService.replicateDatabaseBackupFile("", ""));
+    void shouldReplicateBackup() {
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        adminService.replicateDatabaseBackupFile(
+                tempStorageLocation.getPath(), "backup.sql",
+                tempStorageLocation.getPath(), "backup-copy.sql");
+        assertTrue(Path.of(tempStorageLocation.getPath(), "backup-copy.sql").toFile().isFile());
+    }
+
+    @Test
+    void shouldFailToReplicateWithBackupFileMissing(CapturedOutput output) {
+        adminService.replicateDatabaseBackupFile(
+                tempStorageLocation.getPath(), "backup.sql",
+                tempStorageLocation.getPath(), "backup-copy.sql");
+        assertAll(
+                () -> assertFalse(Path.of(tempStorageLocation.getPath(), "backup-copy.sql").toFile().isFile()),
+                () -> assertTrue(output.getOut().contains("NoSuchFileException"))
+        );
+    }
+
+    @Test
+    void shouldFailToReplicateWithInvalidStorageLocation(CapturedOutput output) {
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        boolean replicateStatus = adminService.replicateDatabaseBackupFile(
+                tempStorageLocation.getPath(), "backup.sql",
+                "/tmp/nonexistent/directory", "backup-copy.sql");
+        assertAll(
+                () -> assertFalse(replicateStatus),
+                () -> assertTrue(output.getAll().contains("NoSuchFileException"))
+        );
+    }
+
+    @Test
+    void shouldFailToReplicateWithOutOfStorageLocation(CapturedOutput output) {
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        boolean replicateStatus = adminService.replicateDatabaseBackupFile(
+                tempStorageLocation.getPath(), "backup.sql",
+                "/opt", "backup-copy.sql");
+        assertAll(
+                () -> assertFalse(replicateStatus),
+                () -> assertTrue(output.getAll().contains("Replicated backup file destination is outside of storage file system"))
+        );
     }
     // endregion
 
@@ -120,7 +159,7 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToRestoreWithBackupFileMissing() throws IOException {
+    void shouldFailToRestoreWhenBackupFileMissing() throws IOException {
         final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
         assertThrows(
                 FileSystemNotFoundException.class,
@@ -130,7 +169,7 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToRestoreWithBackupFileOutOfStorage(CapturedOutput output) {
+    void shouldFailToRestoreWhenBackupFileOutOfStorage(CapturedOutput output) {
         assertAll(
                 () -> assertFalse(adminService.restoreDatabaseFromBackupFile("/backup", "backup.sql")),
                 () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
@@ -161,7 +200,7 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailedDeleteWithBackupFileMissing() throws IOException {
+    void shouldFailToDeleteWhenBackupFileMissing() throws IOException {
         final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
         assertThrows(
                 FileSystemNotFoundException.class,
@@ -171,13 +210,26 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailedToDeleteWithBackupFileOutOfStorage(CapturedOutput output) {
+    void shouldFailToDeleteWhenBackupFileOutOfStorage(CapturedOutput output) {
         assertAll(
                 () -> assertFalse(adminService.deleteBackupFileFromStorage("/backup", "backup.sql")),
                 () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
         );
     }
 
+    @Test
+    void shouldFailToDeleteWhenInvalidParameters() {
+        final String validStorageLocation = "test/path/";
+        final String validBackupFileName = "backup.sql";
+        final String emptyStorageLocation = "";
+        final String emptyBackupFileName = "";
+
+        assertAll(
+                () -> assertFalse(adminService.deleteBackupFileFromStorage(emptyStorageLocation, validBackupFileName)),
+                () -> assertFalse(adminService.deleteBackupFileFromStorage(validStorageLocation, emptyBackupFileName)),
+                () -> assertFalse(adminService.deleteBackupFileFromStorage(emptyStorageLocation, emptyBackupFileName))
+        );
+    }
     // endregion
 
     //region utils

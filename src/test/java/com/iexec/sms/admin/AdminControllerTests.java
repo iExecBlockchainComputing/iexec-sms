@@ -18,7 +18,6 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -118,7 +117,8 @@ class AdminControllerTests {
     void testReplicate(@TempDir Path tempDir) {
         // Test to change when the methode replicateDatabaseBackupFile will be implemented
         final String storageID = convertToHex(tempDir.toString());
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
+        when(adminService.replicateDatabaseBackupFile("/work/", FILE_NAME, tempDir.toString(), FILE_NAME)).thenReturn(true);
+        assertEquals(HttpStatus.OK, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @ParameterizedTest
@@ -129,7 +129,7 @@ class AdminControllerTests {
 
     @Test
     void testInternalServerErrorOnReplicate() {
-        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME)).thenThrow(RuntimeException.class);
+        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(RuntimeException.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
     }
 
@@ -143,23 +143,22 @@ class AdminControllerTests {
     @Test
     void testNotFoundOnReplicate() {
         final String storageID = convertToHex(STORAGE_PATH);
-        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
         assertEquals(HttpStatus.NOT_FOUND, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
-    @Disabled("Test to change when the methode replicateDatabaseBackupFile will be implemented")
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
-            public boolean replicateDatabaseBackupFile(String storagePath, String backupFileName) {
+            public boolean replicateDatabaseBackupFile(String backupStoragePath, String backupFileName, String replicateStoragePath, String replicateFileName) {
                 try {
                     log.info("Long replicateDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                return adminService.replicateDatabaseBackupFile(storagePath, backupFileName);
+                return true;
             }
         });
 
@@ -207,7 +206,7 @@ class AdminControllerTests {
     }
 
     @Test
-    void testInterrupterThreadOnRestore() throws InterruptedException {
+    void testInterruptedThreadOnRestore() throws InterruptedException {
         ReflectionTestUtils.setField(adminController, "rLock", rLock);
         when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.restoreBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
@@ -302,7 +301,7 @@ class AdminControllerTests {
     }
 
     @Test
-    void testInterrupterThreadOnDelete() throws InterruptedException {
+    void testInterruptedThreadOnDelete() throws InterruptedException {
         ReflectionTestUtils.setField(adminController, "rLock", rLock);
         when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.deleteBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
