@@ -26,7 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -61,29 +62,26 @@ public class AdminService {
      * @return {@code true} if the backup was successful; {@code false} if any error occurs.
      */
     boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
-        // Check for missing or empty storageLocation parameter
-        if (StringUtils.isBlank(storageLocation)) {
-            log.error("storageLocation must not be empty.");
-            return false;
-        }
-        // Check for missing or empty backupFileName parameter
-        if (StringUtils.isBlank(backupFileName)) {
-            log.error("backupFileName must not be empty.");
-            return false;
-        }
-        // Ensure that storageLocation ends with a slash
-        if (!storageLocation.endsWith(File.separator)) {
-            storageLocation += File.separator;
-        }
+        try {
+            // Ensure that storageLocation and backupFileName are not blanks
+            boolean validation = checkCommonParameters(storageLocation, backupFileName);
+            if (!validation) {
+                return false;
+            }
+            // Check if storageLocation is an existing directory, we don't want to create it.
+            final File directory = new File(storageLocation);
+            if (!directory.isDirectory()) {
+                log.error("storageLocation must be an existing directory [storageLocation:{}]", storageLocation);
+                return false;
+            }
+            final File backupFile = new File(storageLocation + File.separator + backupFileName);
+            final String backupFileLocation = backupFile.getCanonicalPath();
 
-        // Check if storageLocation is an existing directory, we don't want to create it.
-        final File directory = new File(storageLocation);
-        if (!directory.isDirectory()) {
-            log.error("storageLocation must be an existing directory [storageLocation:{}]", storageLocation);
-            return false;
+            return databaseDump(backupFileLocation);
+        } catch (IOException e) {
+            log.error("An error occurred while creating backup", e);
         }
-
-        return databaseDump(storageLocation + backupFileName);
+        return false;
     }
 
     /**
@@ -111,8 +109,8 @@ public class AdminService {
         return true;
     }
 
-    public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
-        return "replicateDatabaseBackupFile is not implemented";
+    boolean replicateDatabaseBackupFile(String storagePath, String backupFileName) {
+        return false;
     }
 
     /**
@@ -149,4 +147,55 @@ public class AdminService {
         }
         return false;
     }
+
+    /**
+     * Delete a backup of the H2 database from a location
+     *
+     * @param storageLocation The location of the backup file.
+     * @param backupFileName  The name of the backup file.
+     * @return {@code true} if the deletion was successful; {@code false} if any error occurs.
+     */
+    public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+        try {
+            // Ensure that storageLocation and backupFileName are not blanks
+            boolean validation = checkCommonParameters(storageLocation, backupFileName);
+            if (!validation) {
+                return false;
+            }
+            String fullBackupFileName = storageLocation + File.separator + backupFileName;
+            final File backupFile = new File(fullBackupFileName);
+            final String backupFileLocation = backupFile.getCanonicalPath();
+            // Ensure that storageLocation correspond to an authorised area
+            if (!backupFileLocation.startsWith(adminStorageLocation)) {
+                throw new IOException("Backup file is outside of storage file system");
+            } else if (!backupFile.exists()) {
+                throw new FileSystemNotFoundException("Backup file does not exist");
+            }
+            log.info("Starting the delete process [backupFileLocation:{}]", backupFileLocation);
+            final long start = System.currentTimeMillis();
+            Files.delete(Paths.get(backupFileLocation));
+            final long stop = System.currentTimeMillis();
+            log.info("Successfully deleted backup [timestamp:{}, backupFileLocation:{}, duration:{} ms]", dateFormat.format(new Date(start)), backupFileLocation, stop - start);
+            return true;
+        } catch (IOException e) {
+            log.error("An error occurred while deleting backup", e);
+        }
+        return false;
+    }
+
+
+    boolean checkCommonParameters(String storageLocation, String backupFileName) {
+        // Check for missing or empty storageLocation parameter
+        if (StringUtils.isBlank(storageLocation)) {
+            log.error("storageLocation must not be empty.");
+            return false;
+        }
+        // Check for missing or empty backupFileName parameter
+        if (StringUtils.isBlank(backupFileName)) {
+            log.error("backupFileName must not be empty.");
+            return false;
+        }
+        return true;
+    }
+
 }

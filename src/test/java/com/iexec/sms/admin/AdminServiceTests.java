@@ -32,6 +32,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,10 +58,7 @@ class AdminServiceTests {
     // region backup
     @Test
     void shouldReturnTrueWhenAllParametersAreValid() {
-        AdminService adminServiceSpy = Mockito.spy(adminService);
-
-        Mockito.doReturn(true).when(adminServiceSpy).databaseDump(any());
-        assertTrue(adminServiceSpy.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
+        assertTrue(adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
     }
 
     @Test
@@ -107,7 +105,7 @@ class AdminServiceTests {
     // region replicate-backup
     @Test
     void shouldReturnNotImplementedWhenCallingReplicate() {
-        assertEquals("replicateDatabaseBackupFile is not implemented", adminService.replicateDatabaseBackupFile("", ""));
+        assertFalse(adminService.replicateDatabaseBackupFile("", ""));
     }
     // endregion
 
@@ -147,6 +145,57 @@ class AdminServiceTests {
         assertTrue(new File(backupFile).exists());
         corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertTrue(output.getOut().contains("SQL error occurred during restore"));
+    }
+    // endregion
+
+    // region delete-backup
+    @Test
+    void shouldDeleteBackup(CapturedOutput output) throws IOException {
+        final String backupFileName = "backup.sql";
+        final Path tmpFile = Files.createFile(tempStorageLocation.toPath().resolve(backupFileName));
+        assertAll(
+                () -> assertTrue(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName)),
+                () -> assertFalse(tmpFile.toFile().exists()),
+                () -> assertTrue(output.getOut().contains("Successfully deleted backup"))
+        );
+    }
+
+    @Test
+    void shouldFailedDeleteWithBackupFileMissing() throws IOException {
+        final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
+        assertThrows(
+                FileSystemNotFoundException.class,
+                () -> adminService.deleteBackupFileFromStorage(backupStorageLocation, "backup.sql"),
+                "Backup file does not exist"
+        );
+    }
+
+    @Test
+    void shouldFailedToDeleteWithBackupFileOutOfStorage(CapturedOutput output) {
+        assertAll(
+                () -> assertFalse(adminService.deleteBackupFileFromStorage("/backup", "backup.sql")),
+                () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
+        );
+    }
+
+    // endregion
+
+    //region utils
+
+    @Test
+    void testCheckCommonParametersValidation() {
+        // Valid case
+        final String validStorageLocation = "test/path/";
+        final String validBackupFileName = "backup.sql";
+        final String emptyStorageLocation = "";
+        final String emptyBackupFileName = "";
+
+        assertAll(
+                () -> assertTrue(adminService.checkCommonParameters(validStorageLocation, validBackupFileName)),
+                () -> assertFalse(adminService.checkCommonParameters(emptyStorageLocation, validBackupFileName)),
+                () -> assertFalse(adminService.checkCommonParameters(validStorageLocation, emptyBackupFileName)),
+                () -> assertFalse(adminService.checkCommonParameters(emptyStorageLocation, emptyBackupFileName))
+        );
     }
     // endregion
 }

@@ -18,6 +18,7 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -91,7 +92,7 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
 
         Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
@@ -115,8 +116,9 @@ class AdminControllerTests {
     // region replicate-backup
     @Test
     void testReplicate(@TempDir Path tempDir) {
+        // Test to change when the methode replicateDatabaseBackupFile will be implemented
         final String storageID = convertToHex(tempDir.toString());
-        assertEquals(HttpStatus.OK, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @ParameterizedTest
@@ -146,10 +148,11 @@ class AdminControllerTests {
     }
 
     @Test
+    @Disabled("Test to change when the methode replicateDatabaseBackupFile will be implemented")
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
-            public String replicateDatabaseBackupFile(String storagePath, String backupFileName) {
+            public boolean replicateDatabaseBackupFile(String storagePath, String backupFileName) {
                 try {
                     log.info("Long replicateDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
@@ -160,7 +163,7 @@ class AdminControllerTests {
             }
         });
 
-        final List<ResponseEntity<String>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
 
         Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME)));
@@ -274,6 +277,78 @@ class AdminControllerTests {
             hex.append(Integer.toHexString(ch));
         }
         return hex.toString();
+    }
+    // endregion
+
+    // region delete-backup
+    @Test
+    void testDelete(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        when(adminService.deleteBackupFileFromStorage(tempDir.toString(), FILE_NAME)).thenReturn(true);
+        assertEquals(HttpStatus.OK, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBadRequestParameters")
+    void testBadRequestOnDelete(String storageID, String fileName) {
+        assertEquals(HttpStatus.BAD_REQUEST, adminController.deleteBackup(storageID, fileName).getStatusCode());
+    }
+
+    @Test
+    void testInternalServerErrorOnDelete(@TempDir Path tempDir) {
+        final String storageID = convertToHex(tempDir.toString());
+        when(adminService.deleteBackupFileFromStorage(tempDir.toString(), FILE_NAME)).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testInterrupterThreadOnDelete() throws InterruptedException {
+        ReflectionTestUtils.setField(adminController, "rLock", rLock);
+        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.deleteBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testNotFoundOnDelete() {
+        final String storageID = convertToHex(STORAGE_PATH);
+        when(adminService.deleteBackupFileFromStorage(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        assertEquals(HttpStatus.NOT_FOUND, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testTooManyRequestOnDelete(@TempDir Path tempDir) throws InterruptedException {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+            @Override
+            public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+                try {
+                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return true;
+            }
+        });
+
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final String storageID = convertToHex(tempDir.toString());
+
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME)));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME)));
+
+        firstThread.start();
+        secondThread.start();
+        responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME));
+
+        secondThread.join();
+        firstThread.join();
+
+
+        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
+
+        assertEquals(1, code200);
+        assertEquals(2, code429);
     }
     // endregion
 

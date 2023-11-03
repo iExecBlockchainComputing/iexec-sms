@@ -33,6 +33,13 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AdminController {
 
     /**
+     * Enum representing different types of backup operations: BACKUP, DELETE, REPLICATE and RESTORE.
+     */
+    private enum BackupAction {
+        BACKUP, DELETE, REPLICATE, RESTORE;
+    }
+
+    /**
      * The directory where the database backup file will be stored.
      * The value of this constant should be a valid, existing directory path.
      */
@@ -69,23 +76,8 @@ public class AdminController {
      * </ul>
      */
     @PostMapping("/backup")
-    public ResponseEntity<String> createBackup() {
-        try {
-            if (!tryToAcquireLock()) {
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
-            }
-            if (adminService.createDatabaseBackupFile(BACKUP_STORAGE_LOCATION, BACKUP_FILENAME)) {
-                return ResponseEntity.status(HttpStatus.CREATED).build();
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } finally {
-            tryToReleaseLock();
-        }
+    public ResponseEntity<Void> createBackup() {
+        return performOperation("", "", BackupAction.BACKUP);
     }
 
     /**
@@ -105,26 +97,8 @@ public class AdminController {
      * </ul>
      */
     @PostMapping("/{storageID}/replicate-backup")
-    public ResponseEntity<String> replicateBackup(@PathVariable String storageID, @RequestParam String fileName) {
-        try {
-            if (StringUtils.isBlank(storageID) || StringUtils.isBlank(fileName)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-            if (!tryToAcquireLock()) {
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
-            }
-            final String storagePath = getStoragePathFromID(storageID);
-            return ResponseEntity.ok(adminService.replicateDatabaseBackupFile(storagePath, fileName));
-        } catch (FileSystemNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } finally {
-            tryToReleaseLock();
-        }
+    public ResponseEntity<Void> replicateBackup(@PathVariable String storageID, @RequestParam String fileName) {
+        return performOperation(storageID, fileName, BackupAction.REPLICATE);
     }
 
     /**
@@ -146,17 +120,76 @@ public class AdminController {
      */
     @PostMapping("/{storageID}/restore-backup")
     ResponseEntity<Void> restoreBackup(@PathVariable String storageID, @RequestParam String fileName) {
+        return performOperation(storageID, fileName, BackupAction.RESTORE);
+    }
+
+    /**
+     * Endpoint to delete a database backup.
+     * <p>
+     * This method allows the client to initiate the deletion of a database backup
+     * from a specified dump file, identified by the {@code fileName}, located in a location specified by the {@code storageID}.
+     *
+     * @param storageID The unique identifier for the storage location of the dump in hexadecimal.
+     * @param fileName  The name of the dump file to be deleted.
+     * @return A response entity indicating the status and details of the delete operation.
+     * <ul>
+     * <li>HTTP 200 (OK) - If the backup has been successfully deleted.
+     * <li>HTTP 400 (Bad Request) - If {@code fileName} is missing or {@code storageID} does not match an existing directory.
+     * <li>HTTP 404 (Not Found) - If the backup file specified by {@code fileName} does not exist.
+     * <li>HTTP 429 (Too Many Requests) - If another operation (backup/restore/replicate) is already in progress.
+     * <li>HTTP 500 (Internal Server Error) - If an unexpected error occurs during the restore process.
+     * </ul>
+     */
+    @DeleteMapping("/{storageID}/delete-backup")
+    ResponseEntity<Void> deleteBackup(@PathVariable String storageID, @RequestParam String fileName) {
+        return performOperation(storageID, fileName, BackupAction.DELETE);
+    }
+
+    /**
+     * Common method for database backup operations.
+     *
+     * @param storageID     The unique identifier for the storage location of the dump in hexadecimal.
+     * @param fileName      The name of the dump file to be operated on.
+     * @param operationType The type of operation {{@link BackupAction}.
+     * @return A response entity indicating the status and details of the operation.
+     */
+    private ResponseEntity<Void> performOperation(String storageID, String fileName, BackupAction operationType) {
         try {
-            if (StringUtils.isBlank(storageID) || StringUtils.isBlank(fileName)) {
+            if ((StringUtils.isBlank(storageID) || StringUtils.isBlank(fileName)) && operationType != BackupAction.BACKUP) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
             if (!tryToAcquireLock()) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
+
             final String storagePath = getStoragePathFromID(storageID);
-            if (adminService.restoreDatabaseFromBackupFile(storagePath, fileName)) {
+
+            boolean operationSuccessful = false;
+
+            switch (operationType) {
+                case BACKUP:
+                    operationSuccessful = adminService.createDatabaseBackupFile(BACKUP_STORAGE_LOCATION, BACKUP_FILENAME);
+                    break;
+                case RESTORE:
+                    operationSuccessful = adminService.restoreDatabaseFromBackupFile(storagePath, fileName);
+                    break;
+                case DELETE:
+                    operationSuccessful = adminService.deleteBackupFileFromStorage(storagePath, fileName);
+                    break;
+                case REPLICATE:
+                    operationSuccessful = adminService.replicateDatabaseBackupFile(storagePath, fileName);
+                    break;
+                default:
+                    break;
+            }
+
+            if (operationSuccessful) {
+                if (operationType == BackupAction.BACKUP) {
+                    return ResponseEntity.status(HttpStatus.CREATED).build();
+                }
                 return ResponseEntity.ok().build();
             }
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (FileSystemNotFoundException e) {
             return ResponseEntity.notFound().build();
