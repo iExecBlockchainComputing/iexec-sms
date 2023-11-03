@@ -89,7 +89,7 @@ class AdminControllerTests {
                 }
                 return true;
             }
-        });
+        }, "");
 
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
 
@@ -115,9 +115,9 @@ class AdminControllerTests {
     // region replicate-backup
     @Test
     void testReplicate(@TempDir Path tempDir) {
-        // Test to change when the methode replicateDatabaseBackupFile will be implemented
         final String storageID = convertToHex(tempDir.toString());
-        when(adminService.replicateDatabaseBackupFile("/work/", FILE_NAME, tempDir.toString(), FILE_NAME)).thenReturn(true);
+        ReflectionTestUtils.setField(adminController, "adminStorageLocation", tempDir.toString());
+        when(adminService.replicateDatabaseBackupFile(tempDir + "/work/", FILE_NAME, tempDir.toString(), FILE_NAME)).thenReturn(true);
         assertEquals(HttpStatus.OK, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
@@ -160,7 +160,7 @@ class AdminControllerTests {
                 }
                 return true;
             }
-        });
+        }, "");
 
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
@@ -232,7 +232,7 @@ class AdminControllerTests {
                 }
                 return true;
             }
-        });
+        }, "");
 
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
@@ -327,7 +327,7 @@ class AdminControllerTests {
                 }
                 return true;
             }
-        });
+        }, "");
 
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());

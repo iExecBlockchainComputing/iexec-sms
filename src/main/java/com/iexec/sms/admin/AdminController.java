@@ -18,6 +18,7 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,9 +58,11 @@ public class AdminController {
     private final ReentrantLock rLock = new ReentrantLock(true);
 
     private final AdminService adminService;
+    private final String adminStorageLocation;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, @Value("${admin.storage-location}") String adminStorageLocation) {
         this.adminService = adminService;
+        this.adminStorageLocation = adminStorageLocation;
     }
 
     /**
@@ -169,7 +172,7 @@ public class AdminController {
 
             switch (operationType) {
                 case BACKUP:
-                    operationSuccessful = adminService.createDatabaseBackupFile(BACKUP_STORAGE_LOCATION, BACKUP_FILENAME);
+                    operationSuccessful = adminService.createDatabaseBackupFile(adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME);
                     break;
                 case RESTORE:
                     operationSuccessful = adminService.restoreDatabaseFromBackupFile(storagePath, fileName);
@@ -179,7 +182,7 @@ public class AdminController {
                     break;
                 case REPLICATE:
                     operationSuccessful = adminService.replicateDatabaseBackupFile(
-                            BACKUP_STORAGE_LOCATION, BACKUP_FILENAME, storagePath, fileName);
+                            adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME, storagePath, fileName);
                     break;
                 default:
                     break;
