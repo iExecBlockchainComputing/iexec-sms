@@ -14,6 +14,10 @@ All notable changes to this project will be documented in this file.
 - Add the ability to trigger a delete via a dedicated endpoint. (#213)
 - Add the ability to trigger a backup replication via a dedicated endpoint. (#214)
 
+### Dependency Upgrades
+
+- Upgrade to `jenkins-library` 2.7.4. (#216)
+
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
 
 ### Bug Fixes

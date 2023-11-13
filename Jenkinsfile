@@ -1,8 +1,10 @@
-@Library('global-jenkins-library@2.7.3') _
+@Library('global-jenkins-library@2.7.4') _
 
 String repositoryName = 'iexec-sms'
 
-buildInfo = getBuildInfo()
+buildInfo = buildJavaProject(
+        shouldPublishJars: true,
+        shouldPublishDockerImages: true)
 
 // add parameters for non-PR builds when branch is not develop or production branch
 boolean addParameters = !buildInfo.isPullRequestBuild && !buildInfo.isDevelopBranch && !buildInfo.isProductionBranch
@@ -14,14 +16,6 @@ if (addParameters) {
     parameters([booleanParam(description: 'Build TEE images', name: 'BUILD_TEE')])
   ])
 }
-
-buildJavaProject(
-        buildInfo: buildInfo,
-        integrationTestsEnvVars: [],
-        shouldPublishJars: true,
-        shouldPublishDockerImages: true,
-        dockerfileDir: '.',
-        buildContext: '.')
 
 // BUILD_TEE parameter only exists if addParameters is true
 // If BUILD_TEE is false, TEE builds won't be executed and we return here
