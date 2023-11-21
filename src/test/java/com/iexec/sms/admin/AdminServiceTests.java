@@ -102,52 +102,6 @@ class AdminServiceTests {
 
     // endregion
 
-    // region replicate-backup
-    @Test
-    void shouldReplicateBackup() {
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        adminService.replicateDatabaseBackupFile(
-                tempStorageLocation.getPath(), "backup.sql",
-                tempStorageLocation.getPath(), "backup-copy.sql");
-        assertTrue(Path.of(tempStorageLocation.getPath(), "backup-copy.sql").toFile().isFile());
-    }
-
-    @Test
-    void shouldFailToReplicateWithBackupFileMissing(CapturedOutput output) {
-        adminService.replicateDatabaseBackupFile(
-                tempStorageLocation.getPath(), "backup.sql",
-                tempStorageLocation.getPath(), "backup-copy.sql");
-        assertAll(
-                () -> assertFalse(Path.of(tempStorageLocation.getPath(), "backup-copy.sql").toFile().isFile()),
-                () -> assertTrue(output.getOut().contains("NoSuchFileException"))
-        );
-    }
-
-    @Test
-    void shouldFailToReplicateWithInvalidStorageLocation(CapturedOutput output) {
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        boolean replicateStatus = adminService.replicateDatabaseBackupFile(
-                tempStorageLocation.getPath(), "backup.sql",
-                "/tmp/nonexistent/directory", "backup-copy.sql");
-        assertAll(
-                () -> assertFalse(replicateStatus),
-                () -> assertTrue(output.getAll().contains("NoSuchFileException"))
-        );
-    }
-
-    @Test
-    void shouldFailToReplicateWithOutOfStorageLocation(CapturedOutput output) {
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        boolean replicateStatus = adminService.replicateDatabaseBackupFile(
-                tempStorageLocation.getPath(), "backup.sql",
-                "/opt", "backup-copy.sql");
-        assertAll(
-                () -> assertFalse(replicateStatus),
-                () -> assertTrue(output.getAll().contains("Replicated backup file destination is outside of storage file system"))
-        );
-    }
-    // endregion
-
     // region restore-backup
     @Test
     void shouldRestoreBackup(CapturedOutput output) {
@@ -232,52 +186,73 @@ class AdminServiceTests {
     }
     // endregion
 
-    //region copy-backup
-
+    // region copy-backup
     @Test
     void shouldCopy() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createDatabaseBackupFile(validStorageLocation, validBackupFileName);
-        assertTrue(adminService.copyBackupFileFromStorageToStorage(validStorageLocation, validBackupFileName, validStorageLocation, "backup2.sql"));
-        assertTrue(new File(validStorageLocation + File.separator + "backup2.sql").exists());
+        assertTrue(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy.sql"));
+        assertTrue(new File(validStorageLocation + File.separator + "backup-copy.sql").exists());
     }
 
     @Test
-    void shouldFailToCopyWhenInvalidParameters(CapturedOutput output) {
+    void shouldFailToCopyWhenDestinationFileAlreadyExist(CapturedOutput output) {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        final String emptyStorageLocation = "";
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-        assertAll(
+        assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName));
+        assertTrue(output.getOut().contains(AdminService.ERR_FILE_ALREADY_EXIST));
+    }
 
-                () -> assertAll(
-                        () -> assertFalse(adminService.copyBackupFileFromStorageToStorage(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName)),
-                        () -> assertTrue(output.getOut().contains(AdminService.ERR_FILE_ALREADY_EXIST))
-                ),
+    @ParameterizedTest
+    @ValueSource(strings = {"", "/opt"})
+    void shouldFailToCopyWhenSourceIsOutsideStorage(String location, CapturedOutput output) {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-                () -> assertAll(
-                        () -> assertFalse(adminService.copyBackupFileFromStorageToStorage(validStorageLocation, validBackupFileName, "", "")),
-                        () -> assertTrue(output.getOut().contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE))
-                ),
+        assertFalse(adminService.copyBackupFile(location, validBackupFileName, validStorageLocation, validBackupFileName));
+        assertTrue(output.getOut().contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE));
+    }
 
-                () -> assertAll(
-                        () -> assertFalse(adminService.copyBackupFileFromStorageToStorage(emptyStorageLocation, validBackupFileName, "", "")),
-                        () -> assertTrue(output.getOut().contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE))
-                ),
+    @ParameterizedTest
+    @ValueSource(strings = {"", "/opt"})
+    void shouldFailToCopyWhenDestinationIsOutsideStorage(String location, CapturedOutput output) {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-                () -> assertThrows(
-                        FileSystemNotFoundException.class,
-                        () -> adminService.copyBackupFileFromStorageToStorage(validStorageLocation, "backup2.sql", "", ""),
-                        AdminService.ERR_BACKUP_FILE_NOT_EXIST
-                )
+        assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, location, ""));
+        assertTrue(output.getOut().contains(AdminService.ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
+    }
+
+    @Test
+    void shouldFailToCopyWhenBackupFileDoesNotExist() {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+
+        assertThrows(
+                FileSystemNotFoundException.class,
+                () -> adminService.copyBackupFile(validStorageLocation, "backup2.sql", "", ""),
+                AdminService.ERR_BACKUP_FILE_NOT_EXIST
         );
+    }
+
+    @Test
+    void shouldFailToCopyWhenDestinationStorageDoesNotExist(CapturedOutput output) {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+
+        assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, "/tmp/nonexistent", validBackupFileName));
+        assertTrue(output.getAll().contains("NoSuchFileException"));
     }
     // endregion
 
     //region utils
-
     @Test
     void testCheckCommonParametersValidation() {
         // Valid case

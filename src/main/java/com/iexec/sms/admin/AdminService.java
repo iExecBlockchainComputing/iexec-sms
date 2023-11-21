@@ -44,6 +44,7 @@ public class AdminService {
 
     public static final String ERR_BACKUP_FILE_OUTSIDE_STORAGE = "Backup file is outside of storage file system";
     public static final String ERR_BACKUP_FILE_NOT_EXIST = "Backup file does not exist";
+    public static final String ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE = "Replicated or Copied backup file destination is outside of storage file system";
     public static final String ERR_FILE_ALREADY_EXIST = "A file already exists at the destination";
     private final String datasourceUrl;
     private final String datasourceUsername;
@@ -117,37 +118,6 @@ public class AdminService {
     }
 
     /**
-     * Replicates a backup to the persistent storage.
-     * <p>
-     * The {@code backupStorageLocation/backupFileName} is replicated to {@code replicateStorageLocation/replicateFileName}.
-     *
-     * @param backupStorageLocation    Location of backup to replicate
-     * @param backupFileName           Name of backup file to replicate
-     * @param replicateStorageLocation Location of replicated backup
-     * @param replicateFileName        Name of replicated backup file
-     * @return {@code true} if the replication was successful, {@code false} if any error occurs.
-     */
-    boolean replicateDatabaseBackupFile(String backupStorageLocation, String backupFileName, String replicateStorageLocation, String replicateFileName) {
-        try {
-            final Path fullBackupFilePath = Path.of(backupStorageLocation, backupFileName).toRealPath();
-            final String backupFileLocation = checkBackupFileLocation(
-                    replicateStorageLocation + File.separator + replicateFileName,
-                    "Replicated backup file destination is outside of storage file system");
-            final long size = fullBackupFilePath.toFile().length();
-            log.info("Starting the replicate process [backupFileLocation:{}]", backupFileLocation);
-            final long start = System.currentTimeMillis();
-            Files.copy(fullBackupFilePath, Path.of(backupFileLocation), StandardCopyOption.COPY_ATTRIBUTES);
-            final long stop = System.currentTimeMillis();
-            log.info("Backup has been replicated [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    backupFileLocation, dateFormat.format(start), stop - start, size);
-            return true;
-        } catch (IOException e) {
-            log.error("Error occurred during copy", e);
-        }
-        return false;
-    }
-
-    /**
      * Restores a backup from provided inputs.
      * <p>
      * The location is checked against a configuration property value provided by an admin.
@@ -217,6 +187,8 @@ public class AdminService {
 
     /**
      * Copy a backup from a location to another with the possibility of renaming the file
+     * <p>
+     * The {@code sourceStorageLocation/sourceBackupFileName} is replicated to {@code destinationStorageLocation/destinationBackupFileName}.
      *
      * @param sourceStorageLocation      The location of the source backup file.
      * @param sourceBackupFileName       The name of the source backup file.
@@ -224,36 +196,34 @@ public class AdminService {
      * @param destinationBackupFileName  The name of the destination backup file.
      * @return {@code true} if the copy was successful, {@code false} if any error occurs.
      */
-    boolean copyBackupFileFromStorageToStorage(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
+    boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
         try {
             // Check that we want to copy an authorised file
             final Path sourceBackupFileLocation = Path.of(checkBackupFileLocation(
                     sourceStorageLocation + File.separator + sourceBackupFileName,
                     ERR_BACKUP_FILE_OUTSIDE_STORAGE));
+
             // File must exist
             if (!sourceBackupFileLocation.toFile().exists()) {
                 throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
             }
-            // No renaming, keep the original name
-            if (StringUtils.isBlank(destinationBackupFileName)) {
-                destinationBackupFileName = sourceBackupFileName;
-            }
+
             // Check that we want to copy into authorized location
             final Path destinationBackupFileLocation = Path.of(checkBackupFileLocation(
                     destinationStorageLocation + File.separator + destinationBackupFileName,
-                    ERR_BACKUP_FILE_OUTSIDE_STORAGE));
+                    ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
 
             // Check that we are not trying to overwrite a file
             if (destinationBackupFileLocation.toFile().exists()) {
                 throw new IOException(ERR_FILE_ALREADY_EXIST);
             }
-
+            final long size = sourceBackupFileLocation.toFile().length();
             log.info("Starting the copy process [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}]", sourceBackupFileLocation, destinationBackupFileLocation);
             final long start = System.currentTimeMillis();
-            Files.copy(sourceBackupFileLocation, destinationBackupFileLocation, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+            Files.copy(sourceBackupFileLocation, destinationBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
             final long stop = System.currentTimeMillis();
-            log.info("Backup has been copied [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}, timestamp:{}, duration:{} ms]",
-                    sourceBackupFileLocation, destinationBackupFileLocation, dateFormat.format(start), stop - start);
+            log.info("Backup has been copied [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                    sourceBackupFileLocation, destinationBackupFileLocation, dateFormat.format(start), stop - start, size);
             return true;
         } catch (IOException e) {
             log.error("An error occurred while copying backup", e);
