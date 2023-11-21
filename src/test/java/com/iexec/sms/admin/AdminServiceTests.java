@@ -232,6 +232,50 @@ class AdminServiceTests {
     }
     // endregion
 
+    //region copy-backup
+
+    @Test
+    void shouldCopy() {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createDatabaseBackupFile(validStorageLocation, validBackupFileName);
+        assertTrue(adminService.copyBackupFileFromStorageToStorage(validStorageLocation, validBackupFileName, validStorageLocation, "backup2.sql"));
+        assertTrue(new File(validStorageLocation + File.separator + "backup2.sql").exists());
+    }
+
+    @Test
+    void shouldFailToCopyWhenInvalidParameters(CapturedOutput output) {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        final String emptyStorageLocation = "";
+        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+
+        assertAll(
+
+                () -> assertAll(
+                        () -> assertFalse(adminService.copyBackupFileFromStorageToStorage(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName)),
+                        () -> assertTrue(output.getOut().contains(AdminService.ERR_FILE_ALREADY_EXIST))
+                ),
+
+                () -> assertAll(
+                        () -> assertFalse(adminService.copyBackupFileFromStorageToStorage(validStorageLocation, validBackupFileName, "", "")),
+                        () -> assertTrue(output.getOut().contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE))
+                ),
+
+                () -> assertAll(
+                        () -> assertFalse(adminService.copyBackupFileFromStorageToStorage(emptyStorageLocation, validBackupFileName, "", "")),
+                        () -> assertTrue(output.getOut().contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE))
+                ),
+
+                () -> assertThrows(
+                        FileSystemNotFoundException.class,
+                        () -> adminService.copyBackupFileFromStorageToStorage(validStorageLocation, "backup2.sql", "", ""),
+                        AdminService.ERR_BACKUP_FILE_NOT_EXIST
+                )
+        );
+    }
+    // endregion
+
     //region utils
 
     @Test
