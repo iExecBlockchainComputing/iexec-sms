@@ -31,8 +31,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,7 +120,7 @@ class AdminControllerTests {
     void testReplicate(@TempDir Path tempDir) {
         final String storageID = convertToHex(tempDir.toString());
         ReflectionTestUtils.setField(adminController, "adminStorageLocation", tempDir.toString());
-        when(adminService.replicateDatabaseBackupFile(tempDir + "/work/", FILE_NAME, tempDir.toString(), FILE_NAME)).thenReturn(true);
+        when(adminService.copyBackupFile(tempDir + "/work/", FILE_NAME, tempDir.toString(), FILE_NAME)).thenReturn(true);
         assertEquals(HttpStatus.OK, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
@@ -129,7 +132,7 @@ class AdminControllerTests {
 
     @Test
     void testInternalServerErrorOnReplicate() {
-        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(RuntimeException.class);
+        when(adminService.copyBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(RuntimeException.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
     }
 
@@ -143,7 +146,7 @@ class AdminControllerTests {
     @Test
     void testNotFoundOnReplicate() {
         final String storageID = convertToHex(STORAGE_PATH);
-        when(adminService.replicateDatabaseBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
+        when(adminService.copyBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
         assertEquals(HttpStatus.NOT_FOUND, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
@@ -151,9 +154,9 @@ class AdminControllerTests {
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
         AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
             @Override
-            public boolean replicateDatabaseBackupFile(String backupStoragePath, String backupFileName, String replicateStoragePath, String replicateFileName) {
+            public boolean copyBackupFile(String backupStoragePath, String backupFileName, String replicateStoragePath, String replicateFileName) {
                 try {
-                    log.info("Long replicateDatabaseBackupFile action is running ...");
+                    log.info("Long copyOrReplicateBackupFileFromStorageToStorage action is running ...");
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -351,6 +354,92 @@ class AdminControllerTests {
     }
     // endregion
 
+    // region replicate-backup
+    @Test
+    void testCopy(@TempDir Path tempDir) {
+        final String sourceStorageID = convertToHex(tempDir.toString());
+
+        ReflectionTestUtils.setField(adminController, "adminStorageLocation", tempDir.toString());
+        when(adminService.copyBackupFile(tempDir.toString(), FILE_NAME, tempDir.toString(), "backup2.sql")).thenReturn(true);
+        assertEquals(HttpStatus.OK, adminController.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql").getStatusCode());
+    }
+
+    @Test
+    void testCopyWithTheSameName(@TempDir Path tempDir) throws IOException {
+        final String sourceStorageID = convertToHex(tempDir.toString());
+        final Path dailyDir = Paths.get(tempDir.toString(), "daily");
+        final String dailyDirString = Files.createDirectories(dailyDir).toFile().getAbsolutePath();
+        final String destinationStorageID = convertToHex(dailyDirString);
+
+        ReflectionTestUtils.setField(adminController, "adminStorageLocation", tempDir.toString());
+        when(adminService.copyBackupFile(tempDir.toString(), FILE_NAME, dailyDirString, FILE_NAME)).thenReturn(true);
+        assertEquals(HttpStatus.OK, adminController.copyBackup(sourceStorageID, destinationStorageID, FILE_NAME, "").getStatusCode());
+    }
+
+    @Test
+    void testInterruptedThreadOnCopy() throws InterruptedException {
+        ReflectionTestUtils.setField(adminController, "rLock", rLock);
+        when(rLock.tryLock(100, TimeUnit.MILLISECONDS)).thenThrow(InterruptedException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.copyBackup(STORAGE_PATH, STORAGE_PATH, FILE_NAME, FILE_NAME).getStatusCode());
+    }
+
+    @Test
+    void testInternalServerErrorOnCopy(@TempDir Path tempDir) {
+        final String sourceStorageID = convertToHex(tempDir.toString());
+        when(adminService.copyBackupFile(tempDir.toString(), FILE_NAME, tempDir.toString(), "backup2.sql")).thenThrow(RuntimeException.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql").getStatusCode());
+    }
+
+    @Test
+    void testTooManyRequestOnCopy(@TempDir Path tempDir) throws InterruptedException {
+
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+            @Override
+            public boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
+                try {
+                    log.info("Long copyOrReplicateBackupFileFromStorageToStorage action is running ...");
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return true;
+            }
+        }, "");
+
+        final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
+        final String sourceStorageID = convertToHex(tempDir.toString());
+
+        Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql")));
+        Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql")));
+
+        firstThread.start();
+        secondThread.start();
+        responses.add(adminControllerWithLongAction.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql"));
+
+        secondThread.join();
+        firstThread.join();
+
+
+        long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
+        long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
+
+        assertEquals(1, code200);
+        assertEquals(2, code429);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBadRequestParameters")
+    void testBadRequestOnCopyOnCommonsAdminControls(String storageID, String fileName) {
+        assertEquals(HttpStatus.BAD_REQUEST, adminController.copyBackup(storageID, "NOT_CONCERNED", fileName, "NOT_CONCERNED").getStatusCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideBadRequestParametersForCopy")
+    void testBadRequestOnCopyOnSpecificsCopyControls(String sourceStorageID, String sourceFileName, String destinationStorageID) {
+        assertEquals(HttpStatus.BAD_REQUEST, adminController.copyBackup(sourceStorageID, destinationStorageID, sourceFileName, "NOT_CONCERNED").getStatusCode());
+    }
+    // endregion
+
     private static Stream<Arguments> provideBadRequestParameters() {
         return Stream.of(
                 Arguments.of(null, null),
@@ -358,6 +447,14 @@ class AdminControllerTests {
                 Arguments.of(" ", " "),
                 Arguments.of(STORAGE_PATH, " "),
                 Arguments.of(" ", FILE_NAME)
+        );
+    }
+
+    private static Stream<Arguments> provideBadRequestParametersForCopy() {
+        return Stream.of(
+                Arguments.of(STORAGE_PATH, FILE_NAME, ""),
+                Arguments.of(STORAGE_PATH, FILE_NAME, " "),
+                Arguments.of(STORAGE_PATH, FILE_NAME, null)
         );
     }
 }

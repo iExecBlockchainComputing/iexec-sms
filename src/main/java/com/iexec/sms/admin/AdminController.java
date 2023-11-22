@@ -35,10 +35,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AdminController {
 
     /**
-     * Enum representing different types of backup operations: BACKUP, DELETE, REPLICATE and RESTORE.
+     * Enum representing different types of backup operations: BACKUP, COPY,DELETE, REPLICATE and RESTORE.
      */
     private enum BackupAction {
-        BACKUP, DELETE, REPLICATE, RESTORE;
+        BACKUP, COPY, DELETE, REPLICATE, RESTORE;
     }
 
     /**
@@ -81,7 +81,7 @@ public class AdminController {
      */
     @PostMapping("/backup")
     public ResponseEntity<Void> createBackup() {
-        return performOperation("", "", BackupAction.BACKUP);
+        return performOperation(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, BackupAction.BACKUP);
     }
 
     /**
@@ -102,7 +102,7 @@ public class AdminController {
      */
     @PostMapping("/{storageID}/replicate-backup")
     ResponseEntity<Void> replicateBackup(@PathVariable String storageID, @RequestParam String fileName) {
-        return performOperation(storageID, fileName, BackupAction.REPLICATE);
+        return performOperation(StringUtils.EMPTY, StringUtils.EMPTY, storageID, fileName, BackupAction.REPLICATE);
     }
 
     /**
@@ -124,7 +124,7 @@ public class AdminController {
      */
     @PostMapping("/{storageID}/restore-backup")
     ResponseEntity<Void> restoreBackup(@PathVariable String storageID, @RequestParam String fileName) {
-        return performOperation(storageID, fileName, BackupAction.RESTORE);
+        return performOperation(storageID, fileName, StringUtils.EMPTY, StringUtils.EMPTY, BackupAction.RESTORE);
     }
 
     /**
@@ -146,27 +146,55 @@ public class AdminController {
      */
     @DeleteMapping("/{storageID}/delete-backup")
     ResponseEntity<Void> deleteBackup(@PathVariable String storageID, @RequestParam String fileName) {
-        return performOperation(storageID, fileName, BackupAction.DELETE);
+        return performOperation(storageID, fileName, StringUtils.EMPTY, StringUtils.EMPTY, BackupAction.DELETE);
+    }
+
+    /**
+     * Endpoint to copy a database backup.
+     * <p>
+     * This method allows the copy of the backup toward another storage.
+     *
+     * @param sourceStorageID      The unique identifier for the source storage location of the dump in hexadecimal.
+     * @param sourceFileName       The name of the source file to copy from the source storage location.
+     * @param destinationStorageID The unique identifier for the destination storage location of the dump in hexadecimal.
+     * @param destinationFileName  The name of the destination file, can be empty.
+     * @return A response entity indicating the status and details of the copy operation.
+     * <ul>
+     * <li>HTTP 200 (OK) - If the copy has been successfully replicated.
+     * <li>HTTP 400 (Bad Request) - If {@code sourceFileName} is missing or {@code sourceStorageID} or {@code destinationStorageID}  does not match an existing directory.
+     * <li>HTTP 404 (Not Found) - If the backup file specified by {@code fileName} does not exist.
+     * <li>HTTP 429 (Too Many Requests) - If another operation (backup/restore/delete/replicate/copy) is already in progress.
+     * <li>HTTP 500 (Internal Server Error) - If an unexpected error occurs during the copy process.
+     * </ul>
+     */
+    @PostMapping("/{sourceStorageID}/copy-to/{destinationStorageID}")
+    ResponseEntity<Void> copyBackup(@PathVariable String sourceStorageID, @PathVariable String destinationStorageID, @RequestParam String sourceFileName, @RequestParam(required = false) String destinationFileName) {
+        destinationFileName = StringUtils.isNotBlank(destinationFileName) ? destinationFileName : sourceFileName;
+        return performOperation(sourceStorageID, sourceFileName, destinationStorageID, destinationFileName, BackupAction.COPY);
     }
 
     /**
      * Common method for database backup operations.
      *
-     * @param storageID     The unique identifier for the storage location of the dump in hexadecimal.
-     * @param fileName      The name of the dump file to be operated on.
-     * @param operationType The type of operation {{@link BackupAction}.
+     * @param sourceStorageID      The unique identifier for the storage location of the dump in hexadecimal.
+     * @param sourceFileName       The name of the dump file to be operated on.
+     * @param destinationStorageID The unique identifier for the destination storage location of the dump in hexadecimal.
+     * @param destinationFileName  The name of the destination file, can be empty.
+     * @param operationType        The type of operation {{@link BackupAction}.
      * @return A response entity indicating the status and details of the operation.
      */
-    private ResponseEntity<Void> performOperation(String storageID, String fileName, BackupAction operationType) {
+    private ResponseEntity<Void> performOperation(String sourceStorageID, String sourceFileName, String destinationStorageID, String destinationFileName, BackupAction operationType) {
         try {
-            if ((StringUtils.isBlank(storageID) || StringUtils.isBlank(fileName)) && operationType != BackupAction.BACKUP) {
+            if (invalidSource(sourceStorageID, sourceFileName, operationType) || invalidDestination(destinationStorageID, destinationFileName, operationType)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
+
             if (!tryToAcquireLock()) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
             }
 
-            final String storagePath = getStoragePathFromID(storageID);
+            final String sourceStoragePath = getStoragePathFromID(sourceStorageID);
+            String destinationStoragePath = "";
 
             boolean operationSuccessful = false;
 
@@ -175,14 +203,20 @@ public class AdminController {
                     operationSuccessful = adminService.createDatabaseBackupFile(adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME);
                     break;
                 case RESTORE:
-                    operationSuccessful = adminService.restoreDatabaseFromBackupFile(storagePath, fileName);
+                    operationSuccessful = adminService.restoreDatabaseFromBackupFile(sourceStoragePath, sourceFileName);
                     break;
                 case DELETE:
-                    operationSuccessful = adminService.deleteBackupFileFromStorage(storagePath, fileName);
+                    operationSuccessful = adminService.deleteBackupFileFromStorage(sourceStoragePath, sourceFileName);
                     break;
                 case REPLICATE:
-                    operationSuccessful = adminService.replicateDatabaseBackupFile(
-                            adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME, storagePath, fileName);
+                    destinationStoragePath = getStoragePathFromID(destinationStorageID);
+                    operationSuccessful = adminService.copyBackupFile(
+                            adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME, destinationStoragePath, destinationFileName);
+                    break;
+                case COPY:
+                    destinationStoragePath = getStoragePathFromID(destinationStorageID);
+                    operationSuccessful = adminService.copyBackupFile(
+                            sourceStoragePath, sourceFileName, destinationStoragePath, destinationFileName);
                     break;
                 default:
                     break;
@@ -227,6 +261,15 @@ public class AdminController {
         return output;
     }
 
+    private boolean invalidSource(String sourceStorageID, String sourceFileName, BackupAction operationType) {
+        return (StringUtils.isBlank(sourceStorageID) || StringUtils.isBlank(sourceFileName))
+                && operationType != BackupAction.REPLICATE && operationType != BackupAction.BACKUP;
+    }
+
+    private boolean invalidDestination(String destinationStorageID, String destinationFileName, BackupAction operationType) {
+        return (StringUtils.isBlank(destinationStorageID) || StringUtils.isBlank(destinationFileName)) && (operationType == BackupAction.COPY || operationType == BackupAction.REPLICATE);
+    }
+
     private boolean tryToAcquireLock() throws InterruptedException {
         return rLock.tryLock(100, TimeUnit.MILLISECONDS);
     }
@@ -236,5 +279,4 @@ public class AdminController {
             rLock.unlock();
         }
     }
-
 }
