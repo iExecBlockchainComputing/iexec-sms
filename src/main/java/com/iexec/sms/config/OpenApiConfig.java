@@ -16,19 +16,20 @@
 
 package com.iexec.sms.config;
 
-import com.iexec.sms.version.VersionService;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
+    public static final String TITLE = "iExec SMS";
 
-    private final VersionService versionService;
+    private final BuildProperties buildProperties;
 
-    public OpenApiConfig(VersionService versionService) {
-        this.versionService = versionService;
+    public OpenApiConfig(BuildProperties buildProperties) {
+        this.buildProperties = buildProperties;
     }
 
     /*
@@ -38,7 +39,8 @@ public class OpenApiConfig {
     public OpenAPI api() {
         return new OpenAPI().info(
                 new Info()
-                        .title("iExec SMS")
-                        .version(versionService.getVersion())
+                        .title(TITLE)
+                        .version(buildProperties.getVersion())
         );
-    }}
+    }
+}
