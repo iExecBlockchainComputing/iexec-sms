@@ -76,7 +76,7 @@ dependencies {
     implementation 'com.h2database:h2:2.2.222'
 
     // Spring Doc
-    implementation 'org.springdoc:springdoc-openapi-ui:1.6.3'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
 
     //ssl
     implementation 'org.apache.httpcomponents:httpclient'
