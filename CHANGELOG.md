@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade to `eclipse-temurin:11.0.21_9-jre-focal`. (#219)
 - Upgrade to Spring Boot 2.7.17. (#218)
 - Upgrade to Spring Dependency Management Plugin 1.1.4. (#218)
-- Upgrade to Spring Doc Openapi 1.7.0. (#220)
+- Upgrade to Spring Doc OpenAPI 1.7.0. (#220)
 - Upgrade to `jenkins-library` 2.7.4. (#216)
 
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
