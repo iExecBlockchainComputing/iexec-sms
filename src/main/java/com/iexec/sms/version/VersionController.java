@@ -46,7 +46,7 @@ public class VersionController {
 
     @PostConstruct
     void initializeGaugeVersion() {
-        Gauge.builder(METRIC_INFO_GAUGE_NAME, METRIC_VALUE, n -> METRIC_VALUE)
+        Gauge.builder(METRIC_INFO_GAUGE_NAME, () -> METRIC_VALUE)
                 .description(METRIC_INFO_GAUGE_DESC)
                 .tags(METRIC_INFO_LABEL_APP_VERSION, buildProperties.getVersion(),
                         METRIC_INFO_LABEL_APP_NAME, buildProperties.getName(),
