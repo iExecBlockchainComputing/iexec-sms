@@ -47,12 +47,11 @@ import java.util.stream.Collectors;
 
 import static com.iexec.commons.poco.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static com.iexec.sms.MockChainConfiguration.MOCK_CHAIN_PROFILE;
-import static com.iexec.sms.MockTeeConfiguration.MOCK_TEE_PROFILE;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-@ActiveProfiles({MOCK_TEE_PROFILE, MOCK_CHAIN_PROFILE, "test"})
+@ActiveProfiles({"scone", MOCK_CHAIN_PROFILE, "test"})
 public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS = "0xABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
