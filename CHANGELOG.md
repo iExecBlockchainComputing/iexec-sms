@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 - Add the ability to trigger a delete via a dedicated endpoint. (#213)
 - Add the ability to trigger a backup replication via a dedicated endpoint. (#214)
 - Add the ability to trigger a backup copy via a dedicated endpoint. (#217)
-- Expose version through prometheus endpoint and through VersionController. (#220)
+- Expose version through prometheus endpoint and through VersionController. (#220 #221)
 
 ### Dependency Upgrades
 

@@ -16,6 +16,7 @@
 
 package com.iexec.sms.version;
 
+import com.iexec.sms.api.config.TeeServicesProperties;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import org.springframework.boot.info.BuildProperties;
@@ -32,19 +33,24 @@ public class VersionController {
     public static final String METRIC_INFO_GAUGE_DESC = "A metric to expose version and application name.";
     public static final String METRIC_INFO_LABEL_APP_NAME = "iexecAppName";
     public static final String METRIC_INFO_LABEL_APP_VERSION = "iexecAppVersion";
-
+    public static final String METRIC_INFO_LABEL_TEE_FRAMEWORK = "teeFramework";
+    // Must be static final to avoid garbage collect and side effect on gauge
+    public static final int METRIC_VALUE = 1;
     private final BuildProperties buildProperties;
+    private final TeeServicesProperties teeServicesProperties;
 
-    public VersionController(BuildProperties buildProperties) {
+    public VersionController(BuildProperties buildProperties, TeeServicesProperties teeServicesProperties) {
         this.buildProperties = buildProperties;
+        this.teeServicesProperties = teeServicesProperties;
     }
 
     @PostConstruct
     void initializeGaugeVersion() {
-        Gauge.builder(METRIC_INFO_GAUGE_NAME, 1.0, n -> n)
+        Gauge.builder(METRIC_INFO_GAUGE_NAME, () -> METRIC_VALUE)
                 .description(METRIC_INFO_GAUGE_DESC)
                 .tags(METRIC_INFO_LABEL_APP_VERSION, buildProperties.getVersion(),
-                        METRIC_INFO_LABEL_APP_NAME, buildProperties.getName())
+                        METRIC_INFO_LABEL_APP_NAME, buildProperties.getName(),
+                        METRIC_INFO_LABEL_TEE_FRAMEWORK, teeServicesProperties.getTeeFramework().name())
                 .register(Metrics.globalRegistry);
     }
 
