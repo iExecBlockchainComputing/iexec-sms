@@ -61,6 +61,12 @@ class VersionControllerTests {
 
     @Test
     void testVersionController() {
+        TeeServicesProperties properties = new SconeServicesProperties(
+                preComputeProperties,
+                postComputeProperties,
+                "lasImage"
+        );
+        versionController = new VersionController(buildProperties, properties);
         assertEquals(ResponseEntity.ok(buildProperties.getVersion()), versionController.getVersion());
     }
 
