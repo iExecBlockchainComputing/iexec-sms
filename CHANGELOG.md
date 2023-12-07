@@ -24,6 +24,10 @@ All notable changes to this project will be documented in this file.
 - Upgrade to Spring Doc OpenAPI 1.7.0. (#220)
 - Upgrade to `jenkins-library` 2.7.4. (#216)
 
+### Bug Fixes
+
+- Remove MockTeeConfiguration and set scone instead in `TeeTaskComputeSecretIntegrationTests`. (#222)
+
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
 
 ### Bug Fixes
