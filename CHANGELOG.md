@@ -23,6 +23,8 @@ All notable changes to this project will be documented in this file.
 - Upgrade to Spring Dependency Management Plugin 1.1.4. (#218)
 - Upgrade to Spring Doc OpenAPI 1.7.0. (#220)
 - Upgrade to `jenkins-library` 2.7.4. (#216)
+- Upgrade to `iexec-commons-poco` 3.2.0. (#223)
+- Upgrade to `iexec-common` 8.3.1. (#223)
 
 ### Bug Fixes
 
