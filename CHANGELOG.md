@@ -16,6 +16,11 @@ All notable changes to this project will be documented in this file.
 - Add the ability to trigger a backup copy via a dedicated endpoint. (#217)
 - Expose version through prometheus endpoint and through VersionController. (#220 #221)
 
+### Bug Fixes
+
+- Remove MockTeeConfiguration and set scone instead in `TeeTaskComputeSecretIntegrationTests`. (#222)
+- Remove `/up` endpoint. (#224)
+
 ### Dependency Upgrades
 
 - Upgrade to `eclipse-temurin:11.0.21_9-jre-focal`. (#219)
@@ -25,10 +30,6 @@ All notable changes to this project will be documented in this file.
 - Upgrade to `jenkins-library` 2.7.4. (#216)
 - Upgrade to `iexec-commons-poco` 3.2.0. (#223)
 - Upgrade to `iexec-common` 8.3.1. (#223)
-
-### Bug Fixes
-
-- Remove MockTeeConfiguration and set scone instead in `TeeTaskComputeSecretIntegrationTests`. (#222)
 
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.3.0) 2023-09-28
 
