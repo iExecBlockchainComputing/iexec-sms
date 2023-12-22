@@ -31,12 +31,10 @@ import java.util.List;
  * Interface allowing to instantiate a Feign client targeting SMS REST endpoints.
  * <p>
  * To create the client, see the related builder.
+ *
  * @see SmsClientBuilder
  */
 public interface SmsClient {
-
-    @RequestLine("GET /up")
-    String isUp();
 
     // region Secrets
     @RequestLine("POST /apps/{appAddress}/secrets/1")
