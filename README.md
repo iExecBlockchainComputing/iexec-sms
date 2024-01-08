@@ -49,7 +49,7 @@ To support:
 | --- | --- | --- | --- | --- |
 | `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK` | Define which TEE framework this _iExec SMS_ supports. | `scone` or `gramine` | | |
 | `IEXEC_SMS_PORT` | Server HTTP port. | Positive integer | `13300` | `13300` |
-| `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/tmp/h2/sms-h2` |  `jdbc:h2:file:/tmp/h2/sms-h2` |
+| `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/data/sms-h2` | `jdbc:h2:file:/data/sms-h2` |
 | `IEXEC_SMS_H2_CONSOLE` | Whether to enable the H2 console. | Boolean | `false` | `false` |
 | `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` | `src/main/resources/iexec-sms-aes.key` |
 | `IEXEC_SMS_ADMIN_API_KEY` | API key used to authorize calls to `/admin` endpoints. | String | | |
