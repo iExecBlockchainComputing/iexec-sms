@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2023
+## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
 ### New Features
 
@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 
 - Remove MockTeeConfiguration and set scone instead in `TeeTaskComputeSecretIntegrationTests`. (#222)
 - Remove `/up` endpoint. (#224)
+- Fix `README.md` and remove some code smells. (#225)
 
 ### Dependency Upgrades
 
