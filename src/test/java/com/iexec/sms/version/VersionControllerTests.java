@@ -16,32 +16,90 @@
 
 package com.iexec.sms.version;
 
-import org.junit.jupiter.api.BeforeEach;
+import com.iexec.commons.poco.tee.TeeFramework;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
+@ExtendWith(SpringExtension.class)
+@Import(ProjectInfoAutoConfiguration.class)
 class VersionControllerTests {
-    @Mock
-    private VersionService versionService;
-    @InjectMocks
+    TeeAppProperties preComputeProperties;
+    TeeAppProperties postComputeProperties;
     private VersionController versionController;
+    @Autowired
+    private BuildProperties buildProperties;
 
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.openMocks(this);
+    @BeforeAll
+    static void initRegistry() {
+        Metrics.globalRegistry.add(new SimpleMeterRegistry());
+    }
+
+    @AfterEach
+    void afterEach() {
+        Metrics.globalRegistry.clear();
+    }
+
+    @Test
+    void testVersionController() {
+        TeeServicesProperties properties = new SconeServicesProperties(
+                preComputeProperties,
+                postComputeProperties,
+                "lasImage"
+        );
+        versionController = new VersionController(buildProperties, properties);
+        assertEquals(ResponseEntity.ok(buildProperties.getVersion()), versionController.getVersion());
     }
 
     @ParameterizedTest
-    @ValueSource(strings={"x.y.z", "x.y.z-rc", "x.y.z-NEXT-SNAPSHOT"})
-    void testVersionController(String version) {
-        when(versionService.getVersion()).thenReturn(version);
-        assertEquals(ResponseEntity.ok(version), versionController.getVersion());
+    @EnumSource(value = TeeFramework.class)
+    void shouldReturnInfoGauge(TeeFramework teeFramework) {
+        TeeServicesProperties properties;
+        if (teeFramework == TeeFramework.SCONE) {
+            properties = new SconeServicesProperties(
+                    preComputeProperties,
+                    postComputeProperties,
+                    "lasImage"
+            );
+        } else {
+            properties = new GramineServicesProperties(
+                    preComputeProperties,
+                    postComputeProperties
+            );
+        }
+        versionController = new VersionController(buildProperties, properties);
+        versionController.initializeGaugeVersion();
+
+        final Gauge info = Metrics.globalRegistry.find(VersionController.METRIC_INFO_GAUGE_NAME).gauge();
+        assertThat(info)
+                .isNotNull()
+                .extracting(Gauge::getId)
+                .isNotNull()
+                .extracting(
+                        id -> id.getTag(VersionController.METRIC_INFO_LABEL_APP_NAME),
+                        id -> id.getTag(VersionController.METRIC_INFO_LABEL_APP_VERSION),
+                        id -> id.getTag(VersionController.METRIC_INFO_LABEL_TEE_FRAMEWORK)
+                )
+                .containsExactly(buildProperties.getName(), buildProperties.getVersion(), teeFramework.name());
+        assertThat(info.value()).isEqualTo(VersionController.METRIC_VALUE);
     }
 }

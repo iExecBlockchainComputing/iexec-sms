@@ -119,8 +119,9 @@ public class SecretSessionBaseService {
     /**
      * Get tokens to be injected in the pre-compute enclave.
      *
-     * @return map of pre-compute tokens
-     * @throws TeeSessionGenerationException if dataset secret is not found.
+     * @param request Session request details
+     * @return {@link SecretEnclaveBase} instance
+     * @throws TeeSessionGenerationException if dataset secret is not found
      */
     public SecretEnclaveBase getPreComputeTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
@@ -157,18 +158,22 @@ public class SecretSessionBaseService {
                 .entrySet()
                 .stream()
                 .filter(e ->
-                // extract trusted en vars to include
-                trustedEnv.contains(e.getKey())
-                        // extract <IEXEC_INPUT_FILE_URL_N, url>
-                        || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
+                        // extract trusted en vars to include
+                        trustedEnv.contains(e.getKey())
+                                // extract <IEXEC_INPUT_FILE_URL_N, url>
+                                || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
                 .forEach(e -> tokens.put(e.getKey(), e.getValue()));
         return enclaveBase
                 .environment(tokens)
                 .build();
     }
 
-    /*
-     * Compute (App)
+    /**
+     * Get tokens to be injected in the application enclave.
+     *
+     * @param request Session request details
+     * @return {@link SecretEnclaveBase} instance
+     * @throws TeeSessionGenerationException if {@code TaskDescription} is {@literal null} or does not contain a {@code TeeEnclaveConfiguration}
      */
     public SecretEnclaveBase getAppTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
@@ -220,11 +225,11 @@ public class SecretSessionBaseService {
         if (applicationAddress != null) {
             final String secretIndex = "1";
             String appDeveloperSecret = teeTaskComputeSecretService.getSecret(
-                    OnChainObjectType.APPLICATION,
-                    applicationAddress.toLowerCase(),
-                    SecretOwnerRole.APPLICATION_DEVELOPER,
-                    "",
-                    secretIndex)
+                            OnChainObjectType.APPLICATION,
+                            applicationAddress.toLowerCase(),
+                            SecretOwnerRole.APPLICATION_DEVELOPER,
+                            "",
+                            secretIndex)
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
             if (!StringUtils.isEmpty(appDeveloperSecret)) {
@@ -252,11 +257,11 @@ public class SecretSessionBaseService {
                 continue;
             }
             String requesterSecret = teeTaskComputeSecretService.getSecret(
-                    OnChainObjectType.APPLICATION,
-                    "",
-                    SecretOwnerRole.REQUESTER,
-                    taskDescription.getRequester().toLowerCase(),
-                    secretEntry.getValue())
+                            OnChainObjectType.APPLICATION,
+                            "",
+                            SecretOwnerRole.REQUESTER,
+                            taskDescription.getRequester().toLowerCase(),
+                            secretEntry.getValue())
                     .map(TeeTaskComputeSecret::getValue)
                     .orElse(EMPTY_YML_VALUE);
             requesterSecrets.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + secretEntry.getKey(), requesterSecret);
@@ -265,8 +270,12 @@ public class SecretSessionBaseService {
         return tokens;
     }
 
-    /*
-     * Post-Compute (Result)
+    /**
+     * Get tokens to be injected in the post-compute enclave.
+     *
+     * @param request Session request details
+     * @return {@link SecretEnclaveBase} instance
+     * @throws TeeSessionGenerationException if {@code TaskDescription} is {@literal null}
      */
     public SecretEnclaveBase getPostComputeTokens(TeeSessionRequest request)
             throws TeeSessionGenerationException {
@@ -278,16 +287,6 @@ public class SecretSessionBaseService {
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
         }
-        // ###############################################################################
-        // TODO: activate this when user specific post-compute is properly
-        // supported. See
-        // https://github.com/iExecBlockchainComputing/iexec-sms/issues/52.
-        // ###############################################################################
-        // // Use specific post-compute image if requested.
-        // if (taskDescription.containsPostCompute()) {
-        // teePostComputeFingerprint = taskDescription.getTeePostComputeFingerprint();
-        // //add entrypoint too
-        // }
         // encryption
         Map<String, String> encryptionTokens = getPostComputeEncryptionTokens(request);
         tokens.putAll(encryptionTokens);
