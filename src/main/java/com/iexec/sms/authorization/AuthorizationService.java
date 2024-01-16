@@ -22,6 +22,7 @@ import com.iexec.commons.poco.chain.ChainTask;
 import com.iexec.commons.poco.chain.ChainTaskStatus;
 import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
 import com.iexec.commons.poco.security.Signature;
+import com.iexec.commons.poco.tee.TeeUtils;
 import com.iexec.commons.poco.utils.BytesUtils;
 import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.commons.poco.utils.SignatureUtils;
@@ -61,14 +62,6 @@ public class AuthorizationService {
         }
 
         String chainTaskId = workerpoolAuthorization.getChainTaskId();
-        boolean isTeeTaskOnchain = iexecHubService.isTeeTask(chainTaskId);
-        if (isTeeTask != isTeeTaskOnchain) {
-            log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{},"
-                    + "chainTaskId:{}, walletAddress:{}]",isTeeTask, isTeeTaskOnchain,
-                    chainTaskId, workerpoolAuthorization.getWorkerWallet());
-            return Optional.of(NO_MATCH_ONCHAIN_TYPE);
-        }
-
         Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
         if (optionalChainTask.isEmpty()) {
             log.error("Could not get chainTask [chainTaskId:{}]", chainTaskId);
@@ -90,6 +83,15 @@ public class AuthorizationService {
             return Optional.of(GET_CHAIN_DEAL_FAILED);
         }
         ChainDeal chainDeal = optionalChainDeal.get();
+
+        boolean isTeeTaskOnchain = TeeUtils.isTeeTag(chainDeal.getTag());
+        if (isTeeTask != isTeeTaskOnchain) {
+            log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{},"
+                            + "chainTaskId:{}, walletAddress:{}]", isTeeTask, isTeeTaskOnchain,
+                    chainTaskId, workerpoolAuthorization.getWorkerWallet());
+            return Optional.of(NO_MATCH_ONCHAIN_TYPE);
+        }
+
         String workerpoolAddress = chainDeal.getPoolOwner();
         boolean isSignerByWorkerpool = isSignedByHimself(workerpoolAuthorization.getHash(),
                 workerpoolAuthorization.getSignature().getValue(), workerpoolAddress);
@@ -156,5 +158,5 @@ public class AuthorizationService {
                 workerpoolAuthorization.getWorkerWallet(),
                 workerpoolAuthorization.getChainTaskId(),
                 workerpoolAuthorization.getEnclaveChallenge());
-        }
+    }
 }
