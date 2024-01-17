@@ -71,7 +71,7 @@ public class AuthorizationService {
         ChainTaskStatus taskStatus = chainTask.getStatus();
         String chainDealId = chainTask.getDealid();
 
-        if (!taskStatus.equals(ChainTaskStatus.ACTIVE)) {
+        if (taskStatus != ChainTaskStatus.ACTIVE) {
             log.error("Task not active onchain [chainTaskId:{}, status:{}]",
                     chainTaskId, taskStatus);
             return Optional.of(TASK_NOT_ACTIVE);
