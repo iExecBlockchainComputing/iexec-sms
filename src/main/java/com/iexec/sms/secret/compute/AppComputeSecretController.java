@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,10 +54,20 @@ public class AppComputeSecretController {
     // region App developer endpoints
     @PostMapping("/apps/{appAddress}/secrets/1")
     public ResponseEntity<ApiResponseBody<String, List<String>>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
-                                                                               @PathVariable String appAddress,
-                                                                               @RequestBody String secretValue) {
+                                                                                                 @PathVariable String appAddress,
+                                                                                                 @RequestBody String secretValue) {
         appAddress = appAddress.toLowerCase();
         String secretIndex = "1";
+
+        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue);
+
+        if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
+            log.error("Unauthorized to addAppDeveloperComputeComputeSecret [appAddress: {}, expectedChallenge: {}]",
+                    appAddress, challenge);
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(invalidAuthorizationPayload);
+        }
 
         try {
             checkSecretIndex(secretIndex);
@@ -72,17 +82,6 @@ public class AppComputeSecretController {
             return ResponseEntity
                     .status(HttpStatus.PAYLOAD_TOO_LARGE)
                     .body(createErrorPayload("Secret size should not exceed 4 Kb"));
-        }
-
-        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue);
-
-        if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
-            log.error("Unauthorized to addAppDeveloperComputeComputeSecret" +
-                            " [appAddress: {}, expectedChallenge: {}]",
-                    appAddress, challenge);
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(invalidAuthorizationPayload);
         }
 
         if (teeTaskComputeSecretService.isSecretPresent(
@@ -112,7 +111,7 @@ public class AppComputeSecretController {
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String, List<String>>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
-                                                                                         @PathVariable String secretIndex) {
+                                                                                                       @PathVariable String secretIndex) {
         appAddress = appAddress.toLowerCase();
         try {
             checkSecretIndex(secretIndex);
@@ -144,6 +143,7 @@ public class AppComputeSecretController {
     /**
      * Checks provided application developer index is in a valid range.
      * A valid index is a positive number.
+     *
      * @param secretIndex Secret index value to check.
      */
     private void checkSecretIndex(String secretIndex) {
@@ -157,15 +157,10 @@ public class AppComputeSecretController {
     // region App requester endpoint
     @PostMapping("/requesters/{requesterAddress}/secrets/{secretKey}")
     public ResponseEntity<ApiResponseBody<String, List<String>>> addRequesterAppComputeSecret(@RequestHeader("Authorization") String authorization,
-                                                                            @PathVariable String requesterAddress,
-                                                                            @PathVariable String secretKey,
-                                                                            @RequestBody String secretValue) {
+                                                                                              @PathVariable String requesterAddress,
+                                                                                              @PathVariable String secretKey,
+                                                                                              @RequestBody String secretValue) {
         requesterAddress = requesterAddress.toLowerCase();
-        if (!secretKeyPattern.matcher(secretKey).matches()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload(INVALID_SECRET_KEY_FORMAT_MSG));
-        }
 
         String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
                 requesterAddress,
@@ -174,12 +169,17 @@ public class AppComputeSecretController {
         );
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, requesterAddress)) {
-            log.error("Unauthorized to addRequesterAppComputeSecret" +
-                            " [requesterAddress:{}, expectedChallenge:{}]",
+            log.error("Unauthorized to addRequesterAppComputeSecret [requesterAddress:{}, expectedChallenge:{}]",
                     requesterAddress, challenge);
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(invalidAuthorizationPayload);
+        }
+
+        if (!secretKeyPattern.matcher(secretKey).matches()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(createErrorPayload(INVALID_SECRET_KEY_FORMAT_MSG));
         }
 
         final List<String> badRequestErrors = validateRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
