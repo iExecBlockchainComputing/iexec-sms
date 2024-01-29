@@ -76,8 +76,7 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
         verify(encryptionService, never()).decrypt(anyString());
 
-        verify(teeChallengeMeasuredSecretService, never()).newlyAddedSecret();
-        verify(ethereumCredentialsMeasuredSecretService, never()).newlyAddedSecret();
+        verifyNoInteractions(teeChallengeMeasuredSecretService, ethereumCredentialsMeasuredSecretService);
     }
 
     @Test
@@ -91,8 +90,7 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
         verify(encryptionService, times(1)).decrypt(anyString());
 
-        verify(teeChallengeMeasuredSecretService, never()).newlyAddedSecret();
-        verify(ethereumCredentialsMeasuredSecretService, never()).newlyAddedSecret();
+        verifyNoInteractions(teeChallengeMeasuredSecretService, ethereumCredentialsMeasuredSecretService);
     }
 
     @Test
