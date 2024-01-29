@@ -20,7 +20,6 @@ import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -46,12 +45,19 @@ class TeeChallengeServiceTests {
     @Mock
     private MeasuredSecretService teeChallengeMeasuredSecretService;
 
-    @InjectMocks
+    @Mock
+    private MeasuredSecretService ethereumCredentialsMeasuredSecretService;
+
     private TeeChallengeService teeChallengeService;
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        teeChallengeService = new TeeChallengeService(teeChallengeRepository,
+                encryptionService,
+                teeChallengeMeasuredSecretService,
+                ethereumCredentialsMeasuredSecretService
+        );
     }
 
     private TeeChallenge getEncryptedTeeChallengeStub() throws Exception {
@@ -71,6 +77,7 @@ class TeeChallengeServiceTests {
         verify(encryptionService, never()).decrypt(anyString());
 
         verify(teeChallengeMeasuredSecretService, never()).newlyAddedSecret();
+        verify(ethereumCredentialsMeasuredSecretService, never()).newlyAddedSecret();
     }
 
     @Test
@@ -85,6 +92,7 @@ class TeeChallengeServiceTests {
         verify(encryptionService, times(1)).decrypt(anyString());
 
         verify(teeChallengeMeasuredSecretService, never()).newlyAddedSecret();
+        verify(ethereumCredentialsMeasuredSecretService, never()).newlyAddedSecret();
     }
 
     @Test
@@ -100,6 +108,7 @@ class TeeChallengeServiceTests {
         verify(encryptionService, never()).decrypt(anyString());
 
         verify(teeChallengeMeasuredSecretService, times(1)).newlyAddedSecret();
+        verify(ethereumCredentialsMeasuredSecretService, times(1)).newlyAddedSecret();
     }
 
     @Test
@@ -115,6 +124,7 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
 
         verify(teeChallengeMeasuredSecretService, times(1)).newlyAddedSecret();
+        verify(ethereumCredentialsMeasuredSecretService, times(1)).newlyAddedSecret();
     }
 
     @Test

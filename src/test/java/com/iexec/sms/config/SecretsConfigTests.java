@@ -22,6 +22,7 @@ import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
 import com.iexec.sms.secret.web2.Web2SecretRepository;
 import com.iexec.sms.secret.web3.Web3SecretRepository;
 import com.iexec.sms.tee.challenge.TeeChallengeRepository;
+import com.iexec.sms.utils.EthereumCredentialsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -136,8 +137,23 @@ class SecretsConfigTests {
         final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
 
         assertAll(
-                () -> assertThat(secretsType).isEqualTo("TEE challenges & Ethereum Credentials"),
-                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.tee_challenge_ethereum_credentials."),
+                () -> assertThat(secretsType).isEqualTo("TEE challenges"),
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.tee_challenges."),
+                () -> verify(metricsService).registerNewMeasuredSecretService(measuredSecretService)
+        );
+    }
+
+    @Test
+    void ethereumCredentialsMeasuredSecretService() {
+        final EthereumCredentialsRepository repository = mock(EthereumCredentialsRepository.class);
+        final MeasuredSecretService measuredSecretService = secretsConfig.ethereumCredentialsMeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+
+        final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
+        final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
+
+        assertAll(
+                () -> assertThat(secretsType).isEqualTo("Ethereum Credentials"),
+                () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.ethereum_credentials."),
                 () -> verify(metricsService).registerNewMeasuredSecretService(measuredSecretService)
         );
     }

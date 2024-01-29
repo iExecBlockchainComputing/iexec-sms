@@ -30,14 +30,17 @@ public class TeeChallengeService {
 
     private final TeeChallengeRepository teeChallengeRepository;
     private final EncryptionService encryptionService;
-    private final MeasuredSecretService measuredSecretService;
+    private final MeasuredSecretService teeChallengesMeasuredSecretService;
+    private final MeasuredSecretService ethereumCredentialsMeasuredSecretService;
 
     public TeeChallengeService(TeeChallengeRepository teeChallengeRepository,
                                EncryptionService encryptionService,
-                               MeasuredSecretService teeChallengeMeasuredSecretService) {
+                               MeasuredSecretService teeChallengeMeasuredSecretService,
+                               MeasuredSecretService ethereumCredentialsMeasuredSecretService) {
         this.teeChallengeRepository = teeChallengeRepository;
         this.encryptionService = encryptionService;
-        this.measuredSecretService = teeChallengeMeasuredSecretService;
+        this.teeChallengesMeasuredSecretService = teeChallengeMeasuredSecretService;
+        this.ethereumCredentialsMeasuredSecretService = ethereumCredentialsMeasuredSecretService;
     }
 
     public Optional<TeeChallenge> getOrCreate(String taskId, boolean shouldDecryptKeys) {
@@ -55,7 +58,8 @@ public class TeeChallengeService {
             TeeChallenge teeChallenge = new TeeChallenge(taskId);
             encryptChallengeKeys(teeChallenge);
             teeChallenge = teeChallengeRepository.save(teeChallenge);
-            measuredSecretService.newlyAddedSecret();
+            teeChallengesMeasuredSecretService.newlyAddedSecret();
+            ethereumCredentialsMeasuredSecretService.newlyAddedSecret();
             log.info("Created tee challenge [chainTaskId:{}, teeChallenge:{}]",
                     taskId, teeChallenge.getCredentials().getAddress());
 
