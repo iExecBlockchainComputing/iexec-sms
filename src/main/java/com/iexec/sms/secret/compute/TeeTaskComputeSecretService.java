@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.AbstractSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskComputeSecretService {
+public class TeeTaskComputeSecretService extends AbstractSecretService {
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
@@ -76,13 +77,22 @@ public class TeeTaskComputeSecretService {
                                    SecretOwnerRole secretOwnerRole,
                                    String secretOwner,
                                    String secretKey) {
-        return getSecret(
+
+        if (lookSecretExistenceInCache(deployedObjectAddress, secretOwnerRole.toString(), secretOwner, secretKey)) {
+            return true;
+        }
+
+        if (getSecret(
                 onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
                 secretKey
-        ).isPresent();
+        ).isPresent()) {
+            putSecretExistenceInCache(deployedObjectAddress, secretOwnerRole.toString(), secretOwner, secretKey);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -119,9 +129,15 @@ public class TeeTaskComputeSecretService {
                 .value(encryptionService.encrypt(secretValue))
                 .build();
         log.info("Adding new tee task compute secret" +
-                        " [secret:{}]", secret);
+                " [secret:{}]", secret);
         teeTaskComputeSecretRepository.save(secret);
+        putSecretExistenceInCache(onChainObjectAddress, secretOwnerRole.toString(), secretOwner, secretKey);
         measuredSecretService.newlyAddedSecret();
         return true;
+    }
+
+    @Override
+    protected String getPrefixCacheKey() {
+        return "tee";
     }
 }

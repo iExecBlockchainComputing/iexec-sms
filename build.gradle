@@ -88,6 +88,9 @@ dependencies {
     implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
     implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
 
+    // expiring map
+    implementation "net.jodah:expiringmap:0.5.10"
+
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

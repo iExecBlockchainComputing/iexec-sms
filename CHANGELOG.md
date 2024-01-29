@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
+### New Features
+
+- Add a cache mechanism for secret existence. (#231)
+
 ### Bug Fixes
 
 - Validate authorization first when working on compute secrets. (#229)

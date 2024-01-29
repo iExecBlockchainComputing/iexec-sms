@@ -5,12 +5,19 @@ import com.iexec.sms.secret.MeasuredSecretService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(OutputCaptureExtension.class)
 class TeeTaskComputeSecretServiceTest {
     private static final String APP_ADDRESS = "appAddress";
     private static final String DECRYPTED_SECRET_VALUE = "I'm a secret.";
@@ -98,13 +105,39 @@ class TeeTaskComputeSecretServiceTest {
 
     // region isSecretPresent
     @Test
-    void secretShouldExist() {
-        when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0"))
+    void shouldGetSecretExistenceFromDBAndPutInCache(CapturedOutput output) {
+        when(teeTaskComputeSecretRepository.findById(any(TeeTaskComputeSecretHeader.class)))
                 .thenReturn(Optional.of(COMPUTE_SECRET));
 
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
-        Assertions.assertThat(isSecretPresent).isTrue();
+        assertAll(
+                () -> assertTrue(isSecretPresent),
+                () -> assertThat(output.getOut()).contains("Search secret existence in cache"),
+                () -> assertThat(output.getOut()).contains("Secret existence was not found in cache"),
+                () -> assertThat(output.getOut()).doesNotContain("Secret existence was found in cache"),
+                () -> assertThat(output.getOut()).contains("Put secret existence in cache")
+        );
+    }
+
+    @Test
+    void shouldGetSecretExistenceFromCache(CapturedOutput output) {
+        when(teeTaskComputeSecretRepository.findById(any(TeeTaskComputeSecretHeader.class)))
+                .thenReturn(Optional.of(COMPUTE_SECRET));
+
+        teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
+        final int logLengthForFirstCall = output.getOut().length();
+        final boolean resultSecondCall = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
+        final String secondCallLogs = output.getOut().substring(logLengthForFirstCall - 1);
+        assertAll(
+                () -> assertTrue(resultSecondCall),
+                //put 1 bellow means no new invocation since 1st call
+                () -> verify(teeTaskComputeSecretRepository, times(1)).findById(any(TeeTaskComputeSecretHeader.class)),
+                () -> assertThat(secondCallLogs).doesNotContain("Secret existence was not found in cache"),
+                () -> assertThat(secondCallLogs).doesNotContain("Put secret existence in cache"),
+                () -> assertThat(secondCallLogs).contains("Search secret existence in cache"),
+                () -> assertThat(secondCallLogs).contains("Secret existence was found in cache")
+        );
     }
 
     @Test

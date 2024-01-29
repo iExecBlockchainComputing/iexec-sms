@@ -18,6 +18,7 @@ package com.iexec.sms.secret.web3;
 
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.AbstractSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web3SecretService {
+public class Web3SecretService extends AbstractSecretService {
     private final Web3SecretRepository web3SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
@@ -57,7 +58,14 @@ public class Web3SecretService {
     }
 
     public boolean isSecretPresent(String secretAddress) {
-        return getSecret(secretAddress).isPresent();
+        if (lookSecretExistenceInCache(secretAddress)) {
+            return true;
+        }
+        if (getSecret(secretAddress).isPresent()) {
+            putSecretExistenceInCache(secretAddress);
+            return true;
+        }
+        return false;
     }
 
     /*
@@ -76,7 +84,13 @@ public class Web3SecretService {
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         web3SecretRepository.save(web3Secret);
+        putSecretExistenceInCache(secretAddress);
         measuredSecretService.newlyAddedSecret();
         return true;
+    }
+
+    @Override
+    protected String getPrefixCacheKey() {
+        return "web3";
     }
 }
