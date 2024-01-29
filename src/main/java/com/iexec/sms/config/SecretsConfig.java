@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
 import com.iexec.sms.secret.web2.Web2SecretRepository;
 import com.iexec.sms.secret.web3.Web3SecretRepository;
+import com.iexec.sms.tee.challenge.TeeChallengeRepository;
+import com.iexec.sms.utils.EthereumCredentialsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -97,6 +99,34 @@ public class SecretsConfig {
                         "compute",
                         "iexec.sms.secrets.compute.",
                         teeTaskComputeSecretRepository::count,
+                        storageMetricsExecutorService,
+                        storedSecretsCountPeriod
+                )
+        );
+    }
+
+    @Bean
+    MeasuredSecretService teeChallengeMeasuredSecretService(TeeChallengeRepository teeChallengeRepository,
+                                                            @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
+        return metricsService.registerNewMeasuredSecretService(
+                new MeasuredSecretService(
+                        "TEE challenges",
+                        "iexec.sms.secrets.tee_challenges.",
+                        teeChallengeRepository::count,
+                        storageMetricsExecutorService,
+                        storedSecretsCountPeriod
+                )
+        );
+    }
+
+    @Bean
+    MeasuredSecretService ethereumCredentialsMeasuredSecretService(EthereumCredentialsRepository ethereumCredentialsRepository,
+                                                                   @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
+        return metricsService.registerNewMeasuredSecretService(
+                new MeasuredSecretService(
+                        "Ethereum Credentials",
+                        "iexec.sms.secrets.ethereum_credentials.",
+                        ethereumCredentialsRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod
                 )

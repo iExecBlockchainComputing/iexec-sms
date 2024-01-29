@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 package com.iexec.sms.tee.challenge;
 
-import java.util.Optional;
-
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.utils.EthereumCredentials;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -31,11 +30,17 @@ public class TeeChallengeService {
 
     private final TeeChallengeRepository teeChallengeRepository;
     private final EncryptionService encryptionService;
+    private final MeasuredSecretService teeChallengesMeasuredSecretService;
+    private final MeasuredSecretService ethereumCredentialsMeasuredSecretService;
 
     public TeeChallengeService(TeeChallengeRepository teeChallengeRepository,
-                               EncryptionService encryptionService) {
+                               EncryptionService encryptionService,
+                               MeasuredSecretService teeChallengeMeasuredSecretService,
+                               MeasuredSecretService ethereumCredentialsMeasuredSecretService) {
         this.teeChallengeRepository = teeChallengeRepository;
         this.encryptionService = encryptionService;
+        this.teeChallengesMeasuredSecretService = teeChallengeMeasuredSecretService;
+        this.ethereumCredentialsMeasuredSecretService = ethereumCredentialsMeasuredSecretService;
     }
 
     public Optional<TeeChallenge> getOrCreate(String taskId, boolean shouldDecryptKeys) {
@@ -53,6 +58,8 @@ public class TeeChallengeService {
             TeeChallenge teeChallenge = new TeeChallenge(taskId);
             encryptChallengeKeys(teeChallenge);
             teeChallenge = teeChallengeRepository.save(teeChallenge);
+            teeChallengesMeasuredSecretService.newlyAddedSecret();
+            ethereumCredentialsMeasuredSecretService.newlyAddedSecret();
             log.info("Created tee challenge [chainTaskId:{}, teeChallenge:{}]",
                     taskId, teeChallenge.getCredentials().getAddress());
 

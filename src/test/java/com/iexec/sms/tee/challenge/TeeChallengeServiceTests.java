@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,19 @@
 
 package com.iexec.sms.tee.challenge;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.MeasuredSecretService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
-import com.iexec.sms.encryption.EncryptionService;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 class TeeChallengeServiceTests {
 
@@ -46,12 +42,22 @@ class TeeChallengeServiceTests {
     @Mock
     private EncryptionService encryptionService;
 
-    @InjectMocks
+    @Mock
+    private MeasuredSecretService teeChallengeMeasuredSecretService;
+
+    @Mock
+    private MeasuredSecretService ethereumCredentialsMeasuredSecretService;
+
     private TeeChallengeService teeChallengeService;
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        teeChallengeService = new TeeChallengeService(teeChallengeRepository,
+                encryptionService,
+                teeChallengeMeasuredSecretService,
+                ethereumCredentialsMeasuredSecretService
+        );
     }
 
     private TeeChallenge getEncryptedTeeChallengeStub() throws Exception {
@@ -69,6 +75,8 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
         verify(encryptionService, never()).decrypt(anyString());
+
+        verifyNoInteractions(teeChallengeMeasuredSecretService, ethereumCredentialsMeasuredSecretService);
     }
 
     @Test
@@ -81,6 +89,8 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
         verify(encryptionService, times(1)).decrypt(anyString());
+
+        verifyNoInteractions(teeChallengeMeasuredSecretService, ethereumCredentialsMeasuredSecretService);
     }
 
     @Test
@@ -94,6 +104,9 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
         verify(encryptionService, never()).decrypt(anyString());
+
+        verify(teeChallengeMeasuredSecretService, times(1)).newlyAddedSecret();
+        verify(ethereumCredentialsMeasuredSecretService, times(1)).newlyAddedSecret();
     }
 
     @Test
@@ -107,6 +120,9 @@ class TeeChallengeServiceTests {
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
+
+        verify(teeChallengeMeasuredSecretService, times(1)).newlyAddedSecret();
+        verify(ethereumCredentialsMeasuredSecretService, times(1)).newlyAddedSecret();
     }
 
     @Test
