@@ -21,6 +21,7 @@ import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
 import com.iexec.sms.secret.web2.Web2SecretRepository;
 import com.iexec.sms.secret.web3.Web3SecretRepository;
+import com.iexec.sms.tee.challenge.TeeChallengeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -97,6 +98,20 @@ public class SecretsConfig {
                         "compute",
                         "iexec.sms.secrets.compute.",
                         teeTaskComputeSecretRepository::count,
+                        storageMetricsExecutorService,
+                        storedSecretsCountPeriod
+                )
+        );
+    }
+
+    @Bean
+    MeasuredSecretService teeChallengeMeasuredSecretService(TeeChallengeRepository teeChallengeRepository,
+                                                            @Value("${metrics.storage.refresh-interval}") int storedSecretsCountPeriod) {
+        return metricsService.registerNewMeasuredSecretService(
+                new MeasuredSecretService(
+                        "TEE challenges & Ethereum Credentials",
+                        "iexec.sms.secrets.tee_challenge_ethereum_credentials.",
+                        teeChallengeRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod
                 )

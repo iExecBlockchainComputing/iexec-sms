@@ -16,23 +16,20 @@
 
 package com.iexec.sms.tee.challenge;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
 import com.iexec.sms.encryption.EncryptionService;
-
+import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 class TeeChallengeServiceTests {
 
@@ -45,6 +42,9 @@ class TeeChallengeServiceTests {
 
     @Mock
     private EncryptionService encryptionService;
+
+    @Mock
+    private MeasuredSecretService teeChallengeMeasuredSecretService;
 
     @InjectMocks
     private TeeChallengeService teeChallengeService;
@@ -69,6 +69,8 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
         verify(encryptionService, never()).decrypt(anyString());
+
+        verify(teeChallengeMeasuredSecretService, never()).newlyAddedSecret();
     }
 
     @Test
@@ -81,6 +83,8 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
         verify(encryptionService, times(1)).decrypt(anyString());
+
+        verify(teeChallengeMeasuredSecretService, never()).newlyAddedSecret();
     }
 
     @Test
@@ -94,6 +98,8 @@ class TeeChallengeServiceTests {
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
         verify(encryptionService, never()).decrypt(anyString());
+
+        verify(teeChallengeMeasuredSecretService, times(1)).newlyAddedSecret();
     }
 
     @Test
@@ -107,6 +113,8 @@ class TeeChallengeServiceTests {
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
+
+        verify(teeChallengeMeasuredSecretService, times(1)).newlyAddedSecret();
     }
 
     @Test
