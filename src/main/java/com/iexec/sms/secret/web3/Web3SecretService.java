@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web3SecretService extends AbstractSecretService {
+public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
     private final Web3SecretRepository web3SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
@@ -58,11 +58,12 @@ public class Web3SecretService extends AbstractSecretService {
     }
 
     public boolean isSecretPresent(String secretAddress) {
-        if (lookSecretExistenceInCache(secretAddress)) {
+        final Web3SecretHeader key = new Web3SecretHeader(secretAddress);
+        if (lookSecretExistenceInCache(key)) {
             return true;
         }
         if (getSecret(secretAddress).isPresent()) {
-            putSecretExistenceInCache(secretAddress);
+            putSecretExistenceInCache(key);
             return true;
         }
         return false;
@@ -84,13 +85,8 @@ public class Web3SecretService extends AbstractSecretService {
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         web3SecretRepository.save(web3Secret);
-        putSecretExistenceInCache(secretAddress);
+        putSecretExistenceInCache(web3Secret.getHeader());
         measuredSecretService.newlyAddedSecret();
         return true;
-    }
-
-    @Override
-    protected String getPrefixCacheKey() {
-        return "web3";
     }
 }

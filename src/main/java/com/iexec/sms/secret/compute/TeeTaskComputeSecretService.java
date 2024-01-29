@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskComputeSecretService extends AbstractSecretService {
+public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskComputeSecretHeader> {
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
@@ -78,7 +78,14 @@ public class TeeTaskComputeSecretService extends AbstractSecretService {
                                    String secretOwner,
                                    String secretKey) {
 
-        if (lookSecretExistenceInCache(deployedObjectAddress, secretOwnerRole.toString(), secretOwner, secretKey)) {
+        final TeeTaskComputeSecretHeader key = new TeeTaskComputeSecretHeader(
+                onChainObjectType,
+                deployedObjectAddress,
+                secretOwnerRole,
+                secretOwner,
+                secretKey
+        );
+        if (lookSecretExistenceInCache(key)) {
             return true;
         }
 
@@ -89,7 +96,7 @@ public class TeeTaskComputeSecretService extends AbstractSecretService {
                 secretOwner,
                 secretKey
         ).isPresent()) {
-            putSecretExistenceInCache(deployedObjectAddress, secretOwnerRole.toString(), secretOwner, secretKey);
+            putSecretExistenceInCache(key);
             return true;
         }
         return false;
@@ -131,13 +138,8 @@ public class TeeTaskComputeSecretService extends AbstractSecretService {
         log.info("Adding new tee task compute secret" +
                 " [secret:{}]", secret);
         teeTaskComputeSecretRepository.save(secret);
-        putSecretExistenceInCache(onChainObjectAddress, secretOwnerRole.toString(), secretOwner, secretKey);
+        putSecretExistenceInCache(secret.getHeader());
         measuredSecretService.newlyAddedSecret();
         return true;
-    }
-
-    @Override
-    protected String getPrefixCacheKey() {
-        return "tee";
     }
 }

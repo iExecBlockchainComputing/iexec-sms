@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ *  * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *  *
  *  * Licensed under the Apache License, Version 2.0 (the "License");
  *  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web2SecretService extends AbstractSecretService {
+public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
 
     private final Web2SecretRepository web2SecretRepository;
     private final EncryptionService encryptionService;
@@ -63,12 +63,12 @@ public class Web2SecretService extends AbstractSecretService {
     }
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {
-
-        if (lookSecretExistenceInCache(ownerAddress, secretAddress)) {
+        final Web2SecretHeader key = new Web2SecretHeader(ownerAddress, secretAddress);
+        if (lookSecretExistenceInCache(key)) {
             return true;
         }
         if (getSecret(ownerAddress, secretAddress).isPresent()) {
-            putSecretExistenceInCache(ownerAddress, secretAddress);
+            putSecretExistenceInCache(key);
             return true;
         }
         return false;
@@ -94,7 +94,7 @@ public class Web2SecretService extends AbstractSecretService {
         final String encryptedValue = encryptionService.encrypt(secretValue);
         final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        putSecretExistenceInCache(ownerAddress, secretAddress);
+        putSecretExistenceInCache(savedSecret.getHeader());
         measuredSecretService.newlyAddedSecret();
         return savedSecret;
     }
@@ -129,13 +129,7 @@ public class Web2SecretService extends AbstractSecretService {
 
         final Web2Secret newSecret = secret.withValue(encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        putSecretExistenceInCache(ownerAddress, secretAddress);
+        putSecretExistenceInCache(savedSecret.getHeader());
         return savedSecret;
-    }
-
-
-    @Override
-    public String getPrefixCacheKey() {
-        return "web2";
     }
 }
