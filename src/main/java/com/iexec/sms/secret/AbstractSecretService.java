@@ -58,7 +58,8 @@ public abstract class AbstractSecretService<K> {
             return false;
         }
         Boolean found = secretExistenceCache.get(key);
-        if (found == null || !found) {
+        //as the value is necessarily true when cached, we don't need to test false
+        if (found == null) {
             log.debug("Secret existence was not found in cache[key:{}]", key);
             return false;
         }
