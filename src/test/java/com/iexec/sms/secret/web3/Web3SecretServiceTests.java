@@ -33,8 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -84,17 +83,23 @@ class Web3SecretServiceTests {
     void shouldAddSecret() {
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
-        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isTrue();
-        verify(measuredSecretService).newlyAddedSecret();
-        verify(encryptionService).encrypt(any());
-        verify(web3SecretRepository).save(any());
+        when(web3SecretRepository.save(any())).thenReturn(new Web3Secret(secretAddress, encryptedSecretValue));
+
+        final boolean success = web3SecretService.addSecret(secretAddress, plainSecretValue);
+        assertAll(
+                () -> assertTrue(success),
+                () -> verify(measuredSecretService).newlyAddedSecret(),
+                () -> verify(encryptionService).encrypt(any()),
+                () -> verify(web3SecretRepository).save(any()),
+                () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
+        );
     }
     // endregion
 
 
     // region isSecretPresent
     @Test
-    void shouldGetSecretExistenceFromDBAndPutInCache() {
+    void shouldGetSecretExistFromDBAndPutInCache() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
 
@@ -109,7 +114,7 @@ class Web3SecretServiceTests {
     }
 
     @Test
-    void shouldGetSecretExistenceFromCache() {
+    void shouldGetSecretExistFromCache() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
 
@@ -122,7 +127,26 @@ class Web3SecretServiceTests {
                 () -> verify(web3SecretRepository, times(1)).findById(any()),
                 () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache"))
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
+                () -> assertTrue(memoryLogAppender.contains("exist:true"))
+        );
+    }
+
+    @Test
+    void shouldGetSecretNotExistFromCache() {
+        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
+
+        web3SecretService.isSecretPresent(secretAddress);
+        memoryLogAppender.reset();
+        boolean resultSecondCall = web3SecretService.isSecretPresent(secretAddress);
+        assertAll(
+                () -> assertFalse(resultSecondCall),
+                //put 1 bellow means no new invocation since 1st call
+                () -> verify(web3SecretRepository, times(1)).findById(any()),
+                () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
+                () -> assertTrue(memoryLogAppender.contains("exist:false"))
         );
     }
     // endregion

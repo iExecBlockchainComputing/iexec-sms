@@ -59,14 +59,13 @@ public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
 
     public boolean isSecretPresent(String secretAddress) {
         final Web3SecretHeader key = new Web3SecretHeader(secretAddress);
-        if (lookSecretExistenceInCache(key)) {
-            return true;
+        final Boolean found = lookSecretExistenceInCache(key);
+        if (found != null) {
+            return found;
         }
-        if (getSecret(secretAddress).isPresent()) {
-            putSecretExistenceInCache(key);
-            return true;
-        }
-        return false;
+        final boolean isPresentInDB = getSecret(secretAddress).isPresent();
+        putSecretExistenceInCache(key, isPresentInDB);
+        return isPresentInDB;
     }
 
     /*
@@ -84,8 +83,8 @@ public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
                 secretAddress, encryptedValue);
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
-        web3SecretRepository.save(web3Secret);
-        putSecretExistenceInCache(web3Secret.getHeader());
+        final Web3Secret savedSecret = web3SecretRepository.save(web3Secret);
+        putSecretExistenceInCache(savedSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return true;
     }

@@ -28,21 +28,34 @@ class AbstractSecretServiceTests {
 
 
     @Test
-    void shouldSucceed() {
+    void shouldSucceedWithTrueValue() {
         AbstractSecretServiceTU secretServiceTU = new AbstractSecretServiceTU();
-        secretServiceTU.putSecretExistenceInCache(KEY);
+        secretServiceTU.putSecretExistenceInCache(KEY, true);
         boolean found = secretServiceTU.lookSecretExistenceInCache(KEY);
         assertAll(
                 () -> assertTrue(found),
                 () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache"))
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache[key:KEY, exist:true]"))
         );
     }
 
     @Test
+    void shouldSucceedWithFalseValue() {
+        AbstractSecretServiceTU secretServiceTU = new AbstractSecretServiceTU();
+        secretServiceTU.putSecretExistenceInCache(KEY, false);
+        boolean found = secretServiceTU.lookSecretExistenceInCache(KEY);
+        assertAll(
+                () -> assertFalse(found),
+                () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache[key:KEY, exist:false]"))
+        );
+    }
+
+
+    @Test
     void shouldFailedToPutInCacheWhenKeyIsNull() {
         AbstractSecretServiceTU secretServiceTU = new AbstractSecretServiceTU();
-        secretServiceTU.putSecretExistenceInCache(null);
+        secretServiceTU.putSecretExistenceInCache(null, true);
         assertTrue(memoryLogAppender.contains("Key is NULL, unable to use cache"));
     }
 
@@ -59,9 +72,9 @@ class AbstractSecretServiceTests {
     @Test
     void shouldFailedToReadFromCacheWhenKeyIsNotInCache() {
         AbstractSecretServiceTU secretServiceTU = new AbstractSecretServiceTU();
-        boolean found = secretServiceTU.lookSecretExistenceInCache("MISSING");
+        Boolean found = secretServiceTU.lookSecretExistenceInCache("MISSING");
         assertAll(
-                () -> assertFalse(found),
+                () -> assertNull(found),
                 () -> assertTrue(memoryLogAppender.contains("Secret existence was not found in cache"))
         );
     }

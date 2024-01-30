@@ -34,10 +34,10 @@ public abstract class AbstractSecretService<K> {
      *
      * @param key The key to use for cache
      */
-    protected void putSecretExistenceInCache(K key) {
+    protected void putSecretExistenceInCache(K key, boolean value) {
         log.debug("Put secret existence in cache[key:{}]", key);
         if (null != key) {
-            secretExistenceCache.put(key, Boolean.TRUE);
+            secretExistenceCache.put(key, value);
         } else {
             //no strong coupling with cache, no exception handling
             log.debug("Key is NULL, unable to use cache");
@@ -50,20 +50,19 @@ public abstract class AbstractSecretService<K> {
      * @param key The key to use for cache
      * @return true if an entry was found in cache and false otherwise.
      */
-    protected boolean lookSecretExistenceInCache(K key) {
+    protected Boolean lookSecretExistenceInCache(K key) {
         log.debug("Search secret existence in cache[key:{}]", key);
         if (null == key) {
             //no strong coupling with cache, no exception handling
             log.debug("Key is NULL, unable to use cache");
             return false;
         }
-        Boolean found = secretExistenceCache.get(key);
-        //as the value is necessarily true when cached, we don't need to test false
+        final Boolean found = secretExistenceCache.get(key);
         if (found == null) {
             log.debug("Secret existence was not found in cache[key:{}]", key);
-            return false;
+        } else {
+            log.debug("Secret existence was found in cache[key:{}, exist:{}]", key, found);
         }
-        log.debug("Secret existence was found in cache[key:{}]", key);
-        return true;
+        return found;
     }
 }

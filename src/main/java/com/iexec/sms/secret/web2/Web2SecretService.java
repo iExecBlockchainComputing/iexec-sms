@@ -64,14 +64,13 @@ public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {
         final Web2SecretHeader key = new Web2SecretHeader(ownerAddress, secretAddress);
-        if (lookSecretExistenceInCache(key)) {
-            return true;
+        final Boolean found = lookSecretExistenceInCache(key);
+        if (found != null) {
+            return found;
         }
-        if (getSecret(ownerAddress, secretAddress).isPresent()) {
-            putSecretExistenceInCache(key);
-            return true;
-        }
-        return false;
+        final boolean isPresentInDB = getSecret(ownerAddress, secretAddress).isPresent();
+        putSecretExistenceInCache(key, isPresentInDB);
+        return isPresentInDB;
     }
 
     /**
@@ -94,7 +93,7 @@ public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
         final String encryptedValue = encryptionService.encrypt(secretValue);
         final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        putSecretExistenceInCache(savedSecret.getHeader());
+        putSecretExistenceInCache(savedSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return savedSecret;
     }
@@ -129,7 +128,7 @@ public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
 
         final Web2Secret newSecret = secret.withValue(encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        putSecretExistenceInCache(savedSecret.getHeader());
+        putSecretExistenceInCache(savedSecret.getHeader(), true);
         return savedSecret;
     }
 }

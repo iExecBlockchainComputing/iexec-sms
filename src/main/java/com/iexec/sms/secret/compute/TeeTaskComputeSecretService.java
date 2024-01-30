@@ -85,21 +85,21 @@ public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskCo
                 secretOwner,
                 secretKey
         );
-        if (lookSecretExistenceInCache(key)) {
-            return true;
+        final Boolean found = lookSecretExistenceInCache(key);
+        if (found != null) {
+            return found;
         }
 
-        if (getSecret(
+        final boolean isPresentInDB = getSecret(
                 onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
                 secretKey
-        ).isPresent()) {
-            putSecretExistenceInCache(key);
-            return true;
-        }
-        return false;
+        ).isPresent();
+
+        putSecretExistenceInCache(key, isPresentInDB);
+        return isPresentInDB;
     }
 
     /**
@@ -137,8 +137,8 @@ public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskCo
                 .build();
         log.info("Adding new tee task compute secret" +
                 " [secret:{}]", secret);
-        teeTaskComputeSecretRepository.save(secret);
-        putSecretExistenceInCache(secret.getHeader());
+        final TeeTaskComputeSecret saveSecret = teeTaskComputeSecretRepository.save(secret);
+        putSecretExistenceInCache(saveSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return true;
     }

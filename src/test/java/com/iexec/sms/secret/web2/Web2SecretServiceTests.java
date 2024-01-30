@@ -132,7 +132,7 @@ class Web2SecretServiceTests {
 
     // region isSecretPresent
     @Test
-    void shouldGetSecretExistenceFromDBAndPutInCache() {
+    void shouldGetSecretExistFromDBAndPutInCache() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
 
         when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
@@ -150,7 +150,7 @@ class Web2SecretServiceTests {
     }
 
     @Test
-    void shouldGetSecretExistenceFromCache() {
+    void shouldGetSecretExistFromCache() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
         when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
@@ -164,8 +164,28 @@ class Web2SecretServiceTests {
                 () -> verify(web2SecretRepository, times(1)).findById(any()),
                 () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache"))
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
+                () -> assertTrue(memoryLogAppender.contains("exist:true"))
 
+        );
+    }
+
+    @Test
+    void shouldGetSecretNotExistFromCache() {
+        when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
+                .thenReturn(Optional.empty());
+
+        web2SecretService.isSecretPresent(OWNER_ADDRESS, SECRET_ADDRESS);
+        memoryLogAppender.reset();
+        boolean resultSecondCall = web2SecretService.isSecretPresent(OWNER_ADDRESS, SECRET_ADDRESS);
+        assertAll(
+                () -> assertFalse(resultSecondCall),
+                //put 1 bellow means no new invocation since 1st call
+                () -> verify(web2SecretRepository, times(1)).findById(any()),
+                () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
+                () -> assertTrue(memoryLogAppender.contains("exist:false"))
         );
     }
     // endregion
