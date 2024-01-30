@@ -40,7 +40,7 @@ public abstract class AbstractSecretService<K> {
             secretExistenceCache.put(key, Boolean.TRUE);
         } else {
             //no strong coupling with cache, no exception handling
-            log.debug("Key is NULL, can't ");
+            log.debug("Key is NULL, unable to use cache");
         }
     }
 
@@ -54,6 +54,7 @@ public abstract class AbstractSecretService<K> {
         log.debug("Search secret existence in cache[key:{}]", key);
         if (null == key) {
             //no strong coupling with cache, no exception handling
+            log.debug("Key is NULL, unable to use cache");
             return false;
         }
         Boolean found = secretExistenceCache.get(key);
