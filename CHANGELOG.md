@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
+- Export metrics on TEE challenges and Ethereum Credentials counts. (#230)
 - Add a cache mechanism for secret existence. (#231)
 
 ### Bug Fixes
