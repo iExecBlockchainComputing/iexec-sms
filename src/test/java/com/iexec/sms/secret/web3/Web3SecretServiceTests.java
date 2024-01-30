@@ -16,16 +16,19 @@
 
 package com.iexec.sms.secret.web3;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -35,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(OutputCaptureExtension.class)
 class Web3SecretServiceTests {
     String secretAddress = "secretAddress".toLowerCase();
     String plainSecretValue = "plainSecretValue";
@@ -49,10 +51,22 @@ class Web3SecretServiceTests {
     private MeasuredSecretService measuredSecretService;
     @InjectMocks
     private Web3SecretService web3SecretService;
+    private static MemoryLogAppender memoryLogAppender;
+
+    @BeforeAll
+    static void initLog() {
+        Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
+        memoryLogAppender = new MemoryLogAppender();
+        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(memoryLogAppender);
+        memoryLogAppender.start();
+    }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        memoryLogAppender.reset();
     }
 
     // region addSecret
@@ -80,7 +94,7 @@ class Web3SecretServiceTests {
 
     // region isSecretPresent
     @Test
-    void shouldGetSecretExistenceFromDBAndPutInCache(CapturedOutput output) {
+    void shouldGetSecretExistenceFromDBAndPutInCache() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
 
@@ -88,30 +102,27 @@ class Web3SecretServiceTests {
         assertAll(
                 () -> assertTrue(resultFirstCall),
                 () -> verify(web3SecretRepository, times(1)).findById(any()),
-                () -> assertThat(output.getOut()).contains("Search secret existence in cache"),
-                () -> assertThat(output.getOut()).contains("Secret existence was not found in cache"),
-                () -> assertThat(output.getOut()).doesNotContain("Secret existence was found in cache"),
-                () -> assertThat(output.getOut()).contains("Put secret existence in cache")
+                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was not found in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
         );
     }
 
     @Test
-    void shouldGetSecretExistenceFromCache(CapturedOutput output) {
+    void shouldGetSecretExistenceFromCache() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
         when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
 
         web3SecretService.isSecretPresent(secretAddress);
-        final int logLengthForFirstCall = output.getOut().length();
-        final boolean resultSecondCall = web3SecretService.isSecretPresent(secretAddress);
-        final String secondCallLogs = output.getOut().substring(logLengthForFirstCall - 1);
+        memoryLogAppender.reset();
+        boolean resultSecondCall = web3SecretService.isSecretPresent(secretAddress);
         assertAll(
                 () -> assertTrue(resultSecondCall),
                 //put 1 bellow means no new invocation since 1st call
                 () -> verify(web3SecretRepository, times(1)).findById(any()),
-                () -> assertThat(secondCallLogs).doesNotContain("Secret existence was not found in cache"),
-                () -> assertThat(secondCallLogs).doesNotContain("Put secret existence in cache"),
-                () -> assertThat(secondCallLogs).contains("Search secret existence in cache"),
-                () -> assertThat(secondCallLogs).contains("Secret existence was found in cache")
+                () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache"))
         );
     }
     // endregion

@@ -16,16 +16,20 @@
 
 package com.iexec.sms.admin;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import com.iexec.sms.MemoryLogAppender;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
@@ -38,7 +42,6 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
-@ExtendWith(OutputCaptureExtension.class)
 class AdminServiceTests {
 
     @Bean
@@ -54,6 +57,23 @@ class AdminServiceTests {
 
     @TempDir
     File tempStorageLocation;
+
+    private static MemoryLogAppender memoryLogAppender;
+
+    @BeforeAll
+    static void initLog() {
+        Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.admin");
+        memoryLogAppender = new MemoryLogAppender();
+        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(memoryLogAppender);
+        memoryLogAppender.start();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        memoryLogAppender.reset();
+    }
 
     // region backup
     @Test
@@ -104,12 +124,12 @@ class AdminServiceTests {
 
     // region restore-backup
     @Test
-    void shouldRestoreBackup(CapturedOutput output) {
+    void shouldRestoreBackup() {
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertTrue(new File(backupFile).exists());
         adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(output.getOut().contains("Backup has been restored"));
+        assertTrue(memoryLogAppender.contains("Backup has been restored"));
     }
 
     @Test
@@ -123,33 +143,33 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToRestoreWhenBackupFileOutOfStorage(CapturedOutput output) {
+    void shouldFailToRestoreWhenBackupFileOutOfStorage() {
         assertAll(
                 () -> assertFalse(adminService.restoreDatabaseFromBackupFile("/backup", "backup.sql")),
-                () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
+                () -> assertTrue(memoryLogAppender.contains("Backup file is outside of storage file system"))
         );
     }
 
     @Test
-    void withSQLException(CapturedOutput output) {
+    void withSQLException() {
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
         AdminService corruptAdminService = new AdminService("url", "username", "password", "/tmp/");
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertTrue(new File(backupFile).exists());
         corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(output.getOut().contains("SQL error occurred during restore"));
+        assertTrue(memoryLogAppender.contains("SQL error occurred during restore"));
     }
     // endregion
 
     // region delete-backup
     @Test
-    void shouldDeleteBackup(CapturedOutput output) throws IOException {
+    void shouldDeleteBackup() throws IOException {
         final String backupFileName = "backup.sql";
         final Path tmpFile = Files.createFile(tempStorageLocation.toPath().resolve(backupFileName));
         assertAll(
                 () -> assertTrue(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName)),
                 () -> assertFalse(tmpFile.toFile().exists()),
-                () -> assertTrue(output.getOut().contains("Successfully deleted backup"))
+                () -> assertTrue(memoryLogAppender.contains("Successfully deleted backup"))
         );
     }
 
@@ -164,11 +184,12 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToDeleteWhenBackupFileOutOfStorage(CapturedOutput output) {
+    void shouldFailToDeleteWhenBackupFileOutOfStorage() {
         assertAll(
                 () -> assertFalse(adminService.deleteBackupFileFromStorage("/backup", "backup.sql")),
-                () -> assertTrue(output.getOut().contains("Backup file is outside of storage file system"))
+                () -> assertTrue(memoryLogAppender.contains("Backup file is outside of storage file system"))
         );
+
     }
 
     @Test
@@ -197,35 +218,35 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToCopyWhenDestinationFileAlreadyExist(CapturedOutput output) {
+    void shouldFailToCopyWhenDestinationFileAlreadyExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
         assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName));
-        assertTrue(output.getOut().contains(AdminService.ERR_FILE_ALREADY_EXIST));
+        assertTrue(memoryLogAppender.contains(AdminService.ERR_FILE_ALREADY_EXIST));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "/opt"})
-    void shouldFailToCopyWhenSourceIsOutsideStorage(String location, CapturedOutput output) {
+    void shouldFailToCopyWhenSourceIsOutsideStorage(String location) {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
         assertFalse(adminService.copyBackupFile(location, validBackupFileName, validStorageLocation, validBackupFileName));
-        assertTrue(output.getOut().contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE));
+        assertTrue(memoryLogAppender.contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"", "/opt"})
-    void shouldFailToCopyWhenDestinationIsOutsideStorage(String location, CapturedOutput output) {
+    void shouldFailToCopyWhenDestinationIsOutsideStorage(String location) {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
         assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, location, ""));
-        assertTrue(output.getOut().contains(AdminService.ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
+        assertTrue(memoryLogAppender.contains(AdminService.ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
     }
 
     @Test
@@ -242,13 +263,13 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToCopyWhenDestinationStorageDoesNotExist(CapturedOutput output) {
+    void shouldFailToCopyWhenDestinationStorageDoesNotExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
         assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, "/tmp/nonexistent", validBackupFileName));
-        assertTrue(output.getAll().contains("NoSuchFileException"));
+        assertTrue(memoryLogAppender.contains("An error occurred while copying backup"));
     }
     // endregion
 

@@ -18,16 +18,19 @@
 
 package com.iexec.sms.secret.web2;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -35,7 +38,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(OutputCaptureExtension.class)
 class Web2SecretServiceTests {
     private static final String OWNER_ADDRESS = "ownerAddress";
     private static final String SECRET_ADDRESS = "secretAddress";
@@ -53,11 +55,22 @@ class Web2SecretServiceTests {
 
     @InjectMocks
     private Web2SecretService web2SecretService;
+    private static MemoryLogAppender memoryLogAppender;
 
+    @BeforeAll
+    static void initLog() {
+        Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
+        memoryLogAppender = new MemoryLogAppender();
+        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(memoryLogAppender);
+        memoryLogAppender.start();
+    }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        memoryLogAppender.reset();
     }
 
 
@@ -119,7 +132,7 @@ class Web2SecretServiceTests {
 
     // region isSecretPresent
     @Test
-    void shouldGetSecretExistenceFromDBAndPutInCache(CapturedOutput output) {
+    void shouldGetSecretExistenceFromDBAndPutInCache() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
 
         when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
@@ -130,31 +143,29 @@ class Web2SecretServiceTests {
         assertAll(
                 () -> assertTrue(resultFirstCall),
                 () -> verify(web2SecretRepository, times(1)).findById(any()),
-                () -> assertThat(output.getOut()).contains("Search secret existence in cache"),
-                () -> assertThat(output.getOut()).contains("Secret existence was not found in cache"),
-                () -> assertThat(output.getOut()).doesNotContain("Secret existence was found in cache"),
-                () -> assertThat(output.getOut()).contains("Put secret existence in cache")
+                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was not found in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
         );
     }
 
     @Test
-    void shouldGetSecretExistenceFromCache(CapturedOutput output) {
+    void shouldGetSecretExistenceFromCache() {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
         when(web2SecretRepository.findById(any(Web2SecretHeader.class)))
                 .thenReturn(Optional.of(encryptedSecret));
 
         web2SecretService.isSecretPresent(OWNER_ADDRESS, SECRET_ADDRESS);
-        final int logLengthForFirstCall = output.getOut().length();
+        memoryLogAppender.reset();
         final boolean resultSecondCall = web2SecretService.isSecretPresent(OWNER_ADDRESS, SECRET_ADDRESS);
-        final String secondCallLogs = output.getOut().substring(logLengthForFirstCall - 1);
         assertAll(
                 () -> assertTrue(resultSecondCall),
                 //put 1 bellow means no new invocation since 1st call
                 () -> verify(web2SecretRepository, times(1)).findById(any()),
-                () -> assertThat(secondCallLogs).doesNotContain("Secret existence was not found in cache"),
-                () -> assertThat(secondCallLogs).doesNotContain("Put secret existence in cache"),
-                () -> assertThat(secondCallLogs).contains("Search secret existence in cache"),
-                () -> assertThat(secondCallLogs).contains("Secret existence was found in cache")
+                () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
+                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache"))
+
         );
     }
     // endregion
