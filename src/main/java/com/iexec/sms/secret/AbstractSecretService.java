@@ -37,7 +37,7 @@ public abstract class AbstractSecretService<K> {
     protected void putSecretExistenceInCache(K key, boolean value) {
         log.debug("Put secret existence in cache[key:{}]", key);
         if (null != key) {
-            secretExistenceCache.putIfAbsent(key, value);
+            secretExistenceCache.put(key, value);
         } else {
             //no strong coupling with cache, no exception handling
             log.warn("Key is NULL, unable to use cache");
