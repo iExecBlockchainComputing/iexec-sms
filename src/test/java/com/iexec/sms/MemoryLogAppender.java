@@ -63,6 +63,4 @@ public class MemoryLogAppender extends ListAppender<ILoggingEvent> {
     public boolean isEmpty() {
         return this.list.isEmpty();
     }
-
-
 }
