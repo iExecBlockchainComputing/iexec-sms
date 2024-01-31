@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,24 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
@@ -38,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(OutputCaptureExtension.class)
 class SconeSessionHandlerServiceTests {
 
     private static final String CAS_URL = "casUrl";
@@ -51,14 +53,27 @@ class SconeSessionHandlerServiceTests {
     @InjectMocks
     private SconeSessionHandlerService sessionHandlerService;
 
+    private static MemoryLogAppender memoryLogAppender;
+
+    @BeforeAll
+    static void initLog() {
+        Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        memoryLogAppender = new MemoryLogAppender();
+        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(memoryLogAppender);
+        memoryLogAppender.start();
+    }
+
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         when(casConfiguration.getEnclaveHost()).thenReturn(CAS_URL);
+        memoryLogAppender.reset();
     }
 
     @Test
-    void shouldBuildAndPostSessionWithLogs(CapturedOutput output)
+    void shouldBuildAndPostSessionWithLogs()
             throws TeeSessionGenerationException {
         TaskDescription taskDescription = TaskDescription.builder().build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
@@ -70,11 +85,11 @@ class SconeSessionHandlerServiceTests {
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
-        assertTrue(output.getOut().isEmpty());
+        assertTrue(memoryLogAppender.isEmpty());
     }
 
     @Test
-    void shouldBuildAndPostSessionWithoutLogs(CapturedOutput output)
+    void shouldBuildAndPostSessionWithoutLogs()
             throws TeeSessionGenerationException {
         TaskDescription taskDescription = TaskDescription.builder().build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
@@ -86,7 +101,7 @@ class SconeSessionHandlerServiceTests {
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
-        assertTrue(output.getOut().isEmpty());
+        assertTrue(memoryLogAppender.isEmpty());
     }
 
     @Test

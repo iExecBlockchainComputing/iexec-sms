@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.AbstractSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskComputeSecretService {
+public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskComputeSecretHeader> {
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
@@ -76,13 +77,29 @@ public class TeeTaskComputeSecretService {
                                    SecretOwnerRole secretOwnerRole,
                                    String secretOwner,
                                    String secretKey) {
-        return getSecret(
+
+        final TeeTaskComputeSecretHeader key = new TeeTaskComputeSecretHeader(
+                onChainObjectType,
+                deployedObjectAddress,
+                secretOwnerRole,
+                secretOwner,
+                secretKey
+        );
+        final Boolean found = lookSecretExistenceInCache(key);
+        if (found != null) {
+            return found;
+        }
+
+        final boolean isPresentInDB = getSecret(
                 onChainObjectType,
                 deployedObjectAddress,
                 secretOwnerRole,
                 secretOwner,
                 secretKey
         ).isPresent();
+
+        putSecretExistenceInCache(key, isPresentInDB);
+        return isPresentInDB;
     }
 
     /**
@@ -119,8 +136,9 @@ public class TeeTaskComputeSecretService {
                 .value(encryptionService.encrypt(secretValue))
                 .build();
         log.info("Adding new tee task compute secret" +
-                        " [secret:{}]", secret);
-        teeTaskComputeSecretRepository.save(secret);
+                " [secret:{}]", secret);
+        final TeeTaskComputeSecret saveSecret = teeTaskComputeSecretRepository.save(secret);
+        putSecretExistenceInCache(saveSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return true;
     }

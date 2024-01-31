@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,11 @@
 
 package com.iexec.sms.tee.session.gramine;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
@@ -24,21 +28,19 @@ import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsApiClient;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import feign.FeignException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.slf4j.LoggerFactory;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(OutputCaptureExtension.class)
 class GramineSessionHandlerServiceTests {
 
     private static final String SPS_URL = "spsUrl";
@@ -48,15 +50,27 @@ class GramineSessionHandlerServiceTests {
     private SpsConfiguration spsConfiguration;
     @InjectMocks
     private GramineSessionHandlerService sessionHandlerService;
+    private static MemoryLogAppender memoryLogAppender;
+
+    @BeforeAll
+    static void initLog() {
+        Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        memoryLogAppender = new MemoryLogAppender();
+        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+        logger.setLevel(Level.DEBUG);
+        logger.addAppender(memoryLogAppender);
+        memoryLogAppender.start();
+    }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         when(spsConfiguration.getEnclaveHost()).thenReturn(SPS_URL);
+        memoryLogAppender.reset();
     }
 
     @Test
-    void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
+    void shouldBuildAndPostSession() throws TeeSessionGenerationException {
         TaskDescription taskDescription = TaskDescription.builder().build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
@@ -65,9 +79,8 @@ class GramineSessionHandlerServiceTests {
         SpsApiClient spsClient = mock(SpsApiClient.class);
         when(spsClient.postSession(spsSession)).thenReturn("sessionId");
         when(spsConfiguration.getInstance()).thenReturn(spsClient);
-
         assertEquals(SPS_URL, sessionHandlerService.buildAndPostSession(request));
-        assertTrue(output.getOut().isEmpty());
+        assertTrue(memoryLogAppender.isEmpty());
     }
 
     @Test

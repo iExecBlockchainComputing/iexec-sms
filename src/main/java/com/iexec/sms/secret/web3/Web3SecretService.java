@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.iexec.sms.secret.web3;
 
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.AbstractSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web3SecretService {
+public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
     private final Web3SecretRepository web3SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
@@ -57,7 +58,14 @@ public class Web3SecretService {
     }
 
     public boolean isSecretPresent(String secretAddress) {
-        return getSecret(secretAddress).isPresent();
+        final Web3SecretHeader key = new Web3SecretHeader(secretAddress);
+        final Boolean found = lookSecretExistenceInCache(key);
+        if (found != null) {
+            return found;
+        }
+        final boolean isPresentInDB = getSecret(secretAddress).isPresent();
+        putSecretExistenceInCache(key, isPresentInDB);
+        return isPresentInDB;
     }
 
     /*
@@ -75,7 +83,8 @@ public class Web3SecretService {
                 secretAddress, encryptedValue);
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
-        web3SecretRepository.save(web3Secret);
+        final Web3Secret savedSecret = web3SecretRepository.save(web3Secret);
+        putSecretExistenceInCache(savedSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return true;
     }

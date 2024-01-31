@@ -1,6 +1,6 @@
 /*
  *
- *  * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ *  * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *  *
  *  * Licensed under the Apache License, Version 2.0 (the "License");
  *  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.AbstractSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,12 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web2SecretService {
+public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
 
     private final Web2SecretRepository web2SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
+
 
     protected Web2SecretService(Web2SecretRepository web2SecretRepository,
                                 EncryptionService encryptionService,
@@ -61,7 +63,14 @@ public class Web2SecretService {
     }
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {
-        return getSecret(ownerAddress, secretAddress).isPresent();
+        final Web2SecretHeader key = new Web2SecretHeader(ownerAddress, secretAddress);
+        final Boolean found = lookSecretExistenceInCache(key);
+        if (found != null) {
+            return found;
+        }
+        final boolean isPresentInDB = getSecret(ownerAddress, secretAddress).isPresent();
+        putSecretExistenceInCache(key, isPresentInDB);
+        return isPresentInDB;
     }
 
     /**
@@ -84,6 +93,7 @@ public class Web2SecretService {
         final String encryptedValue = encryptionService.encrypt(secretValue);
         final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
+        putSecretExistenceInCache(savedSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return savedSecret;
     }
@@ -98,7 +108,7 @@ public class Web2SecretService {
      * @param newSecretValue New, unencrypted value of the secret.
      * @return The {@link Web2Secret} that has been saved.
      * @throws NotAnExistingSecretException thrown when the requested secret does not exist.
-     * @throws SameSecretException thrown when the requested secret already contains the encrypted value.
+     * @throws SameSecretException          thrown when the requested secret already contains the encrypted value.
      */
     public Web2Secret updateSecret(String ownerAddress, String secretAddress, String newSecretValue) throws NotAnExistingSecretException, SameSecretException {
         final Optional<Web2Secret> oSecret = getSecret(ownerAddress, secretAddress);
@@ -117,6 +127,8 @@ public class Web2SecretService {
         }
 
         final Web2Secret newSecret = secret.withValue(encryptedValue);
-        return web2SecretRepository.save(newSecret);
+        final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
+        putSecretExistenceInCache(savedSecret.getHeader(), true);
+        return savedSecret;
     }
 }
