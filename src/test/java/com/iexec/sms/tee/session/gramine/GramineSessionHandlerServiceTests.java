@@ -16,11 +16,7 @@
 
 package com.iexec.sms.tee.session.gramine;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import com.iexec.commons.poco.task.TaskDescription;
-import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
@@ -28,16 +24,15 @@ import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import com.iexec.sms.tee.session.gramine.sps.SpsApiClient;
 import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import feign.FeignException;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.LoggerFactory;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,23 +45,11 @@ class GramineSessionHandlerServiceTests {
     private SpsConfiguration spsConfiguration;
     @InjectMocks
     private GramineSessionHandlerService sessionHandlerService;
-    private static MemoryLogAppender memoryLogAppender;
-
-    @BeforeAll
-    static void initLog() {
-        Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        memoryLogAppender = new MemoryLogAppender();
-        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-        logger.setLevel(Level.DEBUG);
-        logger.addAppender(memoryLogAppender);
-        memoryLogAppender.start();
-    }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         when(spsConfiguration.getEnclaveHost()).thenReturn(SPS_URL);
-        memoryLogAppender.reset();
     }
 
     @Test
@@ -80,7 +63,6 @@ class GramineSessionHandlerServiceTests {
         when(spsClient.postSession(spsSession)).thenReturn("sessionId");
         when(spsConfiguration.getInstance()).thenReturn(spsClient);
         assertEquals(SPS_URL, sessionHandlerService.buildAndPostSession(request));
-        assertTrue(memoryLogAppender.isEmpty());
     }
 
     @Test

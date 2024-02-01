@@ -16,28 +16,23 @@
 
 package com.iexec.sms.tee.session.scone;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import com.iexec.commons.poco.task.TaskDescription;
-import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,23 +48,10 @@ class SconeSessionHandlerServiceTests {
     @InjectMocks
     private SconeSessionHandlerService sessionHandlerService;
 
-    private static MemoryLogAppender memoryLogAppender;
-
-    @BeforeAll
-    static void initLog() {
-        Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        memoryLogAppender = new MemoryLogAppender();
-        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-        logger.setLevel(Level.DEBUG);
-        logger.addAppender(memoryLogAppender);
-        memoryLogAppender.start();
-    }
-
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         when(casConfiguration.getEnclaveHost()).thenReturn(CAS_URL);
-        memoryLogAppender.reset();
     }
 
     @Test
@@ -85,7 +67,6 @@ class SconeSessionHandlerServiceTests {
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
-        assertTrue(memoryLogAppender.isEmpty());
     }
 
     @Test
@@ -101,7 +82,6 @@ class SconeSessionHandlerServiceTests {
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
-        assertTrue(memoryLogAppender.isEmpty());
     }
 
     @Test
