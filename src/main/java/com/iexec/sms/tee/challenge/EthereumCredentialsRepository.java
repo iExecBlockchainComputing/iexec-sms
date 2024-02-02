@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.utils;
+package com.iexec.sms.tee.challenge;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
