@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 
 - Optimize chain calls in `AuthorizationService`. (#228)
 - Fix licence headers in some source files. (#232)
+- Move `EthereumCredentials` class to `com.iex.ec.sms.tee.challenge` package. (#234)
 
 ## [[8.4.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.4.0) 2024-01-10
 

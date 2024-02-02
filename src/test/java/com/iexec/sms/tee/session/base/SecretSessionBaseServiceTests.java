@@ -31,11 +31,11 @@ import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
+import com.iexec.sms.tee.challenge.EthereumCredentials;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
-import com.iexec.sms.utils.EthereumCredentials;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -555,7 +555,7 @@ class SecretSessionBaseServiceTests {
 
     @ParameterizedTest
     @NullSource
-    @ValueSource(strings = { "" })
+    @ValueSource(strings = {""})
     void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
         final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
                 .workerAddress(emptyWorkerAddress)
@@ -573,7 +573,7 @@ class SecretSessionBaseServiceTests {
 
     @ParameterizedTest
     @NullSource
-    @ValueSource(strings = { "" })
+    @ValueSource(strings = {""})
     void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
         final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
                 .enclaveChallenge(emptyEnclaveChallenge)

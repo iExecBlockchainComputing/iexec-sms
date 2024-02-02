@@ -16,7 +16,6 @@
 
 package com.iexec.sms.tee.challenge;
 
-import com.iexec.sms.utils.EthereumCredentials;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
