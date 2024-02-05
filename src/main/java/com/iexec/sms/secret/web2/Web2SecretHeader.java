@@ -25,9 +25,9 @@ import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
-@EqualsAndHashCode
 @Embeddable
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Web2SecretHeader implements Serializable {
     private static final long serialVersionUID = -6126999592529129002L;

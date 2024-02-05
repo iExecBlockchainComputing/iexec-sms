@@ -56,7 +56,6 @@ public class TeeTaskComputeSecret implements Serializable {
     @EmbeddedId
     private TeeTaskComputeSecretHeader header;
 
-    @NotNull
     /*
      * Expected behavior of AES encryption is to not expand the data very much.
      * Final size might be padded to the next block, plus another padding might
@@ -69,6 +68,7 @@ public class TeeTaskComputeSecret implements Serializable {
      * For these reasons and for simplicity purposes, we reserve twice the size
      * of `SECRET_MAX_SIZE` in storage.
      */
+    @NotNull
     @Column(length = SecretUtils.SECRET_MAX_SIZE * 2)
     private String value;
 

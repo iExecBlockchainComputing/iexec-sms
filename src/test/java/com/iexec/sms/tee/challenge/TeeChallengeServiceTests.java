@@ -137,7 +137,7 @@ class TeeChallengeServiceTests {
     @Test
     void shouldDecryptChallengeKeys() throws Exception {
         TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
-        teeChallenge.getCredentials().setEncrypted(true);
+        teeChallenge.getCredentials().setEncryptedPrivateKey(ENC_PRIVATE);
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
         teeChallengeService.decryptChallengeKeys(teeChallenge);
