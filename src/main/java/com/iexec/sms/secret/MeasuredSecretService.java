@@ -60,9 +60,9 @@ public class MeasuredSecretService {
     public MeasuredSecretService(String secretsType,
                                  String metricsPrefix,
                                  Supplier<Long> storedSecretsCountGetter,
+                                 LongSupplier cachedSecretsCountGetter,
                                  ScheduledExecutorService storageMetricsExecutorService,
-                                 int storedSecretsCountPeriod,
-                                 LongSupplier cachedSecretsCountGetter) {
+                                 int storedSecretsCountPeriod) {
         this.secretsType = secretsType;
         this.metricsPrefix = metricsPrefix;
         this.storedSecretsCountGetter = storedSecretsCountGetter;

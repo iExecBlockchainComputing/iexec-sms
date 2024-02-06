@@ -42,9 +42,9 @@ class MetricsServiceTests {
             SECRETS_TYPE,
             METRICS_PREFIX,
             count::get, // Simulating a repo `count` method
+            () -> 0,
             Executors.newSingleThreadScheduledExecutor(),
-            1,
-            null
+            1
     ));
 
     // region registerNewMeasuredSecretService
