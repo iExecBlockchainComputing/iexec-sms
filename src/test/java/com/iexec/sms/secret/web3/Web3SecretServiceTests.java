@@ -25,10 +25,11 @@ import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Optional;
 
@@ -37,19 +38,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@DataJpaTest
 class Web3SecretServiceTests {
     String secretAddress = "secretAddress".toLowerCase();
     String plainSecretValue = "plainSecretValue";
     String encryptedSecretValue = "encryptedSecretValue";
 
+    @Autowired
+    private Web3SecretRepository web3SecretRepository;
+
     @Mock
     private EncryptionService encryptionService;
-    @Mock
-    private Web3SecretRepository web3SecretRepository;
+
     @Mock
     private MeasuredSecretService measuredSecretService;
-    @InjectMocks
+
     private Web3SecretService web3SecretService;
+
     private static MemoryLogAppender memoryLogAppender;
 
     @BeforeAll
@@ -66,31 +71,31 @@ class Web3SecretServiceTests {
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
+        web3SecretRepository.deleteAll();
+        web3SecretService = new Web3SecretService(web3SecretRepository, encryptionService, measuredSecretService);
     }
 
     // region addSecret
     @Test
     void shouldNotAddSecretIfPresent() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
+        web3SecretRepository.save(web3Secret);
         assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
         verify(measuredSecretService, times(0)).newlyAddedSecret();
         verifyNoInteractions(encryptionService);
-        verify(web3SecretRepository, never()).save(any());
+        assertThat(web3SecretRepository.count()).isOne();
     }
 
     @Test
     void shouldAddSecret() {
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
-        when(web3SecretRepository.save(any())).thenReturn(new Web3Secret(secretAddress, encryptedSecretValue));
 
         final boolean success = web3SecretService.addSecret(secretAddress, plainSecretValue);
         assertAll(
                 () -> assertTrue(success),
                 () -> verify(measuredSecretService).newlyAddedSecret(),
                 () -> verify(encryptionService).encrypt(any()),
-                () -> verify(web3SecretRepository).save(any()),
+                () -> assertThat(web3SecretRepository.count()).isOne(),
                 () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
         );
     }
@@ -101,12 +106,11 @@ class Web3SecretServiceTests {
     @Test
     void shouldGetSecretExistFromDBAndPutInCache() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
+        web3SecretRepository.save(web3Secret);
 
         final boolean resultFirstCall = web3SecretService.isSecretPresent(secretAddress);
         assertAll(
                 () -> assertTrue(resultFirstCall),
-                () -> verify(web3SecretRepository, times(1)).findById(any()),
                 () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Secret existence was not found in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
@@ -116,15 +120,13 @@ class Web3SecretServiceTests {
     @Test
     void shouldGetSecretExistFromCache() {
         Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(web3Secret));
+        web3SecretRepository.save(web3Secret);
 
         web3SecretService.isSecretPresent(secretAddress);
         memoryLogAppender.reset();
         boolean resultSecondCall = web3SecretService.isSecretPresent(secretAddress);
         assertAll(
                 () -> assertTrue(resultSecondCall),
-                //put 1 bellow means no new invocation since 1st call
-                () -> verify(web3SecretRepository, times(1)).findById(any()),
                 () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
@@ -134,15 +136,11 @@ class Web3SecretServiceTests {
 
     @Test
     void shouldGetSecretNotExistFromCache() {
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
-
         web3SecretService.isSecretPresent(secretAddress);
         memoryLogAppender.reset();
         boolean resultSecondCall = web3SecretService.isSecretPresent(secretAddress);
         assertAll(
                 () -> assertFalse(resultSecondCall),
-                //put 1 bellow means no new invocation since 1st call
-                () -> verify(web3SecretRepository, times(1)).findById(any()),
                 () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
                 () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
@@ -155,23 +153,18 @@ class Web3SecretServiceTests {
     @Test
     void shouldGetDecryptedValue() {
         Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(encryptedSecret));
+        web3SecretRepository.save(encryptedSecret);
         when(encryptionService.decrypt(encryptedSecretValue)).thenReturn(plainSecretValue);
 
         Optional<String> result = web3SecretService.getDecryptedValue(secretAddress);
-        assertThat(result)
-                .isPresent()
-                .get().isEqualTo(plainSecretValue);
+        assertThat(result).contains(plainSecretValue);
 
-        verify(web3SecretRepository).findById(any(Web3SecretHeader.class));
         verify(encryptionService).decrypt(any());
     }
 
     @Test
     void shouldGetEmptyValueIfSecretNotPresent() {
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
         assertThat(web3SecretService.getDecryptedValue(secretAddress)).isEmpty();
-        verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
         verifyNoInteractions(encryptionService);
     }
     // endregion
@@ -180,19 +173,18 @@ class Web3SecretServiceTests {
     @Test
     void shouldGetEncryptedSecret() {
         Web3Secret encryptedSecret = new Web3Secret(secretAddress, encryptedSecretValue);
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.of(encryptedSecret));
+        web3SecretRepository.save(encryptedSecret);
         Optional<Web3Secret> result = web3SecretService.getSecret(secretAddress);
         assertThat(result)
-                .contains(encryptedSecret);
-        verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
+                .isNotEmpty()
+                .usingRecursiveComparison()
+                .isEqualTo(Optional.of(encryptedSecret));
         verifyNoInteractions(encryptionService);
     }
 
     @Test
     void shouldGetEmptySecretIfSecretNotPresent() {
-        when(web3SecretRepository.findById(any(Web3SecretHeader.class))).thenReturn(Optional.empty());
         assertThat(web3SecretService.getSecret(secretAddress)).isEmpty();
-        verify(web3SecretRepository, times(1)).findById(any(Web3SecretHeader.class));
         verifyNoInteractions(encryptionService);
     }
     // endregion

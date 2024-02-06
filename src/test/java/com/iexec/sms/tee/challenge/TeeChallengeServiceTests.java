@@ -22,21 +22,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@DataJpaTest
 class TeeChallengeServiceTests {
 
     private static final String TASK_ID = "0x123";
     private static final String PLAIN_PRIVATE = "plainPrivate";
     private static final String ENC_PRIVATE = "encPrivate";
 
-    @Mock
+    @Autowired
     private TeeChallengeRepository teeChallengeRepository;
 
     @Mock
@@ -53,7 +55,8 @@ class TeeChallengeServiceTests {
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        teeChallengeService = new TeeChallengeService(teeChallengeRepository,
+        teeChallengeService = new TeeChallengeService(
+                teeChallengeRepository,
                 encryptionService,
                 teeChallengeMeasuredSecretService,
                 ethereumCredentialsMeasuredSecretService
@@ -69,7 +72,7 @@ class TeeChallengeServiceTests {
     @Test
     void shouldGetExistingChallengeWithoutDecryptingKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
-        when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.of(encryptedTeeChallengeStub));
+        teeChallengeRepository.save(encryptedTeeChallengeStub);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
         assertThat(oTeeChallenge).isPresent();
@@ -82,7 +85,7 @@ class TeeChallengeServiceTests {
     @Test
     void shouldGetExistingChallengeAndDecryptKeys() throws Exception {
         TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
-        when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.of(encryptedTeeChallengeStub));
+        teeChallengeRepository.save(encryptedTeeChallengeStub);
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
@@ -94,11 +97,8 @@ class TeeChallengeServiceTests {
     }
 
     @Test
-    void shouldCreateNewChallengeWithoutDecryptingKeys() throws Exception {
-        TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
-        when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.empty());
+    void shouldCreateNewChallengeWithoutDecryptingKeys() {
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
-        when(teeChallengeRepository.save(any())).thenReturn(encryptedTeeChallengeStub);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
         assertThat(oTeeChallenge).isPresent();
@@ -110,11 +110,8 @@ class TeeChallengeServiceTests {
     }
 
     @Test
-    void shouldCreateNewChallengeAndDecryptKeys() throws Exception {
-        TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
-        when(teeChallengeRepository.findByTaskId(TASK_ID)).thenReturn(Optional.empty());
+    void shouldCreateNewChallengeAndDecryptKeys() {
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
-        when(teeChallengeRepository.save(any())).thenReturn(encryptedTeeChallengeStub);
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
         Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
