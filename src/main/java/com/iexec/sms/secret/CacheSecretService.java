@@ -40,6 +40,13 @@ public class CacheSecretService<K> {
     }
 
     /**
+     * Reset entries in the cache
+     */
+    public void clear() {
+        secretExistenceCache.clear();
+    }
+
+    /**
      * Caches the existence of the secret.
      *
      * @param key The key to use for cache

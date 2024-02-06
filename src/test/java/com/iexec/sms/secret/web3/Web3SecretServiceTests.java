@@ -64,15 +64,16 @@ class Web3SecretServiceTests {
     void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
         memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
+        web3CacheSecretService = new CacheSecretService<>();
     }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        web3CacheSecretService = new CacheSecretService<>();
         memoryLogAppender.reset();
         web3SecretRepository.deleteAll();
-        web3SecretService = new Web3SecretService(web3SecretRepository, encryptionService, measuredSecretService,web3CacheSecretService);
+        web3CacheSecretService.clear();
+        web3SecretService = new Web3SecretService(web3SecretRepository, encryptionService, measuredSecretService, web3CacheSecretService);
     }
 
     // region addSecret

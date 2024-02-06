@@ -74,16 +74,17 @@ class TeeTaskComputeSecretServiceTest {
     void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
         memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
+        teeTaskComputeCacheSecretService = new CacheSecretService<>();
     }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
-        teeTaskComputeCacheSecretService = new CacheSecretService<>();
         teeTaskComputeSecretRepository.deleteAll();
+        teeTaskComputeCacheSecretService.clear();
         teeTaskComputeSecretService = new TeeTaskComputeSecretService(
-                teeTaskComputeSecretRepository, encryptionService, measuredSecretService,teeTaskComputeCacheSecretService);
+                teeTaskComputeSecretRepository, encryptionService, measuredSecretService, teeTaskComputeCacheSecretService);
     }
 
     // region encryptAndSaveSecret

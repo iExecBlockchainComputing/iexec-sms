@@ -64,15 +64,16 @@ class Web2SecretServiceTests {
     void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
         memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
+        web2CacheSecretService = new CacheSecretService<>();
     }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
-        web2CacheSecretService = new CacheSecretService<>();
         web2SecretRepository.deleteAll();
-        web2SecretService = new Web2SecretService(web2SecretRepository, encryptionService, measuredSecretService,web2CacheSecretService);
+        web2CacheSecretService.clear();
+        web2SecretService = new Web2SecretService(web2SecretRepository, encryptionService, measuredSecretService, web2CacheSecretService);
     }
 
 
