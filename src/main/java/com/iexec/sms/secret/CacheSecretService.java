@@ -29,13 +29,12 @@ public class CacheSecretService<K> {
             .expirationPolicy(ExpirationPolicy.CREATED)
             .build();
 
-
     /**
      * Count how many entries are currently in the cache
      *
      * @return
      */
-    public int count() {
+    public long count() {
         return secretExistenceCache.size();
     }
 

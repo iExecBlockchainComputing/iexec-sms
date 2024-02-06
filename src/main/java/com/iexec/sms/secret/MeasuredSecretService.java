@@ -51,24 +51,26 @@ public class MeasuredSecretService {
     private final int storedSecretsCountPeriod;
 
     private Counter initialSecretsCounter;
-    private AtomicLong storedSecretsCount;
+    private final AtomicLong storedSecretsCount;
     private final Counter addedSecretsSinceStartCounter;
-    private AtomicLong cachedSecretsCount;
-    private final CacheSecretService<?> cacheSecretService;
+    private final AtomicLong cachedSecretsCount;
+    private final Supplier<Long> cachedSecretsCountGetter;
 
     public MeasuredSecretService(String secretsType,
                                  String metricsPrefix,
                                  Supplier<Long> storedSecretsCountGetter,
                                  ScheduledExecutorService storageMetricsExecutorService,
                                  int storedSecretsCountPeriod,
-                                 CacheSecretService<?> cacheSecretService) {
+                                 Supplier<Long> cachedSecretsCountGetter) {
         this.secretsType = secretsType;
         this.metricsPrefix = metricsPrefix;
         this.storedSecretsCountGetter = storedSecretsCountGetter;
         this.storageMetricsExecutorService = storageMetricsExecutorService;
         this.storedSecretsCountPeriod = storedSecretsCountPeriod;
-        this.cacheSecretService = cacheSecretService;
+        this.cachedSecretsCountGetter = cachedSecretsCountGetter;
         this.addedSecretsSinceStartCounter = Metrics.counter(metricsPrefix + ADDED_SECRETS_SINCE_START_COUNT_POSTFIX);
+        this.storedSecretsCount = Metrics.gauge(metricsPrefix + STORED_SECRETS_COUNT_POSTFIX, new AtomicLong(0));
+        this.cachedSecretsCount = Metrics.gauge(metricsPrefix + CACHED_SECRETS_COUNT_POSTFIX, new AtomicLong(0));
     }
 
     @PostConstruct
@@ -76,9 +78,7 @@ public class MeasuredSecretService {
         final long initialSecretsCount = storedSecretsCountGetter.get();
         this.initialSecretsCounter = Metrics.counter(metricsPrefix + INITIAL_SECRETS_COUNT_POSTFIX);
         this.initialSecretsCounter.increment(initialSecretsCount);
-
-        this.storedSecretsCount = Metrics.gauge(metricsPrefix + STORED_SECRETS_COUNT_POSTFIX, new AtomicLong(initialSecretsCount));
-        this.cachedSecretsCount = Metrics.gauge(metricsPrefix + CACHED_SECRETS_COUNT_POSTFIX, new AtomicLong(0));
+        this.storedSecretsCount.set(initialSecretsCount);
 
         storageMetricsExecutorService.scheduleAtFixedRate(
                 this::countStoredSecrets,
@@ -117,13 +117,10 @@ public class MeasuredSecretService {
     private void countStoredSecrets() {
         try {
             final Long count = storedSecretsCountGetter.get();
-            log.debug("Counting secrets [type:{}, count:{}]", secretsType, count);
+            final Long cacheCount = cachedSecretsCountGetter.get();
+            log.debug("Counting secrets [type:{}, count:{}, cache:{}]", secretsType, count, cacheCount);
             storedSecretsCount.set(count);
-            if (null != cacheSecretService) {
-                cachedSecretsCount.set(cacheSecretService.count());
-            } else {
-                cachedSecretsCount.set(0);
-            }
+            cachedSecretsCount.set(cacheCount);
         } catch (RuntimeException e) {
             log.error("Secrets count has failed [type:{}]", secretsType, e);
             storedSecretsCount.set(-1);

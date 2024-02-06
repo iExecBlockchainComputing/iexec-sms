@@ -66,7 +66,7 @@ class MeasuredSecretServiceTests {
                     throw new RuntimeException("Mocked data access exception");
                 }, // Simulating a repo `count` method
                 Executors.newSingleThreadScheduledExecutor(),
-                1, cacheSecretService);
+                1, cacheSecretService::count);
         measuredSecretService.init();
     }
 
@@ -99,7 +99,7 @@ class MeasuredSecretServiceTests {
                 METRICS_PREFIX,
                 () -> count.get(),
                 Executors.newSingleThreadScheduledExecutor(),
-                1, null);
+                1, () -> 0L);
         measuredSecretServiceWithNullCache.init();
 
         Awaitility.await().atLeast(5, TimeUnit.SECONDS);

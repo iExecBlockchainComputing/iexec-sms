@@ -78,7 +78,7 @@ public class SecretsConfig {
                         web2SecretRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod,
-                        web2CacheSecretService
+                        web2CacheSecretService::count
                 )
         );
     }
@@ -94,7 +94,7 @@ public class SecretsConfig {
                         web3SecretRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod,
-                        web3CacheSecretService
+                        web3CacheSecretService::count
                 )
         );
     }
@@ -110,7 +110,7 @@ public class SecretsConfig {
                         teeTaskComputeSecretRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod,
-                        teeTaskComputeCacheSecretService
+                        teeTaskComputeCacheSecretService::count
                 )
         );
     }
@@ -126,7 +126,7 @@ public class SecretsConfig {
                         teeChallengeRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod,
-                        null
+                        () -> 0L
                 )
         );
     }
@@ -141,7 +141,7 @@ public class SecretsConfig {
                         ethereumCredentialsRepository::count,
                         storageMetricsExecutorService,
                         storedSecretsCountPeriod,
-                        null
+                        () -> 0L
                 )
         );
     }
@@ -155,7 +155,6 @@ public class SecretsConfig {
     CacheSecretService<Web2SecretHeader> web2CacheSecretService() {
         return new CacheSecretService<>();
     }
-
 
     @Bean
     CacheSecretService<TeeTaskComputeSecretHeader> teeTaskComputeCacheSecretService() {
