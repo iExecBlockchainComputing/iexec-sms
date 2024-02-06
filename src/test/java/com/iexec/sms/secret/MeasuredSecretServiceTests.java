@@ -103,7 +103,7 @@ class MeasuredSecretServiceTests {
         measuredSecretServiceWithNullCache.init();
 
         Awaitility.await().atLeast(5, TimeUnit.SECONDS);
-        assertThat(measuredSecretService.getCachedSecretsCount()).isEqualTo(0);
+        assertThat(measuredSecretService.getCachedSecretsCount()).isZero();
     }
 
     @Test
