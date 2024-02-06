@@ -16,15 +16,14 @@
 
 package com.iexec.sms.secret.web2;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @DataJpaTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Web2SecretServiceTests {
     private static final String OWNER_ADDRESS = "ownerAddress";
     private static final String SECRET_ADDRESS = "secretAddress";
@@ -58,13 +58,9 @@ class Web2SecretServiceTests {
     private static MemoryLogAppender memoryLogAppender;
 
     @BeforeAll
-    static void initLog() {
+    void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
-        memoryLogAppender = new MemoryLogAppender();
-        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-        logger.setLevel(Level.DEBUG);
-        logger.addAppender(memoryLogAppender);
-        memoryLogAppender.start();
+        memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
     }
 
     @BeforeEach
