@@ -18,7 +18,6 @@ package com.iexec.sms.tee.challenge;
 
 import com.iexec.commons.poco.utils.CredentialsUtils;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -33,11 +32,10 @@ import javax.persistence.Id;
 /**
  * Domain entity
  */
-@Data
+@Entity
 @Getter
 @NoArgsConstructor //for hibernate
 @AllArgsConstructor
-@Entity
 public class EthereumCredentials {
 
     @Id
