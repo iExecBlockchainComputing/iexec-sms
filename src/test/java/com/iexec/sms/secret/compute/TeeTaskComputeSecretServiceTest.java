@@ -1,17 +1,12 @@
 package com.iexec.sms.secret.compute;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -41,6 +36,9 @@ class TeeTaskComputeSecretServiceTest {
     @Mock
     MeasuredSecretService measuredSecretService;
 
+    @Mock
+    CacheSecretService<TeeTaskComputeSecretHeader> teeTaskComputeCacheSecretService;
+
     @InjectMocks
     @Spy
     TeeTaskComputeSecretService teeTaskComputeSecretService;
@@ -48,22 +46,10 @@ class TeeTaskComputeSecretServiceTest {
     @Captor
     ArgumentCaptor<TeeTaskComputeSecret> computeSecretCaptor;
 
-    private static MemoryLogAppender memoryLogAppender;
-
-    @BeforeAll
-    static void initLog() {
-        Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
-        memoryLogAppender = new MemoryLogAppender();
-        memoryLogAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
-        logger.setLevel(Level.DEBUG);
-        logger.addAppender(memoryLogAppender);
-        memoryLogAppender.start();
-    }
 
     @BeforeEach
     void beforeEach() {
         MockitoAnnotations.openMocks(this);
-        memoryLogAppender.reset();
     }
 
     // region encryptAndSaveSecret
@@ -78,8 +64,7 @@ class TeeTaskComputeSecretServiceTest {
 
         assertAll(
                 () -> assertTrue(secretAdded),
-                () -> verify(teeTaskComputeSecretRepository, times(1)).save(computeSecretCaptor.capture()),
-                () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
+                () -> verify(teeTaskComputeSecretRepository, times(1)).save(computeSecretCaptor.capture())
         );
 
         final TeeTaskComputeSecret savedTeeTaskComputeSecret = computeSecretCaptor.getValue();
@@ -125,59 +110,40 @@ class TeeTaskComputeSecretServiceTest {
     void shouldGetSecretExistFromDBAndPutInCache() {
         when(teeTaskComputeSecretRepository.findById(any(TeeTaskComputeSecretHeader.class)))
                 .thenReturn(Optional.of(COMPUTE_SECRET));
+        when(teeTaskComputeCacheSecretService.lookSecretExistenceInCache(any(TeeTaskComputeSecretHeader.class))).thenReturn(null);
 
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
         assertAll(
-                () -> assertTrue(isSecretPresent),
-                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Secret existence was not found in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
+                () -> assertTrue(isSecretPresent)
         );
     }
 
     @Test
     void shouldGetSecretExistFromCache() {
-        when(teeTaskComputeSecretRepository.findById(any(TeeTaskComputeSecretHeader.class)))
-                .thenReturn(Optional.of(COMPUTE_SECRET));
-
-        teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
-        memoryLogAppender.reset();
-        final boolean resultSecondCall = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
+        when(teeTaskComputeCacheSecretService.lookSecretExistenceInCache(any(TeeTaskComputeSecretHeader.class))).thenReturn(true);
+        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
         assertAll(
-                () -> assertTrue(resultSecondCall),
-                //put 1 bellow means no new invocation since 1st call
-                () -> verify(teeTaskComputeSecretRepository, times(1)).findById(any(TeeTaskComputeSecretHeader.class)),
-                () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
-                () -> assertTrue(memoryLogAppender.contains("exist:true"))
+                () -> assertTrue(isSecretPresent),
+                () -> verify(teeTaskComputeSecretRepository, times(0)).findById(any(TeeTaskComputeSecretHeader.class))
         );
     }
 
     @Test
     void shouldGetSecretNotExistFromCache() {
-        when(teeTaskComputeSecretRepository.findById(any(TeeTaskComputeSecretHeader.class)))
-                .thenReturn(Optional.empty());
-
-        teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
-        memoryLogAppender.reset();
-        final boolean resultSecondCall = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
+        when(teeTaskComputeCacheSecretService.lookSecretExistenceInCache(any(TeeTaskComputeSecretHeader.class))).thenReturn(false);
+        final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0");
 
         assertAll(
-                () -> assertFalse(resultSecondCall),
-                //put 1 bellow means no new invocation since 1st call
-                () -> verify(teeTaskComputeSecretRepository, times(1)).findById(any(TeeTaskComputeSecretHeader.class)),
-                () -> assertTrue(memoryLogAppender.doesNotContains("Put secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Search secret existence in cache")),
-                () -> assertTrue(memoryLogAppender.contains("Secret existence was found in cache")),
-                () -> assertTrue(memoryLogAppender.contains("exist:false"))
+                () -> assertFalse(isSecretPresent),
+                () -> verify(teeTaskComputeSecretRepository, times(0)).findById(any(TeeTaskComputeSecretHeader.class))
         );
     }
 
     @Test
     void secretShouldNotExist() {
+        when(teeTaskComputeCacheSecretService.lookSecretExistenceInCache(any(TeeTaskComputeSecretHeader.class))).thenReturn(null);
         when(teeTaskComputeSecretService.getSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0"))
                 .thenReturn(Optional.empty());
 

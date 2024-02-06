@@ -17,9 +17,13 @@
 package com.iexec.sms.config;
 
 import com.iexec.sms.metric.MetricsService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
+import com.iexec.sms.secret.compute.TeeTaskComputeSecretHeader;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretRepository;
+import com.iexec.sms.secret.web2.Web2SecretHeader;
 import com.iexec.sms.secret.web2.Web2SecretRepository;
+import com.iexec.sms.secret.web3.Web3SecretHeader;
 import com.iexec.sms.secret.web3.Web3SecretRepository;
 import com.iexec.sms.tee.challenge.EthereumCredentialsRepository;
 import com.iexec.sms.tee.challenge.TeeChallengeRepository;
@@ -35,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -86,7 +91,8 @@ class SecretsConfigTests {
     @Test
     void web2MeasuredSecretService() {
         final Web2SecretRepository repository = mock(Web2SecretRepository.class);
-        final MeasuredSecretService measuredSecretService = secretsConfig.web2MeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+        final CacheSecretService<Web2SecretHeader> cacheSecretService = new CacheSecretService<>();
+        final MeasuredSecretService measuredSecretService = secretsConfig.web2MeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD, cacheSecretService);
 
         final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
         final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
@@ -101,7 +107,8 @@ class SecretsConfigTests {
     @Test
     void web3MeasuredSecretService() {
         final Web3SecretRepository repository = mock(Web3SecretRepository.class);
-        final MeasuredSecretService measuredSecretService = secretsConfig.web3MeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+        final CacheSecretService<Web3SecretHeader> cacheSecretService = new CacheSecretService<>();
+        final MeasuredSecretService measuredSecretService = secretsConfig.web3MeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD, cacheSecretService);
 
         final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
         final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
@@ -116,7 +123,8 @@ class SecretsConfigTests {
     @Test
     void computeMeasuredSecretService() {
         final TeeTaskComputeSecretRepository repository = mock(TeeTaskComputeSecretRepository.class);
-        final MeasuredSecretService measuredSecretService = secretsConfig.computeMeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+        final CacheSecretService<TeeTaskComputeSecretHeader> cacheSecretService = new CacheSecretService<>();
+        final MeasuredSecretService measuredSecretService = secretsConfig.computeMeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD, cacheSecretService);
 
         final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
         final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
@@ -131,7 +139,7 @@ class SecretsConfigTests {
     @Test
     void teeChallengeMeasuredSecretService() {
         final TeeChallengeRepository repository = mock(TeeChallengeRepository.class);
-        final MeasuredSecretService measuredSecretService = secretsConfig.teeChallengeMeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD);
+        final MeasuredSecretService measuredSecretService = secretsConfig.teeChallengeMeasuredSecretService(repository, STORED_SECRETS_COUNT_PERIOD, null);
 
         final String secretsType = ((String) ReflectionTestUtils.getField(measuredSecretService, "secretsType"));
         final String metricsPrefix = ((String) ReflectionTestUtils.getField(measuredSecretService, "metricsPrefix"));
@@ -155,6 +163,17 @@ class SecretsConfigTests {
                 () -> assertThat(secretsType).isEqualTo("Ethereum Credentials"),
                 () -> assertThat(metricsPrefix).isEqualTo("iexec.sms.secrets.ethereum_credentials."),
                 () -> verify(metricsService).registerNewMeasuredSecretService(measuredSecretService)
+        );
+    }
+    // endregion
+
+    // region caches
+    @Test
+    void cachesServicesWereNotNull() {
+        assertAll(
+                () -> assertNotNull(secretsConfig.web2CacheSecretService()),
+                () -> assertNotNull(secretsConfig.web3CacheSecretService()),
+                () -> assertNotNull(secretsConfig.teeTaskComputeCacheSecretService())
         );
     }
     // endregion
