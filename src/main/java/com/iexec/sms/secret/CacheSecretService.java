@@ -22,7 +22,7 @@ import net.jodah.expiringmap.ExpiringMap;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public abstract class AbstractSecretService<K> {
+public class CacheSecretService<K> {
 
     private final ExpiringMap<K, Boolean> secretExistenceCache = ExpiringMap.builder()
             .expiration(1, TimeUnit.MINUTES)
@@ -30,11 +30,27 @@ public abstract class AbstractSecretService<K> {
             .build();
 
     /**
+     * Count how many entries are currently in the cache
+     *
+     * @return
+     */
+    public long count() {
+        return secretExistenceCache.size();
+    }
+
+    /**
+     * Reset entries in the cache
+     */
+    public void clear() {
+        secretExistenceCache.clear();
+    }
+
+    /**
      * Caches the existence of the secret.
      *
      * @param key The key to use for cache
      */
-    protected void putSecretExistenceInCache(K key, boolean value) {
+    public void putSecretExistenceInCache(K key, boolean value) {
         log.debug("Put secret existence in cache[key:{}]", key);
         if (null != key) {
             secretExistenceCache.put(key, value);
@@ -50,7 +66,7 @@ public abstract class AbstractSecretService<K> {
      * @param key The key to use for cache
      * @return true if an entry was found in cache and false otherwise.
      */
-    protected Boolean lookSecretExistenceInCache(K key) {
+    public Boolean lookSecretExistenceInCache(K key) {
         log.debug("Search secret existence in cache[key:{}]", key);
         if (null == key) {
             //no strong coupling with cache, no exception handling

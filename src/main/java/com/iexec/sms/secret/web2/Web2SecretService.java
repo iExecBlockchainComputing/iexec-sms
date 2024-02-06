@@ -19,7 +19,7 @@
 package com.iexec.sms.secret.web2;
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,19 +29,21 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
+public class Web2SecretService {
 
     private final Web2SecretRepository web2SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
-
+    private final CacheSecretService<Web2SecretHeader> cacheSecretService;
 
     protected Web2SecretService(Web2SecretRepository web2SecretRepository,
                                 EncryptionService encryptionService,
-                                MeasuredSecretService web2MeasuredSecretService) {
+                                MeasuredSecretService web2MeasuredSecretService,
+                                CacheSecretService<Web2SecretHeader> web2CacheSecretService) {
         this.web2SecretRepository = web2SecretRepository;
         this.encryptionService = encryptionService;
         this.measuredSecretService = web2MeasuredSecretService;
+        this.cacheSecretService = web2CacheSecretService;
     }
 
     /**
@@ -64,12 +66,12 @@ public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {
         final Web2SecretHeader key = new Web2SecretHeader(ownerAddress, secretAddress);
-        final Boolean found = lookSecretExistenceInCache(key);
+        final Boolean found = cacheSecretService.lookSecretExistenceInCache(key);
         if (found != null) {
             return found;
         }
         final boolean isPresentInDB = getSecret(ownerAddress, secretAddress).isPresent();
-        putSecretExistenceInCache(key, isPresentInDB);
+        cacheSecretService.putSecretExistenceInCache(key, isPresentInDB);
         return isPresentInDB;
     }
 
@@ -93,7 +95,7 @@ public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
         final String encryptedValue = encryptionService.encrypt(secretValue);
         final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        putSecretExistenceInCache(savedSecret.getHeader(), true);
+        cacheSecretService.putSecretExistenceInCache(savedSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return savedSecret;
     }
@@ -128,7 +130,7 @@ public class Web2SecretService extends AbstractSecretService<Web2SecretHeader> {
 
         final Web2Secret newSecret = secret.withValue(encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        putSecretExistenceInCache(savedSecret.getHeader(), true);
+        cacheSecretService.putSecretExistenceInCache(savedSecret.getHeader(), true);
         return savedSecret;
     }
 }

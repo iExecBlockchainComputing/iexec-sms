@@ -19,6 +19,7 @@ package com.iexec.sms.secret.compute;
 import ch.qos.logback.classic.Logger;
 import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,6 +64,8 @@ class TeeTaskComputeSecretServiceTest {
     @Mock
     MeasuredSecretService measuredSecretService;
 
+    CacheSecretService<TeeTaskComputeSecretHeader> teeTaskComputeCacheSecretService;
+
     TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     private MemoryLogAppender memoryLogAppender;
@@ -71,6 +74,7 @@ class TeeTaskComputeSecretServiceTest {
     void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
         memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
+        teeTaskComputeCacheSecretService = new CacheSecretService<>();
     }
 
     @BeforeEach
@@ -78,8 +82,9 @@ class TeeTaskComputeSecretServiceTest {
         MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
         teeTaskComputeSecretRepository.deleteAll();
+        teeTaskComputeCacheSecretService.clear();
         teeTaskComputeSecretService = new TeeTaskComputeSecretService(
-                teeTaskComputeSecretRepository, encryptionService, measuredSecretService);
+                teeTaskComputeSecretRepository, encryptionService, measuredSecretService, teeTaskComputeCacheSecretService);
     }
 
     // region encryptAndSaveSecret

@@ -16,7 +16,10 @@
 
 package com.iexec.sms.metric;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Builder
 @NoArgsConstructor
@@ -27,4 +30,5 @@ public class SecretsMetrics {
     private long initialCount;
     private long storedCount;
     private long addedSinceStartCount;
+    private long cachedSecretsCount;
 }

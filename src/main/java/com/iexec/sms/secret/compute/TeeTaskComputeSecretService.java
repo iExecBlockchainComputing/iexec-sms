@@ -17,7 +17,7 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,17 +26,20 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskComputeSecretHeader> {
+public class TeeTaskComputeSecretService {
     private final TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
+    private final CacheSecretService<TeeTaskComputeSecretHeader> cacheSecretService;
 
     protected TeeTaskComputeSecretService(TeeTaskComputeSecretRepository teeTaskComputeSecretRepository,
                                           EncryptionService encryptionService,
-                                          MeasuredSecretService computeMeasuredSecretService) {
+                                          MeasuredSecretService computeMeasuredSecretService,
+                                          CacheSecretService<TeeTaskComputeSecretHeader> teeTaskComputeCacheSecretService) {
         this.teeTaskComputeSecretRepository = teeTaskComputeSecretRepository;
         this.encryptionService = encryptionService;
         this.measuredSecretService = computeMeasuredSecretService;
+        this.cacheSecretService = teeTaskComputeCacheSecretService;
     }
 
     /**
@@ -85,7 +88,7 @@ public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskCo
                 secretOwner,
                 secretKey
         );
-        final Boolean found = lookSecretExistenceInCache(key);
+        final Boolean found = cacheSecretService.lookSecretExistenceInCache(key);
         if (found != null) {
             return found;
         }
@@ -98,7 +101,7 @@ public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskCo
                 secretKey
         ).isPresent();
 
-        putSecretExistenceInCache(key, isPresentInDB);
+        cacheSecretService.putSecretExistenceInCache(key, isPresentInDB);
         return isPresentInDB;
     }
 
@@ -138,7 +141,7 @@ public class TeeTaskComputeSecretService extends AbstractSecretService<TeeTaskCo
         log.info("Adding new tee task compute secret" +
                 " [secret:{}]", secret);
         final TeeTaskComputeSecret saveSecret = teeTaskComputeSecretRepository.save(secret);
-        putSecretExistenceInCache(saveSecret.getHeader(), true);
+        cacheSecretService.putSecretExistenceInCache(saveSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return true;
     }

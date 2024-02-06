@@ -19,6 +19,7 @@ package com.iexec.sms.secret.web3;
 import ch.qos.logback.classic.Logger;
 import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +54,8 @@ class Web3SecretServiceTests {
     @Mock
     private MeasuredSecretService measuredSecretService;
 
+    private CacheSecretService<Web3SecretHeader> web3CacheSecretService;
+
     private Web3SecretService web3SecretService;
 
     private static MemoryLogAppender memoryLogAppender;
@@ -61,6 +64,7 @@ class Web3SecretServiceTests {
     void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
         memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
+        web3CacheSecretService = new CacheSecretService<>();
     }
 
     @BeforeEach
@@ -68,7 +72,8 @@ class Web3SecretServiceTests {
         MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
         web3SecretRepository.deleteAll();
-        web3SecretService = new Web3SecretService(web3SecretRepository, encryptionService, measuredSecretService);
+        web3CacheSecretService.clear();
+        web3SecretService = new Web3SecretService(web3SecretRepository, encryptionService, measuredSecretService, web3CacheSecretService);
     }
 
     // region addSecret

@@ -19,6 +19,7 @@ package com.iexec.sms.secret.web2;
 import ch.qos.logback.classic.Logger;
 import com.iexec.sms.MemoryLogAppender;
 import com.iexec.sms.encryption.EncryptionService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +54,8 @@ class Web2SecretServiceTests {
     @Mock
     private MeasuredSecretService measuredSecretService;
 
+    private CacheSecretService<Web2SecretHeader> web2CacheSecretService;
+
     private Web2SecretService web2SecretService;
 
     private static MemoryLogAppender memoryLogAppender;
@@ -61,6 +64,7 @@ class Web2SecretServiceTests {
     void initLog() {
         Logger logger = (Logger) LoggerFactory.getLogger("com.iexec.sms.secret");
         memoryLogAppender = (MemoryLogAppender) logger.getAppender("MEM");
+        web2CacheSecretService = new CacheSecretService<>();
     }
 
     @BeforeEach
@@ -68,7 +72,8 @@ class Web2SecretServiceTests {
         MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
         web2SecretRepository.deleteAll();
-        web2SecretService = new Web2SecretService(web2SecretRepository, encryptionService, measuredSecretService);
+        web2CacheSecretService.clear();
+        web2SecretService = new Web2SecretService(web2SecretRepository, encryptionService, measuredSecretService, web2CacheSecretService);
     }
 
 

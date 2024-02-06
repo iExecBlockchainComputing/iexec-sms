@@ -18,7 +18,7 @@ package com.iexec.sms.secret.web3;
 
 
 import com.iexec.sms.encryption.EncryptionService;
-import com.iexec.sms.secret.AbstractSecretService;
+import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,17 +27,21 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
+public class Web3SecretService {
     private final Web3SecretRepository web3SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
 
+    private final CacheSecretService<Web3SecretHeader> cacheSecretService;
+
     protected Web3SecretService(Web3SecretRepository web3SecretRepository,
                                 EncryptionService encryptionService,
-                                MeasuredSecretService web3MeasuredSecretService) {
+                                MeasuredSecretService web3MeasuredSecretService,
+                                CacheSecretService<Web3SecretHeader> web3CacheSecretService) {
         this.web3SecretRepository = web3SecretRepository;
         this.encryptionService = encryptionService;
         this.measuredSecretService = web3MeasuredSecretService;
+        this.cacheSecretService = web3CacheSecretService;
     }
 
     /**
@@ -59,12 +63,12 @@ public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
 
     public boolean isSecretPresent(String secretAddress) {
         final Web3SecretHeader key = new Web3SecretHeader(secretAddress);
-        final Boolean found = lookSecretExistenceInCache(key);
+        final Boolean found = cacheSecretService.lookSecretExistenceInCache(key);
         if (found != null) {
             return found;
         }
         final boolean isPresentInDB = getSecret(secretAddress).isPresent();
-        putSecretExistenceInCache(key, isPresentInDB);
+        cacheSecretService.putSecretExistenceInCache(key, isPresentInDB);
         return isPresentInDB;
     }
 
@@ -84,7 +88,7 @@ public class Web3SecretService extends AbstractSecretService<Web3SecretHeader> {
 
         final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
         final Web3Secret savedSecret = web3SecretRepository.save(web3Secret);
-        putSecretExistenceInCache(savedSecret.getHeader(), true);
+        cacheSecretService.putSecretExistenceInCache(savedSecret.getHeader(), true);
         measuredSecretService.newlyAddedSecret();
         return true;
     }
