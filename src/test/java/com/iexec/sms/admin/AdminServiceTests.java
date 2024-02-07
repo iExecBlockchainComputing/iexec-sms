@@ -20,9 +20,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.iexec.sms.MemoryLogAppender;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
@@ -30,7 +29,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -42,21 +41,28 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
+@Slf4j
 class AdminServiceTests {
 
-    @Bean
-    public DataSource dataSource() {
-        return DataSourceBuilder.create()
-                .url("jdbc:h2:mem:test")
-                .username("sa")
-                .password("")
-                .build();
-    }
-
-    private final AdminService adminService = new AdminService("jdbc:h2:mem:test", "sa", "", "/tmp/");
+    private final AdminService adminService;
 
     @TempDir
     File tempStorageLocation;
+
+    public AdminServiceTests() {
+        DataSource dataSource = DataSourceBuilder.create()
+                .url("jdbc:sqlite::memory:")
+                .username("sa")
+                .password("sa")
+                .build();
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        this.adminService = new AdminService(jdbcTemplate, "jdbc:sqlite::memory:", "sa", "", "/tmp/");
+    }
+
+    @BeforeEach
+    void init(TestInfo testInfo) {
+        log.info(">>> {}", testInfo.getDisplayName());
+    }
 
     private static MemoryLogAppender memoryLogAppender;
 
@@ -135,11 +141,7 @@ class AdminServiceTests {
     @Test
     void shouldFailToRestoreWhenBackupFileMissing() throws IOException {
         final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
-        assertThrows(
-                FileSystemNotFoundException.class,
-                () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql"),
-                "Backup file does not exist"
-        );
+        assertFalse(adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql"));
     }
 
     @Test
@@ -153,7 +155,8 @@ class AdminServiceTests {
     @Test
     void withSQLException() {
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
-        AdminService corruptAdminService = new AdminService("url", "username", "password", "/tmp/");
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSourceBuilder.create().build());
+        AdminService corruptAdminService = new AdminService(jdbcTemplate, "url", "username", "password", "/tmp/");
         adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertTrue(new File(backupFile).exists());
         corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");

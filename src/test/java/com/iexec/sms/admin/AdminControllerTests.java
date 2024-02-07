@@ -27,8 +27,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
@@ -54,6 +56,8 @@ class AdminControllerTests {
     private static final String STORAGE_PATH = "/storage";
     private static final String FILE_NAME = "backup.sql";
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
     @Mock
     private ReentrantLock rLock;
     @Mock
@@ -81,7 +85,7 @@ class AdminControllerTests {
 
     @Test
     void shouldReturnTooManyRequestWhenBackupProcessIsAlreadyRunning() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(jdbcTemplate, "", "", "", "") {
             @Override
             public boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
                 try {
@@ -152,7 +156,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(jdbcTemplate, "", "", "", "") {
             @Override
             public boolean copyBackupFile(String backupStoragePath, String backupFileName, String replicateStoragePath, String replicateFileName) {
                 try {
@@ -224,7 +228,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnRestore(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(jdbcTemplate, "", "", "", "") {
             @Override
             public boolean restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
@@ -319,7 +323,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnDelete(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(jdbcTemplate, "", "", "", "") {
             @Override
             public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
                 try {
@@ -393,7 +397,7 @@ class AdminControllerTests {
     @Test
     void testTooManyRequestOnCopy(@TempDir Path tempDir) throws InterruptedException {
 
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(jdbcTemplate, "", "", "", "") {
             @Override
             public boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
                 try {

@@ -6,14 +6,14 @@ spring:
   profiles:
     active: ${IEXEC_SMS_TEE_RUNTIME_FRAMEWORK:} # gramine/scone
   datasource:
-    url: ${IEXEC_SMS_H2_URL:jdbc:h2:file:/data/sms-h2} # will get or create /data/sms-h2.mv.db
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:sqlite:/data/sms.db # will get or create /data/sms-h2.mv.db
+    driver-class-name: org.sqlite.JDBC
+    username: admin
+    password: admin
   jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
       ddl-auto: update
-      database-platform: org.hibernate.dialect.H2Dialect
     properties:
       hibernate:
         # Protect column names with quotes to avoid interpreting them as SQL keywords

@@ -18,19 +18,16 @@ package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.h2.tools.RunScript;
-import org.h2.tools.Script;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,15 +43,18 @@ public class AdminService {
     public static final String ERR_BACKUP_FILE_NOT_EXIST = "Backup file does not exist";
     public static final String ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE = "Replicated or Copied backup file destination is outside of storage file system";
     public static final String ERR_FILE_ALREADY_EXIST = "A file already exists at the destination";
+    private final JdbcTemplate jdbcTemplate;
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
     private final String adminStorageLocation;
 
-    public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
+    public AdminService(JdbcTemplate jdbcTemplate,
+                        @Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
                         @Value("${spring.datasource.password}") String datasourcePassword,
                         @Value("${admin.storage-location}") String adminStorageLocation) {
+        this.jdbcTemplate = jdbcTemplate;
         this.datasourceUrl = datasourceUrl;
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
@@ -105,12 +105,12 @@ public class AdminService {
         try {
             log.info("Starting the backup process [fullBackupFileName:{}]", fullBackupFileName);
             final long start = System.currentTimeMillis();
-            Script.process(datasourceUrl, datasourceUsername, datasourcePassword, fullBackupFileName, "DROP", "");
+            jdbcTemplate.execute("backup to " + fullBackupFileName);
             final long stop = System.currentTimeMillis();
             final long size = new File(fullBackupFileName).length();
             log.info("New backup created [fullBackupFileName:{}, timestamp:{}, duration:{} ms, size:{}]",
                     fullBackupFileName, dateFormat.format(new Date(start)), stop - start, size);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error("SQL error occurred during backup", e);
             return false;
         }
@@ -137,15 +137,14 @@ public class AdminService {
             final long size = backupFileLocation.length();
             log.info("Starting the restore process [backupFileLocation:{}]", backupFileLocation);
             final long start = System.currentTimeMillis();
-            RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
-                    backupFileLocation, Charset.defaultCharset(), true);
+            jdbcTemplate.execute("restore from " + backupFileLocation);
             final long stop = System.currentTimeMillis();
             log.warn("Backup has been restored [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
                     backupFileLocation, dateFormat.format(new Date(start)), stop - start, size);
             return true;
         } catch (IOException e) {
             log.error("Invalid backup file location", e);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error("SQL error occurred during restore", e);
         }
         return false;
