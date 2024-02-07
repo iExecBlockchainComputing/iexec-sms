@@ -17,6 +17,9 @@
 package com.iexec.sms.tee.challenge;
 
 import com.iexec.commons.poco.utils.CredentialsUtils;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,10 +27,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
 import org.web3j.utils.Numeric;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 /**
  * Domain entity

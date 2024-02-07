@@ -17,12 +17,11 @@
 package com.iexec.sms.secret.web3;
 
 import com.iexec.sms.secret.Secret;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
 
 @Entity
 @Getter

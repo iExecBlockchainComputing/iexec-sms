@@ -16,12 +16,12 @@
 
 package com.iexec.sms.secret;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
 import java.util.Objects;
 
 @MappedSuperclass

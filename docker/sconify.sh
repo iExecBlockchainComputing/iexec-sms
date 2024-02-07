@@ -3,9 +3,12 @@
 cd $(dirname $0)
 
 SCONE_IMG_NAME=scone-debug/iexec-sconify-image-unlocked
-SCONE_IMG_VERSION=5.7.2-wal
+SCONE_IMG_VERSION=5.8.2-wal
 
-IMG_TO=${IMG_FROM}-sconify-${SCONE_IMG_VERSION}-debug
+if [ -z "$IMG_TO" ] ; then
+  IMG_TO=$IMG_FROM
+fi
+IMG_TO+=-sconify-${SCONE_IMG_VERSION}-debug
 
 ARGS=$(sed -e "s'\${IMG_FROM}'${IMG_FROM}'" -e "s'\${IMG_TO}'${IMG_TO}'" sconify.args)
 echo $ARGS

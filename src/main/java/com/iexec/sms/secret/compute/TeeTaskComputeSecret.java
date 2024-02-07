@@ -17,12 +17,12 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.sms.secret.SecretUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 

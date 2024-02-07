@@ -16,12 +16,12 @@
 
 package com.iexec.sms.secret.web3;
 
+import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 

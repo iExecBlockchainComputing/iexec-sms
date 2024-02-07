@@ -16,12 +16,11 @@
 
 package com.iexec.sms.secret.compute;
 
+import jakarta.validation.ValidationException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import javax.validation.ValidationException;
 
 class TeeTaskComputeSecretHeaderTests {
     private final static String ON_CHAIN_OBJECT_ADDRESS = "onChainObjectAddress";
