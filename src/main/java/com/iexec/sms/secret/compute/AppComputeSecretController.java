@@ -84,28 +84,20 @@ public class AppComputeSecretController {
                     .body(createErrorPayload("Secret size should not exceed 4 Kb"));
         }
 
-        if (teeTaskComputeSecretService.isSecretPresent(
-                OnChainObjectType.APPLICATION,
-                appAddress,
-                SecretOwnerRole.APPLICATION_DEVELOPER,
-                "",
-                secretIndex)) {
-            log.error("Can't add app developer secret as it already exists" +
-                            " [appAddress:{}, secretIndex:{}]",
-                    appAddress, secretIndex);
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(createErrorPayload("Secret already exists"));
-        }
-
-        teeTaskComputeSecretService.encryptAndSaveSecret(
+        if (!teeTaskComputeSecretService.encryptAndSaveSecret(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
                 secretIndex,
                 secretValue
-        );
+        )) {
+            log.error("Can't add app developer secret as it already exists [appAddress:{}, secretIndex:{}]",
+                    appAddress, secretIndex);
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(createErrorPayload("Secret already exists"));
+        }
         return ResponseEntity.noContent().build();
     }
 
@@ -189,12 +181,14 @@ public class AppComputeSecretController {
                     .body(createErrorPayload(badRequestErrors));
         }
 
-        if (teeTaskComputeSecretService.isSecretPresent(
+        if (!teeTaskComputeSecretService.encryptAndSaveSecret(
                 OnChainObjectType.APPLICATION,
                 "",
                 SecretOwnerRole.REQUESTER,
                 requesterAddress,
-                secretKey)) {
+                secretKey,
+                secretValue
+        )) {
             log.debug("Can't add requester secret as it already exists" +
                             " [requesterAddress:{}, secretIndex:{}]",
                     requesterAddress, secretKey);
@@ -202,15 +196,6 @@ public class AppComputeSecretController {
                     .status(HttpStatus.CONFLICT)
                     .body(createErrorPayload("Secret already exists"));
         }
-
-        teeTaskComputeSecretService.encryptAndSaveSecret(
-                OnChainObjectType.APPLICATION,
-                "",
-                SecretOwnerRole.REQUESTER,
-                requesterAddress,
-                secretKey,
-                secretValue
-        );
         return ResponseEntity.noContent().build();
     }
 

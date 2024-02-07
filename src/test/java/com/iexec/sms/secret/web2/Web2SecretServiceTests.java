@@ -30,6 +30,7 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Optional;
 
@@ -44,6 +45,9 @@ class Web2SecretServiceTests {
     private static final String SECRET_ADDRESS = "secretAddress";
     private static final String PLAIN_SECRET_VALUE = "plainSecretValue";
     private static final String ENCRYPTED_SECRET_VALUE = "encryptedSecretValue";
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private Web2SecretRepository web2SecretRepository;
@@ -73,7 +77,8 @@ class Web2SecretServiceTests {
         memoryLogAppender.reset();
         web2SecretRepository.deleteAll();
         web2CacheSecretService.clear();
-        web2SecretService = new Web2SecretService(web2SecretRepository, encryptionService, measuredSecretService, web2CacheSecretService);
+        web2SecretService = new Web2SecretService(
+                jdbcTemplate, web2SecretRepository, encryptionService, measuredSecretService, web2CacheSecretService);
     }
 
 
@@ -89,7 +94,7 @@ class Web2SecretServiceTests {
         final Optional<String> result = web2SecretService.getDecryptedValue(OWNER_ADDRESS, SECRET_ADDRESS);
         assertThat(result)
                 .isNotEmpty()
-                .get().isEqualTo(PLAIN_SECRET_VALUE);
+                .contains(PLAIN_SECRET_VALUE);
     }
 
     @Test
@@ -171,11 +176,12 @@ class Web2SecretServiceTests {
 
     // region addSecret
     @Test
-    void shouldAddSecret() throws SecretAlreadyExistsException {
+    void shouldAddSecret() {
         when(encryptionService.encrypt(PLAIN_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
-
-        final Web2Secret newSecret = web2SecretService.addSecret(OWNER_ADDRESS, SECRET_ADDRESS, PLAIN_SECRET_VALUE);
+        final boolean secretAdded = web2SecretService.addSecret(OWNER_ADDRESS, SECRET_ADDRESS, PLAIN_SECRET_VALUE);
+        final Web2Secret newSecret = web2SecretRepository.findById(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)).orElseThrow();
         assertAll(
+                () -> assertThat(secretAdded).isTrue(),
                 () -> assertThat(newSecret).extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
                 () -> assertThat(newSecret).extracting(Web2Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
                 () -> verify(measuredSecretService).newlyAddedSecret(),
@@ -185,17 +191,16 @@ class Web2SecretServiceTests {
 
     @Test
     void shouldNotAddSecretIfPresent() {
+        when(encryptionService.encrypt(PLAIN_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
         final Web2Secret secret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
-        web2SecretRepository.save(secret);
+        web2SecretRepository.saveAndFlush(secret);
 
-        final SecretAlreadyExistsException exception = assertThrows(SecretAlreadyExistsException.class,
-                () -> web2SecretService.addSecret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE));
+        final String ownerAddress = OWNER_ADDRESS.toLowerCase();
+        final String secretAddress = SECRET_ADDRESS.toLowerCase();
         assertAll(
-                () -> assertEquals(OWNER_ADDRESS, exception.getOwnerAddress()),
-                () -> assertEquals(SECRET_ADDRESS, exception.getSecretAddress()),
-                () -> verify(measuredSecretService, times(0)).newlyAddedSecret(),
-
-                () -> verify(encryptionService, never()).encrypt(PLAIN_SECRET_VALUE),
+                () -> assertThat(web2SecretService.addSecret(ownerAddress, secretAddress, PLAIN_SECRET_VALUE)).isFalse(),
+                () -> verify(measuredSecretService, never()).newlyAddedSecret(),
+                () -> verify(encryptionService).encrypt(PLAIN_SECRET_VALUE),
                 () -> assertThat(web2SecretRepository.count()).isOne()
         );
     }

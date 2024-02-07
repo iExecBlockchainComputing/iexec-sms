@@ -32,6 +32,7 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Optional;
 
@@ -54,6 +55,9 @@ class TeeTaskComputeSecretServiceTest {
             .key("0")
             .value(ENCRYPTED_SECRET_VALUE)
             .build();
+
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
     @Autowired
     TeeTaskComputeSecretRepository teeTaskComputeSecretRepository;
@@ -84,7 +88,7 @@ class TeeTaskComputeSecretServiceTest {
         teeTaskComputeSecretRepository.deleteAll();
         teeTaskComputeCacheSecretService.clear();
         teeTaskComputeSecretService = new TeeTaskComputeSecretService(
-                teeTaskComputeSecretRepository, encryptionService, measuredSecretService, teeTaskComputeCacheSecretService);
+                jdbcTemplate, teeTaskComputeSecretRepository, encryptionService, measuredSecretService, teeTaskComputeCacheSecretService);
     }
 
     // region encryptAndSaveSecret
@@ -114,10 +118,13 @@ class TeeTaskComputeSecretServiceTest {
 
     @Test
     void shouldNotAddSecretSinceAlreadyExist() {
-        teeTaskComputeSecretRepository.save(COMPUTE_SECRET);
+        when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
+                .thenReturn(ENCRYPTED_SECRET_VALUE);
+        teeTaskComputeSecretRepository.saveAndFlush(COMPUTE_SECRET);
 
-        teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
+        final boolean secretAdded = teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
 
+        assertThat(secretAdded).isFalse();
         assertThat(teeTaskComputeSecretRepository.count()).isOne();
         verify(measuredSecretService, times(0)).newlyAddedSecret();
     }

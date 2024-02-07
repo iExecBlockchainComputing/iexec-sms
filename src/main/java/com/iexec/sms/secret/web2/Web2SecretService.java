@@ -22,6 +22,8 @@ import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -30,16 +32,18 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class Web2SecretService {
-
+    private final JdbcTemplate jdbcTemplate;
     private final Web2SecretRepository web2SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
     private final CacheSecretService<Web2SecretHeader> cacheSecretService;
 
-    protected Web2SecretService(Web2SecretRepository web2SecretRepository,
+    protected Web2SecretService(JdbcTemplate jdbcTemplate,
+                                Web2SecretRepository web2SecretRepository,
                                 EncryptionService encryptionService,
                                 MeasuredSecretService web2MeasuredSecretService,
                                 CacheSecretService<Web2SecretHeader> web2CacheSecretService) {
+        this.jdbcTemplate = jdbcTemplate;
         this.web2SecretRepository = web2SecretRepository;
         this.encryptionService = encryptionService;
         this.measuredSecretService = web2MeasuredSecretService;
@@ -83,21 +87,19 @@ public class Web2SecretService {
      * @param secretAddress Address of the secret.
      * @param secretValue   Unencrypted value of the secret.
      * @return The {@link Web2Secret} that has been saved.
-     * @throws SecretAlreadyExistsException throw when a secret
-     *                                      with same {@code ownerAddress}/{@code secretAddress} couple already exists
      */
-    public Web2Secret addSecret(String ownerAddress, String secretAddress, String secretValue) throws SecretAlreadyExistsException {
-        if (isSecretPresent(ownerAddress, secretAddress)) {
-            log.error("Secret already exists [ownerAddress:{}, secretAddress:{}]", ownerAddress, secretAddress);
-            throw new SecretAlreadyExistsException(ownerAddress, secretAddress);
+    public boolean addSecret(String ownerAddress, String secretAddress, String secretValue) {
+        try {
+            final String encryptedValue = encryptionService.encrypt(secretValue);
+            final Web2Secret web2Secret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
+            jdbcTemplate.update("INSERT INTO \"web2secret\" (\"owner_address\", \"address\", \"value\") VALUES (?, ?, ?)",
+                    web2Secret.getHeader().getOwnerAddress(), web2Secret.getHeader().getAddress(), web2Secret.getValue());
+            cacheSecretService.putSecretExistenceInCache(web2Secret.getHeader(), true);
+            measuredSecretService.newlyAddedSecret();
+            return true;
+        } catch (DataAccessException e) {
+            return false;
         }
-
-        final String encryptedValue = encryptionService.encrypt(secretValue);
-        final Web2Secret newSecret = new Web2Secret(ownerAddress, secretAddress, encryptedValue);
-        final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
-        cacheSecretService.putSecretExistenceInCache(savedSecret.getHeader(), true);
-        measuredSecretService.newlyAddedSecret();
-        return savedSecret;
     }
 
     /**

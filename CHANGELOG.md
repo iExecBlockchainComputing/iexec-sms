@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Fix licence headers in some source files. (#232)
 - Move `EthereumCredentials` class to `com.iexec.sms.tee.challenge` package. (#234)
 - Use `@DataJpaTest` to run secrets and TEE challenges tests on H2 database. (#236 #237)
+- Insert secrets in a single SQL statement. (#238)
 
 ## [[8.4.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.4.0) 2024-01-10
 
