@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
 package com.iexec.sms.secret;
 
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.secret.web2.*;
+import com.iexec.sms.secret.web2.NotAnExistingSecretException;
+import com.iexec.sms.secret.web2.SameSecretException;
+import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -180,26 +182,26 @@ class SecretControllerTests {
     }
 
     @Test
-    void failToAddWeb2SecretWhenSecretAlreadyExists() throws SecretAlreadyExistsException {
+    void failToAddWeb2SecretWhenSecretAlreadyExists() {
         when(authorizationService.getChallengeForSetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenThrow(new SecretAlreadyExistsException(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME));
+                .thenReturn(false);
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-            .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
+                .isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).build());
         verify(web2SecretService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);
     }
 
     @Test
-    void addWeb2Secret() throws SecretAlreadyExistsException {
+    void addWeb2Secret() {
         when(authorizationService.getChallengeForSetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))
                 .thenReturn(true);
         when(web2SecretService.addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
-                .thenReturn(new Web2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE));
+                .thenReturn(true);
         assertThat(secretController.addWeb2Secret(AUTHORIZATION, WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .isEqualTo(ResponseEntity.noContent().build());
         verify(web2SecretService).addSecret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE);

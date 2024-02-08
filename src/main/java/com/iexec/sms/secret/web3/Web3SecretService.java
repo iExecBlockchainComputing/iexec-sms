@@ -16,11 +16,14 @@
 
 package com.iexec.sms.secret.web3;
 
-
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -28,16 +31,19 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class Web3SecretService {
+    private final JdbcTemplate jdbcTemplate;
     private final Web3SecretRepository web3SecretRepository;
     private final EncryptionService encryptionService;
     private final MeasuredSecretService measuredSecretService;
 
     private final CacheSecretService<Web3SecretHeader> cacheSecretService;
 
-    protected Web3SecretService(Web3SecretRepository web3SecretRepository,
+    protected Web3SecretService(JdbcTemplate jdbcTemplate,
+                                Web3SecretRepository web3SecretRepository,
                                 EncryptionService encryptionService,
                                 MeasuredSecretService web3MeasuredSecretService,
                                 CacheSecretService<Web3SecretHeader> web3CacheSecretService) {
+        this.jdbcTemplate = jdbcTemplate;
         this.web3SecretRepository = web3SecretRepository;
         this.encryptionService = encryptionService;
         this.measuredSecretService = web3MeasuredSecretService;
@@ -77,19 +83,30 @@ public class Web3SecretService {
      * Stores encrypted secrets
      * */
     public boolean addSecret(String secretAddress, String secretValue) {
-        if (isSecretPresent(secretAddress)) {
-            log.error("Secret already exists [secretAddress:{}]", secretAddress);
-            return false;
+        try {
+            final String encryptedValue = encryptionService.encrypt(secretValue);
+            log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
+                    secretAddress, encryptedValue);
+
+            final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
+            final int result = jdbcTemplate.update("INSERT INTO \"web3secret\" (\"address\", \"value\") VALUES (?, ?)",
+                    web3Secret.getHeader().getAddress(), web3Secret.getValue());
+            // With SQL INSERT INTO and a single set VALUES, at most 1 row can be added and result can only be 0 or 1
+            // When value should be 0, an exception should have been thrown
+            // This check is only there as a fallback and cannot be reached in tests at the moment
+            if (result != 1) {
+                throw new IncorrectResultSizeDataAccessException("Data insert did not work but did not produce an exception", 1);
+            }
+            cacheSecretService.putSecretExistenceInCache(web3Secret.getHeader(), true);
+            measuredSecretService.newlyAddedSecret();
+            return true;
+        } catch (DuplicateKeyException e) {
+            log.debug(e.getMostSpecificCause().getMessage());
+        } catch (DataAccessException e) {
+            log.error(e.getMostSpecificCause().getMessage());
+        } catch (Exception e) {
+            log.error("Data insert failed with message {}", e.getMessage());
         }
-
-        final String encryptedValue = encryptionService.encrypt(secretValue);
-        log.info("Adding new web3 secret [secretAddress:{}, encryptedSecretValue:{}]",
-                secretAddress, encryptedValue);
-
-        final Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedValue);
-        final Web3Secret savedSecret = web3SecretRepository.save(web3Secret);
-        cacheSecretService.putSecretExistenceInCache(savedSecret.getHeader(), true);
-        measuredSecretService.newlyAddedSecret();
-        return true;
+        return false;
     }
 }

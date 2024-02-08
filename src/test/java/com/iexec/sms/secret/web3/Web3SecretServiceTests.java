@@ -30,6 +30,7 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Optional;
 
@@ -44,6 +45,9 @@ class Web3SecretServiceTests {
     String secretAddress = "secretAddress".toLowerCase();
     String plainSecretValue = "plainSecretValue";
     String encryptedSecretValue = "encryptedSecretValue";
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private Web3SecretRepository web3SecretRepository;
@@ -73,20 +77,11 @@ class Web3SecretServiceTests {
         memoryLogAppender.reset();
         web3SecretRepository.deleteAll();
         web3CacheSecretService.clear();
-        web3SecretService = new Web3SecretService(web3SecretRepository, encryptionService, measuredSecretService, web3CacheSecretService);
+        web3SecretService = new Web3SecretService(
+                jdbcTemplate, web3SecretRepository, encryptionService, measuredSecretService, web3CacheSecretService);
     }
 
     // region addSecret
-    @Test
-    void shouldNotAddSecretIfPresent() {
-        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
-        web3SecretRepository.save(web3Secret);
-        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
-        verify(measuredSecretService, times(0)).newlyAddedSecret();
-        verifyNoInteractions(encryptionService);
-        assertThat(web3SecretRepository.count()).isOne();
-    }
-
     @Test
     void shouldAddSecret() {
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
@@ -100,8 +95,25 @@ class Web3SecretServiceTests {
                 () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
         );
     }
-    // endregion
 
+    @Test
+    void shouldNotAddSecretIfPresent() {
+        when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
+        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
+        web3SecretRepository.saveAndFlush(web3Secret);
+        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
+        verify(measuredSecretService, times(0)).newlyAddedSecret();
+        verify(encryptionService).encrypt(plainSecretValue);
+        assertThat(web3SecretRepository.count()).isOne();
+    }
+
+    @Test
+    void shouldNotAddSecretWhenNull() {
+        when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
+        final boolean secretAdded = web3SecretService.addSecret(null, null);
+        assertThat(secretAdded).isFalse();
+    }
+    // endregion
 
     // region isSecretPresent
     @Test
