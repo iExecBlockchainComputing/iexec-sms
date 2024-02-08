@@ -118,8 +118,7 @@ class TeeTaskComputeSecretServiceTest {
 
     @Test
     void shouldNotAddSecretSinceAlreadyExist() {
-        when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE))
-                .thenReturn(ENCRYPTED_SECRET_VALUE);
+        when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
         teeTaskComputeSecretRepository.saveAndFlush(COMPUTE_SECRET);
 
         final boolean secretAdded = teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, APP_ADDRESS, SecretOwnerRole.APPLICATION_DEVELOPER, "", "0", DECRYPTED_SECRET_VALUE);
@@ -127,6 +126,13 @@ class TeeTaskComputeSecretServiceTest {
         assertThat(secretAdded).isFalse();
         assertThat(teeTaskComputeSecretRepository.count()).isOne();
         verify(measuredSecretService, times(0)).newlyAddedSecret();
+    }
+
+    @Test
+    void shouldNotAddSecretWhenNull() {
+        when(encryptionService.encrypt(DECRYPTED_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
+        final boolean secretAdded = teeTaskComputeSecretService.encryptAndSaveSecret(null, null, null, null, "0", DECRYPTED_SECRET_VALUE);
+        assertThat(secretAdded).isFalse();
     }
     // endregion
 

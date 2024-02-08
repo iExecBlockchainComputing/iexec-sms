@@ -83,17 +83,6 @@ class Web3SecretServiceTests {
 
     // region addSecret
     @Test
-    void shouldNotAddSecretIfPresent() {
-        when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
-        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
-        web3SecretRepository.saveAndFlush(web3Secret);
-        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
-        verify(measuredSecretService, times(0)).newlyAddedSecret();
-        verify(encryptionService).encrypt(plainSecretValue);
-        assertThat(web3SecretRepository.count()).isOne();
-    }
-
-    @Test
     void shouldAddSecret() {
         when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
 
@@ -106,8 +95,25 @@ class Web3SecretServiceTests {
                 () -> assertTrue(memoryLogAppender.contains("Put secret existence in cache"))
         );
     }
-    // endregion
 
+    @Test
+    void shouldNotAddSecretIfPresent() {
+        when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
+        Web3Secret web3Secret = new Web3Secret(secretAddress, encryptedSecretValue);
+        web3SecretRepository.saveAndFlush(web3Secret);
+        assertThat(web3SecretService.addSecret(secretAddress, plainSecretValue)).isFalse();
+        verify(measuredSecretService, times(0)).newlyAddedSecret();
+        verify(encryptionService).encrypt(plainSecretValue);
+        assertThat(web3SecretRepository.count()).isOne();
+    }
+
+    @Test
+    void shouldNotAddSecretWhenNull() {
+        when(encryptionService.encrypt(plainSecretValue)).thenReturn(encryptedSecretValue);
+        final boolean secretAdded = web3SecretService.addSecret(null, null);
+        assertThat(secretAdded).isFalse();
+    }
+    // endregion
 
     // region isSecretPresent
     @Test

@@ -204,6 +204,13 @@ class Web2SecretServiceTests {
                 () -> assertThat(web2SecretRepository.count()).isOne()
         );
     }
+
+    @Test
+    void shouldNotAddSecretWhenNull() {
+        when(encryptionService.encrypt(PLAIN_SECRET_VALUE)).thenReturn(ENCRYPTED_SECRET_VALUE);
+        final boolean secretAdded = web2SecretService.addSecret(null, null, null);
+        assertThat(secretAdded).isFalse();
+    }
     // endregion
 
     // region updateSecret
