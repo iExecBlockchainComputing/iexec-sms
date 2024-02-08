@@ -21,6 +21,7 @@ import com.iexec.sms.secret.CacheSecretService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -132,19 +133,29 @@ public class TeeTaskComputeSecretService {
                     .value(encryptionService.encrypt(secretValue))
                     .build();
             log.info("Adding new tee task compute secret [secret:{}]", secret);
-            int result = jdbcTemplate.update("INSERT INTO \"tee_task_compute_secret\" "
+            final int result = jdbcTemplate.update("INSERT INTO \"tee_task_compute_secret\" "
                             + "(\"on_chain_object_type\", \"on_chain_object_address\", \"secret_owner_role\", \"fixed_secret_owner\", \"key\", \"value\") VALUES "
                             + "(?, ?, ?, ?, ?, ?)",
-                    onChainObjectType.ordinal(), onChainObjectAddress.toLowerCase(), secretOwnerRole.ordinal(), secretOwner.toLowerCase(), secretKey, encryptionService.encrypt(secretValue));
+                    secret.getHeader().getOnChainObjectType().ordinal(), secret.getHeader().getOnChainObjectAddress(),
+                    secret.getHeader().getSecretOwnerRole().ordinal(), secret.getHeader().getFixedSecretOwner(),
+                    secret.getHeader().getKey(), secret.getValue());
+            // With SQL INSERT INTO and a single set VALUES, at most 1 row can be added and result can only be 0 or 1
+            // When value should be 0, an exception should have been thrown
+            // This check is only there as a fallback and cannot be reached in tests at the moment
             if (result != 1) {
+                log.error("Data insert did not work but did not produce an exception");
                 return false;
             }
             cacheSecretService.putSecretExistenceInCache(secret.getHeader(), true);
             measuredSecretService.newlyAddedSecret();
             return true;
+        } catch (DuplicateKeyException e) {
+            log.debug(e.getMostSpecificCause().getMessage());
         } catch (DataAccessException e) {
-            log.error("{}", e.getMostSpecificCause().getMessage());
-            return false;
+            log.error(e.getMostSpecificCause().getMessage());
+        } catch (Exception e) {
+            log.error("Data insert failed with message {}", e.getMessage());
         }
+        return false;
     }
 }
