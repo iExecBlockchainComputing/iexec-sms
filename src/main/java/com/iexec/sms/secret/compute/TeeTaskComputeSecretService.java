@@ -143,8 +143,7 @@ public class TeeTaskComputeSecretService {
             // When value should be 0, an exception should have been thrown
             // This check is only there as a fallback and cannot be reached in tests at the moment
             if (result != 1) {
-                log.error("Data insert did not work but did not produce an exception");
-                return false;
+                throw new RuntimeException("Data insert did not work but did not produce an exception");
             }
             cacheSecretService.putSecretExistenceInCache(secret.getHeader(), true);
             measuredSecretService.newlyAddedSecret();
