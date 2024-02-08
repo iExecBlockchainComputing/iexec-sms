@@ -22,6 +22,7 @@ import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -94,7 +95,7 @@ public class Web3SecretService {
             // When value should be 0, an exception should have been thrown
             // This check is only there as a fallback and cannot be reached in tests at the moment
             if (result != 1) {
-                throw new RuntimeException("Data insert did not work but did not produce an exception");
+                throw new IncorrectResultSizeDataAccessException("Data insert did not work but did not produce an exception", 1);
             }
             cacheSecretService.putSecretExistenceInCache(web3Secret.getHeader(), true);
             measuredSecretService.newlyAddedSecret();
