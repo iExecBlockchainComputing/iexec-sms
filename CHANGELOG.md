@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Use `@DataJpaTest` to run secrets and TEE challenges tests on H2 database. (#236 #237)
 - Insert secrets in a single SQL statement. (#238)
 - Remove unused method in `AuthorizationService`, update `AuthorizationServiceTests`. (#240)
+- Move `ApiKeyRequestFilter` class to `com.iexec.sms.admin` package. (#241)
 
 ## [[8.4.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.4.0) 2024-01-10
 
