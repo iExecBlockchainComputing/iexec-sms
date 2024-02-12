@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.commons.poco.utils.SignatureUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
@@ -46,17 +47,13 @@ public class AuthorizationService {
         this.iexecHubService = iexecHubService;
     }
 
-    public boolean isAuthorizedOnExecution(WorkerpoolAuthorization workerpoolAuthorization, boolean isTeeTask) {
-        return isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, isTeeTask).isEmpty();
-    }
-
     /**
      * Checks whether this execution is authorized.
      * If not authorized, return the reason.
      * Otherwise, returns an empty {@link Optional}.
      */
     public Optional<AuthorizationError> isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization workerpoolAuthorization, boolean isTeeTask) {
-        if (workerpoolAuthorization == null || workerpoolAuthorization.getChainTaskId().isEmpty()) {
+        if (workerpoolAuthorization == null || StringUtils.isEmpty(workerpoolAuthorization.getChainTaskId())) {
             log.error("Not authorized with empty params");
             return Optional.of(EMPTY_PARAMS_UNAUTHORIZED);
         }
@@ -86,9 +83,8 @@ public class AuthorizationService {
 
         boolean isTeeTaskOnchain = TeeUtils.isTeeTag(chainDeal.getTag());
         if (isTeeTask != isTeeTaskOnchain) {
-            log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{},"
-                            + "chainTaskId:{}, walletAddress:{}]", isTeeTask, isTeeTaskOnchain,
-                    chainTaskId, workerpoolAuthorization.getWorkerWallet());
+            log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{}, chainTaskId:{}, walletAddress:{}]",
+                    isTeeTask, isTeeTaskOnchain, chainTaskId, workerpoolAuthorization.getWorkerWallet());
             return Optional.of(NO_MATCH_ONCHAIN_TYPE);
         }
 
@@ -105,6 +101,7 @@ public class AuthorizationService {
         return Optional.empty();
     }
 
+    // region isSignedBy
     public boolean isSignedByHimself(String message, String signature, String address) {
         return SignatureUtils.isSignatureValid(BytesUtils.stringToBytes(message), new Signature(signature), address);
     }
@@ -121,7 +118,9 @@ public class AuthorizationService {
                 secretAddress,
                 Hash.sha3String(secretValue));
     }
+    // endregion
 
+    // region challenges
     public String getChallengeForSetAppDeveloperAppComputeSecret(String appAddress,
                                                                  String secretIndex,
                                                                  String secretValue) {
@@ -159,4 +158,5 @@ public class AuthorizationService {
                 workerpoolAuthorization.getChainTaskId(),
                 workerpoolAuthorization.getEnclaveChallenge());
     }
+    // endregion
 }

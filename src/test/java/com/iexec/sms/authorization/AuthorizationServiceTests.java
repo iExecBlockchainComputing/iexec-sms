@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,61 +51,6 @@ class AuthorizationServiceTests {
         MockitoAnnotations.openMocks(this);
     }
 
-    // region isAuthorizedOnExecution
-    @Test
-    void shouldBeAuthorizedOnExecutionOfTeeTask() {
-        ChainDeal chainDeal = getChainDeal();
-        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
-        when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
-        when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
-
-        boolean isAuth = authorizationService.isAuthorizedOnExecution(auth, true);
-        assertThat(isAuth).isTrue();
-    }
-
-    @Test
-    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithNullAuthorization() {
-        boolean isAuth = authorizationService.isAuthorizedOnExecution(null, true);
-        assertThat(isAuth).isFalse();
-    }
-
-    @Test
-    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskTypeNotMatchedOnchain() {
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
-        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
-        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
-
-        boolean isAuth = authorizationService.isAuthorizedOnExecution(auth, false);
-        assertThat(isAuth).isFalse();
-    }
-
-    @Test
-    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActive() {
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
-        ChainTask chainTask = TestUtils.getChainTask(UNSET);
-        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
-        when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
-
-        boolean isAuth = authorizationService.isAuthorizedOnExecution(auth, true);
-        assertThat(isAuth).isFalse();
-    }
-
-    @Test
-    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValid() {
-        ChainDeal chainDeal = TestUtils.getChainDeal();
-        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
-        auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
-
-        when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
-        when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
-
-        boolean isAuth = authorizationService.isAuthorizedOnExecution(auth, true);
-        assertThat(isAuth).isFalse();
-    }
-    // endregion
-
     // region isAuthorizedOnExecutionWithDetailedIssue
     @Test
     void shouldBeAuthorizedOnExecutionOfTeeTaskWithDetails() {
@@ -123,8 +68,14 @@ class AuthorizationServiceTests {
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithNullAuthorizationWithDetails() {
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(null, true);
         assertThat(isAuth).isNotEmpty()
-                .get()
-                .isEqualTo(EMPTY_PARAMS_UNAUTHORIZED);
+                .contains(EMPTY_PARAMS_UNAUTHORIZED);
+    }
+
+    @Test
+    void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithEmptyAuthorizationWithDetails() {
+        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(null, true);
+        assertThat(isAuth).isNotEmpty()
+                .contains(EMPTY_PARAMS_UNAUTHORIZED);
     }
 
     @Test
@@ -137,8 +88,7 @@ class AuthorizationServiceTests {
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, false);
         assertThat(isAuth).isNotEmpty()
-                .get()
-                .isEqualTo(NO_MATCH_ONCHAIN_TYPE);
+                .contains(NO_MATCH_ONCHAIN_TYPE);
     }
 
     @Test
@@ -149,8 +99,7 @@ class AuthorizationServiceTests {
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
         assertThat(isAuth).isNotEmpty()
-                .get()
-                .isEqualTo(GET_CHAIN_TASK_FAILED);
+                .contains(GET_CHAIN_TASK_FAILED);
     }
 
     @Test
@@ -162,8 +111,7 @@ class AuthorizationServiceTests {
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
         assertThat(isAuth).isNotEmpty()
-                .get()
-                .isEqualTo(TASK_NOT_ACTIVE);
+                .contains(TASK_NOT_ACTIVE);
     }
 
     @Test
@@ -178,8 +126,7 @@ class AuthorizationServiceTests {
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
         assertThat(isAuth).isNotEmpty()
-                .get()
-                .isEqualTo(GET_CHAIN_DEAL_FAILED);
+                .contains(GET_CHAIN_DEAL_FAILED);
     }
 
     @Test
@@ -194,11 +141,11 @@ class AuthorizationServiceTests {
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth, true);
         assertThat(isAuth).isNotEmpty()
-                .get()
-                .isEqualTo(INVALID_SIGNATURE);
+                .contains(INVALID_SIGNATURE);
     }
     // endregion
 
+    // region challenges
     @Test
     void getChallengeForSetRequesterAppComputeSecret() {
         String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
@@ -216,6 +163,18 @@ class AuthorizationServiceTests {
         Assertions.assertEquals("0x8d0b92aaf96f66f172d7615b81f257ebdece2278b7da6c60127cad45852eaaf6",
                 challenge);
     }
+
+    @Test
+    void getChallengeForWorker() {
+        final WorkerpoolAuthorization authorization = WorkerpoolAuthorization.builder()
+                .chainTaskId("0x0123")
+                .enclaveChallenge("0x4567")
+                .workerWallet("0xabcd")
+                .build();
+        final String challenge = authorizationService.getChallengeForWorker(authorization);
+        assertThat(challenge).isEqualTo("0x0a17b60a69e733c4199912dc3c5bfd4b17aa6bcfbf3cfbfe6230f00e21f96b85");
+    }
+    // endregion
 
     // region utils
     ChainDeal getChainDeal() {
