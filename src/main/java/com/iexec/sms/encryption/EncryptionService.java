@@ -21,6 +21,7 @@ import com.iexec.common.security.CipherHelper;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
@@ -76,17 +77,21 @@ public class EncryptionService {
     }
 
     public String encrypt(String data) {
-        byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
-        if (encryptedData != null) {
-            return new String(encryptedData);
+        if (StringUtils.isNotBlank(data)) {
+            byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
+            if (encryptedData != null) {
+                return new String(encryptedData);
+            }
         }
         return "";
     }
 
     public String decrypt(String encryptedData) {
-        byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
-        if (decryptedData != null) {
-            return new String(decryptedData);
+        if (StringUtils.isNotBlank(encryptedData)) {
+            byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
+            if (decryptedData != null) {
+                return new String(decryptedData);
+            }
         }
         return "";
     }

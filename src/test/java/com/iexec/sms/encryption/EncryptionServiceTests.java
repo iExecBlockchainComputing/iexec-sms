@@ -24,9 +24,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 
@@ -35,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EncryptionServiceTests {
 
+    public static final String AES_KEY_FILE = "/aes.key";
     @TempDir
     public File tempDir;
 
@@ -63,12 +68,12 @@ class EncryptionServiceTests {
 
     @Test
     void shouldCreateAesKey() {
-        String data = "data mock";
-        String aesKeyPath = tempDir.getAbsolutePath() + "aes";
-        EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
+        final String data = "data mock";
+        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
         final EncryptionService service = new EncryptionService(encryptionConfiguration);
 
-        File aesKeyFile = new File(aesKeyPath);
+        final File aesKeyFile = new File(aesKeyPath);
         assertAll(
                 () -> assertTrue(aesKeyFile.exists()),
                 () -> assertTrue(aesKeyFile.canRead()),
@@ -86,14 +91,65 @@ class EncryptionServiceTests {
         );
     }
 
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldReturnExceptionInInitializerErrorWhenAesKeyPathIsNullOrEmpty(String aesKeyPath) {
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
+        assertThrows(ExceptionInInitializerError.class,
+                () -> {
+                    new EncryptionService(encryptionConfiguration);
+                });
+    }
+
     @Test
-    void shouldReturnEmptyIfFailedToDecrypt() {
-        String aesKeyPath = tempDir.getAbsolutePath() + " aes";
-        EncryptionService service = new EncryptionService(
+    void shouldReturnExceptionInInitializerErrorWhenAesKeyFileIsEmpty() {
+        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final File aesKeyFile = new File(aesKeyPath);
+        assertDoesNotThrow(aesKeyFile::createNewFile);
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
+        assertThrows(ExceptionInInitializerError.class,
+                () -> new EncryptionService(encryptionConfiguration));
+    }
+
+    @Test
+    void shouldReturnExceptionInInitializerErrorWhenFailedToCreateAesKeyFile() {
+        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        assertTrue(tempDir.setWritable(false));
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
+        assertThrows(ExceptionInInitializerError.class,
+                () -> new EncryptionService(encryptionConfiguration));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldReturnEmptyOnEncryptIfBadInput(String input) {
+        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final EncryptionService service = new EncryptionService(
                 new EncryptionConfiguration(aesKeyPath));
 
-        assertAll(
-                () -> assertThat(service.decrypt(service.decrypt("0x"))).isEqualTo("")
-        );
+        assertThat(service.decrypt(service.encrypt(input))).isEqualTo("");
+    }
+
+    @Test
+    void shouldReturnEmptyIfErrorOccuredAesEncrypt() {
+        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final EncryptionService service = new EncryptionService(
+                new EncryptionConfiguration(aesKeyPath));
+        ReflectionTestUtils.setField(service, "aesKey", "badkey".getBytes());
+
+        assertThat(service.decrypt(service.encrypt("test"))).isEqualTo("");
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "0x"})
+    void shouldReturnEmptyIfFailedToDecryptOrBadInputData(String input) {
+        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final EncryptionService service = new EncryptionService(
+                new EncryptionConfiguration(aesKeyPath));
+
+        assertThat(service.decrypt(service.decrypt(input))).isEqualTo("");
     }
 }
