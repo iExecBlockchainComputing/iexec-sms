@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
@@ -35,12 +36,20 @@ public class EncryptionService {
 
     private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
     private final byte[] aesKey;
+    private final String aesKeyPath;
 
     public EncryptionService(EncryptionConfiguration configuration) {
+        this.aesKeyPath = configuration.getAesKeyPath();
         this.aesKey = getOrCreateAesKey(configuration.getAesKeyPath());
+    }
 
+    @PostConstruct
+    protected void checkAlgoAndPermissions() {
         if (!decrypt(encrypt(DEFAULT_MESSAGE)).equals(DEFAULT_MESSAGE)) {
             throw new ExceptionInInitializerError("AES key is corrupted");
+        }
+        if (!checkOrFixReadOnlyPermissions(aesKeyPath)) {
+            throw new ExceptionInInitializerError("Failed to set ReadOnly permission on AES key");
         }
     }
 
@@ -61,9 +70,7 @@ public class EncryptionService {
                 throw new ExceptionInInitializerError("Failed to write generated AES key");
             }
         }
-        if (!checkOrFixReadOnlyPermissions(aesKeyPath)) {
-            throw new ExceptionInInitializerError("Failed to set ReadOnly permission on AES key");
-        }
+
         byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
 
         if (aesKey == null) {
@@ -96,7 +103,7 @@ public class EncryptionService {
         return "";
     }
 
-    private boolean checkOrFixReadOnlyPermissions(String aesKeyPath) {
+    boolean checkOrFixReadOnlyPermissions(String aesKeyPath) {
         final File file = new File(aesKeyPath);
         if (file.canWrite()) {
             try {

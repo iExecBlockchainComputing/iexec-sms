@@ -27,8 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -36,19 +35,16 @@ import java.io.File;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 class EncryptionServiceTests {
 
     public static final String AES_KEY_FILE = "/aes.key";
     @TempDir
     public File tempDir;
-
-    @Mock
-    private EncryptionConfiguration encryptionConfiguration;
-
-    @InjectMocks
-    private EncryptionService encryptionService;
-
+    private String aesKeyPath;
+    private EncryptionService service;
     private static MemoryLogAppender memoryLogAppender;
 
     @BeforeAll
@@ -64,14 +60,15 @@ class EncryptionServiceTests {
     @BeforeEach
     void beforeEach() {
         memoryLogAppender.reset();
+        aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        service = new EncryptionService(new EncryptionConfiguration(aesKeyPath));
     }
 
+    // region CreateAesKey
     @Test
     void shouldCreateAesKey() {
         final String data = "data mock";
-        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
-        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
-        final EncryptionService service = new EncryptionService(encryptionConfiguration);
+        service.checkAlgoAndPermissions();
 
         final File aesKeyFile = new File(aesKeyPath);
         assertAll(
@@ -83,12 +80,23 @@ class EncryptionServiceTests {
                 () -> assertTrue(memoryLogAppender.contains("AES key file set to readOnly")),
                 () -> assertTrue(memoryLogAppender.contains("success:true"))
         );
-        //second call, no need to set permissions agin
+        //second call, no need to set permissions again
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
         new EncryptionService(encryptionConfiguration);
         assertAll(
                 () -> assertFalse(memoryLogAppender.doesNotContains("AES key file set to readOnly")),
                 () -> assertTrue(memoryLogAppender.contains("isNewAesKey:false"))
         );
+    }
+    // endregion
+
+    //region ExceptionInInitializerError
+    @Test
+    void shouldReturnExceptionInInitializerErrorWhenCheckOnPostConstructFailed() {
+        EncryptionService spyEncryptionService = Mockito.spy(service);
+        when(spyEncryptionService.decrypt(any())).thenReturn("bad message");
+
+        assertThrows(ExceptionInInitializerError.class, spyEncryptionService::checkAlgoAndPermissions);
     }
 
     @ParameterizedTest
@@ -104,7 +112,7 @@ class EncryptionServiceTests {
 
     @Test
     void shouldReturnExceptionInInitializerErrorWhenAesKeyFileIsEmpty() {
-        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final String aesKeyPath = tempDir.getAbsolutePath() + "/aes2.key";
         final File aesKeyFile = new File(aesKeyPath);
         assertDoesNotThrow(aesKeyFile::createNewFile);
         final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
@@ -114,42 +122,43 @@ class EncryptionServiceTests {
 
     @Test
     void shouldReturnExceptionInInitializerErrorWhenFailedToCreateAesKeyFile() {
-        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
+        final String aesKeyPath = tempDir.getAbsolutePath() + "/aes2.key";
         assertTrue(tempDir.setWritable(false));
         final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
         assertThrows(ExceptionInInitializerError.class,
                 () -> new EncryptionService(encryptionConfiguration));
     }
 
+    @Test
+    void shouldReturnExceptionInInitializerErrorWhenFailedToSetPermissions() {
+        EncryptionService spyEncryptionService = Mockito.spy(service);
+        when(spyEncryptionService.checkOrFixReadOnlyPermissions(aesKeyPath)).thenReturn(false);
+        assertThrows(ExceptionInInitializerError.class, spyEncryptionService::checkAlgoAndPermissions);
+    }
+    // endregion
+
+    // region Encrypt
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
     void shouldReturnEmptyOnEncryptIfBadInput(String input) {
-        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
-        final EncryptionService service = new EncryptionService(
-                new EncryptionConfiguration(aesKeyPath));
-
-        assertThat(service.decrypt(service.encrypt(input))).isEqualTo("");
+        assertThat(service.decrypt(service.encrypt(input))).isEmpty();
     }
+
 
     @Test
-    void shouldReturnEmptyIfErrorOccuredAesEncrypt() {
-        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
-        final EncryptionService service = new EncryptionService(
-                new EncryptionConfiguration(aesKeyPath));
-        ReflectionTestUtils.setField(service, "aesKey", "badkey".getBytes());
-
-        assertThat(service.decrypt(service.encrypt("test"))).isEqualTo("");
+    void shouldReturnEmptyIfErrorOccurredAesEncrypt() {
+        ReflectionTestUtils.setField(service, "aesKey", "badKey".getBytes());
+        assertThat(service.decrypt(service.encrypt("test"))).isEmpty();
     }
+    // endregion
 
+    // region Decrypt
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"", "0x"})
     void shouldReturnEmptyIfFailedToDecryptOrBadInputData(String input) {
-        final String aesKeyPath = tempDir.getAbsolutePath() + AES_KEY_FILE;
-        final EncryptionService service = new EncryptionService(
-                new EncryptionConfiguration(aesKeyPath));
-
-        assertThat(service.decrypt(service.decrypt(input))).isEqualTo("");
+        assertThat(service.decrypt(service.decrypt(input))).isEmpty();
     }
+    // endregion
 }
