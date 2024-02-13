@@ -81,12 +81,9 @@ class EncryptionServiceTests {
                 () -> assertTrue(memoryLogAppender.contains("success:true"))
         );
         //second call, no need to set permissions again
-        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
-        new EncryptionService(encryptionConfiguration);
-        assertAll(
-                () -> assertFalse(memoryLogAppender.doesNotContains("AES key file set to readOnly")),
-                () -> assertTrue(memoryLogAppender.contains("isNewAesKey:false"))
-        );
+        memoryLogAppender.reset();
+        service.checkAlgoAndPermissions();
+        assertTrue(memoryLogAppender.doesNotContains("AES key file set to readOnly"));
     }
     // endregion
 
