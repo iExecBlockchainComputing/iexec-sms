@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Export metrics on TEE challenges and Ethereum Credentials counts. (#230)
 - Add a cache mechanism for secret existence. (#231)
 - Expose cache metrics and refactor cache implementation. (#238)
+- Set permissions to read-only on AES Key File. (#239)
 
 ### Bug Fixes
 

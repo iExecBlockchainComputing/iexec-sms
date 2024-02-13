@@ -60,7 +60,9 @@ public class EncryptionService {
                 throw new ExceptionInInitializerError("Failed to write generated AES key");
             }
         }
-
+        if (!checkOrFixReadOnlyPermissions(aesKeyPath)) {
+            throw new ExceptionInInitializerError("Failed to set ReadOnly permission on AES key");
+        }
         byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
 
         if (aesKey == null) {
@@ -89,4 +91,18 @@ public class EncryptionService {
         return "";
     }
 
+    private boolean checkOrFixReadOnlyPermissions(String aesKeyPath) {
+        final File file = new File(aesKeyPath);
+        if (file.canWrite()) {
+            try {
+                final boolean success = file.setReadOnly();
+                log.debug("AES key file set to readOnly [aesKeyPath:{}, success:{}]", aesKeyPath, success);
+                return success;
+            } catch (SecurityException e) {
+                log.error("Unable to set AES key file to read-only [aesKeyPath:{}]", aesKeyPath, e);
+                return false;
+            }
+        }
+        return true;
+    }
 }
