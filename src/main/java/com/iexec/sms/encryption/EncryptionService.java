@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ import com.iexec.common.security.CipherHelper;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
@@ -34,12 +36,20 @@ public class EncryptionService {
 
     private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
     private final byte[] aesKey;
+    private final String aesKeyPath;
 
     public EncryptionService(EncryptionConfiguration configuration) {
+        this.aesKeyPath = configuration.getAesKeyPath();
         this.aesKey = getOrCreateAesKey(configuration.getAesKeyPath());
+    }
 
+    @PostConstruct
+    protected void checkAlgoAndPermissions() {
         if (!decrypt(encrypt(DEFAULT_MESSAGE)).equals(DEFAULT_MESSAGE)) {
             throw new ExceptionInInitializerError("AES key is corrupted");
+        }
+        if (!checkOrFixReadOnlyPermissions(aesKeyPath)) {
+            throw new ExceptionInInitializerError("Failed to set ReadOnly permission on AES key");
         }
     }
 
@@ -74,19 +84,37 @@ public class EncryptionService {
     }
 
     public String encrypt(String data) {
-        byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
-        if (encryptedData != null) {
-            return new String(encryptedData);
+        if (StringUtils.isNotBlank(data)) {
+            byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
+            if (encryptedData != null) {
+                return new String(encryptedData);
+            }
         }
         return "";
     }
 
     public String decrypt(String encryptedData) {
-        byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
-        if (decryptedData != null) {
-            return new String(decryptedData);
+        if (StringUtils.isNotBlank(encryptedData)) {
+            byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
+            if (decryptedData != null) {
+                return new String(decryptedData);
+            }
         }
         return "";
     }
 
+    boolean checkOrFixReadOnlyPermissions(String aesKeyPath) {
+        final File file = new File(aesKeyPath);
+        if (file.canWrite()) {
+            try {
+                final boolean success = file.setReadOnly();
+                log.debug("AES key file set to readOnly [aesKeyPath:{}, success:{}]", aesKeyPath, success);
+                return success;
+            } catch (SecurityException e) {
+                log.error("Unable to set AES key file to read-only [aesKeyPath:{}]", aesKeyPath, e);
+                return false;
+            }
+        }
+        return true;
+    }
 }
