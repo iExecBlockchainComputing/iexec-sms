@@ -20,6 +20,7 @@ package com.iexec.sms.encryption;
 import com.iexec.common.security.CipherHelper;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,8 @@ public class EncryptionService {
 
     private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
     private final byte[] aesKey;
+
+    @Getter
     private final String aesKeyPath;
 
     public EncryptionService(EncryptionConfiguration configuration) {

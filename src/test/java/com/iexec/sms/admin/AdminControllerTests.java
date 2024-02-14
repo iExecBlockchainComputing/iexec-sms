@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.iexec.sms.admin;
 
+import com.iexec.sms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,8 @@ class AdminControllerTests {
     private ReentrantLock rLock;
     @Mock
     private AdminService adminService;
+    @Mock
+    private EncryptionService encryptionService;
     @InjectMocks
     private AdminController adminController;
 
@@ -69,21 +72,21 @@ class AdminControllerTests {
     // region backup
     @Test
     void shouldReturnCreatedWhenBackupSuccess() {
-        Mockito.doReturn(true).when(adminService).createDatabaseBackupFile(any(), any());
+        Mockito.doReturn(true).when(adminService).createBackupFile(any(), any());
         assertEquals(HttpStatus.CREATED, adminController.createBackup().getStatusCode());
     }
 
     @Test
     void shouldReturnErrorWhenBackupFail() {
-        Mockito.doReturn(false).when(adminService).createDatabaseBackupFile(any(), any());
+        Mockito.doReturn(false).when(adminService).createBackupFile(any(), any());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.createBackup().getStatusCode());
     }
 
     @Test
     void shouldReturnTooManyRequestWhenBackupProcessIsAlreadyRunning() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
             @Override
-            public boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
+            public boolean createBackupFile(String storageLocation, String backupFileName) {
                 try {
                     log.info("Long createDatabaseBackupFile action is running ...");
                     Thread.sleep(2000);
@@ -152,7 +155,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
             @Override
             public boolean copyBackupFile(String backupStoragePath, String backupFileName, String replicateStoragePath, String replicateFileName) {
                 try {
@@ -224,7 +227,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnRestore(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
             @Override
             public boolean restoreDatabaseFromBackupFile(String storageId, String fileName) {
                 try {
@@ -319,7 +322,7 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnDelete(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
             @Override
             public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
                 try {
@@ -393,7 +396,7 @@ class AdminControllerTests {
     @Test
     void testTooManyRequestOnCopy(@TempDir Path tempDir) throws InterruptedException {
 
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService("", "", "", "") {
+        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
             @Override
             public boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
                 try {

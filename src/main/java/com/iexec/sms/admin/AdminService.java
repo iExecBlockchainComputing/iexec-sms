@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.iexec.sms.admin;
 
+import com.iexec.sms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.RunScript;
@@ -41,7 +42,7 @@ public class AdminService {
 
     // Used to print formatted date in log
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-
+    public static final String AES_KEY_FILENAME_EXTENSION = ".key";
     public static final String ERR_BACKUP_FILE_OUTSIDE_STORAGE = "Backup file is outside of storage file system";
     public static final String ERR_BACKUP_FILE_NOT_EXIST = "Backup file does not exist";
     public static final String ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE = "Replicated or Copied backup file destination is outside of storage file system";
@@ -50,8 +51,9 @@ public class AdminService {
     private final String datasourceUsername;
     private final String datasourcePassword;
     private final String adminStorageLocation;
+    private final EncryptionService encryptionService;
 
-    public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
+    public AdminService(EncryptionService encryptionService, @Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
                         @Value("${spring.datasource.password}") String datasourcePassword,
                         @Value("${admin.storage-location}") String adminStorageLocation) {
@@ -59,16 +61,17 @@ public class AdminService {
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
         this.adminStorageLocation = adminStorageLocation;
+        this.encryptionService = encryptionService;
     }
 
     /**
-     * Creates a backup of the H2 database and saves it to the specified location.
+     * Creates a backup of the H2 database and associated AES key at the specified location.
      *
      * @param storageLocation The location where the backup file will be saved, must be an existing directory.
      * @param backupFileName  The name of the backup file.
      * @return {@code true} if the backup was successful, {@code false} if any error occurs.
      */
-    boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
+    boolean createBackupFile(String storageLocation, String backupFileName) {
         try {
             // Ensure that storageLocation and backupFileName are not blanks
             boolean validation = checkCommonParameters(storageLocation, backupFileName);
@@ -82,9 +85,12 @@ public class AdminService {
                 return false;
             }
             final File backupFile = new File(storageLocation + File.separator + backupFileName);
-            final String backupFileLocation = backupFile.getCanonicalPath();
-
-            return databaseDump(backupFileLocation);
+            final String databaseBackupFileLocation = backupFile.getCanonicalPath();
+            final String aesKeyBackupFileLocation = databaseBackupFileLocation + AES_KEY_FILENAME_EXTENSION;
+            //Backup aes key
+            Files.copy(Path.of(encryptionService.getAesKeyPath()), Path.of(aesKeyBackupFileLocation), StandardCopyOption.REPLACE_EXISTING);
+            log.debug("Backup AES Key created [fileName:{}]", aesKeyBackupFileLocation);
+            return databaseDump(databaseBackupFileLocation);
         } catch (IOException e) {
             log.error("An error occurred while creating backup", e);
         }
