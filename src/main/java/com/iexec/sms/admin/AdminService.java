@@ -53,7 +53,8 @@ public class AdminService {
     private final String adminStorageLocation;
     private final EncryptionService encryptionService;
 
-    public AdminService(EncryptionService encryptionService, @Value("${spring.datasource.url}") String datasourceUrl,
+    public AdminService(EncryptionService encryptionService,
+                        @Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
                         @Value("${spring.datasource.password}") String datasourcePassword,
                         @Value("${admin.storage-location}") String adminStorageLocation) {

@@ -57,7 +57,7 @@ class AdminServiceTests {
                 .build();
     }
 
-    private AdminService adminService;// = new AdminService("jdbc:h2:mem:test", "sa", "", "/tmp/");
+    private AdminService adminService;
 
     @TempDir
     File tempStorageLocation;
