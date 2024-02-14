@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.iexec.sms.MemoryLogAppender;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.File;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -72,18 +74,18 @@ class EncryptionServiceTests {
 
         final File aesKeyFile = new File(aesKeyPath);
         assertAll(
-                () -> assertTrue(aesKeyFile.exists()),
-                () -> assertTrue(aesKeyFile.canRead()),
-                () -> assertFalse(aesKeyFile.canExecute()),
-                () -> assertFalse(aesKeyFile.canWrite()),
+                () -> assertThat(aesKeyFile).exists(),
+                () -> assertThat(aesKeyFile).canRead(),
+                () -> assertThat(aesKeyFile.canExecute()).isFalse(),
+                () -> assertThat(aesKeyFile.canWrite()).isFalse(),
                 () -> assertThat(service.decrypt(service.encrypt(data))).isEqualTo(data),
-                () -> assertTrue(memoryLogAppender.contains("AES key file set to readOnly")),
-                () -> assertTrue(memoryLogAppender.contains("success:true"))
+                () -> assertThat(memoryLogAppender.contains("AES key file set to readOnly")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("success:true")).isTrue()
         );
         //second call, no need to set permissions again
         memoryLogAppender.reset();
         service.checkAlgoAndPermissions();
-        assertTrue(memoryLogAppender.doesNotContains("AES key file set to readOnly"));
+        assertThat(memoryLogAppender.doesNotContains("AES key file set to readOnly")).isTrue();
     }
     // endregion
 
@@ -93,7 +95,8 @@ class EncryptionServiceTests {
         EncryptionService spyEncryptionService = Mockito.spy(service);
         when(spyEncryptionService.decrypt(any())).thenReturn("bad message");
 
-        assertThrows(ExceptionInInitializerError.class, spyEncryptionService::checkAlgoAndPermissions);
+        assertThatExceptionOfType(ExceptionInInitializerError.class)
+                .isThrownBy(spyEncryptionService::checkAlgoAndPermissions);
     }
 
     @ParameterizedTest
@@ -101,36 +104,36 @@ class EncryptionServiceTests {
     @ValueSource(strings = {""})
     void shouldReturnExceptionInInitializerErrorWhenAesKeyPathIsNullOrEmpty(String aesKeyPath) {
         final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
-        assertThrows(ExceptionInInitializerError.class,
-                () -> {
-                    new EncryptionService(encryptionConfiguration);
-                });
+        assertThatExceptionOfType(ExceptionInInitializerError.class)
+                .isThrownBy(() -> new EncryptionService(encryptionConfiguration));
     }
 
     @Test
     void shouldReturnExceptionInInitializerErrorWhenAesKeyFileIsEmpty() {
         final String aesKeyPath = tempDir.getAbsolutePath() + "/aes2.key";
         final File aesKeyFile = new File(aesKeyPath);
-        assertDoesNotThrow(aesKeyFile::createNewFile);
+        Assertions.assertThatCode(aesKeyFile::createNewFile).doesNotThrowAnyException();
+
         final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
-        assertThrows(ExceptionInInitializerError.class,
-                () -> new EncryptionService(encryptionConfiguration));
+        assertThatExceptionOfType(ExceptionInInitializerError.class)
+                .isThrownBy(() -> new EncryptionService(encryptionConfiguration));
     }
 
     @Test
     void shouldReturnExceptionInInitializerErrorWhenFailedToCreateAesKeyFile() {
         final String aesKeyPath = tempDir.getAbsolutePath() + "/aes2.key";
-        assertTrue(tempDir.setWritable(false));
+        assertThat(tempDir.setWritable(false)).isTrue();
         final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
-        assertThrows(ExceptionInInitializerError.class,
-                () -> new EncryptionService(encryptionConfiguration));
+        assertThatExceptionOfType(ExceptionInInitializerError.class)
+                .isThrownBy(() -> new EncryptionService(encryptionConfiguration));
     }
 
     @Test
     void shouldReturnExceptionInInitializerErrorWhenFailedToSetPermissions() {
         EncryptionService spyEncryptionService = Mockito.spy(service);
         when(spyEncryptionService.checkOrFixReadOnlyPermissions(aesKeyPath)).thenReturn(false);
-        assertThrows(ExceptionInInitializerError.class, spyEncryptionService::checkAlgoAndPermissions);
+        assertThatExceptionOfType(ExceptionInInitializerError.class)
+                .isThrownBy(spyEncryptionService::checkAlgoAndPermissions);
     }
     // endregion
 
