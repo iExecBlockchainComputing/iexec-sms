@@ -142,14 +142,14 @@ class EncryptionServiceTests {
     @NullSource
     @ValueSource(strings = {""})
     void shouldReturnEmptyOnEncryptIfBadInput(String input) {
-        assertThat(service.decrypt(service.encrypt(input))).isEmpty();
+        assertThat(service.encrypt(input)).isEmpty();
     }
 
 
     @Test
     void shouldReturnEmptyIfErrorOccurredAesEncrypt() {
         ReflectionTestUtils.setField(service, "aesKey", "badKey".getBytes());
-        assertThat(service.decrypt(service.encrypt("test"))).isEmpty();
+        assertThat(service.encrypt("test")).isEmpty();
     }
     // endregion
 
@@ -158,7 +158,7 @@ class EncryptionServiceTests {
     @NullSource
     @ValueSource(strings = {"", "0x"})
     void shouldReturnEmptyIfFailedToDecryptOrBadInputData(String input) {
-        assertThat(service.decrypt(service.decrypt(input))).isEmpty();
+        assertThat(service.decrypt(input)).isEmpty();
     }
     // endregion
 }
