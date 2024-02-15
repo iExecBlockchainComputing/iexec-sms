@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Expose cache metrics and refactor cache implementation. (#238)
 - Set permissions to read-only on AES Key File. (#242)
 - Backup AES Key File with database backup. (#243)
+- Copy AES Key File on database copy. (#244)
 
 ### Bug Fixes
 

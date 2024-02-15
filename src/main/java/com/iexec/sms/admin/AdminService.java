@@ -44,7 +44,8 @@ public class AdminService {
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     public static final String AES_KEY_FILENAME_EXTENSION = ".key";
     public static final String ERR_BACKUP_FILE_OUTSIDE_STORAGE = "Backup file is outside of storage file system";
-    public static final String ERR_BACKUP_FILE_NOT_EXIST = "Backup file does not exist";
+    public static final String ERR_DATABASE_BACKUP_FILE_NOT_EXIST = "Database backup file does not exist";
+    public static final String ERR_AES_KEY_BACKUP_FILE_NOT_EXIST = "AES KEY backup file does not exist";
     public static final String ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE = "Replicated or Copied backup file destination is outside of storage file system";
     public static final String ERR_FILE_ALREADY_EXIST = "A file already exists at the destination";
     private final String datasourceUrl;
@@ -139,7 +140,7 @@ public class AdminService {
                     storageLocation + File.separator + backupFileName,
                     ERR_BACKUP_FILE_OUTSIDE_STORAGE);
             if (!Path.of(backupFileLocation).toFile().exists()) {
-                throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
+                throw new FileSystemNotFoundException(ERR_DATABASE_BACKUP_FILE_NOT_EXIST);
             }
             final long size = backupFileLocation.length();
             log.info("Starting the restore process [backupFileLocation:{}]", backupFileLocation);
@@ -177,7 +178,7 @@ public class AdminService {
                     ERR_BACKUP_FILE_OUTSIDE_STORAGE);
             final Path backupFileLocationPath = Path.of(backupFileLocation);
             if (!backupFileLocationPath.toFile().exists()) {
-                throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
+                throw new FileSystemNotFoundException(ERR_DATABASE_BACKUP_FILE_NOT_EXIST);
             }
             log.info("Starting the delete process [backupFileLocation:{}]", backupFileLocation);
             final long start = System.currentTimeMillis();
@@ -206,31 +207,50 @@ public class AdminService {
     boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
         try {
             // Check that we want to copy an authorised file
-            final Path sourceBackupFileLocation = Path.of(checkBackupFileLocation(
+            final Path sourceDatabaseBackupFileLocation = Path.of(checkBackupFileLocation(
                     sourceStorageLocation + File.separator + sourceBackupFileName,
                     ERR_BACKUP_FILE_OUTSIDE_STORAGE));
 
-            // File must exist
-            if (!sourceBackupFileLocation.toFile().exists()) {
-                throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
+            // authorizations are controlled via the previous line, no need to call checkBackupFileLocation here
+            final Path sourceAesKeyBackupFileLocation = Path.of(sourceDatabaseBackupFileLocation.toString() + AES_KEY_FILENAME_EXTENSION);
+
+            // Database backup file must exist
+            if (!sourceDatabaseBackupFileLocation.toFile().exists()) {
+                throw new FileSystemNotFoundException(ERR_DATABASE_BACKUP_FILE_NOT_EXIST);
+            }
+
+            // AES Key backup file must exist
+            if (!sourceAesKeyBackupFileLocation.toFile().exists()) {
+                throw new FileSystemNotFoundException(ERR_AES_KEY_BACKUP_FILE_NOT_EXIST);
             }
 
             // Check that we want to copy into authorized location
-            final Path destinationBackupFileLocation = Path.of(checkBackupFileLocation(
+            final Path destinationDatabaseBackupFileLocation = Path.of(checkBackupFileLocation(
                     destinationStorageLocation + File.separator + destinationBackupFileName,
                     ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
 
+            // AES Key copy destination
+            final Path destinationAesKeyBackupFileLocation = Path.of(destinationDatabaseBackupFileLocation.toString() + AES_KEY_FILENAME_EXTENSION);
+
             // Check that we are not trying to overwrite a file
-            if (destinationBackupFileLocation.toFile().exists()) {
+            if (destinationDatabaseBackupFileLocation.toFile().exists() || destinationAesKeyBackupFileLocation.toFile().exists()) {
                 throw new IOException(ERR_FILE_ALREADY_EXIST);
             }
-            final long size = sourceBackupFileLocation.toFile().length();
-            log.info("Starting the copy process [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}]", sourceBackupFileLocation, destinationBackupFileLocation);
-            final long start = System.currentTimeMillis();
-            Files.copy(sourceBackupFileLocation, destinationBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
-            final long stop = System.currentTimeMillis();
-            log.info("Backup has been copied [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    sourceBackupFileLocation, destinationBackupFileLocation, dateFormat.format(start), stop - start, size);
+            final long sizeDump = sourceDatabaseBackupFileLocation.toFile().length();
+            log.info("Starting the database copy process [sourceDatabaseBackupFileLocation:{}, destinationDatabaseBackupFileLocation:{}]", sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation);
+            final long startDumpCopy = System.currentTimeMillis();
+            Files.copy(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
+            final long stopDumpCopy = System.currentTimeMillis();
+            log.info("Database backup has been copied [sourceDatabaseBackupFileLocation:{}, destinationDatabaseBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                    sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, dateFormat.format(startDumpCopy), stopDumpCopy - startDumpCopy, sizeDump);
+
+            final long sizeAesKey = sourceAesKeyBackupFileLocation.toFile().length();
+            log.info("Starting the AES Key copy process [sourceAesKeyBackupFileLocation:{}, destinationAesKeyBackupFileLocation:{}]", sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation);
+            final long startAesKeyCopy = System.currentTimeMillis();
+            Files.copy(sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
+            final long stopAesKeyCopy = System.currentTimeMillis();
+            log.info("AES Key backup has been copied [sourceAesKeyBackupFileLocation:{}, destinationAesKeyBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                    sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, dateFormat.format(startAesKeyCopy), stopAesKeyCopy - startAesKeyCopy, sizeAesKey);
             return true;
         } catch (IOException e) {
             log.error("An error occurred while copying backup", e);
