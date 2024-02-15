@@ -236,26 +236,22 @@ public class AdminService {
             if (destinationDatabaseBackupFileLocation.toFile().exists() || destinationAesKeyBackupFileLocation.toFile().exists()) {
                 throw new IOException(ERR_FILE_ALREADY_EXIST);
             }
-            final long sizeDump = sourceDatabaseBackupFileLocation.toFile().length();
-            log.info("Starting the database copy process [sourceDatabaseBackupFileLocation:{}, destinationDatabaseBackupFileLocation:{}]", sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation);
-            final long startDumpCopy = System.currentTimeMillis();
-            Files.copy(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
-            final long stopDumpCopy = System.currentTimeMillis();
-            log.info("Database backup has been copied [sourceDatabaseBackupFileLocation:{}, destinationDatabaseBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, dateFormat.format(startDumpCopy), stopDumpCopy - startDumpCopy, sizeDump);
-
-            final long sizeAesKey = sourceAesKeyBackupFileLocation.toFile().length();
-            log.info("Starting the AES Key copy process [sourceAesKeyBackupFileLocation:{}, destinationAesKeyBackupFileLocation:{}]", sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation);
-            final long startAesKeyCopy = System.currentTimeMillis();
-            Files.copy(sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
-            final long stopAesKeyCopy = System.currentTimeMillis();
-            log.info("AES Key backup has been copied [sourceAesKeyBackupFileLocation:{}, destinationAesKeyBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, dateFormat.format(startAesKeyCopy), stopAesKeyCopy - startAesKeyCopy, sizeAesKey);
+            processCopyFile(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, "Database");
+            processCopyFile(sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, "AES Key");
             return true;
         } catch (IOException e) {
             log.error("An error occurred while copying backup", e);
         }
         return false;
+    }
+
+    private void processCopyFile(Path source, Path destination, String fileDescription) throws IOException {
+        final long size = source.toFile().length();
+        log.info("{} copy process start [source:{}, destination :{}]", fileDescription, source, destination);
+        final long start = System.currentTimeMillis();
+        Files.copy(source, destination, StandardCopyOption.COPY_ATTRIBUTES);
+        final long stop = System.currentTimeMillis();
+        log.info("{} copy process done [source:{}, destination :{}, timestamp:{}, duration:{} ms, size:{}]", fileDescription, source, destination, dateFormat.format(start), stop - start, size);
     }
 
     String checkBackupFileLocation(String fullBackupFileName, String errorMessage) throws IOException {
