@@ -240,7 +240,7 @@ public class AdminService {
      *
      * @param source              The source to check
      * @param adminOperationError The custom error message
-     * @throws IOException If the source does not exist
+     * @throws FileSystemNotFoundException If the source does not exist
      */
     private void checkSourceFileNotExist(Path source, AdminOperationError adminOperationError) throws FileSystemNotFoundException {
         if (!source.toFile().exists()) {
