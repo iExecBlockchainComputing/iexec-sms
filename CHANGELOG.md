@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add a cache mechanism for secret existence. (#231)
 - Expose cache metrics and refactor cache implementation. (#238)
 - Set permissions to read-only on AES Key File. (#242)
+- Backup AES Key File with database backup. (#243)
 
 ### Bug Fixes
 

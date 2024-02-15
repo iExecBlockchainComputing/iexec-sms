@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.iexec.sms.MemoryLogAppender;
+import com.iexec.sms.encryption.EncryptionConfiguration;
+import com.iexec.sms.encryption.EncryptionService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +41,9 @@ import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 
 class AdminServiceTests {
@@ -53,11 +57,13 @@ class AdminServiceTests {
                 .build();
     }
 
-    private final AdminService adminService = new AdminService("jdbc:h2:mem:test", "sa", "", "/tmp/");
+    private AdminService adminService;
 
     @TempDir
     File tempStorageLocation;
 
+    @TempDir
+    public File tempDir;
     private static MemoryLogAppender memoryLogAppender;
 
     @BeforeAll
@@ -73,12 +79,20 @@ class AdminServiceTests {
     @BeforeEach
     void beforeEach() {
         memoryLogAppender.reset();
+        final EncryptionService encryptionService = new EncryptionService(
+                new EncryptionConfiguration(tempDir.getAbsolutePath() + "/aes.key"));
+        adminService = new AdminService(encryptionService, "jdbc:h2:mem:test", "sa", "", "/tmp/");
     }
 
     // region backup
     @Test
     void shouldReturnTrueWhenAllParametersAreValid() {
-        assertTrue(adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
+        final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/backup.sql" + AdminService.AES_KEY_FILENAME_EXTENSION);
+        assertAll(
+                () -> assertThat(adminService.createBackupFile(tempStorageLocation.getPath(), "backup.sql")).isTrue(),
+                () -> assertThat(backupAesKeyFile).exists(),
+                () -> assertThat(memoryLogAppender.contains("Backup AES Key created")).isTrue()
+        );
     }
 
     @Test
@@ -86,78 +100,78 @@ class AdminServiceTests {
         AdminService adminServiceSpy = Mockito.spy(adminService);
 
         Mockito.doReturn(false).when(adminServiceSpy).databaseDump(any());
-        assertFalse(adminServiceSpy.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql"));
+        assertThat(adminServiceSpy.createBackupFile(tempStorageLocation.getPath(), "backup.sql")).isFalse();
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
     void shouldReturnFalseWhenEmptyOrNullStorageLocation(String location) {
-        assertFalse(adminService.createDatabaseBackupFile(location, "backup.sql"));
+        assertThat(adminService.createBackupFile(location, "backup.sql")).isFalse();
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
     void shouldReturnFalseWhenEmptyOrNullBackupFileName(String fileName) {
-        assertFalse(adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), fileName));
+        assertThat(adminService.createBackupFile(tempStorageLocation.getPath(), fileName)).isFalse();
     }
 
     @Test
     void shouldReturnFalseWhenStorageLocationDoesNotExist() {
-        assertFalse(adminService.createDatabaseBackupFile("/nonexistent/directory/", "backup.sql"));
+        assertThat(adminService.createBackupFile("/nonexistent/directory/", "backup.sql")).isFalse();
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
     void shouldReturnFalseWhenEmptyOrNullFullBackupFileName(String fullBackupFileName) {
-        assertFalse(adminService.databaseDump(fullBackupFileName));
+        assertThat(adminService.databaseDump(fullBackupFileName)).isFalse();
     }
 
     @Test
     void shouldReturnFalseWhenBackupFileNameDoesNotExist() {
-        assertFalse(adminService.databaseDump("/nonexistent/directory/backup.sql"));
+        assertThat(adminService.databaseDump("/nonexistent/directory/backup.sql")).isFalse();
     }
-
     // endregion
 
     // region restore-backup
     @Test
     void shouldRestoreBackup() {
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(new File(backupFile).exists());
+        adminService.createBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertThat(new File(backupFile)).exists();
         adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(memoryLogAppender.contains("Backup has been restored"));
+        assertThat(memoryLogAppender.contains("Backup has been restored")).isTrue();
     }
 
     @Test
     void shouldFailToRestoreWhenBackupFileMissing() throws IOException {
         final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
-        assertThrows(
-                FileSystemNotFoundException.class,
-                () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql"),
-                "Backup file does not exist"
-        );
+        assertThatExceptionOfType(FileSystemNotFoundException.class)
+                .isThrownBy(
+                        () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql")
+                ).withMessageContaining("Backup file does not exist");
     }
 
     @Test
     void shouldFailToRestoreWhenBackupFileOutOfStorage() {
         assertAll(
-                () -> assertFalse(adminService.restoreDatabaseFromBackupFile("/backup", "backup.sql")),
-                () -> assertTrue(memoryLogAppender.contains("Backup file is outside of storage file system"))
+                () -> assertThat(adminService.restoreDatabaseFromBackupFile("/backup", "backup.sql")).isFalse(),
+                () -> assertThat(memoryLogAppender.contains("Backup file is outside of storage file system")).isTrue()
         );
     }
 
     @Test
     void withSQLException() {
+        final EncryptionService encryptionService = new EncryptionService(
+                new EncryptionConfiguration(tempDir.getAbsolutePath() + "/aes.key"));
         final String backupFile = Path.of(tempStorageLocation.getPath(), "backup.sql").toString();
-        AdminService corruptAdminService = new AdminService("url", "username", "password", "/tmp/");
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(new File(backupFile).exists());
+        final AdminService corruptAdminService = new AdminService(encryptionService, "url", "username", "password", "/tmp/");
+        adminService.createBackupFile(tempStorageLocation.getPath(), "backup.sql");
+        assertThat(new File(backupFile)).exists();
         corruptAdminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertTrue(memoryLogAppender.contains("SQL error occurred during restore"));
+        assertThat(memoryLogAppender.contains("SQL error occurred during restore")).isTrue();
     }
     // endregion
 
@@ -167,27 +181,26 @@ class AdminServiceTests {
         final String backupFileName = "backup.sql";
         final Path tmpFile = Files.createFile(tempStorageLocation.toPath().resolve(backupFileName));
         assertAll(
-                () -> assertTrue(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName)),
-                () -> assertFalse(tmpFile.toFile().exists()),
-                () -> assertTrue(memoryLogAppender.contains("Successfully deleted backup"))
+                () -> assertThat(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName)).isTrue(),
+                () -> assertThat(tmpFile.toFile()).doesNotExist(),
+                () -> assertThat(memoryLogAppender.contains("Successfully deleted backup")).isTrue()
         );
     }
 
     @Test
     void shouldFailToDeleteWhenBackupFileMissing() throws IOException {
         final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
-        assertThrows(
-                FileSystemNotFoundException.class,
-                () -> adminService.deleteBackupFileFromStorage(backupStorageLocation, "backup.sql"),
-                "Backup file does not exist"
-        );
+        assertThatExceptionOfType(FileSystemNotFoundException.class)
+                .isThrownBy(
+                        () -> adminService.deleteBackupFileFromStorage(backupStorageLocation, "backup.sql")
+                ).withMessageContaining("Backup file does not exist");
     }
 
     @Test
     void shouldFailToDeleteWhenBackupFileOutOfStorage() {
         assertAll(
-                () -> assertFalse(adminService.deleteBackupFileFromStorage("/backup", "backup.sql")),
-                () -> assertTrue(memoryLogAppender.contains("Backup file is outside of storage file system"))
+                () -> assertThat(adminService.deleteBackupFileFromStorage("/backup", "backup.sql")).isFalse(),
+                () -> assertThat(memoryLogAppender.contains("Backup file is outside of storage file system")).isTrue()
         );
 
     }
@@ -200,9 +213,9 @@ class AdminServiceTests {
         final String emptyBackupFileName = "";
 
         assertAll(
-                () -> assertFalse(adminService.deleteBackupFileFromStorage(emptyStorageLocation, validBackupFileName)),
-                () -> assertFalse(adminService.deleteBackupFileFromStorage(validStorageLocation, emptyBackupFileName)),
-                () -> assertFalse(adminService.deleteBackupFileFromStorage(emptyStorageLocation, emptyBackupFileName))
+                () -> assertThat(adminService.deleteBackupFileFromStorage(emptyStorageLocation, validBackupFileName)).isFalse(),
+                () -> assertThat(adminService.deleteBackupFileFromStorage(validStorageLocation, emptyBackupFileName)).isFalse(),
+                () -> assertThat(adminService.deleteBackupFileFromStorage(emptyStorageLocation, emptyBackupFileName)).isFalse()
         );
     }
     // endregion
@@ -212,19 +225,19 @@ class AdminServiceTests {
     void shouldCopy() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        adminService.createDatabaseBackupFile(validStorageLocation, validBackupFileName);
-        assertTrue(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy.sql"));
-        assertTrue(new File(validStorageLocation + File.separator + "backup-copy.sql").exists());
+        adminService.createBackupFile(validStorageLocation, validBackupFileName);
+        assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy.sql")).isTrue();
+        assertThat(new File(validStorageLocation + File.separator + "backup-copy.sql")).exists();
     }
 
     @Test
     void shouldFailToCopyWhenDestinationFileAlreadyExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+        adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-        assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName));
-        assertTrue(memoryLogAppender.contains(AdminService.ERR_FILE_ALREADY_EXIST));
+        assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName)).isFalse();
+        assertThat(memoryLogAppender.contains(AdminService.ERR_FILE_ALREADY_EXIST)).isTrue();
     }
 
     @ParameterizedTest
@@ -232,10 +245,10 @@ class AdminServiceTests {
     void shouldFailToCopyWhenSourceIsOutsideStorage(String location) {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+        adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-        assertFalse(adminService.copyBackupFile(location, validBackupFileName, validStorageLocation, validBackupFileName));
-        assertTrue(memoryLogAppender.contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE));
+        assertThat(adminService.copyBackupFile(location, validBackupFileName, validStorageLocation, validBackupFileName)).isFalse();
+        assertThat(memoryLogAppender.contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE)).isTrue();
     }
 
     @ParameterizedTest
@@ -243,33 +256,31 @@ class AdminServiceTests {
     void shouldFailToCopyWhenDestinationIsOutsideStorage(String location) {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+        adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-        assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, location, ""));
-        assertTrue(memoryLogAppender.contains(AdminService.ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
+        assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, location, "")).isFalse();
+        assertThat(memoryLogAppender.contains(AdminService.ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE)).isTrue();
     }
 
     @Test
     void shouldFailToCopyWhenBackupFileDoesNotExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
-
-        assertThrows(
-                FileSystemNotFoundException.class,
-                () -> adminService.copyBackupFile(validStorageLocation, "backup2.sql", "", ""),
-                AdminService.ERR_BACKUP_FILE_NOT_EXIST
-        );
+        adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+        assertThatExceptionOfType(FileSystemNotFoundException.class)
+                .isThrownBy(
+                        () -> adminService.copyBackupFile(validStorageLocation, "backup2.sql", "", "")
+                ).withMessageContaining(AdminService.ERR_BACKUP_FILE_NOT_EXIST);
     }
 
     @Test
     void shouldFailToCopyWhenDestinationStorageDoesNotExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
-        adminService.createDatabaseBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+        adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
-        assertFalse(adminService.copyBackupFile(validStorageLocation, validBackupFileName, "/tmp/nonexistent", validBackupFileName));
-        assertTrue(memoryLogAppender.contains("An error occurred while copying backup"));
+        assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, "/tmp/nonexistent", validBackupFileName)).isFalse();
+        assertThat(memoryLogAppender.contains("An error occurred while copying backup")).isTrue();
     }
     // endregion
 
@@ -283,10 +294,10 @@ class AdminServiceTests {
         final String emptyBackupFileName = "";
 
         assertAll(
-                () -> assertTrue(adminService.checkCommonParameters(validStorageLocation, validBackupFileName)),
-                () -> assertFalse(adminService.checkCommonParameters(emptyStorageLocation, validBackupFileName)),
-                () -> assertFalse(adminService.checkCommonParameters(validStorageLocation, emptyBackupFileName)),
-                () -> assertFalse(adminService.checkCommonParameters(emptyStorageLocation, emptyBackupFileName))
+                () -> assertThat(adminService.checkCommonParameters(validStorageLocation, validBackupFileName)).isTrue(),
+                () -> assertThat(adminService.checkCommonParameters(emptyStorageLocation, validBackupFileName)).isFalse(),
+                () -> assertThat(adminService.checkCommonParameters(validStorageLocation, emptyBackupFileName)).isFalse(),
+                () -> assertThat(adminService.checkCommonParameters(emptyStorageLocation, emptyBackupFileName)).isFalse()
         );
     }
     // endregion
