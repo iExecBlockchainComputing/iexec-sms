@@ -132,9 +132,7 @@ class AdminServiceTests {
     @Test
     void shouldReturnFalseWhenBackupFileNameDoesNotExist() {
         assertThat(adminService.databaseDump("/nonexistent/directory/backup.sql")).isFalse();
-
     }
-
     // endregion
 
     // region restore-backup
