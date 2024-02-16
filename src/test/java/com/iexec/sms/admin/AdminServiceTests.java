@@ -151,7 +151,7 @@ class AdminServiceTests {
         assertThatExceptionOfType(FileSystemNotFoundException.class)
                 .isThrownBy(
                         () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql")
-                ).withMessageContaining("Backup file does not exist");
+                ).withMessageContaining(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
     }
 
     @Test
@@ -193,7 +193,7 @@ class AdminServiceTests {
         assertThatExceptionOfType(FileSystemNotFoundException.class)
                 .isThrownBy(
                         () -> adminService.deleteBackupFileFromStorage(backupStorageLocation, "backup.sql")
-                ).withMessageContaining("Backup file does not exist");
+                ).withMessageContaining(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
     }
 
     @Test
@@ -226,18 +226,34 @@ class AdminServiceTests {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createBackupFile(validStorageLocation, validBackupFileName);
-        assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy.sql")).isTrue();
-        assertThat(new File(validStorageLocation + File.separator + "backup-copy.sql")).exists();
+        assertAll(
+                () -> assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy.sql")).isTrue(),
+                () -> assertThat(new File(validStorageLocation + File.separator + "backup-copy.sql")).exists(),
+                () -> assertThat(new File(validStorageLocation + File.separator + "backup-copy.sql" + AdminService.AES_KEY_FILENAME_EXTENSION)).exists()
+        );
     }
 
     @Test
-    void shouldFailToCopyWhenDestinationFileAlreadyExist() {
+    void shouldFailToCopyWhenDatabaseDestinationFileAlreadyExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+        assertAll(
+                () -> assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName)).isFalse(),
+                () -> assertThat(memoryLogAppender.contains(AdminOperationError.DATABASE_FILE_ALREADY_EXIST.toString())).isTrue()
+        );
+    }
 
-        assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, validBackupFileName)).isFalse();
-        assertThat(memoryLogAppender.contains(AdminService.ERR_FILE_ALREADY_EXIST)).isTrue();
+    @Test
+    void shouldFailToCopyWhenAesKeyDestinationFileAlreadyExist() throws IOException {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createBackupFile(validStorageLocation, validBackupFileName);
+        assertAll(
+                () -> assertThat(new File(validStorageLocation + File.separator + "backup-copy.sql" + AdminService.AES_KEY_FILENAME_EXTENSION).createNewFile()).isTrue(),
+                () -> assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy.sql")).isFalse(),
+                () -> assertThat(memoryLogAppender.contains(AdminOperationError.AES_KEY_FILE_ALREADY_EXIST.toString())).isTrue()
+        );
     }
 
     @ParameterizedTest
@@ -248,7 +264,7 @@ class AdminServiceTests {
         adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
         assertThat(adminService.copyBackupFile(location, validBackupFileName, validStorageLocation, validBackupFileName)).isFalse();
-        assertThat(memoryLogAppender.contains(AdminService.ERR_BACKUP_FILE_OUTSIDE_STORAGE)).isTrue();
+        assertThat(memoryLogAppender.contains(AdminOperationError.BACKUP_FILE_OUTSIDE_STORAGE.toString())).isTrue();
     }
 
     @ParameterizedTest
@@ -259,18 +275,33 @@ class AdminServiceTests {
         adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
 
         assertThat(adminService.copyBackupFile(validStorageLocation, validBackupFileName, location, "")).isFalse();
-        assertThat(memoryLogAppender.contains(AdminService.ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE)).isTrue();
+        assertThat(memoryLogAppender.contains(AdminOperationError.REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE.toString())).isTrue();
     }
 
     @Test
-    void shouldFailToCopyWhenBackupFileDoesNotExist() {
+    void shouldFailToCopyWhenDatabaseBackupFileDoesNotExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
         assertThatExceptionOfType(FileSystemNotFoundException.class)
                 .isThrownBy(
                         () -> adminService.copyBackupFile(validStorageLocation, "backup2.sql", "", "")
-                ).withMessageContaining(AdminService.ERR_BACKUP_FILE_NOT_EXIST);
+                ).withMessageContaining(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
+    }
+
+    @Test
+    void shouldFailToCopyWhenAesKeyBackupFileDoesNotExist() {
+        final String validStorageLocation = tempStorageLocation.getPath();
+        final String validBackupFileName = "backup.sql";
+        adminService.createBackupFile(tempStorageLocation.getPath(), validBackupFileName);
+
+        assertAll(
+                () -> assertThat(new File(tempStorageLocation.getPath() + "/" + validBackupFileName + AdminService.AES_KEY_FILENAME_EXTENSION).delete()).isTrue(),
+                () -> assertThatExceptionOfType(FileSystemNotFoundException.class)
+                        .isThrownBy(
+                                () -> adminService.copyBackupFile(validStorageLocation, validBackupFileName, validStorageLocation, "backup-copy")
+                        ).withMessageContaining(AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST.toString())
+        );
     }
 
     @Test
