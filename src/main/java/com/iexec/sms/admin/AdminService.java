@@ -210,8 +210,8 @@ public class AdminService {
             final Path sourceAesKeyBackupFileLocation = Path.of(sourceDatabaseBackupFileLocation + AES_KEY_FILENAME_EXTENSION);
 
             // Check source backup (dump and aes key) exist
-            checkSourceFileNotExist(sourceDatabaseBackupFileLocation, AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST);
-            checkSourceFileNotExist(sourceAesKeyBackupFileLocation, AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST);
+            checkSourceFileExists(sourceDatabaseBackupFileLocation, AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST);
+            checkSourceFileExists(sourceAesKeyBackupFileLocation, AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST);
 
             // Check that we want to copy into authorized location
             final Path destinationDatabaseBackupFileLocation = Path.of(checkBackupFileLocation(
@@ -222,8 +222,8 @@ public class AdminService {
             final Path destinationAesKeyBackupFileLocation = Path.of(destinationDatabaseBackupFileLocation + AES_KEY_FILENAME_EXTENSION);
 
             // Check destination
-            checkDestinationFileNotExist(destinationDatabaseBackupFileLocation, AdminOperationError.DATABASE_FILE_ALREADY_EXIST);
-            checkDestinationFileNotExist(destinationAesKeyBackupFileLocation, AdminOperationError.AES_KEY_FILE_ALREADY_EXIST);
+            checkDestinationFileNotExists(destinationDatabaseBackupFileLocation, AdminOperationError.DATABASE_FILE_ALREADY_EXIST);
+            checkDestinationFileNotExists(destinationAesKeyBackupFileLocation, AdminOperationError.AES_KEY_FILE_ALREADY_EXIST);
 
             //Process copy
             processCopyFile(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, "Database");
@@ -242,7 +242,7 @@ public class AdminService {
      * @param adminOperationError The custom error message
      * @throws FileSystemNotFoundException If the source does not exist
      */
-    private void checkSourceFileNotExist(Path source, AdminOperationError adminOperationError) throws FileSystemNotFoundException {
+    private void checkSourceFileExists(Path source, AdminOperationError adminOperationError) throws FileSystemNotFoundException {
         if (!source.toFile().exists()) {
             throw new FileSystemNotFoundException(adminOperationError.toString());
         }
@@ -255,7 +255,7 @@ public class AdminService {
      * @param adminOperationError The custom error message
      * @throws IOException If the destination already exist
      */
-    private void checkDestinationFileNotExist(Path destination, AdminOperationError adminOperationError) throws IOException {
+    private void checkDestinationFileNotExists(Path destination, AdminOperationError adminOperationError) throws IOException {
         if (destination.toFile().exists()) {
             throw new IOException(adminOperationError.toString());
         }
