@@ -178,7 +178,7 @@ class AdminServiceTests {
     @Test
     void shouldDeleteBackup() throws IOException {
         final String backupFileName = "backup.sql";
-        final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
+        final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName);
         final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
 
         assertAll(
@@ -194,9 +194,9 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToDeleteWhenOneBackupFilesMissing() {
+    void shouldFailToDeleteWhenOneBackupFileIsMissing() {
         final String backupFileName = "backup.sql";
-        final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
+        final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName);
         final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
 
         assertAll(
