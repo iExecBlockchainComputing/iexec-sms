@@ -38,7 +38,6 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,21 +178,46 @@ class AdminServiceTests {
     @Test
     void shouldDeleteBackup() throws IOException {
         final String backupFileName = "backup.sql";
-        final Path tmpFile = Files.createFile(tempStorageLocation.toPath().resolve(backupFileName));
+        final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName);
+        final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
+
         assertAll(
+                () -> assertThat(adminService.createBackupFile(tempStorageLocation.getPath(), "backup.sql")).isTrue(),
+                () -> assertThat(backupDatabaseFile).exists(),
+                () -> assertThat(backupAesKeyFile).exists(),
                 () -> assertThat(adminService.deleteBackupFileFromStorage(tempStorageLocation.getPath(), backupFileName)).isTrue(),
-                () -> assertThat(tmpFile.toFile()).doesNotExist(),
-                () -> assertThat(memoryLogAppender.contains("Successfully deleted backup")).isTrue()
+                () -> assertThat(backupDatabaseFile).doesNotExist(),
+                () -> assertThat(backupAesKeyFile).doesNotExist(),
+                () -> assertThat(memoryLogAppender.contains("Database delete process done")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("AES Key delete process done")).isTrue()
         );
     }
 
     @Test
-    void shouldFailToDeleteWhenBackupFileMissing() throws IOException {
-        final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
-        assertThatExceptionOfType(FileSystemNotFoundException.class)
-                .isThrownBy(
-                        () -> adminService.deleteBackupFileFromStorage(backupStorageLocation, "backup.sql")
-                ).withMessageContaining(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
+    void shouldFailToDeleteWhenOneBackupFileIsMissing() {
+        final String backupFileName = "backup.sql";
+        final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName);
+        final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
+
+        assertAll(
+                () -> assertThat(adminService.createBackupFile(tempStorageLocation.getPath(), "backup.sql")).isTrue(),
+                () -> assertThat(backupDatabaseFile).exists(),
+                () -> assertThat(backupAesKeyFile).exists(),
+                () -> assertThat(backupAesKeyFile.delete()).isTrue(),
+                () -> assertThat(adminService.deleteBackupFileFromStorage(tempStorageLocation.getCanonicalPath(), "backup.sql")).isFalse(),
+                () -> assertThat(backupDatabaseFile).doesNotExist(),
+                () -> assertThat(memoryLogAppender.contains("Database delete process done")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("AES Key delete process not possible, the file is not present")).isTrue()
+        );
+    }
+
+    @Test
+    void shouldFailToDeleteWhenAllBackupFilesMissing() {
+        assertAll(
+                () -> assertThat(adminService.deleteBackupFileFromStorage(tempStorageLocation.getCanonicalPath(), "backup.sql")).isFalse(),
+                () -> assertThat(memoryLogAppender.contains("Database delete process not possible, the file is not present")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("AES Key delete process not possible, the file is not present")).isTrue()
+        );
     }
 
     @Test

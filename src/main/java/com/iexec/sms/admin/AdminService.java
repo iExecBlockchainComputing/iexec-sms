@@ -171,21 +171,41 @@ public class AdminService {
             final String backupFileLocation = checkBackupFileLocation(
                     storageLocation + File.separator + backupFileName,
                     AdminOperationError.BACKUP_FILE_OUTSIDE_STORAGE);
-            final Path backupFileLocationPath = Path.of(backupFileLocation);
-            if (!backupFileLocationPath.toFile().exists()) {
-                throw new FileSystemNotFoundException(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
-            }
-            log.info("Starting the delete process [backupFileLocation:{}]", backupFileLocation);
-            final long start = System.currentTimeMillis();
-            Files.delete(backupFileLocationPath);
-            final long stop = System.currentTimeMillis();
-            log.info("Successfully deleted backup [backupFileLocation:{}, timestamp:{}, duration:{} ms]",
-                    backupFileLocation, dateFormat.format(new Date(start)), stop - start);
-            return true;
+            final Path backupDatabaseFileLocationPath = Path.of(backupFileLocation);
+            final Path backupAesKeyFileLocationPath = Path.of(backupDatabaseFileLocationPath + AES_KEY_FILENAME_EXTENSION);
+
+            final boolean deleteSuccessfulDB = processDeleteFile(backupDatabaseFileLocationPath, "Database");
+            final boolean deleteSuccessfulAESKey = processDeleteFile(backupAesKeyFileLocationPath, "AES Key");
+
+            return deleteSuccessfulDB && deleteSuccessfulAESKey;
         } catch (IOException e) {
             log.error("An error occurred while deleting backup", e);
         }
         return false;
+    }
+
+    /**
+     * Delete a file if exist with detailed trace information
+     *
+     * @param source          The file to delete
+     * @param fileDescription Short description associated with the file for better traceability
+     * @return {@code true} if the deletion was successful, {@code false} if the file doesn't exist
+     * @throws IOException If the deletion fails with an error
+     */
+    private boolean processDeleteFile(Path source, String fileDescription) throws IOException {
+        //We don't want to raise an exception if one of the files doesn't exist,
+        // as this could be due to an error during copy/replication or a previous delete that wasn't completely successful, so we want to have a workaround.
+        if (source.toFile().exists()) {
+            log.info("{} delete process start [source:{}]", fileDescription, source);
+            final long start = System.currentTimeMillis();
+            Files.delete(source);
+            final long stop = System.currentTimeMillis();
+            log.info("{} delete process done [source:{}, timestamp:{}, duration:{} ms]", fileDescription, source, dateFormat.format(start), stop - start);
+            return true;
+        } else {
+            log.warn("{} delete process not possible, the file is not present [source:{}]", fileDescription, source);
+            return false;
+        }
     }
 
     /**
