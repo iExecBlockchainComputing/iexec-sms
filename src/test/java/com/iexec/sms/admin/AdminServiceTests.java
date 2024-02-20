@@ -187,7 +187,7 @@ class AdminServiceTests {
         assertAll(
                 () -> assertThat(adminServiceCorrupt.createBackupFile(tempStorageLocation.getPath(), backupName)).isTrue(),
                 () -> assertThat(adminServiceCorrupt.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), backupName)).isFalse(),
-                () -> assertThat(memoryLogAppender.contains("Cant switch AES Key file to write permissions")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains(AdminOperationError.AES_KEY_FILE_WRITE_PERMISSIONS.toString())).isTrue(),
                 () -> assertThat(memoryLogAppender.contains("SMS is now online")).isTrue()
         );
     }
