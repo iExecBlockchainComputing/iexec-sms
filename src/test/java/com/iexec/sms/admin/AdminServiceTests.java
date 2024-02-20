@@ -163,13 +163,14 @@ class AdminServiceTests {
     @Test
     void shouldFailToRestoreWhenAesKeyFileMissing() throws IOException {
         final String backupName = "backup.sql";
-        final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/" + backupName + AdminService.AES_KEY_FILENAME_EXTENSION);
+        final String backupPath = tempStorageLocation.getPath();
+        final File backupAesKeyFile = new File(backupPath + "/" + backupName + AdminService.AES_KEY_FILENAME_EXTENSION);
         adminService.createBackupFile(tempStorageLocation.getPath(), backupName);
         assertAll(
                 () -> assertThat(backupAesKeyFile.delete()).isTrue(),
                 () -> assertThatExceptionOfType(FileSystemNotFoundException.class)
                         .isThrownBy(
-                                () -> adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), backupName)
+                                () -> adminService.restoreDatabaseFromBackupFile(backupPath, backupName)
                         ).withMessageContaining(AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST.toString()),
                 () -> assertThat(memoryLogAppender.contains("SMS is now online")).isTrue()
         );
