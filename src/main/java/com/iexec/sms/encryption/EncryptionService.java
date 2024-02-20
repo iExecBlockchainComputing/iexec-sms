@@ -36,7 +36,7 @@ import static com.iexec.common.utils.FileHelper.createFileWithContent;
 public class EncryptionService {
 
     private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
-    private final byte[] aesKey;
+    private byte[] aesKey;
 
     @Getter
     private final String aesKeyPath;
@@ -54,6 +54,16 @@ public class EncryptionService {
         if (!checkOrFixReadOnlyPermissions(aesKeyPath)) {
             throw new ExceptionInInitializerError("Failed to set ReadOnly permission on AES key");
         }
+    }
+
+    /**
+     * Enables to reload the AES Key at runtime
+     * Use after the restoration process
+     */
+    public void reloadAESKey() {
+        log.info("Reload AES Key [aesKeyPath={}]", this.aesKeyPath);
+        this.aesKey = getOrCreateAesKey(this.aesKeyPath);
+        checkAlgoAndPermissions();
     }
 
     private byte[] getOrCreateAesKey(String aesKeyPath) {
@@ -119,5 +129,24 @@ public class EncryptionService {
             }
         }
         return true;
+    }
+
+    /**
+     * Enables the file to be written
+     * Use for restoration process
+     *
+     * @return {@code true} if the switch was successful, {@code false} if any error occurs.
+     */
+    public boolean setWritePermissions() {
+        log.info("Change file permissions to authorize writing");
+        try {
+            final File file = new File(aesKeyPath);
+            final boolean success = file.setWritable(true, true);
+            log.debug("AES key file set to write [aesKeyPath:{}, success:{}]", aesKeyPath, success);
+            return success;
+        } catch (SecurityException e) {
+            log.error("Unable to set AES key file to write [aesKeyPath:{}]", aesKeyPath, e);
+        }
+        return false;
     }
 }

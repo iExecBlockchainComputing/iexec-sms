@@ -25,7 +25,8 @@ public enum AdminOperationError {
     AES_KEY_BACKUP_FILE_NOT_EXIST("AES KEY backup file does not exist"),
     REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE("Replicated or Copied backup file destination is outside of storage file system"),
     DATABASE_FILE_ALREADY_EXIST("A file already exists at the destination of database file"),
-    AES_KEY_FILE_ALREADY_EXIST("A file already exists at the destination of AES Key file");
+    AES_KEY_FILE_ALREADY_EXIST("A file already exists at the destination of AES Key file"),
+    AES_KEY_FILE_WRITE_PERMISSIONS("Cant switch AES Key file to write permissions");
 
     private final String description;
 
