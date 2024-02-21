@@ -25,8 +25,8 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Configuration class to enable OutOfService filter.
  * The filter will be activated only if the configuration is enabled.
- * In addition, the endpoints /admin, /version, /metrics, /swagger-ui/index.html, /v3/api-docs
- * are excluded and will always be served.
+ * In addition, the endpoints /admin, /actuator/*, /version, /metrics, /swagger-ui/index.html, /v3/api-docs
+ * are out of the filter scope and will always be served.
  * The main purpose of activating this filter is to prevent database insertion during a restore.
  */
 @Configuration
