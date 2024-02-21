@@ -126,7 +126,6 @@ public class AppComputeSecretController {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(createErrorPayload(SECRET_NOT_FOUND_MSG));
-
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets")
