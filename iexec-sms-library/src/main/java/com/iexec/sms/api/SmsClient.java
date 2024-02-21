@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,9 @@ import java.util.List;
  */
 public interface SmsClient {
 
+    // Define Application Developer secret index
+    static final String APP_DEVELOPER_SECRET_INDEX = "1";
+
     // region Secrets
     @RequestLine("POST /apps/{appAddress}/secrets")
     @Headers("Authorization: {authorization}")
@@ -44,6 +47,16 @@ public interface SmsClient {
             @Param("appAddress") String appAddress,
             //@Param("secretIndex") String secretIndex,
             String secretValue
+    );
+
+    /**
+     * @deprecated Call {@code isAppDeveloperAppComputeSecretPresent(appAddress)}
+     */
+    @Deprecated(forRemoval = true)
+    @RequestLine("HEAD /apps/{appAddress}/secrets/{secretIndex}")
+    ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
+            @Param("appAddress") String appAddress,
+            @Param("secretIndex") String secretIndex
     );
 
     @RequestLine("HEAD /apps/{appAddress}/secrets")

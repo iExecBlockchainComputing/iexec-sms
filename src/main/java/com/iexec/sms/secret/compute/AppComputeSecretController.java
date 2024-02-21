@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.compute;
 
 import com.iexec.common.web.ApiResponseBody;
+import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.SecretUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,6 @@ import java.util.regex.Pattern;
 @RestController
 public class AppComputeSecretController {
 
-    private static final String APP_COMPUTE_SECRET_INDEX = "1";
     private final AuthorizationService authorizationService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
@@ -42,7 +42,7 @@ public class AppComputeSecretController {
 
     static final String INVALID_SECRET_INDEX_FORMAT_MSG = "Secret index should be a positive number";
     static final String INVALID_SECRET_KEY_FORMAT_MSG = "Secret key should contain at most 64 characters from [0-9A-Za-z-_]";
-
+    static final String SECRET_NOT_FOUND_MSG = "Secret not found";
     private static final Pattern secretKeyPattern = Pattern.compile("^[\\p{Alnum}-_]{"
             + TeeTaskComputeSecretHeader.SECRET_KEY_MIN_LENGTH + ","
             + TeeTaskComputeSecretHeader.SECRET_KEY_MAX_LENGTH + "}$");
@@ -70,7 +70,7 @@ public class AppComputeSecretController {
                                                                                                          @PathVariable String appAddress,
                                                                                                          @RequestBody String secretValue) {
         appAddress = appAddress.toLowerCase();
-        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, APP_COMPUTE_SECRET_INDEX, secretValue);
+        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
             log.error("Unauthorized to addAppDeveloperComputeComputeSecret [appAddress: {}, expectedChallenge: {}]",
@@ -91,7 +91,7 @@ public class AppComputeSecretController {
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
-                APP_COMPUTE_SECRET_INDEX,
+                SmsClient.APP_DEVELOPER_SECRET_INDEX,
                 secretValue
         )) {
             log.error("Can't add app developer secret as it already exists [appAddress:{}]",
@@ -120,7 +120,13 @@ public class AppComputeSecretController {
                     .badRequest()
                     .body(createErrorPayload(INVALID_SECRET_INDEX_FORMAT_MSG));
         }
-        return isApplicationDeveloperAppComputeSecretPresent(appAddress);
+        if (SmsClient.APP_DEVELOPER_SECRET_INDEX.equals(secretIndex)) {
+            return isApplicationDeveloperAppComputeSecretPresent(appAddress);
+        }
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(createErrorPayload(SECRET_NOT_FOUND_MSG));
+
     }
 
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets")
@@ -132,7 +138,7 @@ public class AppComputeSecretController {
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
-                APP_COMPUTE_SECRET_INDEX
+                SmsClient.APP_DEVELOPER_SECRET_INDEX
         );
         if (isSecretPresent) {
             log.debug("App developer secret found [appAddress: {}]", appAddress);
@@ -142,7 +148,7 @@ public class AppComputeSecretController {
         log.debug("App developer secret not found [appAddress: {}]", appAddress);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(createErrorPayload("Secret not found"));
+                .body(createErrorPayload(SECRET_NOT_FOUND_MSG));
     }
 
     /**
@@ -259,7 +265,7 @@ public class AppComputeSecretController {
         log.debug("App requester secret not found {}", messageDetails);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(createErrorPayload("Secret not found"));
+                .body(createErrorPayload(SECRET_NOT_FOUND_MSG));
     }
     // endregion
 
