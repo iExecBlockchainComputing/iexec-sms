@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
 @CrossOrigin
 @RestController
 public class AppComputeSecretController {
+
+    private static final String APP_COMPUTE_SECRET_INDEX = "1";
     private final AuthorizationService authorizationService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
@@ -52,14 +54,23 @@ public class AppComputeSecretController {
     }
 
     // region App developer endpoints
+
+    /**
+     * @deprecated Call /apps/{appAddress}/secrets endpoints in {@code AppComputeSecretController}
+     */
+    @Deprecated(forRemoval = true)
     @PostMapping("/apps/{appAddress}/secrets/1")
     public ResponseEntity<ApiResponseBody<String, List<String>>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
-                                                                                                 @PathVariable String appAddress,
-                                                                                                 @RequestBody String secretValue) {
-        appAddress = appAddress.toLowerCase();
-        String secretIndex = "1";
+                                                                                                 @PathVariable String appAddress, @RequestBody String secretValue) {
+        return addApplicationDeveloperAppComputeSecret(authorization, appAddress, secretValue);
+    }
 
-        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, secretIndex, secretValue);
+    @PostMapping("/apps/{appAddress}/secrets")
+    public ResponseEntity<ApiResponseBody<String, List<String>>> addApplicationDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
+                                                                                                         @PathVariable String appAddress,
+                                                                                                         @RequestBody String secretValue) {
+        appAddress = appAddress.toLowerCase();
+        String challenge = authorizationService.getChallengeForSetAppDeveloperAppComputeSecret(appAddress, APP_COMPUTE_SECRET_INDEX, secretValue);
 
         if (!authorizationService.isSignedByOwner(challenge, authorization, appAddress)) {
             log.error("Unauthorized to addAppDeveloperComputeComputeSecret [appAddress: {}, expectedChallenge: {}]",
@@ -67,15 +78,6 @@ public class AppComputeSecretController {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body(invalidAuthorizationPayload);
-        }
-
-        try {
-            checkSecretIndex(secretIndex);
-        } catch (NumberFormatException e) {
-            log.error(INVALID_SECRET_INDEX_FORMAT_MSG, e);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload(INVALID_SECRET_INDEX_FORMAT_MSG));
         }
 
         if (!SecretUtils.isSecretSizeValid(secretValue)) {
@@ -89,11 +91,11 @@ public class AppComputeSecretController {
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
-                secretIndex,
+                APP_COMPUTE_SECRET_INDEX,
                 secretValue
         )) {
-            log.error("Can't add app developer secret as it already exists [appAddress:{}, secretIndex:{}]",
-                    appAddress, secretIndex);
+            log.error("Can't add app developer secret as it already exists [appAddress:{}]",
+                    appAddress);
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(createErrorPayload("Secret already exists"));
@@ -101,10 +103,15 @@ public class AppComputeSecretController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * @deprecated Call /apps/{appAddress}/secrets endpoints in {@code AppComputeSecretController}
+     */
+    @Deprecated(forRemoval = true)
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
     public ResponseEntity<ApiResponseBody<String, List<String>>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
                                                                                                        @PathVariable String secretIndex) {
-        appAddress = appAddress.toLowerCase();
+        //We're keeping this test anyway, because we still consider that a call to this old endpoint
+        //with an invalid secretIndex should not go through, even if the secretIndex is no longer in the signature of the new method.
         try {
             checkSecretIndex(secretIndex);
         } catch (NumberFormatException e) {
@@ -113,20 +120,26 @@ public class AppComputeSecretController {
                     .badRequest()
                     .body(createErrorPayload(INVALID_SECRET_INDEX_FORMAT_MSG));
         }
+        return isApplicationDeveloperAppComputeSecretPresent(appAddress);
+    }
+
+    @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets")
+    public ResponseEntity<ApiResponseBody<String, List<String>>> isApplicationDeveloperAppComputeSecretPresent(@PathVariable String appAddress) {
+        appAddress = appAddress.toLowerCase();
 
         final boolean isSecretPresent = teeTaskComputeSecretService.isSecretPresent(
                 OnChainObjectType.APPLICATION,
                 appAddress,
                 SecretOwnerRole.APPLICATION_DEVELOPER,
                 "",
-                secretIndex
+                APP_COMPUTE_SECRET_INDEX
         );
         if (isSecretPresent) {
-            log.debug("App developer secret found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+            log.debug("App developer secret found [appAddress: {}]", appAddress);
             return ResponseEntity.noContent().build();
         }
 
-        log.debug("App developer secret not found [appAddress: {}, secretIndex: {}]", appAddress, secretIndex);
+        log.debug("App developer secret not found [appAddress: {}]", appAddress);
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(createErrorPayload("Secret not found"));

@@ -37,7 +37,7 @@ import java.util.List;
 public interface SmsClient {
 
     // region Secrets
-    @RequestLine("POST /apps/{appAddress}/secrets/1")
+    @RequestLine("POST /apps/{appAddress}/secrets")
     @Headers("Authorization: {authorization}")
     ApiResponseBody<String, List<String>> addAppDeveloperAppComputeSecret(
             @Param("authorization") String authorization,
@@ -46,10 +46,9 @@ public interface SmsClient {
             String secretValue
     );
 
-    @RequestLine("HEAD /apps/{appAddress}/secrets/{secretIndex}")
+    @RequestLine("HEAD /apps/{appAddress}/secrets")
     ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
-            @Param("appAddress") String appAddress,
-            @Param("secretIndex") String secretIndex
+            @Param("appAddress") String appAddress
     );
 
     @RequestLine("POST /requesters/{requesterAddress}/secrets/{secretKey}")

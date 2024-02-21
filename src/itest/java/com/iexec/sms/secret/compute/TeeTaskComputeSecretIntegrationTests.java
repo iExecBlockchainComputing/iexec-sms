@@ -113,7 +113,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
         // Check the new secrets exists for the API
         try {
-            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, appDeveloperSecretIndex);
+            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress);
         } catch (FeignException e) {
             Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
         }
@@ -242,7 +242,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
         // At first, no secret should be in the database
         try {
-            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
+            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress);
             Assertions.fail("No application developer secret was expected but one has been retrieved.");
         } catch (FeignException.NotFound ignored) {
             // Having a Not Found exception is what we expect there.
