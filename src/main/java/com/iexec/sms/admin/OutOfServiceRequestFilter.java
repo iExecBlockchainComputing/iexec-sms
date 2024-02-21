@@ -29,7 +29,7 @@ import java.io.IOException;
  */
 public class OutOfServiceRequestFilter extends GenericFilterBean {
 
-    public static final String MAINTENANCE_ERROR = "The server is temporarily unable to service your request due to maintenance downtime";
+    public static final String MAINTENANCE_ERROR = "The server is temporarily unable to serve your request due to maintenance downtime";
     private final AdminService adminService;
 
     public OutOfServiceRequestFilter(AdminService adminService) {

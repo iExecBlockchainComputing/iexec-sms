@@ -41,10 +41,10 @@ import java.util.Date;
 @Service
 public class AdminService {
 
-    private static final String AES_KEY_LOG_DESCRIPTION = "AES Key";
     // Used to print formatted date in log
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     public static final String AES_KEY_FILENAME_EXTENSION = ".key";
+    private static final String AES_KEY_LOG_DESCRIPTION = "AES Key";
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
@@ -182,7 +182,7 @@ public class AdminService {
         if (!successWrite) {
             throw new IOException(AdminOperationError.AES_KEY_FILE_WRITE_PERMISSIONS.toString());
         }
-        processCopyFile(backupAesKeyFileLocation, Path.of(encryptionService.getAesKeyPath()), AES_KEY_LOG_DESCRIPTION, StandardCopyOption.REPLACE_EXISTING);
+        processCopyFile(backupAesKeyFileLocation, Path.of(encryptionService.getAesKeyPath()), AES_KEY_LOG_DESCRIPTION, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
         log.info("Reload AES Key file [aesKeyFileLocationPath:{}]", encryptionService.getAesKeyPath());
         encryptionService.reloadAESKey();
         final long stopAesKeyRestoration = System.currentTimeMillis();
@@ -337,17 +337,17 @@ public class AdminService {
     /**
      * Copy a file to another location with detailed trace information
      *
-     * @param source             The current location
-     * @param destination        The destination location
-     * @param fileDescription    Short description associated with the file for better traceability
-     * @param standardCopyOption Copy option
+     * @param source              The current location
+     * @param destination         The destination location
+     * @param fileDescription     Short description associated with the file for better traceability
+     * @param standardCopyOptions Copy options
      * @throws IOException If the copy fails
      */
-    private void processCopyFile(Path source, Path destination, String fileDescription, StandardCopyOption standardCopyOption) throws IOException {
+    private void processCopyFile(Path source, Path destination, String fileDescription, StandardCopyOption... standardCopyOptions) throws IOException {
         final long size = source.toFile().length();
         log.info("{} copy process start [source:{}, destination :{}]", fileDescription, source, destination);
         final long start = System.currentTimeMillis();
-        Files.copy(source, destination, standardCopyOption);
+        Files.copy(source, destination, standardCopyOptions);
         final long stop = System.currentTimeMillis();
         log.info("{} copy process done [source:{}, destination :{}, timestamp:{}, duration:{} ms, size:{}]", fileDescription, source, destination, dateFormat.format(start), stop - start, size);
     }

@@ -23,7 +23,7 @@ class OufOfServiceFilterConfigTests {
 
     @Test
     void shouldCreateOufOfServiceFilter() {
-        runner.withPropertyValues("admin.outofservice.enabled=true").withBean(EncryptionConfiguration.class, tempDir.getAbsolutePath() + "/aes.key")
+        runner.withPropertyValues("admin.out-of-service.enabled=true").withBean(EncryptionConfiguration.class, tempDir.getAbsolutePath() + "/aes.key")
                 .withBean(EncryptionService.class)
                 .withBean(AdminService.class)
                 .withConfiguration(UserConfigurations.of(OufOfServiceFilterConfig.class))
@@ -31,7 +31,7 @@ class OufOfServiceFilterConfigTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "admin.outofservice.enabled", "admin.outofservice.enabled=false", "admin.outofservice.enabled=1"})
+    @ValueSource(strings = {"", "admin.out-of-service.enabled", "admin.out-of-service.enabled=false", "admin.out-of-service.enabled=1"})
     void shouldNotCreateFilterWhenIsNotEnabled(String value) {
         runner.withPropertyValues(value).withBean(EncryptionConfiguration.class, tempDir.getAbsolutePath() + "/aes.key")
                 .withBean(EncryptionService.class)
