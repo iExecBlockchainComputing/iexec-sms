@@ -17,6 +17,7 @@
 package com.iexec.sms.admin;
 
 import com.iexec.sms.encryption.EncryptionService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.RunScript;
@@ -43,11 +44,15 @@ public class AdminService {
     // Used to print formatted date in log
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     public static final String AES_KEY_FILENAME_EXTENSION = ".key";
+    private static final String AES_KEY_LOG_DESCRIPTION = "AES Key";
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
     private final String adminStorageLocation;
     private final EncryptionService encryptionService;
+
+    @Getter
+    private boolean smsOnline;
 
     public AdminService(EncryptionService encryptionService,
                         @Value("${spring.datasource.url}") String datasourceUrl,
@@ -131,27 +136,75 @@ public class AdminService {
      */
     boolean restoreDatabaseFromBackupFile(String storageLocation, String backupFileName) {
         try {
+            putSmsOffline();
             final String backupFileLocation = checkBackupFileLocation(
                     storageLocation + File.separator + backupFileName,
                     AdminOperationError.BACKUP_FILE_OUTSIDE_STORAGE);
-            if (!Path.of(backupFileLocation).toFile().exists()) {
+            final Path backupDatabaseFileLocation = Path.of(backupFileLocation);
+
+            if (!backupDatabaseFileLocation.toFile().exists()) {
                 throw new FileSystemNotFoundException(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
             }
-            final long size = backupFileLocation.length();
-            log.info("Starting the restore process [backupFileLocation:{}]", backupFileLocation);
-            final long start = System.currentTimeMillis();
-            RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
-                    backupFileLocation, Charset.defaultCharset(), true);
-            final long stop = System.currentTimeMillis();
-            log.warn("Backup has been restored [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    backupFileLocation, dateFormat.format(new Date(start)), stop - start, size);
+
+            final Path backupAesKeyFileLocationPath = Path.of(backupFileLocation + AES_KEY_FILENAME_EXTENSION);
+            if (!backupAesKeyFileLocationPath.toFile().exists()) {
+                throw new FileSystemNotFoundException(AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST.toString());
+            }
+
+            final long startRestoration = System.currentTimeMillis();
+            log.info("Starting the full restore process [backupFileLocation:{},backupAesKeyFileLocationPath:{}]", backupFileLocation, backupAesKeyFileLocationPath);
+            restoreAesKey(backupAesKeyFileLocationPath);
+            restoreDatabase(backupDatabaseFileLocation);
+            final long stopRestoration = System.currentTimeMillis();
+            log.info("Ending the full restore process [backupFileLocation:{},backupAesKeyFileLocationPath:{},timestamp:{}, duration:{} ms]", backupFileLocation, backupAesKeyFileLocationPath, dateFormat.format(new Date(startRestoration)), stopRestoration - startRestoration);
+
             return true;
         } catch (IOException e) {
-            log.error("Invalid backup file location", e);
+            log.error("Invalid backup file operation", e);
         } catch (SQLException e) {
             log.error("SQL error occurred during restore", e);
+        } finally {
+            putSmsOnline();
         }
         return false;
+    }
+
+    /**
+     * Restore the AES Key from backup
+     *
+     * @param backupAesKeyFileLocation The location of AES key backup
+     * @throws IOException If an error occurred during AES Key file manipulation
+     */
+    private void restoreAesKey(Path backupAesKeyFileLocation) throws IOException {
+        final long startAesKeyRestoration = System.currentTimeMillis();
+        final long databaseAesKeyBackupFileSize = backupAesKeyFileLocation.toFile().length();
+        final boolean successWrite = encryptionService.setWritePermissions();
+        if (!successWrite) {
+            throw new IOException(AdminOperationError.AES_KEY_FILE_WRITE_PERMISSIONS.toString());
+        }
+        processCopyFile(backupAesKeyFileLocation, Path.of(encryptionService.getAesKeyPath()), AES_KEY_LOG_DESCRIPTION, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+        log.info("Reload AES Key file [aesKeyFileLocationPath:{}]", encryptionService.getAesKeyPath());
+        encryptionService.reloadAESKey();
+        final long stopAesKeyRestoration = System.currentTimeMillis();
+        log.info("AES Key file has been restored [backupAesKeyFileLocationPath:{}, timestamp:{}, duration:{} ms, size:{}]",
+                backupAesKeyFileLocation, dateFormat.format(new Date(startAesKeyRestoration)), stopAesKeyRestoration - startAesKeyRestoration, databaseAesKeyBackupFileSize);
+    }
+
+    /**
+     * Restore the database from backup
+     *
+     * @param backupDatabaseFileLocation The location of database backup
+     * @throws SQLException If an error occurred during sql script execution
+     */
+    private void restoreDatabase(Path backupDatabaseFileLocation) throws SQLException {
+        final long databaseBackupFileSize = backupDatabaseFileLocation.toFile().length();
+        final long startDatabaseRestoration = System.currentTimeMillis();
+        log.info("Starting the restore process for the database");
+        RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
+                backupDatabaseFileLocation.toString(), Charset.defaultCharset(), true);
+        final long stopDatabaseRestoration = System.currentTimeMillis();
+        log.info("Database has been restored [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                backupDatabaseFileLocation, dateFormat.format(new Date(startDatabaseRestoration)), stopDatabaseRestoration - startDatabaseRestoration, databaseBackupFileSize);
     }
 
     /**
@@ -175,7 +228,7 @@ public class AdminService {
             final Path backupAesKeyFileLocationPath = Path.of(backupDatabaseFileLocationPath + AES_KEY_FILENAME_EXTENSION);
 
             final boolean deleteSuccessfulDB = processDeleteFile(backupDatabaseFileLocationPath, "Database");
-            final boolean deleteSuccessfulAESKey = processDeleteFile(backupAesKeyFileLocationPath, "AES Key");
+            final boolean deleteSuccessfulAESKey = processDeleteFile(backupAesKeyFileLocationPath, AES_KEY_LOG_DESCRIPTION);
 
             return deleteSuccessfulDB && deleteSuccessfulAESKey;
         } catch (IOException e) {
@@ -246,8 +299,8 @@ public class AdminService {
             checkDestinationFileNotExists(destinationAesKeyBackupFileLocation, AdminOperationError.AES_KEY_FILE_ALREADY_EXIST);
 
             //Process copy
-            processCopyFile(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, "Database");
-            processCopyFile(sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, "AES Key");
+            processCopyFile(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, "Database", StandardCopyOption.COPY_ATTRIBUTES);
+            processCopyFile(sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, AES_KEY_LOG_DESCRIPTION, StandardCopyOption.COPY_ATTRIBUTES);
             return true;
         } catch (IOException e) {
             log.error("An error occurred while copying backup", e);
@@ -284,16 +337,17 @@ public class AdminService {
     /**
      * Copy a file to another location with detailed trace information
      *
-     * @param source          The current location
-     * @param destination     The destination location
-     * @param fileDescription Short description associated with the file for better traceability
+     * @param source              The current location
+     * @param destination         The destination location
+     * @param fileDescription     Short description associated with the file for better traceability
+     * @param standardCopyOptions Copy options
      * @throws IOException If the copy fails
      */
-    private void processCopyFile(Path source, Path destination, String fileDescription) throws IOException {
+    private void processCopyFile(Path source, Path destination, String fileDescription, StandardCopyOption... standardCopyOptions) throws IOException {
         final long size = source.toFile().length();
         log.info("{} copy process start [source:{}, destination :{}]", fileDescription, source, destination);
         final long start = System.currentTimeMillis();
-        Files.copy(source, destination, StandardCopyOption.COPY_ATTRIBUTES);
+        Files.copy(source, destination, standardCopyOptions);
         final long stop = System.currentTimeMillis();
         log.info("{} copy process done [source:{}, destination :{}, timestamp:{}, duration:{} ms, size:{}]", fileDescription, source, destination, dateFormat.format(start), stop - start, size);
     }
@@ -308,7 +362,6 @@ public class AdminService {
         return backupFileLocation;
     }
 
-
     boolean checkCommonParameters(String storageLocation, String backupFileName) {
         // Check for missing or empty storageLocation parameter
         if (StringUtils.isBlank(storageLocation)) {
@@ -321,6 +374,23 @@ public class AdminService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Put SMS offline, especially in the case of a restoration
+     * where you don't want new insertion requests to arrive
+     */
+    void putSmsOffline() {
+        log.info("SMS is now offline");
+        smsOnline = false;
+    }
+
+    /**
+     * Put SMS online
+     */
+    void putSmsOnline() {
+        log.info("SMS is now online");
+        smsOnline = true;
     }
 
 }

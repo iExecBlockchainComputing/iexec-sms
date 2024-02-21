@@ -161,4 +161,21 @@ class EncryptionServiceTests {
         assertThat(service.decrypt(input)).isEmpty();
     }
     // endregion
+
+    // region setWritePermissions
+    @Test
+    void shouldSwitchPermission() {
+        service.checkAlgoAndPermissions();
+        service.setWritePermissions();
+        final File aesKeyFile = new File(aesKeyPath);
+        assertAll(
+                () -> assertThat(aesKeyFile).exists(),
+                () -> assertThat(aesKeyFile).canRead(),
+                () -> assertThat(aesKeyFile.canExecute()).isFalse(),
+                () -> assertThat(aesKeyFile).canWrite(),
+                () -> assertThat(memoryLogAppender.contains("Change file permissions to authorize writing")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("AES key file set to write")).isTrue()
+        );
+    }
+    // endregion
 }

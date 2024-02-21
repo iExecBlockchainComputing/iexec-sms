@@ -141,16 +141,55 @@ class AdminServiceTests {
         adminService.createBackupFile(tempStorageLocation.getPath(), "backup.sql");
         assertThat(new File(backupFile)).exists();
         adminService.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), "backup.sql");
-        assertThat(memoryLogAppender.contains("Backup has been restored")).isTrue();
+        assertAll(
+                () -> assertThat(memoryLogAppender.contains("AES Key file has been restored")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("Database has been restored")).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("SMS is now online")).isTrue()
+        );
     }
 
     @Test
     void shouldFailToRestoreWhenBackupFileMissing() throws IOException {
         final String backupStorageLocation = tempStorageLocation.getCanonicalPath();
-        assertThatExceptionOfType(FileSystemNotFoundException.class)
-                .isThrownBy(
-                        () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql")
-                ).withMessageContaining(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
+        assertAll(
+                () -> assertThatExceptionOfType(FileSystemNotFoundException.class)
+                        .isThrownBy(
+                                () -> adminService.restoreDatabaseFromBackupFile(backupStorageLocation, "backup.sql")
+                        ).withMessageContaining(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString()),
+                () -> assertThat(memoryLogAppender.contains("SMS is now online")).isTrue()
+        );
+    }
+
+    @Test
+    void shouldFailToRestoreWhenAesKeyFileMissing() throws IOException {
+        final String backupName = "backup.sql";
+        final String backupPath = tempStorageLocation.getPath();
+        final File backupAesKeyFile = new File(backupPath + "/" + backupName + AdminService.AES_KEY_FILENAME_EXTENSION);
+        adminService.createBackupFile(tempStorageLocation.getPath(), backupName);
+        assertAll(
+                () -> assertThat(backupAesKeyFile.delete()).isTrue(),
+                () -> assertThatExceptionOfType(FileSystemNotFoundException.class)
+                        .isThrownBy(
+                                () -> adminService.restoreDatabaseFromBackupFile(backupPath, backupName)
+                        ).withMessageContaining(AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST.toString()),
+                () -> assertThat(memoryLogAppender.contains("SMS is now online")).isTrue()
+        );
+    }
+
+    @Test
+    void shouldFailToRestoreWhenSwitchPermissionToWriteOnAesKeyFileFail() throws IOException {
+        final EncryptionService encryptionServiceSpy = Mockito.spy(new EncryptionService(
+                new EncryptionConfiguration(tempDir.getAbsolutePath() + "/aes.key")));
+        Mockito.doReturn(false).when(encryptionServiceSpy).setWritePermissions();
+
+        final AdminService adminServiceCorrupt = new AdminService(encryptionServiceSpy, "jdbc:h2:mem:test", "sa", "", "/tmp/");
+        final String backupName = "backup.sql";
+        assertAll(
+                () -> assertThat(adminServiceCorrupt.createBackupFile(tempStorageLocation.getPath(), backupName)).isTrue(),
+                () -> assertThat(adminServiceCorrupt.restoreDatabaseFromBackupFile(tempStorageLocation.getPath(), backupName)).isFalse(),
+                () -> assertThat(memoryLogAppender.contains(AdminOperationError.AES_KEY_FILE_WRITE_PERMISSIONS.toString())).isTrue(),
+                () -> assertThat(memoryLogAppender.contains("SMS is now online")).isTrue()
+        );
     }
 
     @Test
