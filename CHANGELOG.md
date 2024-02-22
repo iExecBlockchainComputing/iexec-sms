@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Copy AES Key File on database copy. (#244)
 - Delete AES Key File on database delete. (#245)
 - Restore AES Key File on database restoration. (#246)
+- Create TEE session with worker IPFS storage token and fallback on requester token. (#248)
 
 ### Bug Fixes
 
