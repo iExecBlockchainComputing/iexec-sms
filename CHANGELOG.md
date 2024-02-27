@@ -34,6 +34,10 @@ All notable changes to this project will be documented in this file.
 - Move `ApiKeyRequestFilter` class to `com.iexec.sms.admin` package. (#241)
 - Clean App compute secret endpoints on `AppComputeSecretController`. (#247)
 
+### Dependency Upgrades
+
+- Upgrade to `iexec-common` 8.4.0. (#250)
+
 ## [[8.4.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.4.0) 2024-01-10
 
 ### New Features
