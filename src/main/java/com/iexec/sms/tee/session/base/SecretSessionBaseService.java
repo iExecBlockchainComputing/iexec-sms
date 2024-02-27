@@ -345,23 +345,26 @@ public class SecretSessionBaseService {
         }
         String storageProvider = taskDescription.getResultStorageProvider();
         String storageProxy = taskDescription.getResultStorageProxy();
-        String keyName = storageProvider.equals(DROPBOX_RESULT_STORAGE_PROVIDER)
-                ? IEXEC_RESULT_DROPBOX_TOKEN
-                : IEXEC_RESULT_IEXEC_IPFS_TOKEN;
-        Optional<String> requesterStorageTokenSecret = web2SecretService.getDecryptedValue(
-                taskDescription.getRequester(),
-                keyName);
-        if (requesterStorageTokenSecret.isEmpty()) {
+        final Optional<String> storageTokenSecret;
+        if (DROPBOX_RESULT_STORAGE_PROVIDER.equals(storageProvider)) {
+            storageTokenSecret = web2SecretService.getDecryptedValue(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN);
+        } else {
+            // TODO remove fallback on requester token when legacy Result Proxy endpoints have been removed
+            final boolean isWorkerTokenPresent = web2SecretService.isSecretPresent(request.getWorkerAddress(), IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+            final String tokenOwner = isWorkerTokenPresent ? request.getWorkerAddress() : taskDescription.getRequester();
+            storageTokenSecret = web2SecretService.getDecryptedValue(tokenOwner, IEXEC_RESULT_IEXEC_IPFS_TOKEN);
+        }
+        if (storageTokenSecret.isEmpty()) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_STORAGE_TOKENS_FAILED,
                     "Empty requester storage token - taskId: " + taskId);
         }
-        String requesterStorageToken = requesterStorageTokenSecret.get();
+        final String storageToken = storageTokenSecret.get();
         tokens.put(RESULT_STORAGE_PROVIDER, storageProvider);
         tokens.put(RESULT_STORAGE_PROXY, storageProxy);
-        tokens.put(RESULT_STORAGE_TOKEN, requesterStorageToken);
+        tokens.put(RESULT_STORAGE_TOKEN, storageToken);
         return tokens;
     }
 
