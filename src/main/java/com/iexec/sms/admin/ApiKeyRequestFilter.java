@@ -44,23 +44,23 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
     private static final String API_KEY_HEADER_NAME = "X-API-KEY"; //Name of header in which api key is expected
     private final String apiKey; //The filter API Key
 
-    private final boolean isSensitiveApiEnabled;
+    private final boolean isSensitiveApiDisabled;
 
     public ApiKeyRequestFilter(String apiKey) {
-        if (StringUtils.isBlank(apiKey)) {
+        this.isSensitiveApiDisabled = StringUtils.isBlank(apiKey);
+
+        if (isSensitiveApiDisabled) {
             log.warn("No API key has been set. Sensitive API is therefore disabled.");
             this.apiKey = null;
-            this.isSensitiveApiEnabled = false;
             return;
         }
         this.apiKey = apiKey;
-        this.isSensitiveApiEnabled = true;
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        if (!this.isSensitiveApiEnabled) {
+        if (this.isSensitiveApiDisabled) {
             sendResponseWithStatusAndMessage(response, "This endpoint is disabled.", HttpServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -76,11 +76,11 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
         chain.doFilter(request, response);
     }
 
-    private static void sendResponseWithStatusAndMessage(ServletResponse response, String error, int scUnauthorized) throws IOException {
+    private static void sendResponseWithStatusAndMessage(ServletResponse response, String error, int statusCode) throws IOException {
         final HttpServletResponse resp = (HttpServletResponse) response;
 
         resp.reset();
-        resp.setStatus(scUnauthorized);
+        resp.setStatus(statusCode);
         response.setContentLength(error.length());
         response.getWriter().write(error);
     }
