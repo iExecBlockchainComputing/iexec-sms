@@ -75,7 +75,7 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
         final HttpServletRequest req = (HttpServletRequest) request;
 
         final String key = req.getHeader(API_KEY_HEADER_NAME);
-        if (!this.apiKey.equalsIgnoreCase(key)) {
+        if (!this.apiKey.equals(key)) {
             final HttpServletResponse resp = (HttpServletResponse) response;
             final String error = "You are not authorized to access this endpoint.";
 
