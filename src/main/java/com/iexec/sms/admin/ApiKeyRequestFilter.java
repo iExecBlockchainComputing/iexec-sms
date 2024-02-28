@@ -61,14 +61,7 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         if (!this.isSensitiveApiEnabled) {
-            final HttpServletResponse resp = (HttpServletResponse) response;
-            final String error = "This endpoint is disabled.";
-
-            resp.reset();
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentLength(error.length());
-            response.getWriter().write(error);
-
+            sendResponseWithStatusAndMessage(response, "This endpoint is disabled.", HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
@@ -76,17 +69,19 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
 
         final String key = req.getHeader(API_KEY_HEADER_NAME);
         if (!this.apiKey.equals(key)) {
-            final HttpServletResponse resp = (HttpServletResponse) response;
-            final String error = "You are not authorized to access this endpoint.";
-
-            resp.reset();
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentLength(error.length());
-            response.getWriter().write(error);
-
+            sendResponseWithStatusAndMessage(response, "You are not authorized to access this endpoint.", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         chain.doFilter(request, response);
+    }
+
+    private static void sendResponseWithStatusAndMessage(ServletResponse response, String error, int scUnauthorized) throws IOException {
+        final HttpServletResponse resp = (HttpServletResponse) response;
+
+        resp.reset();
+        resp.setStatus(scUnauthorized);
+        response.setContentLength(error.length());
+        response.getWriter().write(error);
     }
 }
