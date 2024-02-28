@@ -43,20 +43,25 @@ class ApiKeyRequestFilterTest {
         chain = new MockFilterChain();
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"", apiKey})
-    void shouldBeOk(String requestApiKey) throws Exception {
-        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(requestApiKey);
-        if (null != requestApiKey && !requestApiKey.isBlank()) {
-            req.addHeader("X-API-KEY", requestApiKey);
-        }
+    @Test
+    void shouldGiveAccessWhenSensitiveApiIsEnabledAndCorrectApiKeyIsUsed() throws Exception {
+        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
+        req.addHeader("X-API-KEY", apiKey);
         filter.doFilter(req, res, chain);
         assertEquals(HttpServletResponse.SC_OK, res.getStatus());
     }
 
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {""})
+    void shouldForbidAccessWhenSensitiveApiIsDisabled(String requestApiKey) throws Exception {
+        ApiKeyRequestFilter filter = new ApiKeyRequestFilter(requestApiKey);
+        filter.doFilter(req, res, chain);
+        assertEquals(HttpServletResponse.SC_FORBIDDEN, res.getStatus());
+    }
+
     @Test
-    void shouldNotPassTheFilterWhenFilterIsActiveAndApiKeyIsNotFilled() throws Exception {
+    void shouldNotPassTheFilterWhenSensitiveApiIsEnabledAndApiKeyIsNotFilled() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
         filter.doFilter(req, res, chain);
 
@@ -64,7 +69,7 @@ class ApiKeyRequestFilterTest {
     }
 
     @Test
-    void shouldNotPassTheFilterWhenFilterIsActiveAndApiKeyIsIncorrect() throws Exception {
+    void shouldNotPassTheFilterWhenSensitiveApiIsEnabledAndApiKeyIsIncorrect() throws Exception {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
         req.addHeader("X-API-KEY", "INCORRECT API KEY");
         filter.doFilter(req, res, chain);
