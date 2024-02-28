@@ -50,11 +50,13 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
         this.isSensitiveApiDisabled = StringUtils.isBlank(apiKey);
 
         if (isSensitiveApiDisabled) {
-            log.warn("No API key has been set. Sensitive API is therefore disabled.");
             this.apiKey = null;
+            log.warn("No API key has been configured. Sensitive API is therefore disabled.");
             return;
         }
+
         this.apiKey = apiKey;
+        log.info("API key has been configured. Sensitive API is accessible using the API key.");
     }
 
     @Override
