@@ -48,7 +48,7 @@ class ApiKeyRequestFilterTest {
         ApiKeyRequestFilter filter = new ApiKeyRequestFilter(apiKey);
         req.addHeader("X-API-KEY", apiKey);
         filter.doFilter(req, res, chain);
-        assertEquals(HttpServletResponse.SC_FORBIDDEN, res.getStatus());
+        assertEquals(HttpServletResponse.SC_OK, res.getStatus());
     }
 
     @ParameterizedTest
