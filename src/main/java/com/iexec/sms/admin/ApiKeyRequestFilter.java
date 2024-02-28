@@ -17,6 +17,7 @@
 package com.iexec.sms.admin;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -32,9 +33,9 @@ import java.io.IOException;
  * <p>
  * It is based on the use of an API Key that the caller must fill in via the X-API-KEY header.
  * <p>
- * If an API Key is configured, the filter will be activated and requests will have to present a valid API Key,
+ * If an API Key is configured, the filter is activated and requests have to present a valid API Key,
  * if this is not the case, a 401 message is sent.
- * If no API Key is configured, then the filter will not be activated and requests will run unchecked.
+ * If no API Key is configured, then the filter forbids any request and returns a 403 status code.
  */
 @Slf4j
 public class ApiKeyRequestFilter extends GenericFilterBean {
@@ -43,40 +44,49 @@ public class ApiKeyRequestFilter extends GenericFilterBean {
     private static final String API_KEY_HEADER_NAME = "X-API-KEY"; //Name of header in which api key is expected
     private final String apiKey; //The filter API Key
 
-    private final boolean isEnabled;
+    private final boolean isSensitiveApiEnabled;
 
     public ApiKeyRequestFilter(String apiKey) {
-        if (null != apiKey && !apiKey.isBlank()) {
-            this.apiKey = apiKey;
-            this.isEnabled = true;
-        } else {
+        if (StringUtils.isBlank(apiKey)) {
+            log.warn("No API key has been set. Sensitive API is therefore disabled.");
             this.apiKey = null;
-            this.isEnabled = false;
-            log.warn("API Key filter is not enabled");
+            this.isSensitiveApiEnabled = false;
+            return;
         }
+        this.apiKey = apiKey;
+        this.isSensitiveApiEnabled = true;
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
+        if (!this.isSensitiveApiEnabled) {
+            final HttpServletResponse resp = (HttpServletResponse) response;
+            final String error = "This endpoint is disabled.";
 
-        if (this.isEnabled) {
-            HttpServletRequest req = (HttpServletRequest) request;
+            resp.reset();
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentLength(error.length());
+            response.getWriter().write(error);
 
-            String key = req.getHeader(API_KEY_HEADER_NAME);
-            if (!this.apiKey.equalsIgnoreCase(key)) {
-                HttpServletResponse resp = (HttpServletResponse) response;
-                String error = "You are not authorized to access this endpoint";
-
-                resp.reset();
-                resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentLength(error.length());
-                response.getWriter().write(error);
-            } else {
-                chain.doFilter(request, response);
-            }
-        } else {
-            chain.doFilter(request, response);
+            return;
         }
+
+        final HttpServletRequest req = (HttpServletRequest) request;
+
+        final String key = req.getHeader(API_KEY_HEADER_NAME);
+        if (!this.apiKey.equalsIgnoreCase(key)) {
+            final HttpServletResponse resp = (HttpServletResponse) response;
+            final String error = "You are not authorized to access this endpoint.";
+
+            resp.reset();
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentLength(error.length());
+            response.getWriter().write(error);
+
+            return;
+        }
+
+        chain.doFilter(request, response);
     }
 }
