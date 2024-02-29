@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.utils;
+package com.iexec.sms.tee.challenge;
 
 import com.iexec.common.utils.EthAddress;
 import com.iexec.commons.poco.utils.BytesUtils;

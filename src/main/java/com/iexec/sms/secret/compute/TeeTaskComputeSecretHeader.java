@@ -17,6 +17,7 @@
 package com.iexec.sms.secret.compute;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +28,13 @@ import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Embeddable
 @Slf4j
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TeeTaskComputeSecretHeader implements Serializable {
     public static final int SECRET_KEY_MIN_LENGTH = 1;
@@ -89,22 +90,5 @@ public class TeeTaskComputeSecretHeader implements Serializable {
                 throw new ValidationException("Can't create TeeTaskComputeSecretHeader.");
             }
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final TeeTaskComputeSecretHeader that = (TeeTaskComputeSecretHeader) o;
-        return onChainObjectType == that.onChainObjectType
-                && Objects.equals(onChainObjectAddress, that.onChainObjectAddress)
-                && secretOwnerRole == that.secretOwnerRole
-                && Objects.equals(fixedSecretOwner, that.fixedSecretOwner)
-                && Objects.equals(key, that.key);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(onChainObjectType, onChainObjectAddress, secretOwnerRole, fixedSecretOwner, key);
     }
 }

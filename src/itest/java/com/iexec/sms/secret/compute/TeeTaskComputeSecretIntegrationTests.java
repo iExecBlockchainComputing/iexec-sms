@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,19 +101,18 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void shouldAddNewComputeSecrets() {
-        final String appDeveloperSecretIndex = "1";
         final String requesterSecretKey = "secret-key";
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
         final String ownerAddress = OWNER_ADDRESS;
 
-        addNewAppDeveloperSecret(appAddress, appDeveloperSecretIndex, secretValue, ownerAddress);
+        addNewAppDeveloperSecret(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue, ownerAddress);
         addNewRequesterSecret(requesterAddress, requesterSecretKey, secretValue);
 
         // Check the new secrets exists for the API
         try {
-            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, appDeveloperSecretIndex);
+            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress);
         } catch (FeignException e) {
             Assertions.assertThat(e.status()).isEqualTo(HttpStatus.NO_CONTENT.value());
         }
@@ -133,7 +132,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
                                 .onChainObjectType(OnChainObjectType.APPLICATION)
                                 .onChainObjectAddress(appAddress)
                                 .secretOwnerRole(SecretOwnerRole.APPLICATION_DEVELOPER)
-                                .key(appDeveloperSecretIndex)
+                                .key(SmsClient.APP_DEVELOPER_SECRET_INDEX)
                                 .build(),
                         exampleMatcher
                 )
@@ -145,7 +144,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             return;
         }
         Assertions.assertThat(appDeveloperSecret.get().getHeader().getOnChainObjectAddress()).isEqualToIgnoringCase(appAddress);
-        Assertions.assertThat(appDeveloperSecret.get().getHeader().getKey()).isEqualTo(appDeveloperSecretIndex);
+        Assertions.assertThat(appDeveloperSecret.get().getHeader().getKey()).isEqualTo(SmsClient.APP_DEVELOPER_SECRET_INDEX);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isNotEqualTo(secretValue);
         Assertions.assertThat(appDeveloperSecret.get().getValue()).isEqualTo(encryptionService.encrypt(secretValue));
 
@@ -173,7 +172,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
         // We shouldn't be able to add a new secrets to the database with the same IDs
         try {
-            final String authorization = getAuthorizationForAppDeveloper(appAddress, appDeveloperSecretIndex, secretValue);
+            final String authorization = getAuthorizationForAppDeveloper(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
             apiClient.addAppDeveloperAppComputeSecret(authorization, appAddress, secretValue);
             Assertions.fail("A second app developer secret with the same app address and index should be rejected.");
         } catch (FeignException.Conflict ignored) {
@@ -192,7 +191,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         try {
             when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
 
-            final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, appDeveloperSecretIndex, secretValue);
+            final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
             apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretValue);
             Assertions.fail("A second app developer secret with the same index " +
                     "and an app address whose only difference is the case should be rejected.");
@@ -242,7 +241,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
         // At first, no secret should be in the database
         try {
-            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
+            apiClient.isAppDeveloperAppComputeSecretPresent(appAddress);
             Assertions.fail("No application developer secret was expected but one has been retrieved.");
         } catch (FeignException.NotFound ignored) {
             // Having a Not Found exception is what we expect there.

@@ -42,6 +42,7 @@ class MetricsServiceTests {
             SECRETS_TYPE,
             METRICS_PREFIX,
             count::get, // Simulating a repo `count` method
+            () -> 0,
             Executors.newSingleThreadScheduledExecutor(),
             1
     ));
@@ -70,20 +71,24 @@ class MetricsServiceTests {
         final long initialCount = 1;
         final long addedCount = 2;
         final long storedCount = 3;
+        final long cachedCount = 2;
 
         doReturn(initialCount).when(measuredSecretService).getInitialSecretsCount();
-        doReturn(addedCount  ).when(measuredSecretService).getAddedSecretsSinceStartCount();
-        doReturn(storedCount ).when(measuredSecretService).getStoredSecretsCount();
+        doReturn(addedCount).when(measuredSecretService).getAddedSecretsSinceStartCount();
+        doReturn(storedCount).when(measuredSecretService).getStoredSecretsCount();
+        doReturn(cachedCount).when(measuredSecretService).getCachedSecretsCount();
 
         final SmsMetrics smsMetrics = metricsService.getSmsMetrics();
         final Map<String, SecretsMetrics> secretsMetrics = smsMetrics.getSecretsMetrics();
 
         assertAll(
                 () -> assertThat(secretsMetrics).hasSize(1),
-                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getSecretsType         ).isEqualTo(SECRETS_TYPE),
-                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getInitialCount        ).isEqualTo(initialCount),
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getSecretsType).isEqualTo(SECRETS_TYPE),
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getInitialCount).isEqualTo(initialCount),
                 () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getAddedSinceStartCount).isEqualTo(addedCount),
-                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getStoredCount         ).isEqualTo(storedCount)
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getStoredCount).isEqualTo(storedCount),
+                () -> assertThat(secretsMetrics.get(SECRETS_TYPE)).extracting(SecretsMetrics::getCachedSecretsCount).isEqualTo(cachedCount)
+
         );
     }
     // endregion

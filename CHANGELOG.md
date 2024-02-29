@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.5.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.0) 2024-02-29
+
+### New Features
+
+- Export metrics on TEE challenges and Ethereum Credentials counts. (#230)
+- Add a cache mechanism for secret existence. (#231)
+- Expose cache metrics and refactor cache implementation. (#238)
+- Set permissions to read-only on AES Key File. (#242)
+- Backup AES Key File with database backup. (#243)
+- Copy AES Key File on database copy. (#244)
+- Delete AES Key File on database delete. (#245)
+- Restore AES Key File on database restoration. (#246)
+- Create TEE session with worker IPFS storage token and fallback on requester token. (#248)
+
+### Bug Fixes
+
+- Validate authorization first when working on compute secrets. (#229)
+- Remove outdated empty log assertions in session tests. (#233)
+- Do not use `@Data` lombok annotations on entities. (#235)
+- Forbid access to sensitive APIs when no API key has been configured. (#249 #252)
+
+### Quality
+
+- Optimize chain calls in `AuthorizationService`. (#228)
+- Fix licence headers in some source files. (#232)
+- Move `EthereumCredentials` class to `com.iexec.sms.tee.challenge` package. (#234)
+- Use `@DataJpaTest` to run secrets and TEE challenges tests on H2 database. (#236 #237)
+- Insert secrets in a single SQL statement. (#238)
+- Remove unused method in `AuthorizationService`, update `AuthorizationServiceTests`. (#240)
+- Move `ApiKeyRequestFilter` class to `com.iexec.sms.admin` package. (#241)
+- Clean App compute secret endpoints on `AppComputeSecretController`. (#247)
+
+### Dependency Upgrades
+
+- Upgrade to `iexec-common` 8.4.0. (#250)
+
 ## [[8.4.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.4.0) 2024-01-10
 
 ### New Features

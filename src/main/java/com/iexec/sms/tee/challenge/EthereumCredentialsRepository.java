@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2024-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,9 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.metric;
+package com.iexec.sms.tee.challenge;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-public class SecretsMetrics {
-    private String secretsType;
-    private long initialCount;
-    private long storedCount;
-    private long addedSinceStartCount;
-    private long cachedSecretsCount;
+public interface EthereumCredentialsRepository extends JpaRepository<EthereumCredentials, String> {
 }

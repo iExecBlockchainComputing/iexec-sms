@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class AdminController {
     /**
      * The name of the database backup file.
      */
-    private static final String BACKUP_FILENAME = "backup.sql";
+    private static final String BACKUP_DATABASE_FILENAME = "backup.sql";
 
     /**
      * We want to perform one operation at a time. This ReentrantLock is used to set up the lock mechanism.
@@ -200,7 +200,7 @@ public class AdminController {
 
             switch (operationType) {
                 case BACKUP:
-                    operationSuccessful = adminService.createDatabaseBackupFile(adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME);
+                    operationSuccessful = adminService.createBackupFile(adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_DATABASE_FILENAME);
                     break;
                 case RESTORE:
                     operationSuccessful = adminService.restoreDatabaseFromBackupFile(sourceStoragePath, sourceFileName);
@@ -211,7 +211,7 @@ public class AdminController {
                 case REPLICATE:
                     destinationStoragePath = getStoragePathFromID(destinationStorageID);
                     operationSuccessful = adminService.copyBackupFile(
-                            adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_FILENAME, destinationStoragePath, destinationFileName);
+                            adminStorageLocation + BACKUP_STORAGE_LOCATION, BACKUP_DATABASE_FILENAME, destinationStoragePath, destinationFileName);
                     break;
                 case COPY:
                     destinationStoragePath = getStoragePathFromID(destinationStorageID);

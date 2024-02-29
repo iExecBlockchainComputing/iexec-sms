@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.utils;
+package com.iexec.sms.tee.challenge;
 
 import com.iexec.commons.poco.utils.CredentialsUtils;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -33,11 +32,10 @@ import javax.persistence.Id;
 /**
  * Domain entity
  */
-@Data
+@Entity
 @Getter
 @NoArgsConstructor //for hibernate
 @AllArgsConstructor
-@Entity
 public class EthereumCredentials {
 
     @Id

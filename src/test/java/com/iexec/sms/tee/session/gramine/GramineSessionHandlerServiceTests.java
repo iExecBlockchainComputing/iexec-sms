@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,19 +26,16 @@ import com.iexec.sms.tee.session.gramine.sps.SpsConfiguration;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(OutputCaptureExtension.class)
 class GramineSessionHandlerServiceTests {
 
     private static final String SPS_URL = "spsUrl";
@@ -56,7 +53,7 @@ class GramineSessionHandlerServiceTests {
     }
 
     @Test
-    void shouldBuildAndPostSession(CapturedOutput output) throws TeeSessionGenerationException {
+    void shouldBuildAndPostSession() throws TeeSessionGenerationException {
         TaskDescription taskDescription = TaskDescription.builder().build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
         GramineSession spsSession = mock(GramineSession.class);
@@ -65,9 +62,7 @@ class GramineSessionHandlerServiceTests {
         SpsApiClient spsClient = mock(SpsApiClient.class);
         when(spsClient.postSession(spsSession)).thenReturn("sessionId");
         when(spsConfiguration.getInstance()).thenReturn(spsClient);
-
         assertEquals(SPS_URL, sessionHandlerService.buildAndPostSession(request));
-        assertTrue(output.getOut().isEmpty());
     }
 
     @Test

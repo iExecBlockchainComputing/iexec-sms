@@ -65,6 +65,7 @@ public class MetricsService {
                 .initialCount(secretService.getInitialSecretsCount())
                 .addedSinceStartCount(secretService.getAddedSecretsSinceStartCount())
                 .storedCount(secretService.getStoredSecretsCount())
+                .cachedSecretsCount(secretService.getCachedSecretsCount())
                 .build();
     }
 

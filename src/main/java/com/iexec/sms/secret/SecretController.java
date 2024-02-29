@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
 
 package com.iexec.sms.secret;
 
-
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.NotAnExistingSecretException;
 import com.iexec.sms.secret.web2.SameSecretException;
-import com.iexec.sms.secret.web2.SecretAlreadyExistsException;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import lombok.extern.slf4j.Slf4j;
@@ -105,12 +103,11 @@ public class SecretController {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
 
-        try {
-            web2SecretService.addSecret(ownerAddress, secretName, secretValue);
-            return ResponseEntity.noContent().build();
-        } catch (SecretAlreadyExistsException e) {
+        if (!web2SecretService.addSecret(ownerAddress, secretName, secretValue)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/web2")

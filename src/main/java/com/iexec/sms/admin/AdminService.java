@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.iexec.sms.admin;
 
+import com.iexec.sms.encryption.EncryptionService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.h2.tools.RunScript;
@@ -41,17 +43,19 @@ public class AdminService {
 
     // Used to print formatted date in log
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-
-    public static final String ERR_BACKUP_FILE_OUTSIDE_STORAGE = "Backup file is outside of storage file system";
-    public static final String ERR_BACKUP_FILE_NOT_EXIST = "Backup file does not exist";
-    public static final String ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE = "Replicated or Copied backup file destination is outside of storage file system";
-    public static final String ERR_FILE_ALREADY_EXIST = "A file already exists at the destination";
+    public static final String AES_KEY_FILENAME_EXTENSION = ".key";
+    private static final String AES_KEY_LOG_DESCRIPTION = "AES Key";
     private final String datasourceUrl;
     private final String datasourceUsername;
     private final String datasourcePassword;
     private final String adminStorageLocation;
+    private final EncryptionService encryptionService;
 
-    public AdminService(@Value("${spring.datasource.url}") String datasourceUrl,
+    @Getter
+    private boolean smsOnline;
+
+    public AdminService(EncryptionService encryptionService,
+                        @Value("${spring.datasource.url}") String datasourceUrl,
                         @Value("${spring.datasource.username}") String datasourceUsername,
                         @Value("${spring.datasource.password}") String datasourcePassword,
                         @Value("${admin.storage-location}") String adminStorageLocation) {
@@ -59,16 +63,17 @@ public class AdminService {
         this.datasourceUsername = datasourceUsername;
         this.datasourcePassword = datasourcePassword;
         this.adminStorageLocation = adminStorageLocation;
+        this.encryptionService = encryptionService;
     }
 
     /**
-     * Creates a backup of the H2 database and saves it to the specified location.
+     * Creates a backup of the H2 database and associated AES key at the specified location.
      *
      * @param storageLocation The location where the backup file will be saved, must be an existing directory.
      * @param backupFileName  The name of the backup file.
      * @return {@code true} if the backup was successful, {@code false} if any error occurs.
      */
-    boolean createDatabaseBackupFile(String storageLocation, String backupFileName) {
+    boolean createBackupFile(String storageLocation, String backupFileName) {
         try {
             // Ensure that storageLocation and backupFileName are not blanks
             boolean validation = checkCommonParameters(storageLocation, backupFileName);
@@ -82,9 +87,12 @@ public class AdminService {
                 return false;
             }
             final File backupFile = new File(storageLocation + File.separator + backupFileName);
-            final String backupFileLocation = backupFile.getCanonicalPath();
-
-            return databaseDump(backupFileLocation);
+            final String databaseBackupFileLocation = backupFile.getCanonicalPath();
+            final String aesKeyBackupFileLocation = databaseBackupFileLocation + AES_KEY_FILENAME_EXTENSION;
+            //Backup aes key
+            Files.copy(Path.of(encryptionService.getAesKeyPath()), Path.of(aesKeyBackupFileLocation), StandardCopyOption.REPLACE_EXISTING);
+            log.debug("Backup AES Key created [fileName:{}]", aesKeyBackupFileLocation);
+            return databaseDump(databaseBackupFileLocation);
         } catch (IOException e) {
             log.error("An error occurred while creating backup", e);
         }
@@ -128,27 +136,75 @@ public class AdminService {
      */
     boolean restoreDatabaseFromBackupFile(String storageLocation, String backupFileName) {
         try {
+            putSmsOffline();
             final String backupFileLocation = checkBackupFileLocation(
                     storageLocation + File.separator + backupFileName,
-                    ERR_BACKUP_FILE_OUTSIDE_STORAGE);
-            if (!Path.of(backupFileLocation).toFile().exists()) {
-                throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
+                    AdminOperationError.BACKUP_FILE_OUTSIDE_STORAGE);
+            final Path backupDatabaseFileLocation = Path.of(backupFileLocation);
+
+            if (!backupDatabaseFileLocation.toFile().exists()) {
+                throw new FileSystemNotFoundException(AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST.toString());
             }
-            final long size = backupFileLocation.length();
-            log.info("Starting the restore process [backupFileLocation:{}]", backupFileLocation);
-            final long start = System.currentTimeMillis();
-            RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
-                    backupFileLocation, Charset.defaultCharset(), true);
-            final long stop = System.currentTimeMillis();
-            log.warn("Backup has been restored [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    backupFileLocation, dateFormat.format(new Date(start)), stop - start, size);
+
+            final Path backupAesKeyFileLocationPath = Path.of(backupFileLocation + AES_KEY_FILENAME_EXTENSION);
+            if (!backupAesKeyFileLocationPath.toFile().exists()) {
+                throw new FileSystemNotFoundException(AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST.toString());
+            }
+
+            final long startRestoration = System.currentTimeMillis();
+            log.info("Starting the full restore process [backupFileLocation:{},backupAesKeyFileLocationPath:{}]", backupFileLocation, backupAesKeyFileLocationPath);
+            restoreAesKey(backupAesKeyFileLocationPath);
+            restoreDatabase(backupDatabaseFileLocation);
+            final long stopRestoration = System.currentTimeMillis();
+            log.info("Ending the full restore process [backupFileLocation:{},backupAesKeyFileLocationPath:{},timestamp:{}, duration:{} ms]", backupFileLocation, backupAesKeyFileLocationPath, dateFormat.format(new Date(startRestoration)), stopRestoration - startRestoration);
+
             return true;
         } catch (IOException e) {
-            log.error("Invalid backup file location", e);
+            log.error("Invalid backup file operation", e);
         } catch (SQLException e) {
             log.error("SQL error occurred during restore", e);
+        } finally {
+            putSmsOnline();
         }
         return false;
+    }
+
+    /**
+     * Restore the AES Key from backup
+     *
+     * @param backupAesKeyFileLocation The location of AES key backup
+     * @throws IOException If an error occurred during AES Key file manipulation
+     */
+    private void restoreAesKey(Path backupAesKeyFileLocation) throws IOException {
+        final long startAesKeyRestoration = System.currentTimeMillis();
+        final long databaseAesKeyBackupFileSize = backupAesKeyFileLocation.toFile().length();
+        final boolean successWrite = encryptionService.setWritePermissions();
+        if (!successWrite) {
+            throw new IOException(AdminOperationError.AES_KEY_FILE_WRITE_PERMISSIONS.toString());
+        }
+        processCopyFile(backupAesKeyFileLocation, Path.of(encryptionService.getAesKeyPath()), AES_KEY_LOG_DESCRIPTION, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+        log.info("Reload AES Key file [aesKeyFileLocationPath:{}]", encryptionService.getAesKeyPath());
+        encryptionService.reloadAESKey();
+        final long stopAesKeyRestoration = System.currentTimeMillis();
+        log.info("AES Key file has been restored [backupAesKeyFileLocationPath:{}, timestamp:{}, duration:{} ms, size:{}]",
+                backupAesKeyFileLocation, dateFormat.format(new Date(startAesKeyRestoration)), stopAesKeyRestoration - startAesKeyRestoration, databaseAesKeyBackupFileSize);
+    }
+
+    /**
+     * Restore the database from backup
+     *
+     * @param backupDatabaseFileLocation The location of database backup
+     * @throws SQLException If an error occurred during sql script execution
+     */
+    private void restoreDatabase(Path backupDatabaseFileLocation) throws SQLException {
+        final long databaseBackupFileSize = backupDatabaseFileLocation.toFile().length();
+        final long startDatabaseRestoration = System.currentTimeMillis();
+        log.info("Starting the restore process for the database");
+        RunScript.execute(datasourceUrl, datasourceUsername, datasourcePassword,
+                backupDatabaseFileLocation.toString(), Charset.defaultCharset(), true);
+        final long stopDatabaseRestoration = System.currentTimeMillis();
+        log.info("Database has been restored [backupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
+                backupDatabaseFileLocation, dateFormat.format(new Date(startDatabaseRestoration)), stopDatabaseRestoration - startDatabaseRestoration, databaseBackupFileSize);
     }
 
     /**
@@ -167,22 +223,42 @@ public class AdminService {
             }
             final String backupFileLocation = checkBackupFileLocation(
                     storageLocation + File.separator + backupFileName,
-                    ERR_BACKUP_FILE_OUTSIDE_STORAGE);
-            final Path backupFileLocationPath = Path.of(backupFileLocation);
-            if (!backupFileLocationPath.toFile().exists()) {
-                throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
-            }
-            log.info("Starting the delete process [backupFileLocation:{}]", backupFileLocation);
-            final long start = System.currentTimeMillis();
-            Files.delete(backupFileLocationPath);
-            final long stop = System.currentTimeMillis();
-            log.info("Successfully deleted backup [backupFileLocation:{}, timestamp:{}, duration:{} ms]",
-                    backupFileLocation, dateFormat.format(new Date(start)), stop - start);
-            return true;
+                    AdminOperationError.BACKUP_FILE_OUTSIDE_STORAGE);
+            final Path backupDatabaseFileLocationPath = Path.of(backupFileLocation);
+            final Path backupAesKeyFileLocationPath = Path.of(backupDatabaseFileLocationPath + AES_KEY_FILENAME_EXTENSION);
+
+            final boolean deleteSuccessfulDB = processDeleteFile(backupDatabaseFileLocationPath, "Database");
+            final boolean deleteSuccessfulAESKey = processDeleteFile(backupAesKeyFileLocationPath, AES_KEY_LOG_DESCRIPTION);
+
+            return deleteSuccessfulDB && deleteSuccessfulAESKey;
         } catch (IOException e) {
             log.error("An error occurred while deleting backup", e);
         }
         return false;
+    }
+
+    /**
+     * Delete a file if exist with detailed trace information
+     *
+     * @param source          The file to delete
+     * @param fileDescription Short description associated with the file for better traceability
+     * @return {@code true} if the deletion was successful, {@code false} if the file doesn't exist
+     * @throws IOException If the deletion fails with an error
+     */
+    private boolean processDeleteFile(Path source, String fileDescription) throws IOException {
+        //We don't want to raise an exception if one of the files doesn't exist,
+        // as this could be due to an error during copy/replication or a previous delete that wasn't completely successful, so we want to have a workaround.
+        if (source.toFile().exists()) {
+            log.info("{} delete process start [source:{}]", fileDescription, source);
+            final long start = System.currentTimeMillis();
+            Files.delete(source);
+            final long stop = System.currentTimeMillis();
+            log.info("{} delete process done [source:{}, timestamp:{}, duration:{} ms]", fileDescription, source, dateFormat.format(start), stop - start);
+            return true;
+        } else {
+            log.warn("{} delete process not possible, the file is not present [source:{}]", fileDescription, source);
+            return false;
+        }
     }
 
     /**
@@ -199,31 +275,32 @@ public class AdminService {
     boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
         try {
             // Check that we want to copy an authorised file
-            final Path sourceBackupFileLocation = Path.of(checkBackupFileLocation(
+            final Path sourceDatabaseBackupFileLocation = Path.of(checkBackupFileLocation(
                     sourceStorageLocation + File.separator + sourceBackupFileName,
-                    ERR_BACKUP_FILE_OUTSIDE_STORAGE));
+                    AdminOperationError.BACKUP_FILE_OUTSIDE_STORAGE));
 
-            // File must exist
-            if (!sourceBackupFileLocation.toFile().exists()) {
-                throw new FileSystemNotFoundException(ERR_BACKUP_FILE_NOT_EXIST);
-            }
+            // authorizations are controlled via the previous line, no need to call checkBackupFileLocation here
+            final Path sourceAesKeyBackupFileLocation = Path.of(sourceDatabaseBackupFileLocation + AES_KEY_FILENAME_EXTENSION);
+
+            // Check source backup (dump and aes key) exist
+            checkSourceFileExists(sourceDatabaseBackupFileLocation, AdminOperationError.DATABASE_BACKUP_FILE_NOT_EXIST);
+            checkSourceFileExists(sourceAesKeyBackupFileLocation, AdminOperationError.AES_KEY_BACKUP_FILE_NOT_EXIST);
 
             // Check that we want to copy into authorized location
-            final Path destinationBackupFileLocation = Path.of(checkBackupFileLocation(
+            final Path destinationDatabaseBackupFileLocation = Path.of(checkBackupFileLocation(
                     destinationStorageLocation + File.separator + destinationBackupFileName,
-                    ERR_REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
+                    AdminOperationError.REPLICATE_OR_COPY_FILE_OUTSIDE_STORAGE));
 
-            // Check that we are not trying to overwrite a file
-            if (destinationBackupFileLocation.toFile().exists()) {
-                throw new IOException(ERR_FILE_ALREADY_EXIST);
-            }
-            final long size = sourceBackupFileLocation.toFile().length();
-            log.info("Starting the copy process [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}]", sourceBackupFileLocation, destinationBackupFileLocation);
-            final long start = System.currentTimeMillis();
-            Files.copy(sourceBackupFileLocation, destinationBackupFileLocation, StandardCopyOption.COPY_ATTRIBUTES);
-            final long stop = System.currentTimeMillis();
-            log.info("Backup has been copied [sourceBackupFileLocation:{}, destinationBackupFileLocation:{}, timestamp:{}, duration:{} ms, size:{}]",
-                    sourceBackupFileLocation, destinationBackupFileLocation, dateFormat.format(start), stop - start, size);
+            // AES Key copy destination
+            final Path destinationAesKeyBackupFileLocation = Path.of(destinationDatabaseBackupFileLocation + AES_KEY_FILENAME_EXTENSION);
+
+            // Check destination
+            checkDestinationFileNotExists(destinationDatabaseBackupFileLocation, AdminOperationError.DATABASE_FILE_ALREADY_EXIST);
+            checkDestinationFileNotExists(destinationAesKeyBackupFileLocation, AdminOperationError.AES_KEY_FILE_ALREADY_EXIST);
+
+            //Process copy
+            processCopyFile(sourceDatabaseBackupFileLocation, destinationDatabaseBackupFileLocation, "Database", StandardCopyOption.COPY_ATTRIBUTES);
+            processCopyFile(sourceAesKeyBackupFileLocation, destinationAesKeyBackupFileLocation, AES_KEY_LOG_DESCRIPTION, StandardCopyOption.COPY_ATTRIBUTES);
             return true;
         } catch (IOException e) {
             log.error("An error occurred while copying backup", e);
@@ -231,16 +308,59 @@ public class AdminService {
         return false;
     }
 
-    String checkBackupFileLocation(String fullBackupFileName, String errorMessage) throws IOException {
+    /**
+     * Checks if the source exists and throws an exception if it does not
+     *
+     * @param source              The source to check
+     * @param adminOperationError The custom error message
+     * @throws FileSystemNotFoundException If the source does not exist
+     */
+    private void checkSourceFileExists(Path source, AdminOperationError adminOperationError) throws FileSystemNotFoundException {
+        if (!source.toFile().exists()) {
+            throw new FileSystemNotFoundException(adminOperationError.toString());
+        }
+    }
+
+    /**
+     * Checks if the destination does not exist and throws an exception if it does
+     *
+     * @param destination         The destination to check
+     * @param adminOperationError The custom error message
+     * @throws IOException If the destination already exist
+     */
+    private void checkDestinationFileNotExists(Path destination, AdminOperationError adminOperationError) throws IOException {
+        if (destination.toFile().exists()) {
+            throw new IOException(adminOperationError.toString());
+        }
+    }
+
+    /**
+     * Copy a file to another location with detailed trace information
+     *
+     * @param source              The current location
+     * @param destination         The destination location
+     * @param fileDescription     Short description associated with the file for better traceability
+     * @param standardCopyOptions Copy options
+     * @throws IOException If the copy fails
+     */
+    private void processCopyFile(Path source, Path destination, String fileDescription, StandardCopyOption... standardCopyOptions) throws IOException {
+        final long size = source.toFile().length();
+        log.info("{} copy process start [source:{}, destination :{}]", fileDescription, source, destination);
+        final long start = System.currentTimeMillis();
+        Files.copy(source, destination, standardCopyOptions);
+        final long stop = System.currentTimeMillis();
+        log.info("{} copy process done [source:{}, destination :{}, timestamp:{}, duration:{} ms, size:{}]", fileDescription, source, destination, dateFormat.format(start), stop - start, size);
+    }
+
+    String checkBackupFileLocation(String fullBackupFileName, AdminOperationError adminOperationError) throws IOException {
         final File backupFile = new File(fullBackupFileName);
         final String backupFileLocation = backupFile.getCanonicalPath();
         // Ensure that storageLocation correspond to an authorised area
         if (!backupFileLocation.startsWith(adminStorageLocation)) {
-            throw new IOException(errorMessage);
+            throw new IOException(adminOperationError.toString());
         }
         return backupFileLocation;
     }
-
 
     boolean checkCommonParameters(String storageLocation, String backupFileName) {
         // Check for missing or empty storageLocation parameter
@@ -254,6 +374,23 @@ public class AdminService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Put SMS offline, especially in the case of a restoration
+     * where you don't want new insertion requests to arrive
+     */
+    void putSmsOffline() {
+        log.info("SMS is now offline");
+        smsOnline = false;
+    }
+
+    /**
+     * Put SMS online
+     */
+    void putSmsOnline() {
+        log.info("SMS is now online");
+        smsOnline = true;
     }
 
 }

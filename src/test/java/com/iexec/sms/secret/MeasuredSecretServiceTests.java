@@ -42,12 +42,14 @@ class MeasuredSecretServiceTests {
     private boolean shouldThrowDatabaseAccessException;
 
     private MeasuredSecretService measuredSecretService;
+    private CacheSecretService<String> cacheSecretService;
 
     private MeterRegistry meterRegistry;
 
     @BeforeEach
     void beforeEach() {
         this.shouldThrowDatabaseAccessException = false;
+        cacheSecretService = new CacheSecretService<>();
 
         meterRegistry = new SimpleMeterRegistry();
         Metrics.globalRegistry.add(meterRegistry);
@@ -63,6 +65,7 @@ class MeasuredSecretServiceTests {
                     }
                     throw new RuntimeException("Mocked data access exception");
                 }, // Simulating a repo `count` method
+                cacheSecretService::count,
                 Executors.newSingleThreadScheduledExecutor(),
                 1);
         measuredSecretService.init();
@@ -77,6 +80,32 @@ class MeasuredSecretServiceTests {
     @Test
     void shouldGetInitialSecretsCount() {
         assertThat(measuredSecretService.getInitialSecretsCount()).isEqualTo(INITIAL_COUNT);
+    }
+
+    @Test
+    void shouldGetCachedSecretsCount() {
+        final int cachedSecretsCount = 3;
+        for (int i = 0; i < cachedSecretsCount; i++) {
+            cacheSecretService.putSecretExistenceInCache("secret-key-" + i, true);
+        }
+        Awaitility.await()
+                .timeout(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> assertThat(measuredSecretService.getCachedSecretsCount()).isEqualTo(cachedSecretsCount));
+    }
+
+    @Test
+    void shouldGetZeroWhenCacheSecretServiceIsNull() {
+        MeasuredSecretService measuredSecretServiceWithNullCache = new MeasuredSecretService(
+                SECRETS_TYPE,
+                METRICS_PREFIX,
+                () -> count.get(),
+                () -> 0L,
+                Executors.newSingleThreadScheduledExecutor(),
+                1);
+        measuredSecretServiceWithNullCache.init();
+
+        Awaitility.await().atLeast(5, TimeUnit.SECONDS);
+        assertThat(measuredSecretService.getCachedSecretsCount()).isZero();
     }
 
     @Test
