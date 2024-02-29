@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 - Validate authorization first when working on compute secrets. (#229)
 - Remove outdated empty log assertions in session tests. (#233)
 - Do not use `@Data` lombok annotations on entities. (#235)
-- Forbid access to sensitive APIs when no API key has been configured. (#249 #251)
+- Forbid access to sensitive APIs when no API key has been configured. (#249 #252)
 
 ### Quality
 
