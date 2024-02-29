@@ -18,15 +18,11 @@ package com.iexec.sms.config;
 
 import com.iexec.sms.admin.ApiKeyRequestFilter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnExpression(
-        "T(org.apache.commons.lang3.StringUtils).isNotEmpty('${admin.api-key:}')"
-)
 public class ApiKeyFilterConfig {
 
     @Bean
