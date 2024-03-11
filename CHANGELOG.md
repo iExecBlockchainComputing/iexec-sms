@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
+### Quality
+
+- Use only two SQL statements to read `TeeTaskComputeSecret` and `Web2Secret` during TEE session creation. (#254)
+
 ## [[8.5.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.0) 2024-02-29
 
 ### New Features

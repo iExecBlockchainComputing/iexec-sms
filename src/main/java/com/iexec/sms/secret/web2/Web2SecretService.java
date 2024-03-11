@@ -26,8 +26,10 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -66,6 +68,12 @@ public class Web2SecretService {
     public Optional<String> getDecryptedValue(String ownerAddress, String secretAddress) {
         return getSecret(ownerAddress, secretAddress)
                 .map(secret -> encryptionService.decrypt(secret.getValue()));
+    }
+
+    public List<Web2Secret> getSecretsForTeeSession(Iterable<Web2SecretHeader> ids) {
+        return web2SecretRepository.findAllById(ids).stream()
+                .map(secret -> secret.withValue(encryptionService.decrypt(secret.getValue())))
+                .collect(Collectors.toList());
     }
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {
