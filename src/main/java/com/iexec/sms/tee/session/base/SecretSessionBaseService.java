@@ -219,9 +219,31 @@ public class SecretSessionBaseService {
 
     private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
         final Map<String, Object> tokens = new HashMap<>();
-        final String applicationAddress = taskDescription.getAppAddress();
+        final List<TeeTaskComputeSecretHeader> ids = getAppComputeSecretsHeaders(taskDescription);
+        log.debug("TeeTaskComputeSecret looking for secrets [chainTaskId:{}, count:{}]",
+                taskDescription.getChainTaskId(), ids.size());
+        final List<TeeTaskComputeSecret> secrets = teeTaskComputeSecretService.getSecretsForTeeSession(ids);
+        log.debug("TeeTaskComputeSecret objects fetched from database [chainTaskId:{}, count:{}]",
+                taskDescription.getChainTaskId(), secrets.size());
+        for (TeeTaskComputeSecret secret : secrets) {
+            if (!StringUtils.isEmpty(secret.getHeader().getOnChainObjectAddress())) {
+                tokens.put("IEXEC_APP_DEVELOPER_SECRET", secret.getValue());
+                tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + "1", secret.getValue());
+            } else {
+                final String secretKey = secret.getHeader().getKey();
+                taskDescription.getSecrets().forEach((key, value) -> {
+                    if (value.equals(secretKey)) {
+                        tokens.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + key, secret.getValue());
+                    }
+                });
+            }
+        }
+        return tokens;
+    }
 
+    private List<TeeTaskComputeSecretHeader> getAppComputeSecretsHeaders(TaskDescription taskDescription) {
         final List<TeeTaskComputeSecretHeader> ids = new ArrayList<>();
+        final String applicationAddress = taskDescription.getAppAddress();
         if (applicationAddress != null) {
             final String secretIndex = "1";
             ids.add(new TeeTaskComputeSecretHeader(
@@ -254,27 +276,7 @@ public class SecretSessionBaseService {
                         secretEntry.getValue()));
             }
         }
-
-        // managed secrets fetched from database
-        log.debug("TeeTaskComputeSecret looking for secrets [chainTaskId:{}, count:{}]",
-                taskDescription.getChainTaskId(), ids.size());
-        final List<TeeTaskComputeSecret> secrets = teeTaskComputeSecretService.getSecretsForTeeSession(ids);
-        log.debug("TeeTaskComputeSecret objects fetched from database [chainTaskId:{}, count:{}]",
-                taskDescription.getChainTaskId(), secrets.size());
-        for (TeeTaskComputeSecret secret : secrets) {
-            if (!StringUtils.isEmpty(secret.getHeader().getOnChainObjectAddress())) {
-                tokens.put("IEXEC_APP_DEVELOPER_SECRET", secret.getValue());
-                tokens.put(IexecEnvUtils.IEXEC_APP_DEVELOPER_SECRET_PREFIX + "1", secret.getValue());
-            } else {
-                final String secretKey = secret.getHeader().getKey();
-                taskDescription.getSecrets().forEach((key, value) -> {
-                    if (value.equals(secretKey)) {
-                        tokens.put(IexecEnvUtils.IEXEC_REQUESTER_SECRET_PREFIX + key, secret.getValue());
-                    }
-                });
-            }
-        }
-        return tokens;
+        return ids;
     }
 
     /**
@@ -295,17 +297,7 @@ public class SecretSessionBaseService {
             throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
         }
 
-        final List<Web2SecretHeader> ids = new ArrayList<>();
-        if (taskDescription.isResultEncryption()) {
-            ids.add(new Web2SecretHeader(taskDescription.getBeneficiary(), IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY));
-        }
-        if (DROPBOX_RESULT_STORAGE_PROVIDER.equals(taskDescription.getResultStorageProvider())) {
-            ids.add(new Web2SecretHeader(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN));
-        } else {
-            ids.add(new Web2SecretHeader(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN));
-            ids.add(new Web2SecretHeader(request.getWorkerAddress(), IEXEC_RESULT_IEXEC_IPFS_TOKEN));
-        }
-        ids.forEach(header -> log.debug("{} {}", header.getOwnerAddress(), header.getAddress()));
+        final List<Web2SecretHeader> ids = getPostComputeSecretHeaders(taskDescription, request.getWorkerAddress());
         log.debug("Web2Secret looking for secrets [chainTaskId:{}, count:{}]",
                 taskDescription.getChainTaskId(), ids.size());
         final List<Web2Secret> secrets = web2SecretService.getSecretsForTeeSession(ids);
@@ -350,6 +342,20 @@ public class SecretSessionBaseService {
         return enclaveBase
                 .environment(tokens)
                 .build();
+    }
+
+    List<Web2SecretHeader> getPostComputeSecretHeaders(TaskDescription taskDescription, String workerAddress) {
+        final List<Web2SecretHeader> ids = new ArrayList<>();
+        if (taskDescription.isResultEncryption()) {
+            ids.add(new Web2SecretHeader(taskDescription.getBeneficiary(), IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY));
+        }
+        if (DROPBOX_RESULT_STORAGE_PROVIDER.equals(taskDescription.getResultStorageProvider())) {
+            ids.add(new Web2SecretHeader(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN));
+        } else {
+            ids.add(new Web2SecretHeader(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN));
+            ids.add(new Web2SecretHeader(workerAddress, IEXEC_RESULT_IEXEC_IPFS_TOKEN));
+        }
+        return ids;
     }
 
     public Map<String, String> getPostComputeEncryptionTokens(TeeSessionRequest request, String resultEncryptionKey)

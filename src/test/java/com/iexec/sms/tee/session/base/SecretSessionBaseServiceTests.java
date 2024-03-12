@@ -426,6 +426,53 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
+    void shouldGetPostComputeTokensForDropbox() throws TeeSessionGenerationException, GeneralSecurityException {
+        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
+                .resultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
+                .build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+
+        final String beneficiary = request.getTaskDescription().getBeneficiary();
+        final Web2Secret resultEncryption = new Web2Secret(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+        final Web2Secret dropboxToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN, "Secret value");
+        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), dropboxToken.getHeader())))
+                .thenReturn(List.of(resultEncryption, dropboxToken));
+        TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        when(teeChallengeService.getOrCreate(TASK_ID, true))
+                .thenReturn(Optional.of(challenge));
+
+        SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request);
+        assertThat(enclaveBase.getName()).isEqualTo("post-compute");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
+    }
+
+    @Test
+    void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException, GeneralSecurityException {
+        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
+                .callback("callback")
+                .build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+
+        final String beneficiary = request.getTaskDescription().getBeneficiary();
+        final Web2Secret resultEncryption = new Web2Secret(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
+        final Web2Secret requesterStorageToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
+        final Web2Secret workerStorageToken = new Web2Secret(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
+        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader())))
+                .thenReturn(List.of(resultEncryption, workerStorageToken));
+        TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        when(teeChallengeService.getOrCreate(TASK_ID, true))
+                .thenReturn(Optional.of(challenge));
+
+        SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request);
+        assertThat(enclaveBase.getName()).isEqualTo("post-compute");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
+    }
+
+    @Test
     void shouldNotGetPostComputeTokensSinceTaskDescriptionMissing() {
         TeeSessionRequest request = TeeSessionRequest.builder().build();
 
@@ -437,7 +484,7 @@ class SecretSessionBaseServiceTests {
     }
     // endregion
 
-    // region getPostComputeEncryptionTokens
+    // region getPostComputeStorageTokens
     @Test
     void shouldGetPostComputeStorageTokensWithCallback() {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
@@ -544,6 +591,7 @@ class SecretSessionBaseServiceTests {
                 .isEqualTo("Empty requester storage token - taskId: " + taskDescription.getChainTaskId());
     }
 
+    // region getPostComputeSignTokens
     @Test
     void shouldGetPostComputeSignTokens() throws GeneralSecurityException {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
@@ -652,7 +700,9 @@ class SecretSessionBaseServiceTests {
                 .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
+    // endregion
 
+    // region getPostcomputeEncryptionTokens
     @Test
     void shouldGetPostComputeEncryptionTokensWithEncryption() {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
@@ -701,7 +751,6 @@ class SecretSessionBaseServiceTests {
                 exception.getError());
         assertEquals("Empty beneficiary encryption key - taskId: taskId", exception.getMessage());
     }
-
     // endregion
 
 }
