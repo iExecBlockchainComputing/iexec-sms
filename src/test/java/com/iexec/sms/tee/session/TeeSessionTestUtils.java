@@ -16,25 +16,19 @@
 
 package com.iexec.sms.tee.session;
 
-import com.iexec.common.precompute.PreComputeUtils;
-import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
-import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ClassUtils;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
-import static com.iexec.sms.tee.session.base.SecretSessionBaseService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -137,39 +131,6 @@ public class TeeSessionTestUtils {
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0);
-    }
-
-    public static Map<String, Object> getPreComputeTokens() {
-        return Map.of(
-                PRE_COMPUTE_MRENCLAVE, PRE_COMPUTE_FINGERPRINT,
-                PreComputeUtils.IS_DATASET_REQUIRED, true,
-                PreComputeUtils.IEXEC_DATASET_KEY, DATASET_KEY.trim(),
-                INPUT_FILE_URLS, Map.of(
-                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1,
-                        IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2));
-    }
-
-    public static Map<String, Object> getAppTokens() {
-        return Map.of(
-            APP_MRENCLAVE, APP_FINGERPRINT,
-            SecretSessionBaseService.INPUT_FILE_NAMES, Map.of(
-                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "1", INPUT_FILE_NAME_1,
-                        IexecEnvUtils.IEXEC_INPUT_FILE_NAME_PREFIX + "2", INPUT_FILE_NAME_2));
-    }
-
-    public static Map<String, Object> getPostComputeTokens() {
-        Map<String, Object> map = new HashMap<>();
-        map.put(POST_COMPUTE_MRENCLAVE, POST_COMPUTE_FINGERPRINT);
-        map.put(RESULT_TASK_ID, TASK_ID);
-        map.put(RESULT_ENCRYPTION, "yes");
-        map.put(RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
-        map.put(RESULT_STORAGE_PROVIDER, STORAGE_PROVIDER);
-        map.put(RESULT_STORAGE_PROXY, STORAGE_PROXY);
-        map.put(RESULT_STORAGE_TOKEN, STORAGE_TOKEN);
-        map.put(RESULT_STORAGE_CALLBACK, "no");
-        map.put(RESULT_SIGN_WORKER_ADDRESS, WORKER_ADDRESS);
-        map.put(RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY, TEE_CHALLENGE_PRIVATE_KEY);
-        return map;
     }
 
     public static void assertRecursively(Object expected, Object actual) {
