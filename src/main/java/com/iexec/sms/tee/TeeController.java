@@ -26,7 +26,6 @@ import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -123,11 +122,8 @@ public class TeeController {
         if (authorizationError.isPresent()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Optional<TeeChallenge> executionChallenge =
-                teeChallengeService.getOrCreate(chainTaskId, false);
-        return executionChallenge
-                .map(teeChallenge -> ResponseEntity
-                        .ok(teeChallenge.getCredentials().getAddress()))
+        return teeChallengeService.getOrCreate(chainTaskId, false)
+                .map(teeChallenge -> ResponseEntity.ok(teeChallenge.getCredentials().getAddress()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
