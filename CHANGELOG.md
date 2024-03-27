@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
-- Add `Authorization` header on `/tee/challenges/{chainTaskId}` endpoint. (#255)
+- Add `Authorization` header on `/tee/challenges/{chainTaskId}` endpoint. (#255 #256)
 
 ### Quality
 

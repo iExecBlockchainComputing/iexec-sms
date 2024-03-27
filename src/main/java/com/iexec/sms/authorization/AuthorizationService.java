@@ -16,7 +16,6 @@
 
 package com.iexec.sms.authorization;
 
-
 import com.iexec.commons.poco.chain.ChainDeal;
 import com.iexec.commons.poco.chain.ChainTask;
 import com.iexec.commons.poco.chain.ChainTaskStatus;
@@ -49,52 +48,49 @@ public class AuthorizationService {
 
     /**
      * Checks whether this execution is authorized.
-     * If not authorized, return the reason.
-     * Otherwise, returns an empty {@link Optional}.
+     *
+     * @param workerpoolAuthorization The workerpool authorization to check
+     * @return {@code Optional.empty()} if all checks passed, the failure reason otherwise
      */
-    public Optional<AuthorizationError> isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization workerpoolAuthorization, boolean isTeeTask) {
+    public Optional<AuthorizationError> isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization workerpoolAuthorization) {
         if (workerpoolAuthorization == null || StringUtils.isEmpty(workerpoolAuthorization.getChainTaskId())) {
             log.error("Not authorized with empty params");
             return Optional.of(EMPTY_PARAMS_UNAUTHORIZED);
         }
 
-        String chainTaskId = workerpoolAuthorization.getChainTaskId();
-        Optional<ChainTask> optionalChainTask = iexecHubService.getChainTask(chainTaskId);
-        if (optionalChainTask.isEmpty()) {
+        final String chainTaskId = workerpoolAuthorization.getChainTaskId();
+        final ChainTask chainTask = iexecHubService.getChainTask(chainTaskId).orElse(null);
+        if (chainTask == null) {
             log.error("Could not get chainTask [chainTaskId:{}]", chainTaskId);
             return Optional.of(GET_CHAIN_TASK_FAILED);
         }
-        ChainTask chainTask = optionalChainTask.get();
-        ChainTaskStatus taskStatus = chainTask.getStatus();
-        String chainDealId = chainTask.getDealid();
+        final String chainDealId = chainTask.getDealid();
 
-        if (taskStatus != ChainTaskStatus.ACTIVE) {
-            log.error("Task not active onchain [chainTaskId:{}, status:{}]",
-                    chainTaskId, taskStatus);
+        if (chainTask.getStatus() != ChainTaskStatus.ACTIVE) {
+            log.error("Task not active on chain [chainTaskId:{}, status:{}]",
+                    chainTaskId, chainTask.getStatus());
             return Optional.of(TASK_NOT_ACTIVE);
         }
 
-        Optional<ChainDeal> optionalChainDeal = iexecHubService.getChainDeal(chainDealId);
-        if (optionalChainDeal.isEmpty()) {
+        final ChainDeal chainDeal = iexecHubService.getChainDeal(chainDealId).orElse(null);
+        if (chainDeal == null) {
             log.error("isAuthorizedOnExecution failed (getChainDeal failed) [chainTaskId:{}]", chainTaskId);
             return Optional.of(GET_CHAIN_DEAL_FAILED);
         }
-        ChainDeal chainDeal = optionalChainDeal.get();
 
-        boolean isTeeTaskOnchain = TeeUtils.isTeeTag(chainDeal.getTag());
-        if (isTeeTask != isTeeTaskOnchain) {
-            log.error("Could not match onchain task type [isTeeTask:{}, isTeeTaskOnchain:{}, chainTaskId:{}, walletAddress:{}]",
-                    isTeeTask, isTeeTaskOnchain, chainTaskId, workerpoolAuthorization.getWorkerWallet());
+        final boolean isTeeTaskOnchain = TeeUtils.isTeeTag(chainDeal.getTag());
+        if (!isTeeTaskOnchain) {
+            log.error("Could not match onchain task type [isTeeTaskOnchain:{}, chainTaskId:{}]",
+                    isTeeTaskOnchain, chainTaskId);
             return Optional.of(NO_MATCH_ONCHAIN_TYPE);
         }
 
-        String workerpoolAddress = chainDeal.getPoolOwner();
-        boolean isSignerByWorkerpool = isSignedByHimself(workerpoolAuthorization.getHash(),
-                workerpoolAuthorization.getSignature().getValue(), workerpoolAddress);
+        final boolean isSignedByWorkerpool = isSignedByHimself(workerpoolAuthorization.getHash(),
+                workerpoolAuthorization.getSignature().getValue(), chainDeal.getPoolOwner());
 
-        if (!isSignerByWorkerpool) {
-            log.error("isAuthorizedOnExecution failed (invalid signature) [chainTaskId:{}, isWorkerpoolSignatureValid:{}]",
-                    chainTaskId, isSignerByWorkerpool);
+        if (!isSignedByWorkerpool) {
+            log.error("isAuthorizedOnExecution failed (invalid signature) [chainTaskId:{}, isSignedByWorkerpool:{}]",
+                    chainTaskId, isSignedByWorkerpool);
             return Optional.of(INVALID_SIGNATURE);
         }
 
@@ -109,14 +105,6 @@ public class AuthorizationService {
     public boolean isSignedByOwner(String message, String signature, String address) {
         String owner = iexecHubService.getOwner(address);
         return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
-    }
-
-    public String getChallengeForSetWeb3Secret(String secretAddress,
-                                               String secretValue) {
-        return HashUtils.concatenateAndHash(
-                Hash.sha3String(DOMAIN),
-                secretAddress,
-                Hash.sha3String(secretValue));
     }
     // endregion
 
@@ -149,6 +137,14 @@ public class AuthorizationService {
                 Hash.sha3String(DOMAIN),
                 ownerAddress,
                 Hash.sha3String(secretKey),
+                Hash.sha3String(secretValue));
+    }
+
+    public String getChallengeForSetWeb3Secret(String secretAddress,
+                                               String secretValue) {
+        return HashUtils.concatenateAndHash(
+                Hash.sha3String(DOMAIN),
+                secretAddress,
                 Hash.sha3String(secretValue));
     }
 

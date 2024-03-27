@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -224,7 +224,7 @@ class TeeControllerTests {
 
         when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
-        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true))
+        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
         when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(WORKER_ADDRESS), ENCLAVE_CHALLENGE))
                 .thenReturn(new TeeSessionGenerationResponse(SESSION_ID, SECRET_PROVISIONING_URL));
@@ -273,7 +273,7 @@ class TeeControllerTests {
     @ParameterizedTest
     @MethodSource("notAuthorizedParams")
     void shouldNotGenerateTeeSessionSinceNotAuthorized(AuthorizationError cause,
-            TeeSessionGenerationError consequence) {
+                                                       TeeSessionGenerationError consequence) {
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
@@ -283,7 +283,7 @@ class TeeControllerTests {
 
         when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
-        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true))
+        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.of(cause));
 
         final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
@@ -306,7 +306,7 @@ class TeeControllerTests {
 
         when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
-        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true))
+        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
         when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(WORKER_ADDRESS), ENCLAVE_CHALLENGE))
                 .thenReturn(null);
@@ -345,7 +345,7 @@ class TeeControllerTests {
 
         when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
-        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true))
+        when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
         when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(WORKER_ADDRESS), ENCLAVE_CHALLENGE))
                 .thenThrow(exception);

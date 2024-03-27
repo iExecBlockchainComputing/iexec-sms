@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.iexec.sms.tee;
 
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
+import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
@@ -111,6 +112,17 @@ public class TeeController {
      */
     @PostMapping("/challenges/{chainTaskId}")
     public ResponseEntity<String> generateTeeChallenge(@RequestHeader String authorization, @PathVariable String chainTaskId) {
+        log.debug("generateTeeChallenge [authorization:{}, chainTaskId:{}]", authorization, chainTaskId);
+        final Optional<AuthorizationError> authorizationError = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(
+                WorkerpoolAuthorization.builder()
+                        .chainTaskId(chainTaskId)
+                        .enclaveChallenge("")
+                        .workerWallet("")
+                        .signature(new Signature(authorization))
+                        .build());
+        if (authorizationError.isPresent()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Optional<TeeChallenge> executionChallenge =
                 teeChallengeService.getOrCreate(chainTaskId, false);
         return executionChallenge
@@ -149,7 +161,7 @@ public class TeeController {
                     .body(body);
         }
         final Optional<AuthorizationError> authorizationError =
-                authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true);
+                authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization);
         if (authorizationError.isPresent()) {
             final TeeSessionGenerationError teeSessionGenerationError =
                     authorizationToGenerationError.get(authorizationError.get());
