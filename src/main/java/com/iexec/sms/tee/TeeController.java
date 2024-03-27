@@ -73,6 +73,7 @@ public class TeeController {
 
     /**
      * Return which TEE framework this SMS is configured to use.
+     *
      * @return TEE framework this SMS is configured to use.
      */
     @GetMapping("/framework")
@@ -100,10 +101,16 @@ public class TeeController {
     }
 
     /**
-     * Called by the core, not the worker
+     * Generates an enclave challenge for a PoCo task.
+     * <p>
+     * This method is called by the scheduler.
+     *
+     * @param authorization Authorization to check the query legitimacy
+     * @param chainTaskId   ID of the task the challenge will be produced for
+     * @return The Ethereum address enclave challenge for the provided
      */
     @PostMapping("/challenges/{chainTaskId}")
-    public ResponseEntity<String> generateTeeChallenge(@PathVariable String chainTaskId) {
+    public ResponseEntity<String> generateTeeChallenge(@RequestHeader String authorization, @PathVariable String chainTaskId) {
         Optional<TeeChallenge> executionChallenge =
                 teeChallengeService.getOrCreate(chainTaskId, false);
         return executionChallenge
@@ -118,10 +125,12 @@ public class TeeController {
      * to the enclave so the latter can talk to the CAS and get
      * the needed secrets.
      *
-     * @return
-     *      200 OK with the session id if success,
-     *      404 NOT_FOUND if the task is not found,
-     *      500 INTERNAL_SERVER_ERROR otherwise.
+     * @return result
+     * <ul>
+     * <li>200 OK with the session id if success.
+     * <li>404 NOT_FOUND if the task is not found.
+     * <li>500 INTERNAL_SERVER_ERROR otherwise.
+     * </ul>
      */
     @PostMapping("/sessions")
     public ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> generateTeeSession(
@@ -170,7 +179,7 @@ public class TeeController {
             return ResponseEntity.ok(ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()
                     .data(teeSessionGenerationResponse)
                     .build());
-        } catch(TeeSessionGenerationException e) {
+        } catch (TeeSessionGenerationException e) {
             log.error("Failed to generate secure session [taskId:{}, workerAddress:{}]",
                     taskId, workerAddress, e);
             final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
