@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package com.iexec.sms.tee;
 
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
+import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
-import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -111,11 +111,19 @@ public class TeeController {
      */
     @PostMapping("/challenges/{chainTaskId}")
     public ResponseEntity<String> generateTeeChallenge(@RequestHeader String authorization, @PathVariable String chainTaskId) {
-        Optional<TeeChallenge> executionChallenge =
-                teeChallengeService.getOrCreate(chainTaskId, false);
-        return executionChallenge
-                .map(teeChallenge -> ResponseEntity
-                        .ok(teeChallenge.getCredentials().getAddress()))
+        log.debug("generateTeeChallenge [authorization:{}, chainTaskId:{}]", authorization, chainTaskId);
+        final Optional<AuthorizationError> authorizationError = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(
+                WorkerpoolAuthorization.builder()
+                        .chainTaskId(chainTaskId)
+                        .enclaveChallenge("")
+                        .workerWallet("")
+                        .signature(new Signature(authorization))
+                        .build());
+        if (authorizationError.isPresent()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return teeChallengeService.getOrCreate(chainTaskId, false)
+                .map(teeChallenge -> ResponseEntity.ok(teeChallenge.getCredentials().getAddress()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -149,7 +157,7 @@ public class TeeController {
                     .body(body);
         }
         final Optional<AuthorizationError> authorizationError =
-                authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization, true);
+                authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization);
         if (authorizationError.isPresent()) {
             final TeeSessionGenerationError teeSessionGenerationError =
                     authorizationToGenerationError.get(authorizationError.get());
