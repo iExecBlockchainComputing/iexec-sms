@@ -26,7 +26,9 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -75,6 +77,12 @@ public class TeeTaskComputeSecretService {
         final String decryptedValue = encryptionService.decrypt(secret.getValue());
         TeeTaskComputeSecret decryptedSecret = secret.withValue(decryptedValue);
         return Optional.of(decryptedSecret);
+    }
+
+    public List<TeeTaskComputeSecret> getSecretsForTeeSession(Iterable<TeeTaskComputeSecretHeader> ids) {
+        return teeTaskComputeSecretRepository.findAllById(ids).stream()
+                .map(secret -> secret.withValue(encryptionService.decrypt(secret.getValue())))
+                .collect(Collectors.toList());
     }
 
     /**

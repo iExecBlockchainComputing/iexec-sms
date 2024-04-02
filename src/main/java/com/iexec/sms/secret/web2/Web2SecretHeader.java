@@ -34,7 +34,7 @@ public class Web2SecretHeader implements Serializable {
     private String ownerAddress;
     private String address; //0xdataset1, aws.amazon.com, beneficiary.key.iex.ec (Kb)
 
-    Web2SecretHeader(String ownerAddress, String address) {
+    public Web2SecretHeader(String ownerAddress, String address) {
         Objects.requireNonNull(ownerAddress, "Web2 secret owner address can't be null.");
         Objects.requireNonNull(address, "Web2 secret address can't be null.");
 

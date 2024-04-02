@@ -118,8 +118,17 @@ public interface SmsClient {
     // endregion
 
     // region TEE
+
+    /**
+     * @deprecated use {@link SmsClient#generateTeeChallenge(String, String)}
+     */
+    @Deprecated(forRemoval = true)
     @RequestLine("POST /tee/challenges/{chainTaskId}")
     String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
+
+    @Headers("Authorization: {authorization}")
+    @RequestLine("POST /tee/challenges/{chainTaskId}")
+    String generateTeeChallenge(@Param("authorization") String authorization, @Param("chainTaskId") String chainTaskId);
 
     @RequestLine("POST /tee/sessions")
     @Headers("Authorization: {authorization}")

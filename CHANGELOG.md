@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.5.1]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.1) 2024-04-02
+
+### New Features
+
+- Add `Authorization` header on `/tee/challenges/{chainTaskId}` endpoint. (#255 #256)
+
+### Quality
+
+- Use only two SQL statements to read `TeeTaskComputeSecret` and `Web2Secret` during TEE session creation. (#254)
+
 ## [[8.5.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.0) 2024-02-29
 
 ### New Features
