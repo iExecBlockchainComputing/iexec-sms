@@ -44,22 +44,6 @@ allprojects {
     }
 }
 
-sourceSets {
-    integrationTest {
-        java {
-            compileClasspath += sourceSets.main.output
-            runtimeClasspath += sourceSets.main.output
-            srcDir 'src/itest/java'
-        }
-        resources.srcDir 'src/itest/resources'
-    }
-}
-
-configurations {
-    integrationTestImplementation.extendsFrom testImplementation
-    integrationTestRuntimeOnly.extendsFrom runtimeOnly
-}
-
 dependencies {
     // iexec
     implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
@@ -90,13 +74,6 @@ dependencies {
 
     // expiring map
     implementation "net.jodah:expiringmap:0.5.11"
-
-    // test
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // awaitility
-    testImplementation 'org.awaitility:awaitility'
 }
 
 springBoot {
@@ -110,17 +87,41 @@ tasks.named("bootJar") {
     }
 }
 
-test {
-    useJUnitPlatform()
+testing {
+    suites {
+        configureEach {
+            dependencies {
+                implementation 'org.springframework.boot:spring-boot-starter-test'
+                runtimeOnly 'com.h2database:h2:2.2.222'
+            }
+        }
+        test {
+            useJUnitJupiter()
+            dependencies {
+                implementation 'org.awaitility:awaitility'
+            }
+        }
+        itest(JvmTestSuite) {
+            sources {
+                java {
+                    srcDirs = ['src/itest/java']
+                }
+            }
+            dependencies {
+                implementation project()
+                implementation project(':iexec-sms-library')
+                implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
+                implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
+                implementation 'org.apache.commons:commons-lang3'
+                implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+                implementation 'org.springframework.boot:spring-boot-starter-web'
+            }
+        }
+    }
 }
 
-tasks.register('itest', Test) {
-    group 'Verification'
-    description 'Runs the integration tests.'
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
-    outputs.upToDateWhen { false } // run always
-    useJUnitPlatform()
+tasks.withType(Test).configureEach {
+    finalizedBy tasks.jacocoTestReport
 }
 
 // sonarqube code coverage requires jacoco XML report
@@ -129,7 +130,6 @@ jacocoTestReport {
         xml.required = true
     }
 }
-tasks.test.finalizedBy tasks.jacocoTestReport
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
 publishing {
