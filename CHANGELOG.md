@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Configure Gradle JVM Test Suite Plugin. (#259)
 
+### Dependency Upgrades
+
+- Upgrade to Gradle 8.7. (#260)
+
 ## [[8.5.1]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.1) 2024-04-02
 
 ### New Features
