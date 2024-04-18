@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 - Upgrade to Gradle 8.7. (#260)
 - Upgrade to `eclipse-temurin:11.0.22_7-jre-focal`. (#261)
+- Upgrade to Spring Boot 2.7.18. (#262)
 
 ## [[8.5.1]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.1) 2024-04-02
 
