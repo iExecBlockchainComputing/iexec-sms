@@ -8,5 +8,6 @@
 --stack="8M" \
 --binary-fs \
 --fs-dir=/app \
+--mprotect=1 \
 --host-path=/etc/hosts \
 --host-path=/etc/resolv.conf \
