@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,19 @@
 
 package com.iexec.sms.blockchain;
 
-
 import com.iexec.commons.poco.chain.IexecHubAbstractService;
+import com.iexec.commons.poco.chain.SignerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 
 @Service
 public class IexecHubService extends IexecHubAbstractService {
 
     @Autowired
-    public IexecHubService(CredentialsService credentialsService,
+    public IexecHubService(SignerService signerService,
                            Web3jService web3jService,
                            BlockchainConfig blockchainConfig) {
-        super(credentialsService.getCredentials(), web3jService, blockchainConfig.getHubAddress());
+        super(signerService.getCredentials(), web3jService, blockchainConfig.getHubAddress());
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,16 @@
 
 package com.iexec.sms.blockchain;
 
-import com.iexec.common.chain.CredentialsAbstractService;
+import com.iexec.commons.poco.chain.SignerService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import org.springframework.stereotype.Service;
+import java.security.GeneralSecurityException;
 
-@Service
-public class CredentialsService extends CredentialsAbstractService {
-
-    public CredentialsService() throws Exception {
-        super();
+@Configuration
+public class WalletConfiguration {
+    @Bean
+    SignerService signerService(Web3jService web3jService, BlockchainConfig chainConfig) throws GeneralSecurityException {
+        return new SignerService(web3jService.getWeb3j(), chainConfig.getId());
     }
 }

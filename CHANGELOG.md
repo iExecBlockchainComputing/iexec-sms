@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
+### New Features
+
+- Replace `CredentialsService` with `SignerService`. (#264)
+
 ### Quality
 
 - Configure Gradle JVM Test Suite Plugin. (#259)
