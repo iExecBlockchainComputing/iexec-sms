@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
-import static com.iexec.sms.api.TeeSessionGenerationError.SECURE_SESSION_NO_TEE_PROVIDER;
+import static com.iexec.sms.api.TeeSessionGenerationError.SECURE_SESSION_NO_TEE_FRAMEWORK;
 
 @Service
 public class TeeSessionService {
@@ -64,7 +64,7 @@ public class TeeSessionService {
         final TeeFramework teeFramework = taskDescription.getTeeFramework();
         if (teeFramework == null) {
             throw new TeeSessionGenerationException(
-                    SECURE_SESSION_NO_TEE_PROVIDER,
+                    SECURE_SESSION_NO_TEE_FRAMEWORK,
                     String.format("TEE framework can't be null [taskId:%s]", taskId));
         }
 
