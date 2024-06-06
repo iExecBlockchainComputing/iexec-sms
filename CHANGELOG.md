@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 ### Quality
 
 - Configure Gradle JVM Test Suite Plugin. (#259)
+- Replace `SECURE_SESSION_NO_TEE_PROVIDER` with `SECURE_SESSION_NO_TEE_FRAMEWORK`
+  in `TeeSessionGenerationError`. (#265)
 
 ### Dependency Upgrades
 
