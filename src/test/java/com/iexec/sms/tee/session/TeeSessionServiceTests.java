@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,15 +24,16 @@ import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.gramine.GramineSessionHandlerService;
 import com.iexec.sms.tee.session.scone.SconeSessionHandlerService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class TeeSessionServiceTests {
     private final static String TASK_ID = "0x0";
     private final static String WORKER_ADDRESS = "0x1";
@@ -44,11 +45,6 @@ class TeeSessionServiceTests {
     private GramineSessionHandlerService gramineService;
     @Mock
     private IexecHubService iexecHubService;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     void shouldGenerateSconeSession()
@@ -119,10 +115,9 @@ class TeeSessionServiceTests {
         final TeeSessionGenerationException teeSessionGenerationException = assertThrows(
                 TeeSessionGenerationException.class,
                 () -> teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(TeeSessionGenerationError.SECURE_SESSION_NO_TEE_PROVIDER,
+        assertEquals(TeeSessionGenerationError.SECURE_SESSION_NO_TEE_FRAMEWORK,
                 teeSessionGenerationException.getError());
-        assertEquals(String.format("TEE framework can't be null [taskId:%s]",
-                TASK_ID),
+        assertEquals(String.format("TEE framework can't be null [taskId:%s]", TASK_ID),
                 teeSessionGenerationException.getMessage());
     }
 
