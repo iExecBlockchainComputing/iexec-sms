@@ -71,10 +71,10 @@ public class EncryptionService {
             throw new ExceptionInInitializerError("Failed to get aesKeyPath");
         }
 
-        boolean shouldGenerateKey = !new File(aesKeyPath).exists();
+        final boolean shouldGenerateKey = !new File(aesKeyPath).exists();
 
         if (shouldGenerateKey) {
-            byte[] newAesKey = CipherHelper.generateAesKey();
+            final byte[] newAesKey = CipherHelper.generateAesKey();
 
             if (newAesKey == null) {
                 throw new ExceptionInInitializerError("Failed to generate AES key");
@@ -84,7 +84,7 @@ public class EncryptionService {
             }
         }
 
-        byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+        final byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
 
         if (aesKey == null) {
             throw new ExceptionInInitializerError("Failed to load AES key");
@@ -98,7 +98,7 @@ public class EncryptionService {
 
     public String encrypt(String data) {
         if (StringUtils.isNotBlank(data)) {
-            byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
+            final byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
             if (encryptedData != null) {
                 return new String(encryptedData);
             }
@@ -108,7 +108,7 @@ public class EncryptionService {
 
     public String decrypt(String encryptedData) {
         if (StringUtils.isNotBlank(encryptedData)) {
-            byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
+            final byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
             if (decryptedData != null) {
                 return new String(decryptedData);
             }
