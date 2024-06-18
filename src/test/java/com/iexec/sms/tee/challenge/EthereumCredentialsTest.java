@@ -16,8 +16,8 @@
 
 package com.iexec.sms.tee.challenge;
 
-import com.iexec.common.utils.EthAddress;
 import com.iexec.commons.poco.utils.BytesUtils;
+import com.iexec.commons.poco.utils.EthAddress;
 import org.junit.jupiter.api.Test;
 import org.web3j.crypto.Credentials;
 
