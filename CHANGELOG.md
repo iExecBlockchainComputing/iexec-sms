@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 - Upgrade to `eclipse-temurin:11.0.22_7-jre-focal`. (#261)
 - Upgrade to Spring Boot 2.7.18. (#262)
 - Upgrade to sconify tools and Scone runtime 5.8.8 for SGX enclaves. (#263)
+- Upgrade to `iexec-commons-poco` 4.1.0. (#266)
+- Upgrade to `iexce-common` 8.5.0. (#266)
 
 ## [[8.5.1]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.1) 2024-04-02
 
