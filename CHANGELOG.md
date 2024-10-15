@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Dependency Upgrades
 
-- Upgrade java image to `eclipse-temurin:11.0.24_8-jre-focal`. (#270)
+- Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#270)
 
 ## [[8.6.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.6.0) 2024-06-18
 
