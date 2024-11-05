@@ -25,11 +25,11 @@ import com.iexec.commons.poco.utils.BytesUtils;
 import com.iexec.commons.poco.utils.TestUtils;
 import com.iexec.sms.blockchain.IexecHubService;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
@@ -39,6 +39,7 @@ import static com.iexec.sms.authorization.AuthorizationError.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AuthorizationServiceTests {
 
     @Mock
@@ -46,11 +47,6 @@ class AuthorizationServiceTests {
 
     @InjectMocks
     private AuthorizationService authorizationService;
-
-    @BeforeEach
-    void beforeEach() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     // region isAuthorizedOnExecutionWithDetailedIssue
     @Test
@@ -98,7 +94,6 @@ class AuthorizationServiceTests {
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenGetTaskFailedWithDetails() {
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
-        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.empty());
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
@@ -110,7 +105,6 @@ class AuthorizationServiceTests {
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActiveWithDetails() {
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         ChainTask chainTask = TestUtils.getChainTask(UNSET);
-        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
 
         Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
@@ -124,7 +118,6 @@ class AuthorizationServiceTests {
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
 
-        when(iexecHubService.isTeeTask(auth.getChainTaskId())).thenReturn(true);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.empty());
 
@@ -166,17 +159,6 @@ class AuthorizationServiceTests {
         String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
         Assertions.assertEquals("0x8d0b92aaf96f66f172d7615b81f257ebdece2278b7da6c60127cad45852eaaf6",
                 challenge);
-    }
-
-    @Test
-    void getChallengeForWorker() {
-        final WorkerpoolAuthorization authorization = WorkerpoolAuthorization.builder()
-                .chainTaskId("0x0123")
-                .enclaveChallenge("0x4567")
-                .workerWallet("0xabcd")
-                .build();
-        final String challenge = authorizationService.getChallengeForWorker(authorization);
-        assertThat(challenge).isEqualTo("0x0a17b60a69e733c4199912dc3c5bfd4b17aa6bcfbf3cfbfe6230f00e21f96b85");
     }
     // endregion
 
