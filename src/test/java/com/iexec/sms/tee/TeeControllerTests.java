@@ -121,18 +121,18 @@ class TeeControllerTests {
     // region getTeeServicesProperties
     @Test
     void shouldGetSconeProperties() {
-        final TeeServicesProperties properties = new SconeServicesProperties(
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.SCONE);
+                sconeTeeController.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -148,17 +148,17 @@ class TeeControllerTests {
 
     @Test
     void shouldGetGramineProperties() {
-        final TeeServicesProperties properties = new GramineServicesProperties(
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
                 preComputeProperties,
                 postComputeProperties
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.GRAMINE);
+                gramineTeeController.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -172,35 +172,35 @@ class TeeControllerTests {
 
     @Test
     void shouldNotGetSconePropertiesSinceGramineSms() {
-        final TeeServicesProperties properties = new SconeServicesProperties(
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.GRAMINE);
+                sconeTeeController.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
     void shouldNotGetGraminePropertiesSinceSconeSms() {
-        final TeeServicesProperties properties = new GramineServicesProperties(
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
                 preComputeProperties,
                 postComputeProperties
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.SCONE);
+                gramineTeeController.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
