@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
+### Quality
+
+- Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
+
 ### Dependency Upgrades
 
 - Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#270)
 - Upgrade to Gradle 8.10.2. (#271)
+- Upgrade to `iexec-commons-poco` 4.1.0-NEXT-SNAPSHOT. (#272)
 
 ## [[8.6.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.6.0) 2024-06-18
 

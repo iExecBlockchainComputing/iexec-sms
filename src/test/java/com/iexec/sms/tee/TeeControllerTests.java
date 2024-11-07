@@ -20,6 +20,7 @@ import com.iexec.common.web.ApiResponseBody;
 import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
 import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.tee.TeeFramework;
+import com.iexec.commons.poco.utils.SignatureUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.api.config.GramineServicesProperties;
@@ -32,17 +33,18 @@ import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
 
 import java.util.Optional;
@@ -55,13 +57,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class TeeControllerTests {
-    private final static String TASK_ID = "0x0";
-    private final static String WORKER_ADDRESS = "0x1";
-    private final static String ENCLAVE_CHALLENGE = "0x2";
-    private final static String AUTHORIZATION = "0x2";
-    private final static String CHALLENGE = "CHALLENGE";
-    private final static String SESSION_ID = "SESSION_ID";
+    private static final String TASK_ID = "0x0";
+    private static final String WORKER_ADDRESS = "0x1";
+    private static final String ENCLAVE_CHALLENGE = "0x2";
+    private static final String AUTHORIZATION = "0x2";
+    private static final String SESSION_ID = "SESSION_ID";
     private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
     private static final String LAS_IMAGE = "lasImage";
 
@@ -72,8 +74,6 @@ class TeeControllerTests {
     TeeChallengeService teeChallengeService;
     @Mock
     TeeSessionService teeSessionService;
-    @Mock
-    TeeServicesProperties teeServicesConfig;
 
     TeeAppProperties preComputeProperties;
     TeeAppProperties postComputeProperties;
@@ -81,43 +81,38 @@ class TeeControllerTests {
     @InjectMocks
     TeeController teeController;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     // region getTeeFramework
     @Test
     void shouldGetSconeFramework() {
-        final TeeServicesProperties properties = new SconeServicesProperties(
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
         );
 
         final ResponseEntity<TeeFramework> response =
-                teeController.getTeeFramework();
+                sconeTeeController.getTeeFramework();
 
         assertThat(response).isEqualTo(ResponseEntity.ok(TeeFramework.SCONE));
     }
 
     @Test
     void shouldGetGramineFramework() {
-        final TeeServicesProperties properties = new GramineServicesProperties(
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
                 preComputeProperties,
                 postComputeProperties
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
         );
 
         final ResponseEntity<TeeFramework> response =
-                teeController.getTeeFramework();
+                gramineTeeController.getTeeFramework();
 
         assertThat(response).isEqualTo(ResponseEntity.ok(TeeFramework.GRAMINE));
     }
@@ -126,18 +121,18 @@ class TeeControllerTests {
     // region getTeeServicesProperties
     @Test
     void shouldGetSconeProperties() {
-        final TeeServicesProperties properties = new SconeServicesProperties(
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.SCONE);
+                sconeTeeController.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -153,17 +148,17 @@ class TeeControllerTests {
 
     @Test
     void shouldGetGramineProperties() {
-        final TeeServicesProperties properties = new GramineServicesProperties(
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
                 preComputeProperties,
                 postComputeProperties
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.GRAMINE);
+                gramineTeeController.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -177,35 +172,35 @@ class TeeControllerTests {
 
     @Test
     void shouldNotGetSconePropertiesSinceGramineSms() {
-        final TeeServicesProperties properties = new SconeServicesProperties(
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.GRAMINE);
+                sconeTeeController.getTeeServicesProperties(TeeFramework.GRAMINE);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
     void shouldNotGetGraminePropertiesSinceSconeSms() {
-        final TeeServicesProperties properties = new GramineServicesProperties(
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
                 preComputeProperties,
                 postComputeProperties
         );
 
-        final TeeController teeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, properties
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
         );
 
         final ResponseEntity<TeeServicesProperties> response =
-                teeController.getTeeServicesProperties(TeeFramework.SCONE);
+                gramineTeeController.getTeeServicesProperties(TeeFramework.SCONE);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
@@ -265,23 +260,27 @@ class TeeControllerTests {
 
     // region generateTeeSession
     @Test
-    void shouldGenerateTeeSession() throws TeeSessionGenerationException {
+    void shouldGenerateTeeSession() throws Exception {
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final String workerAddress = credentials.getAddress();
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
-                .workerWallet(WORKER_ADDRESS)
+                .workerWallet(workerAddress)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
                 .build();
 
-        when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
+        final String challenge = workerpoolAuthorization.getHash();
+        final String authorization = SignatureUtils.signMessageHashAndGetSignature(challenge, credentials.getEcKeyPair())
+                .getValue();
+        when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
-        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(WORKER_ADDRESS), ENCLAVE_CHALLENGE))
+        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
                 .thenReturn(new TeeSessionGenerationResponse(SESSION_ID, SECRET_PROVISIONING_URL));
 
         final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
-                .generateTeeSession(AUTHORIZATION, workerpoolAuthorization);
+                .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getData());
@@ -291,19 +290,23 @@ class TeeControllerTests {
     }
 
     @Test
-    void shouldNotGenerateTeeSessionSinceNotSignedByHimself() {
+    void shouldNotGenerateTeeSessionSinceNotSignedByHimself() throws Exception {
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final String workerAddress = credentials.getAddress();
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
-                .workerWallet(WORKER_ADDRESS)
+                .workerWallet(workerAddress)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
                 .build();
 
-        when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(false);
+        final String challenge = workerpoolAuthorization.getHash();
+        final String authorization = SignatureUtils.signMessageHashAndGetSignature(challenge, Keys.createEcKeyPair())
+                .getValue();
+        when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
 
         final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
-                .generateTeeSession(AUTHORIZATION, workerpoolAuthorization);
+                .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
@@ -324,21 +327,25 @@ class TeeControllerTests {
     @ParameterizedTest
     @MethodSource("notAuthorizedParams")
     void shouldNotGenerateTeeSessionSinceNotAuthorized(AuthorizationError cause,
-                                                       TeeSessionGenerationError consequence) {
+                                                       TeeSessionGenerationError consequence) throws Exception {
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final String workerAddress = credentials.getAddress();
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
-                .workerWallet(WORKER_ADDRESS)
+                .workerWallet(workerAddress)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
                 .build();
 
-        when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
+        final String challenge = workerpoolAuthorization.getHash();
+        final String authorization = SignatureUtils.signMessageHashAndGetSignature(challenge, credentials.getEcKeyPair())
+                .getValue();
+        when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.of(cause));
 
         final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
-                .generateTeeSession(AUTHORIZATION, workerpoolAuthorization);
+                .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
@@ -347,23 +354,27 @@ class TeeControllerTests {
     }
 
     @Test
-    void shouldNotGenerateTeeSessionSinceEmptyResponse() throws TeeSessionGenerationException {
+    void shouldNotGenerateTeeSessionSinceEmptyResponse() throws Exception {
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final String workerAddress = credentials.getAddress();
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
-                .workerWallet(WORKER_ADDRESS)
+                .workerWallet(workerAddress)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
                 .build();
 
-        when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
+        final String challenge = workerpoolAuthorization.getHash();
+        final String authorization = SignatureUtils.signMessageHashAndGetSignature(challenge, credentials.getEcKeyPair())
+                .getValue();
+        when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
-        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(WORKER_ADDRESS), ENCLAVE_CHALLENGE))
+        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
                 .thenReturn(null);
 
         final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
-                .generateTeeSession(AUTHORIZATION, workerpoolAuthorization);
+                .generateTeeSession(authorization, workerpoolAuthorization);
 
         assertThat(response).isEqualTo(ResponseEntity.notFound().build());
     }
@@ -385,24 +396,27 @@ class TeeControllerTests {
      */
     @ParameterizedTest
     @MethodSource("exceptionOnSessionIdGeneration")
-    void shouldNotGenerateTeeSessionSinceSessionIdGenerationFailed(Exception exception)
-            throws TeeSessionGenerationException {
+    void shouldNotGenerateTeeSessionSinceSessionIdGenerationFailed(Exception exception) throws Exception {
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final String workerAddress = credentials.getAddress();
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
-                .workerWallet(WORKER_ADDRESS)
+                .workerWallet(workerAddress)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
                 .build();
 
-        when(authorizationService.getChallengeForWorker(workerpoolAuthorization)).thenReturn(CHALLENGE);
-        when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WORKER_ADDRESS)).thenReturn(true);
+        final String challenge = workerpoolAuthorization.getHash();
+        final String authorization = SignatureUtils.signMessageHashAndGetSignature(challenge, credentials.getEcKeyPair())
+                .getValue();
+        when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
-        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(WORKER_ADDRESS), ENCLAVE_CHALLENGE))
+        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
                 .thenThrow(exception);
 
         final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
-                .generateTeeSession(AUTHORIZATION, workerpoolAuthorization);
+                .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotEquals(null, response.getBody());
         assertNull(response.getBody().getData());
