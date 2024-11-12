@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
+### New Features
+
+- Accept scheduler default result-proxy as a web2 secret to fallback on it when no proxy
+  is specified in deal parameters. (#273)
+
 ### Quality
 
 - Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
