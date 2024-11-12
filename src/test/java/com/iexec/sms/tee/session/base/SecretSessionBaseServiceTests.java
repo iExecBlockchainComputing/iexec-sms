@@ -55,6 +55,7 @@ import java.util.Optional;
 
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
+import static com.iexec.sms.tee.session.base.SecretSessionBaseService.EMPTY_YML_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -509,51 +510,34 @@ class SecretSessionBaseServiceTests {
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "yes",
-                                "RESULT_STORAGE_PROVIDER", "",
-                                "RESULT_STORAGE_PROXY", "",
-                                "RESULT_STORAGE_TOKEN", ""));
+                                "RESULT_STORAGE_PROVIDER", EMPTY_YML_VALUE,
+                                "RESULT_STORAGE_PROXY", EMPTY_YML_VALUE,
+                                "RESULT_STORAGE_TOKEN", EMPTY_YML_VALUE));
     }
 
     @Test
-    void shouldGetPostComputeStorageTokensOnIpfsWithRequesterToken() {
+    void shouldGetPostComputeStorageTokensOnIpfsWithStorageToken() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
-        final String secretValue = "Secret value";
+        final String storageToken = "storageToken";
 
         final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, secretValue, ""));
+                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, storageToken, ""));
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "no",
-                                "RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER,
+                                "RESULT_STORAGE_PROVIDER", DealParams.IPFS_RESULT_STORAGE_PROVIDER,
                                 "RESULT_STORAGE_PROXY", STORAGE_PROXY,
-                                "RESULT_STORAGE_TOKEN", secretValue));
-    }
-
-    @Test
-    void shouldGetPostComputeStorageTokensOnIpfsWithWorkerToken() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
-
-        final String secretValue = "Secret value";
-
-        final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, secretValue, ""));
-
-        assertThat(tokens)
-                .containsExactlyInAnyOrderEntriesOf(
-                        Map.of(
-                                "RESULT_STORAGE_CALLBACK", "no",
-                                "RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER,
-                                "RESULT_STORAGE_PROXY", STORAGE_PROXY,
-                                "RESULT_STORAGE_TOKEN", secretValue));
+                                "RESULT_STORAGE_TOKEN", storageToken));
     }
 
     @Test
     void shouldGetPostComputeStorageTokensOnDropbox() {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
                 .resultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
+                .resultStorageProxy("")
                 .build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
 
@@ -566,8 +550,8 @@ class SecretSessionBaseServiceTests {
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "no",
-                                "RESULT_STORAGE_PROVIDER", "dropbox",
-                                "RESULT_STORAGE_PROXY", STORAGE_PROXY,
+                                "RESULT_STORAGE_PROVIDER", DealParams.DROPBOX_RESULT_STORAGE_PROVIDER,
+                                "RESULT_STORAGE_PROXY", EMPTY_YML_VALUE,
                                 "RESULT_STORAGE_TOKEN", secretValue));
     }
 
