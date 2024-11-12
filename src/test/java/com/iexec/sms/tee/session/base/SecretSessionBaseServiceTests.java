@@ -55,7 +55,7 @@ import java.util.Optional;
 
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static com.iexec.sms.tee.session.base.SecretSessionBaseService.EMPTY_YML_VALUE;
+import static com.iexec.sms.tee.session.base.SecretSessionBaseService.EMPTY_STRING_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -510,9 +510,9 @@ class SecretSessionBaseServiceTests {
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "yes",
-                                "RESULT_STORAGE_PROVIDER", EMPTY_YML_VALUE,
-                                "RESULT_STORAGE_PROXY", EMPTY_YML_VALUE,
-                                "RESULT_STORAGE_TOKEN", EMPTY_YML_VALUE));
+                                "RESULT_STORAGE_PROVIDER", EMPTY_STRING_VALUE,
+                                "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
+                                "RESULT_STORAGE_TOKEN", EMPTY_STRING_VALUE));
     }
 
     @Test
@@ -551,7 +551,7 @@ class SecretSessionBaseServiceTests {
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "no",
                                 "RESULT_STORAGE_PROVIDER", DealParams.DROPBOX_RESULT_STORAGE_PROVIDER,
-                                "RESULT_STORAGE_PROXY", EMPTY_YML_VALUE,
+                                "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_TOKEN", secretValue));
     }
 
