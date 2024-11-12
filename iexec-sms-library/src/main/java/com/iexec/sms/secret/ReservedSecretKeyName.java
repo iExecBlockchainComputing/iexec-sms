@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package com.iexec.sms.secret;
 
-public class ReservedSecretKeyName {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-    //result encryption
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ReservedSecretKeyName {
+    // result encryption
     public static final String IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY = "iexec-result-encryption-public-key";
-    //result storage
+    // result storage
     public static final String IEXEC_RESULT_DROPBOX_TOKEN = "iexec-result-dropbox-token";
     public static final String IEXEC_RESULT_IEXEC_IPFS_TOKEN = "iexec-result-iexec-ipfs-token";
-
-    private ReservedSecretKeyName() {}
-
+    public static final String IEXEC_RESULT_IEXEC_RESULT_PROXY_URL = "iexec-result-iexec-result-proxy-url";
 }

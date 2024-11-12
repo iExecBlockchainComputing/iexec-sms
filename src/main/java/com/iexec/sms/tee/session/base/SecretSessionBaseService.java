@@ -312,20 +312,25 @@ public class SecretSessionBaseService {
         tokens.putAll(getPostComputeEncryptionTokens(request, resultEncryptionSecret));
         // storage
         if (taskDescription.containsCallback()) {
-            tokens.putAll(getPostComputeStorageTokens(request, ""));
+            tokens.putAll(getPostComputeStorageTokens(request, "", ""));
         } else if (DROPBOX_RESULT_STORAGE_PROVIDER.equals(taskDescription.getResultStorageProvider())) {
             final String storageToken = secrets.stream()
                     .filter(secret -> IEXEC_RESULT_DROPBOX_TOKEN.equals(secret.getHeader().getAddress()))
                     .findFirst()
                     .map(Web2Secret::getValue)
                     .orElse("");
-            tokens.putAll(getPostComputeStorageTokens(request, storageToken));
+            tokens.putAll(getPostComputeStorageTokens(request, storageToken, ""));
         } else {
             // TODO remove fallback on requester token when legacy Result Proxy endpoints have been removed
             final boolean isWorkerTokenPresent = secrets.stream()
                     .anyMatch(secret -> IEXEC_RESULT_IEXEC_IPFS_TOKEN.equals(secret.getHeader().getAddress())
                             && request.getWorkerAddress().equalsIgnoreCase(secret.getHeader().getOwnerAddress()));
             final String tokenOwner = isWorkerTokenPresent ? request.getWorkerAddress() : taskDescription.getRequester();
+            final String storageProxy = secrets.stream()
+                    .filter(secret -> IEXEC_RESULT_IEXEC_RESULT_PROXY_URL.equals(secret.getHeader().getAddress()))
+                    .findFirst()
+                    .map(Web2Secret::getValue)
+                    .orElse("");
             final String storageToken = secrets.stream()
                     .filter(secret -> IEXEC_RESULT_IEXEC_IPFS_TOKEN.equals(secret.getHeader().getAddress()) &&
                             tokenOwner.equalsIgnoreCase(secret.getHeader().getOwnerAddress()))
@@ -334,7 +339,7 @@ public class SecretSessionBaseService {
                     .orElse("");
             log.debug("storage token [isWorkerTokenPresent:{}, tokenOwner:{}]",
                     isWorkerTokenPresent, tokenOwner);
-            tokens.putAll(getPostComputeStorageTokens(request, storageToken));
+            tokens.putAll(getPostComputeStorageTokens(request, storageToken, storageProxy));
         }
         // enclave signature
         Map<String, String> signTokens = getPostComputeSignTokens(request);
@@ -354,6 +359,7 @@ public class SecretSessionBaseService {
         } else {
             ids.add(new Web2SecretHeader(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN));
             ids.add(new Web2SecretHeader(workerAddress, IEXEC_RESULT_IEXEC_IPFS_TOKEN));
+            ids.add(new Web2SecretHeader(taskDescription.getWorkerpoolOwner(), IEXEC_RESULT_IEXEC_RESULT_PROXY_URL));
         }
         return ids;
     }
@@ -383,8 +389,9 @@ public class SecretSessionBaseService {
     // to the beneficiary private storage space waiting for
     // that feature we only allow to push to the requester
     // private storage space
-    public Map<String, String> getPostComputeStorageTokens(TeeSessionRequest request, String storageToken)
-            throws TeeSessionGenerationException {
+    public Map<String, String> getPostComputeStorageTokens(TeeSessionRequest request,
+                                                           String storageToken,
+                                                           String resultProxyUrl) throws TeeSessionGenerationException {
         TaskDescription taskDescription = request.getTaskDescription();
         String taskId = taskDescription.getChainTaskId();
         Map<String, String> tokens = new HashMap<>();
@@ -397,7 +404,7 @@ public class SecretSessionBaseService {
             return tokens;
         }
         String storageProvider = taskDescription.getResultStorageProvider();
-        String storageProxy = taskDescription.getResultStorageProxy();
+        String storageProxy = taskDescription.getResultStorageProxy() != null ? taskDescription.getResultStorageProxy() : resultProxyUrl;
         if (StringUtils.isEmpty(storageToken)) {
             log.error("Failed to get storage token [taskId:{}, storageProvider:{}, requester:{}]",
                     taskId, storageProvider, taskDescription.getRequester());
