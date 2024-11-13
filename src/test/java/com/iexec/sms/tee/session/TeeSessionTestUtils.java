@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,10 +108,12 @@ public class TeeSessionTestUtils {
     }
 
     public static TaskDescription.TaskDescriptionBuilder createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
-        String appAddress = createEthereumAddress();
-        String requesterAddress = createEthereumAddress();
-        String beneficiaryAddress = createEthereumAddress();
+        final String appAddress = createEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
+        final String beneficiaryAddress = createEthereumAddress();
+        final String workerpoolAddress = createEthereumAddress();
         return TaskDescription.builder()
+                .workerpoolOwner(workerpoolAddress)
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
                 .appAddress(appAddress)
