@@ -35,9 +35,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TeeSessionServiceTests {
-    private final static String TASK_ID = "0x0";
-    private final static String WORKER_ADDRESS = "0x1";
-    private final static String TEE_CHALLENGE = "0x2";
+    private static final String TASK_ID = "0x0";
+    private static final String WORKER_ADDRESS = "0x1";
+    private static final String TEE_CHALLENGE = "0x2";
     private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
     @Mock
     private SconeSessionHandlerService sconeService;
