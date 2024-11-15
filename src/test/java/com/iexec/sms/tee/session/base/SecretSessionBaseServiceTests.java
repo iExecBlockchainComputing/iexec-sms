@@ -36,12 +36,16 @@ import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
@@ -51,10 +55,12 @@ import java.util.Optional;
 
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
+import static com.iexec.sms.tee.session.base.SecretSessionBaseService.EMPTY_STRING_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class SecretSessionBaseServiceTests {
 
     private static final TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
@@ -93,19 +99,15 @@ class SecretSessionBaseServiceTests {
     @Captor
     private ArgumentCaptor<List<TeeTaskComputeSecretHeader>> teeTaskComputeSecretIds;
 
-    @BeforeEach
-    void beforeEach() {
-        MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
-        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
-    }
-
     // region getSecretsTokens
     @Test
     void shouldGetSecretsTokens() throws Exception {
         TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
         String beneficiary = request.getTaskDescription().getBeneficiary();
+
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
 
         // pre
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
@@ -114,8 +116,9 @@ class SecretSessionBaseServiceTests {
         final Web2Secret resultEncryption = new Web2Secret(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
         final Web2Secret requesterStorageToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
         final Web2Secret workerStorageToken = new Web2Secret(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
-        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader())))
-                .thenReturn(List.of(resultEncryption, requesterStorageToken, workerStorageToken));
+        final Web2Secret resultProxyUrl = new Web2Secret(taskDescription.getWorkerpoolOwner(), IEXEC_RESULT_IEXEC_RESULT_PROXY_URL, "");
+        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader(), resultProxyUrl.getHeader())))
+                .thenReturn(List.of(resultEncryption, requesterStorageToken, workerStorageToken, resultProxyUrl));
         TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
@@ -172,6 +175,7 @@ class SecretSessionBaseServiceTests {
     void shouldGetPreComputeTokens() throws Exception {
         TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
                 .thenReturn(Optional.of(DATASET_KEY));
 
@@ -195,6 +199,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetPreComputeTokensWithoutDataset() throws Exception {
+        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
         TeeSessionRequest request = TeeSessionRequest.builder()
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
@@ -396,8 +401,10 @@ class SecretSessionBaseServiceTests {
         final Web2Secret resultEncryption = new Web2Secret(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
         final Web2Secret requesterStorageToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
         final Web2Secret workerStorageToken = new Web2Secret(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
-        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader())))
-                .thenReturn(List.of(resultEncryption, requesterStorageToken, workerStorageToken));
+        final Web2Secret resultProxyUrl = new Web2Secret(taskDescription.getWorkerpoolOwner(), IEXEC_RESULT_IEXEC_RESULT_PROXY_URL, "");
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
+        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader(), resultProxyUrl.getHeader())))
+                .thenReturn(List.of(resultEncryption, requesterStorageToken, workerStorageToken, resultProxyUrl));
 
         TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
@@ -427,6 +434,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetPostComputeTokensForDropbox() throws TeeSessionGenerationException, GeneralSecurityException {
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
                 .resultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
                 .build();
@@ -450,6 +458,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException, GeneralSecurityException {
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
                 .callback("callback")
                 .build();
@@ -459,8 +468,9 @@ class SecretSessionBaseServiceTests {
         final Web2Secret resultEncryption = new Web2Secret(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY, ENCRYPTION_PUBLIC_KEY);
         final Web2Secret requesterStorageToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
         final Web2Secret workerStorageToken = new Web2Secret(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
-        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader())))
-                .thenReturn(List.of(resultEncryption, workerStorageToken));
+        final Web2Secret resultProxyUrl = new Web2Secret(taskDescription.getWorkerpoolOwner(), IEXEC_RESULT_IEXEC_RESULT_PROXY_URL, "");
+        when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader(), resultProxyUrl.getHeader())))
+                .thenReturn(List.of(resultEncryption, workerStorageToken, resultProxyUrl));
         TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
@@ -474,6 +484,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldNotGetPostComputeTokensSinceTaskDescriptionMissing() {
+        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
         TeeSessionRequest request = TeeSessionRequest.builder().build();
 
         final TeeSessionGenerationException exception = assertThrows(
@@ -493,82 +504,54 @@ class SecretSessionBaseServiceTests {
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
 
         final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, ""));
+                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, "", ""));
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "yes",
-                                "RESULT_STORAGE_PROVIDER", "",
-                                "RESULT_STORAGE_PROXY", "",
-                                "RESULT_STORAGE_TOKEN", ""));
+                                "RESULT_STORAGE_PROVIDER", EMPTY_STRING_VALUE,
+                                "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
+                                "RESULT_STORAGE_TOKEN", EMPTY_STRING_VALUE));
     }
 
     @Test
-    void shouldGetPostComputeStorageTokensOnIpfsWithRequesterToken() {
+    void shouldGetPostComputeStorageTokensOnIpfsWithStorageToken() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
-        final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
-        final String secretValue = "Secret value";
-        when(web2SecretService.isSecretPresent(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(false);
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(Optional.of(secretValue));
+        final String storageToken = "storageToken";
 
         final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, secretValue));
+                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, storageToken, ""));
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "no",
-                                "RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER,
+                                "RESULT_STORAGE_PROVIDER", DealParams.IPFS_RESULT_STORAGE_PROVIDER,
                                 "RESULT_STORAGE_PROXY", STORAGE_PROXY,
-                                "RESULT_STORAGE_TOKEN", secretValue));
-    }
-
-    @Test
-    void shouldGetPostComputeStorageTokensOnIpfsWithWorkerToken() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
-
-        final String secretValue = "Secret value";
-        when(web2SecretService.isSecretPresent(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(true);
-        when(web2SecretService.getDecryptedValue(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(Optional.of(secretValue));
-
-        final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, secretValue));
-
-        assertThat(tokens)
-                .containsExactlyInAnyOrderEntriesOf(
-                        Map.of(
-                                "RESULT_STORAGE_CALLBACK", "no",
-                                "RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER,
-                                "RESULT_STORAGE_PROXY", STORAGE_PROXY,
-                                "RESULT_STORAGE_TOKEN", secretValue));
+                                "RESULT_STORAGE_TOKEN", storageToken));
     }
 
     @Test
     void shouldGetPostComputeStorageTokensOnDropbox() {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
                 .resultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
+                .resultStorageProxy("")
                 .build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
 
         final String secretValue = "Secret value";
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN))
-                .thenReturn(Optional.of(secretValue));
 
         final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, secretValue));
+                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, secretValue, ""));
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
                                 "RESULT_STORAGE_CALLBACK", "no",
-                                "RESULT_STORAGE_PROVIDER", "dropbox",
-                                "RESULT_STORAGE_PROXY", STORAGE_PROXY,
+                                "RESULT_STORAGE_PROVIDER", DealParams.DROPBOX_RESULT_STORAGE_PROVIDER,
+                                "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_TOKEN", secretValue));
     }
 
@@ -577,14 +560,9 @@ class SecretSessionBaseServiceTests {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
-        when(web2SecretService.isSecretPresent(WORKER_ADDRESS, IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(false);
-        when(web2SecretService.getDecryptedValue(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN))
-                .thenReturn(Optional.empty());
-
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, ""));
+                () -> teeSecretsService.getPostComputeStorageTokens(sessionRequest, "", ""));
 
         assertThat(exception.getError()).isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_STORAGE_TOKENS_FAILED);
         assertThat(exception.getMessage())
@@ -707,10 +685,6 @@ class SecretSessionBaseServiceTests {
     void shouldGetPostComputeEncryptionTokensWithEncryption() {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
-        final String beneficiary = request.getTaskDescription().getBeneficiary();
-        when(web2SecretService.getDecryptedValue(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
-                .thenReturn(Optional.of(ENCRYPTION_PUBLIC_KEY));
-
         final Map<String, String> encryptionTokens = assertDoesNotThrow(
                 () -> teeSecretsService.getPostComputeEncryptionTokens(request, ENCRYPTION_PUBLIC_KEY));
         assertThat(encryptionTokens)
@@ -739,10 +713,6 @@ class SecretSessionBaseServiceTests {
     @Test
     void shouldNotGetPostComputeEncryptionTokensSinceEmptyBeneficiaryKey() {
         TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
-
-        final String beneficiary = request.getTaskDescription().getBeneficiary();
-        when(web2SecretService.getDecryptedValue(beneficiary, IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY))
-                .thenReturn(Optional.empty());
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,

@@ -6,11 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
+- Accept scheduler default result-proxy as a web2 secret to fallback on it when no proxy
+  is specified in deal parameters. (#273)
 - Configure the SMS at startup to generate Scone sessions in Hardware or MAA mode. (#275)
 
 ### Quality
 
 - Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
+- Reorder static and final keywords. (#274)
 
 ### Dependency Upgrades
 
