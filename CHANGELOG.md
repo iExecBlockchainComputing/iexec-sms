@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2024
 
+### New Features
+
+- Configure the SMS at startup to generate Scone sessions in Hardware or MAA mode. (#275)
+
 ### Quality
 
 - Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
