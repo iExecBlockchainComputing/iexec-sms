@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,8 +85,15 @@ public class SconeSession {
         @JsonProperty("attestation")
         private Attestation attestation;
 
-        public Security(List<String> tolerate, List<String> ignoreAdvisories) {
-            this.attestation = new Attestation(tolerate, ignoreAdvisories);
+        public Security(List<String> tolerate,
+                        List<String> ignoreAdvisories,
+                        String mode,
+                        String url)
+                throws IllegalArgumentException {
+            this.attestation = new Attestation(tolerate, ignoreAdvisories, mode, url);
+            if ("maa".equals(mode) && url == null) {
+                throw new IllegalArgumentException("Attestation URL can not be null when scone session mode is 'maa'");
+            }
         }
 
         @AllArgsConstructor
@@ -96,6 +103,10 @@ public class SconeSession {
             private List<String> tolerate;
             @JsonProperty("ignore_advisories")
             private List<String> ignoreAdvisories;
+            @JsonProperty("mode")
+            private String mode;
+            @JsonProperty("url")
+            private String url;
         }
     }
 

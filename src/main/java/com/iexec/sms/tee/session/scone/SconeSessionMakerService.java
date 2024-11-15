@@ -44,6 +44,7 @@ public class SconeSessionMakerService {
     private final SecretSessionBaseService secretSessionBaseService;
     private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
+    private final String initialMode;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
@@ -52,6 +53,7 @@ public class SconeSessionMakerService {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeServicesConfig = teeServicesConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
+        this.initialMode = attestationSecurityConfig.getMode();
     }
 
     /**
@@ -67,7 +69,7 @@ public class SconeSessionMakerService {
      */
     @NonNull
     public SconeSession generateSession(TeeSessionRequest request)
-            throws TeeSessionGenerationException {
+            throws TeeSessionGenerationException, IllegalArgumentException, IllegalStateException {
         Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
         Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
         Volume postComputeTmpVolume = new Volume("post-compute-tmp",
@@ -108,18 +110,27 @@ public class SconeSessionMakerService {
                 sconePostEnclave.getImageName(),
                 List.of(iexecOutVolume, postComputeTmpVolume)));
 
+        Security security = new Security(
+                attestationSecurityConfig.getToleratedInsecureOptions(),
+                attestationSecurityConfig.getIgnoredSgxAdvisories(),
+                attestationSecurityConfig.getMode(),
+                attestationSecurityConfig.getUrl());
+        final String securityMode = security.getAttestation().getMode();
+        if (!securityMode.equals(initialMode)) {
+            throw new IllegalStateException("Mode switching is not supported. SMS was initialized with session mode [" +
+                    initialMode + "] but current session mode is [" + securityMode + "]");
+        }
+
         return SconeSession.builder()
                 .name(request.getSessionId())
-                .version("0.3")
+                .version("0.3.10")
                 .accessPolicy(new AccessPolicy(List.of("CREATOR"), List.of("NONE")))
                 .services(services)
                 .images(images)
                 .volumes(Arrays.asList(new Volumes(iexecInVolume.getName()),
                         new Volumes(iexecOutVolume.getName()),
                         new Volumes(postComputeTmpVolume.getName())))
-                .security(new Security(
-                        attestationSecurityConfig.getToleratedInsecureOptions(),
-                        attestationSecurityConfig.getIgnoredSgxAdvisories()))
+                .security(security)
                 .build();
     }
 

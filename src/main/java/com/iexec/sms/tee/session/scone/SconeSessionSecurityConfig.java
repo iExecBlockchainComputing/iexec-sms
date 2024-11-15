@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,22 @@ package com.iexec.sms.tee.session.scone;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import lombok.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
-@Configuration
+@Getter
+@Value
+@ConstructorBinding
+@ConfigurationProperties(prefix = "tee.scone.attestation")
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionSecurityConfig {
-
-    @Value("${tee.scone.attestation.tolerated-insecure-options}")
-    @Getter
-    private List<String> toleratedInsecureOptions;
-
-    @Value("${tee.scone.attestation.ignored-sgx-advisories}")
-    @Getter
-    private List<String> ignoredSgxAdvisories;
+    List<String> toleratedInsecureOptions;
+    List<String> ignoredSgxAdvisories;
+    @NotNull
+    String mode;
+    String url;
 }
