@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TeeWorkerInternalConfigurationTests {
-    private final static String IMAGE = "image";
-    private final static String FINGERPRINT = "fingerprint";
-    private final static String ENTRYPOINT = "entrypoint";
-    private final static String LAS_IMAGE = "lasImage";
-    private final static long HEAP_SIZE_GB = 3;
-    private final static long HEAP_SIZE_B = 3221225472L;
+    private static final String IMAGE = "image";
+    private static final String FINGERPRINT = "fingerprint";
+    private static final String ENTRYPOINT = "entrypoint";
+    private static final String LAS_IMAGE = "lasImage";
+    private static final long HEAP_SIZE_GB = 3;
+    private static final long HEAP_SIZE_B = 3221225472L;
 
     private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("preComputeImage")

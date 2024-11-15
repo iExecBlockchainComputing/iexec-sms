@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Quality
 
 - Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
+- Reorder static and final keywords. (#274)
 
 ### Dependency Upgrades
 
