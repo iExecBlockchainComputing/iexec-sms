@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ public class SconeSessionMakerService {
      */
     @NonNull
     public SconeSession generateSession(TeeSessionRequest request)
-            throws TeeSessionGenerationException, IllegalArgumentException, IllegalStateException {
+            throws TeeSessionGenerationException {
         Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
         Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
         Volume postComputeTmpVolume = new Volume("post-compute-tmp",
