@@ -22,6 +22,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URL;
 import java.util.List;
 
 @Slf4j
@@ -85,15 +86,8 @@ public class SconeSession {
         @JsonProperty("attestation")
         private Attestation attestation;
 
-        public Security(List<String> tolerate,
-                        List<String> ignoreAdvisories,
-                        String mode,
-                        String url)
-                throws IllegalArgumentException {
+        public Security(List<String> tolerate, List<String> ignoreAdvisories, String mode, URL url) {
             this.attestation = new Attestation(tolerate, ignoreAdvisories, mode, url);
-            if ("maa".equals(mode) && url == null) {
-                throw new IllegalArgumentException("Attestation URL can not be null when scone session mode is 'maa'");
-            }
         }
 
         @AllArgsConstructor
@@ -106,7 +100,7 @@ public class SconeSession {
             @JsonProperty("mode")
             private String mode;
             @JsonProperty("url")
-            private String url;
+            private URL url;
         }
     }
 

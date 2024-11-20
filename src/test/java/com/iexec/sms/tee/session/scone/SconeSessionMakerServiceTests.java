@@ -36,11 +36,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.yaml.snakeyaml.Yaml;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -51,7 +54,18 @@ class SconeSessionMakerServiceTests {
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
-    private static final String MAA_URL = "https://maa.attestation.service";
+    private static final URL MAA_URL;
+
+    static {
+        try {
+            MAA_URL = new URI("https://maa.attestation.service").toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private final List<String> toleratedInsecureOptions = List.of("hyperthreading", "debug-mode");
+    private final List<String> ignoredSgxAdvisories = List.of("INTEL-SA-00161", "INTEL-SA-00289");
 
     private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("PRE_COMPUTE_IMAGE")
@@ -69,7 +83,7 @@ class SconeSessionMakerServiceTests {
     private SconeServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
-    @Mock
+
     private SconeSessionSecurityConfig attestationSecurityConfig;
 
     @InjectMocks
@@ -78,6 +92,12 @@ class SconeSessionMakerServiceTests {
     private TeeSessionRequest request;
 
     private void setupCommonMocks() throws TeeSessionGenerationException {
+        palaemonSessionService = new SconeSessionMakerService(
+                teeSecretsService,
+                teeServicesConfig,
+                attestationSecurityConfig
+        );
+
         when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
         when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
 
@@ -143,11 +163,6 @@ class SconeSessionMakerServiceTests {
                         .appCompute(appCompute)
                         .postCompute(postCompute)
                         .build());
-
-        when(attestationSecurityConfig.getToleratedInsecureOptions())
-                .thenReturn(List.of("hyperthreading", "debug-mode"));
-        when(attestationSecurityConfig.getIgnoredSgxAdvisories())
-                .thenReturn(List.of("INTEL-SA-00161", "INTEL-SA-00289"));
     }
 
     // region HardwareModeTests
@@ -155,12 +170,12 @@ class SconeSessionMakerServiceTests {
     class HardwareModeTests {
         @BeforeEach
         void setup() throws TeeSessionGenerationException {
-            when(attestationSecurityConfig.getMode()).thenReturn("hardware");
-            when(attestationSecurityConfig.getUrl()).thenReturn(null);
-            palaemonSessionService = new SconeSessionMakerService(
-                    teeSecretsService,
-                    teeServicesConfig,
-                    attestationSecurityConfig);
+            attestationSecurityConfig = new SconeSessionSecurityConfig(
+                    toleratedInsecureOptions,
+                    ignoredSgxAdvisories,
+                    "hardware",
+                    null
+            );
             setupCommonMocks();
         }
 
@@ -173,14 +188,6 @@ class SconeSessionMakerServiceTests {
             Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
             assertRecursively(expectedYmlMap, actualYmlMap);
         }
-
-        @Test
-        void shouldNotSwitchFromHardwareToMaaMode() throws Exception {
-            palaemonSessionService.generateSession(request);
-            when(attestationSecurityConfig.getMode()).thenReturn("maa");
-            when(attestationSecurityConfig.getUrl()).thenReturn(MAA_URL);
-            assertThrows(IllegalStateException.class, () -> palaemonSessionService.generateSession(request));
-        }
     }
     // endregion
 
@@ -189,12 +196,12 @@ class SconeSessionMakerServiceTests {
     class MaaModeTests {
         @BeforeEach
         void setup() throws TeeSessionGenerationException {
-            when(attestationSecurityConfig.getMode()).thenReturn("maa");
-            when(attestationSecurityConfig.getUrl()).thenReturn(MAA_URL);
-            palaemonSessionService = new SconeSessionMakerService(
-                    teeSecretsService,
-                    teeServicesConfig,
-                    attestationSecurityConfig);
+            attestationSecurityConfig = new SconeSessionSecurityConfig(
+                    toleratedInsecureOptions,
+                    ignoredSgxAdvisories,
+                    "maa",
+                    MAA_URL
+            );
             setupCommonMocks();
         }
 
@@ -206,20 +213,6 @@ class SconeSessionMakerServiceTests {
             String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");
             Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
             assertRecursively(expectedYmlMap, actualYmlMap);
-        }
-
-        @Test
-        void shouldNotGenerateMaaSessionSinceNullURL() {
-            when(attestationSecurityConfig.getUrl()).thenReturn(null);
-            assertThrows(IllegalArgumentException.class, () -> palaemonSessionService.generateSession(request));
-        }
-
-        @Test
-        void shouldNotSwitchFromMaaToHardwareMode() throws Exception {
-            palaemonSessionService.generateSession(request);
-            when(attestationSecurityConfig.getMode()).thenReturn("hardware");
-            when(attestationSecurityConfig.getUrl()).thenReturn(null);
-            assertThrows(IllegalStateException.class, () -> palaemonSessionService.generateSession(request));
         }
     }
     // endregion

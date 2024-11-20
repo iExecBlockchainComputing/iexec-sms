@@ -38,8 +38,8 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
     private final CasConfiguration casConfiguration;
 
     public SconeSessionHandlerService(SconeSessionMakerService sessionService,
-            CasClient apiClient,
-            CasConfiguration casConfiguration) {
+                                      CasClient apiClient,
+                                      CasConfiguration casConfiguration) {
         this.sessionService = sessionService;
         this.apiClient = apiClient;
         this.casConfiguration = casConfiguration;
@@ -47,7 +47,7 @@ public class SconeSessionHandlerService implements TeeSessionHandler {
 
     /**
      * Build and post secret session on secret provisioning service.
-     * 
+     *
      * @param request tee session generation request
      * @return String secret provisioning service url
      * @throws TeeSessionGenerationException if call to CAS failed

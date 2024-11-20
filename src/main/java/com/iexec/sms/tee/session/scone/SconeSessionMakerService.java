@@ -44,7 +44,6 @@ public class SconeSessionMakerService {
     private final SecretSessionBaseService secretSessionBaseService;
     private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
-    private final String initialMode;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
@@ -53,7 +52,6 @@ public class SconeSessionMakerService {
         this.secretSessionBaseService = secretSessionBaseService;
         this.teeServicesConfig = teeServicesConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
-        this.initialMode = attestationSecurityConfig.getMode();
     }
 
     /**
@@ -87,7 +85,7 @@ public class SconeSessionMakerService {
                     teeServicesConfig.getPreComputeProperties().getEntrypoint(),
                     true);
             services.add(sconePreEnclave);
-            images.add(new SconeSession.Image(
+            images.add(new Image(
                     sconePreEnclave.getImageName(),
                     List.of(iexecInVolume)));
         }
@@ -97,7 +95,7 @@ public class SconeSessionMakerService {
                 request.getTaskDescription().getAppCommand(),
                 false);
         services.add(sconeAppEnclave);
-        images.add(new SconeSession.Image(
+        images.add(new Image(
                 sconeAppEnclave.getImageName(),
                 List.of(iexecInVolume, iexecOutVolume)));
         // post
@@ -106,20 +104,9 @@ public class SconeSessionMakerService {
                 teeServicesConfig.getPostComputeProperties().getEntrypoint(),
                 true);
         services.add(sconePostEnclave);
-        images.add(new SconeSession.Image(
+        images.add(new Image(
                 sconePostEnclave.getImageName(),
                 List.of(iexecOutVolume, postComputeTmpVolume)));
-
-        Security security = new Security(
-                attestationSecurityConfig.getToleratedInsecureOptions(),
-                attestationSecurityConfig.getIgnoredSgxAdvisories(),
-                attestationSecurityConfig.getMode(),
-                attestationSecurityConfig.getUrl());
-        final String securityMode = security.getAttestation().getMode();
-        if (!securityMode.equals(initialMode)) {
-            throw new IllegalStateException("Mode switching is not supported. SMS was initialized with session mode [" +
-                    initialMode + "] but current session mode is [" + securityMode + "]");
-        }
 
         return SconeSession.builder()
                 .name(request.getSessionId())
@@ -130,7 +117,14 @@ public class SconeSessionMakerService {
                 .volumes(Arrays.asList(new Volumes(iexecInVolume.getName()),
                         new Volumes(iexecOutVolume.getName()),
                         new Volumes(postComputeTmpVolume.getName())))
-                .security(security)
+                .security(
+                        new Security(
+                                attestationSecurityConfig.getToleratedInsecureOptions(),
+                                attestationSecurityConfig.getIgnoredSgxAdvisories(),
+                                attestationSecurityConfig.getMode(),
+                                attestationSecurityConfig.getUrl()
+                        )
+                )
                 .build();
     }
 
