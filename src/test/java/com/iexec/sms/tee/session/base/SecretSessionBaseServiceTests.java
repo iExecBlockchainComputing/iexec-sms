@@ -317,16 +317,6 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldFailToGetAppTokensSinceNoTaskDescription() {
-        TeeSessionRequest request = TeeSessionRequest.builder()
-                .build();
-        TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
-                () -> teeSecretsService.getAppTokens(request));
-        Assertions.assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
-        Assertions.assertEquals("Task description must not be null", exception.getMessage());
-    }
-
-    @Test
     void shouldFailToGetAppTokensSinceNoEnclaveConfig() {
         TeeSessionRequest request = TeeSessionRequest.builder()
                 .sessionId(SESSION_ID)
@@ -480,18 +470,6 @@ class SecretSessionBaseServiceTests {
         SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
-    }
-
-    @Test
-    void shouldNotGetPostComputeTokensSinceTaskDescriptionMissing() {
-        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
-        TeeSessionRequest request = TeeSessionRequest.builder().build();
-
-        final TeeSessionGenerationException exception = assertThrows(
-                TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeTokens(request));
-        assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
-        assertEquals("Task description must not be null", exception.getMessage());
     }
     // endregion
 
