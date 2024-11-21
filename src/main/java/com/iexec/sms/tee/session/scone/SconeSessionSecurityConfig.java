@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,32 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import lombok.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
+import javax.validation.constraints.NotBlank;
+import java.net.URL;
 import java.util.List;
 
-@Configuration
+@Value
+@ConstructorBinding
+@ConfigurationProperties(prefix = "tee.scone.attestation")
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionSecurityConfig {
+    List<String> toleratedInsecureOptions;
+    List<String> ignoredSgxAdvisories;
+    @NotBlank
+    String mode;
+    URL url;
 
-    @Value("${tee.scone.attestation.tolerated-insecure-options}")
-    @Getter
-    private List<String> toleratedInsecureOptions;
-
-    @Value("${tee.scone.attestation.ignored-sgx-advisories}")
-    @Getter
-    private List<String> ignoredSgxAdvisories;
+    public SconeSessionSecurityConfig(List<String> toleratedInsecureOptions, List<String> ignoredSgxAdvisories, String mode, URL url) {
+        this.toleratedInsecureOptions = toleratedInsecureOptions;
+        this.ignoredSgxAdvisories = ignoredSgxAdvisories;
+        this.mode = mode;
+        this.url = url;
+        if ("maa".equals(this.mode) && this.url == null) {
+            throw new IllegalArgumentException("Attestation URL can not be null when scone session mode is 'maa'");
+        }
+    }
 }

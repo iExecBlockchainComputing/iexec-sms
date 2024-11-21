@@ -1,18 +1,17 @@
-
 name: 'sessionId'
-version: '0.3'
+version: '0.3.10'
 
 access_policy:
   read:
-   - CREATOR
+    - CREATOR
   update:
-   - NONE
+    - NONE
 
 services:
 
   - name: 'pre-compute'
     image_name: 'pre-compute-image'
-    mrenclaves: ['mrEnclave1']
+    mrenclaves: [ 'mrEnclave1' ]
     pwd: '/'
     command: 'entrypoint1'
     environment:
@@ -31,11 +30,11 @@ services:
       IEXEC_INPUT_FILES_NUMBER: '2'
       IEXEC_INPUT_FILE_URL_1: 'http://host/file1'
       IEXEC_INPUT_FILE_URL_2: 'http://host/file2'
-    
-  
+
+
   - name: 'app'
     image_name: 'app-image'
-    mrenclaves: ['01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b']
+    mrenclaves: [ '01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b' ]
     pwd: '/'
     command: 'appEntrypoint args'
     environment:
@@ -55,11 +54,11 @@ services:
       IEXEC_INPUT_FILE_NAME_1: 'file1'
       IEXEC_INPUT_FILE_NAME_2: 'file2'
 
-    
-  
+
+
   - name: 'post-compute'
     image_name: 'post-compute-image'
-    mrenclaves: ['mrEnclave3']
+    mrenclaves: [ 'mrEnclave3' ]
     pwd: '/'
     command: 'entrypoint3'
     environment:
@@ -77,13 +76,13 @@ services:
 
 
 images:
-  
+
   - name: 'pre-compute-image'
     volumes:
       - name: 'iexec_in'
         path: '/iexec_in'
 
-  
+
   - name: app-image
     volumes:
       - name: 'iexec_in'
@@ -91,7 +90,7 @@ images:
       - name: 'iexec_out'
         path: '/iexec_out'
 
-  
+
   - name: 'post-compute-image'
     volumes:
       - name: 'iexec_out'
@@ -107,5 +106,7 @@ volumes:
 
 security:
   attestation:
-    tolerate: [hyperthreading, debug-mode]
-    ignore_advisories: [INTEL-SA-00161, INTEL-SA-00289]
+    tolerate: [ hyperthreading, debug-mode ]
+    ignore_advisories: [ INTEL-SA-00161, INTEL-SA-00289 ]
+    mode: hardware
+    url:

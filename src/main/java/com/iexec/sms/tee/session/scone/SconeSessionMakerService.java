@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ public class SconeSessionMakerService {
                     teeServicesConfig.getPreComputeProperties().getEntrypoint(),
                     true);
             services.add(sconePreEnclave);
-            images.add(new SconeSession.Image(
+            images.add(new Image(
                     sconePreEnclave.getImageName(),
                     List.of(iexecInVolume)));
         }
@@ -95,7 +95,7 @@ public class SconeSessionMakerService {
                 request.getTaskDescription().getAppCommand(),
                 false);
         services.add(sconeAppEnclave);
-        images.add(new SconeSession.Image(
+        images.add(new Image(
                 sconeAppEnclave.getImageName(),
                 List.of(iexecInVolume, iexecOutVolume)));
         // post
@@ -104,22 +104,27 @@ public class SconeSessionMakerService {
                 teeServicesConfig.getPostComputeProperties().getEntrypoint(),
                 true);
         services.add(sconePostEnclave);
-        images.add(new SconeSession.Image(
+        images.add(new Image(
                 sconePostEnclave.getImageName(),
                 List.of(iexecOutVolume, postComputeTmpVolume)));
 
         return SconeSession.builder()
                 .name(request.getSessionId())
-                .version("0.3")
+                .version("0.3.10")
                 .accessPolicy(new AccessPolicy(List.of("CREATOR"), List.of("NONE")))
                 .services(services)
                 .images(images)
                 .volumes(Arrays.asList(new Volumes(iexecInVolume.getName()),
                         new Volumes(iexecOutVolume.getName()),
                         new Volumes(postComputeTmpVolume.getName())))
-                .security(new Security(
-                        attestationSecurityConfig.getToleratedInsecureOptions(),
-                        attestationSecurityConfig.getIgnoredSgxAdvisories()))
+                .security(
+                        new Security(
+                                attestationSecurityConfig.getToleratedInsecureOptions(),
+                                attestationSecurityConfig.getIgnoredSgxAdvisories(),
+                                attestationSecurityConfig.getMode(),
+                                attestationSecurityConfig.getUrl()
+                        )
+                )
                 .build();
     }
 
