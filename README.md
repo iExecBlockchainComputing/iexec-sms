@@ -84,8 +84,8 @@ To support:
 | `IEXEC_SMS_SSL_KEYSTORE_ALIAS` | Alias that identifies the key in the key store. | String | `iexec-core` |
 | `IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS` | List of hardware or software Scone vulnerabilities to ignore. | String | |
 | `IEXEC_IGNORED_SGX_ADVISORIES` | List of hardware or software Intel vulnerabilities to ignore. | String | |
-| `TEE_SCONE_ATTESTATION_MODE` | Attestation mode used for the SMS session generation. | String | `maa` |
-| `TEE_SCONE_ATTESTATION_URL` | URL of the Microsoft Azure Attestation used for the SMS session generation. | URL | `https://sharedweu.weu.attest.azure.net` |
+| `TEE_SCONE_ATTESTATION_MODE` | Attestation mode used for TEE tasks Scone session generation. | String | `maa` |
+| `TEE_SCONE_ATTESTATION_URL` | URL of the Microsoft Azure Attestation service used for TEE tasks Scone session generation. | URL | `https://sharedweu.weu.attest.azure.net` |
 | `IEXEC_SMS_IMAGE_LAS_IMAGE` | Scontain LAS OCI image to be used by workers to execute TEE tasks. LAS performs local attestation which creates a quote that CAS can verify. | String | |
 
 ## Health checks
