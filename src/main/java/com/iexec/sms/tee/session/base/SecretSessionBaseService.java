@@ -61,11 +61,11 @@ public class SecretSessionBaseService {
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
-            Web3SecretService web3SecretService,
-            Web2SecretService web2SecretService,
-            TeeChallengeService teeChallengeService,
-            TeeServicesProperties teeServicesConfig,
-            TeeTaskComputeSecretService teeTaskComputeSecretService) {
+            final Web3SecretService web3SecretService,
+            final Web2SecretService web2SecretService,
+            final TeeChallengeService teeChallengeService,
+            final TeeServicesProperties teeServicesConfig,
+            final TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretService = web2SecretService;
         this.teeChallengeService = teeChallengeService;
@@ -79,7 +79,7 @@ public class SecretSessionBaseService {
      * @param request session request details
      * @return All common tokens for a session, whatever TEE technology is used
      */
-    public SecretSessionBase getSecretsTokens(TeeSessionRequest request) throws TeeSessionGenerationException {
+    public SecretSessionBase getSecretsTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
         if (request == null) {
             throw new TeeSessionGenerationException(
                     NO_SESSION_REQUEST,
@@ -90,11 +90,10 @@ public class SecretSessionBaseService {
                     NO_TASK_DESCRIPTION,
                     "Task description must not be null");
         }
-        SecretSessionBaseBuilder sessionBase = SecretSessionBase.builder();
-        TaskDescription taskDescription = request.getTaskDescription();
+        final SecretSessionBaseBuilder sessionBase = SecretSessionBase.builder();
+        final TaskDescription taskDescription = request.getTaskDescription();
         // pre-compute
-        final boolean isPreComputeRequired = taskDescription.containsDataset() ||
-                taskDescription.containsInputFiles();
+        final boolean isPreComputeRequired = taskDescription.containsDataset() || taskDescription.containsInputFiles();
         if (isPreComputeRequired) {
             sessionBase.preCompute(getPreComputeTokens(request));
         }
@@ -112,21 +111,20 @@ public class SecretSessionBaseService {
      * @return {@link SecretEnclaveBase} instance
      * @throws TeeSessionGenerationException if dataset secret is not found
      */
-    public SecretEnclaveBase getPreComputeTokens(TeeSessionRequest request)
-            throws TeeSessionGenerationException {
-        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
+    SecretEnclaveBase getPreComputeTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
+        final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
         enclaveBase.name("pre-compute");
-        Map<String, Object> tokens = new HashMap<>();
-        TaskDescription taskDescription = request.getTaskDescription();
-        String taskId = taskDescription.getChainTaskId();
+        final Map<String, Object> tokens = new HashMap<>();
+        final TaskDescription taskDescription = request.getTaskDescription();
+        final String taskId = taskDescription.getChainTaskId();
         enclaveBase.mrenclave(teeServicesConfig.getPreComputeProperties().getFingerprint());
         tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
 
-        List<String> trustedEnv = new ArrayList<>();
+        final List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
-            String datasetKey = web3SecretService
+            final String datasetKey = web3SecretService
                     .getDecryptedValue(taskDescription.getDatasetAddress())
                     .orElseThrow(() -> new TeeSessionGenerationException(
                             PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
@@ -164,19 +162,13 @@ public class SecretSessionBaseService {
      * @return {@link SecretEnclaveBase} instance
      * @throws TeeSessionGenerationException if {@code TaskDescription} is {@literal null} or does not contain a {@code TeeEnclaveConfiguration}
      */
-    public SecretEnclaveBase getAppTokens(TeeSessionRequest request)
-            throws TeeSessionGenerationException {
-        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
+    SecretEnclaveBase getAppTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
+        final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
         enclaveBase.name("app");
-        TaskDescription taskDescription = request.getTaskDescription();
-        if (taskDescription == null) {
-            throw new TeeSessionGenerationException(
-                    NO_TASK_DESCRIPTION,
-                    "Task description must not be null");
-        }
+        final TaskDescription taskDescription = request.getTaskDescription();
 
-        Map<String, Object> tokens = new HashMap<>();
-        TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
+        final Map<String, Object> tokens = new HashMap<>();
+        final TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
@@ -207,7 +199,7 @@ public class SecretSessionBaseService {
                 .build();
     }
 
-    private Map<String, Object> getApplicationComputeSecrets(TaskDescription taskDescription) {
+    private Map<String, Object> getApplicationComputeSecrets(final TaskDescription taskDescription) {
         final Map<String, Object> tokens = new HashMap<>();
         final List<TeeTaskComputeSecretHeader> ids = getAppComputeSecretsHeaders(taskDescription);
         log.debug("TeeTaskComputeSecret looking for secrets [chainTaskId:{}, count:{}]",
@@ -231,7 +223,7 @@ public class SecretSessionBaseService {
         return tokens;
     }
 
-    private List<TeeTaskComputeSecretHeader> getAppComputeSecretsHeaders(TaskDescription taskDescription) {
+    private List<TeeTaskComputeSecretHeader> getAppComputeSecretsHeaders(final TaskDescription taskDescription) {
         final List<TeeTaskComputeSecretHeader> ids = new ArrayList<>();
         final String applicationAddress = taskDescription.getAppAddress();
         if (applicationAddress != null) {
@@ -247,9 +239,9 @@ public class SecretSessionBaseService {
         if (taskDescription.getSecrets() != null && taskDescription.getRequester() != null) {
             for (Map.Entry<String, String> secretEntry : taskDescription.getSecrets().entrySet()) {
                 try {
-                    int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
+                    final int requesterSecretIndex = Integer.parseInt(secretEntry.getKey());
                     if (requesterSecretIndex <= 0) {
-                        String message = "Application secret indices provided in the deal parameters must be positive numbers"
+                        final String message = "Application secret indices provided in the deal parameters must be positive numbers"
                                 + " [providedApplicationSecretIndex:" + requesterSecretIndex + "]";
                         log.warn(message);
                         throw new NumberFormatException(message);
@@ -276,17 +268,12 @@ public class SecretSessionBaseService {
      * @return {@link SecretEnclaveBase} instance
      * @throws TeeSessionGenerationException if {@code TaskDescription} is {@literal null}
      */
-    public SecretEnclaveBase getPostComputeTokens(TeeSessionRequest request)
-            throws TeeSessionGenerationException {
-        SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
+    SecretEnclaveBase getPostComputeTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
+        final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
                 .name("post-compute")
                 .mrenclave(teeServicesConfig.getPostComputeProperties().getFingerprint());
-        Map<String, Object> tokens = new HashMap<>();
-        TaskDescription taskDescription = request.getTaskDescription();
-        if (taskDescription == null) {
-            throw new TeeSessionGenerationException(NO_TASK_DESCRIPTION, "Task description must not be null");
-        }
-
+        final Map<String, Object> tokens = new HashMap<>();
+        final TaskDescription taskDescription = request.getTaskDescription();
         final List<Web2SecretHeader> ids = getPostComputeSecretHeaders(taskDescription, request.getWorkerAddress());
         log.debug("Web2Secret looking for secrets [chainTaskId:{}, count:{}]",
                 taskDescription.getChainTaskId(), ids.size());
@@ -332,14 +319,14 @@ public class SecretSessionBaseService {
             tokens.putAll(getPostComputeStorageTokens(request, storageToken, storageProxy));
         }
         // enclave signature
-        Map<String, String> signTokens = getPostComputeSignTokens(request);
+        final Map<String, String> signTokens = getPostComputeSignTokens(request);
         tokens.putAll(signTokens);
         return enclaveBase
                 .environment(tokens)
                 .build();
     }
 
-    List<Web2SecretHeader> getPostComputeSecretHeaders(TaskDescription taskDescription, String workerAddress) {
+    List<Web2SecretHeader> getPostComputeSecretHeaders(final TaskDescription taskDescription, final String workerAddress) {
         final List<Web2SecretHeader> ids = new ArrayList<>();
         if (taskDescription.isResultEncryption()) {
             ids.add(new Web2SecretHeader(taskDescription.getBeneficiary(), IEXEC_RESULT_ENCRYPTION_PUBLIC_KEY));
@@ -354,12 +341,12 @@ public class SecretSessionBaseService {
         return ids;
     }
 
-    public Map<String, String> getPostComputeEncryptionTokens(TeeSessionRequest request, String resultEncryptionKey)
+    Map<String, String> getPostComputeEncryptionTokens(final TeeSessionRequest request, final String resultEncryptionKey)
             throws TeeSessionGenerationException {
-        TaskDescription taskDescription = request.getTaskDescription();
-        String taskId = taskDescription.getChainTaskId();
-        Map<String, String> tokens = new HashMap<>();
-        boolean shouldEncrypt = taskDescription.isResultEncryption();
+        final TaskDescription taskDescription = request.getTaskDescription();
+        final String taskId = taskDescription.getChainTaskId();
+        final Map<String, String> tokens = new HashMap<>();
+        final boolean shouldEncrypt = taskDescription.isResultEncryption();
         // TODO use boolean with quotes instead of yes/no
         tokens.put(RESULT_ENCRYPTION, booleanToYesNo(shouldEncrypt));
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY, EMPTY_STRING_VALUE);
@@ -379,13 +366,13 @@ public class SecretSessionBaseService {
     // to the beneficiary private storage space waiting for
     // that feature we only allow to push to the requester
     // private storage space
-    public Map<String, String> getPostComputeStorageTokens(final TeeSessionRequest request,
-                                                           final String storageToken,
-                                                           final String resultProxyUrl) throws TeeSessionGenerationException {
-        TaskDescription taskDescription = request.getTaskDescription();
-        String taskId = taskDescription.getChainTaskId();
-        Map<String, String> tokens = new HashMap<>();
-        boolean isCallbackRequested = taskDescription.containsCallback();
+    Map<String, String> getPostComputeStorageTokens(final TeeSessionRequest request,
+                                                    final String storageToken,
+                                                    final String resultProxyUrl) throws TeeSessionGenerationException {
+        final TaskDescription taskDescription = request.getTaskDescription();
+        final String taskId = taskDescription.getChainTaskId();
+        final Map<String, String> tokens = new HashMap<>();
+        final boolean isCallbackRequested = taskDescription.containsCallback();
         tokens.put(RESULT_STORAGE_CALLBACK, booleanToYesNo(isCallbackRequested));
         tokens.put(RESULT_STORAGE_PROVIDER, EMPTY_STRING_VALUE);
         tokens.put(RESULT_STORAGE_PROXY, EMPTY_STRING_VALUE);
@@ -408,11 +395,10 @@ public class SecretSessionBaseService {
         return tokens;
     }
 
-    public Map<String, String> getPostComputeSignTokens(TeeSessionRequest request)
-            throws TeeSessionGenerationException {
-        String taskId = request.getTaskDescription().getChainTaskId();
-        String workerAddress = request.getWorkerAddress();
-        Map<String, String> tokens = new HashMap<>();
+    Map<String, String> getPostComputeSignTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
+        final String taskId = request.getTaskDescription().getChainTaskId();
+        final String workerAddress = request.getWorkerAddress();
+        final Map<String, String> tokens = new HashMap<>();
         if (StringUtils.isEmpty(workerAddress)) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
@@ -423,13 +409,13 @@ public class SecretSessionBaseService {
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
                     "Empty public enclave challenge - taskId: " + taskId);
         }
-        Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
+        final Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
         if (teeChallenge.isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
                     "Empty TEE challenge  - taskId: " + taskId);
         }
-        EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
+        final EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
         if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
             throw new TeeSessionGenerationException(
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
