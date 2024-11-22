@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,16 +23,23 @@ import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
+import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.yaml.snakeyaml.Yaml;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -40,12 +47,25 @@ import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static org.mockito.Mockito.when;
 
 @Slf4j
+@ExtendWith(MockitoExtension.class)
 class SconeSessionMakerServiceTests {
 
     private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
     private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
+    private static final URL MAA_URL;
+
+    static {
+        try {
+            MAA_URL = new URI("https://maa.attestation.service").toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private final List<String> toleratedInsecureOptions = List.of("hyperthreading", "debug-mode");
+    private final List<String> ignoredSgxAdvisories = List.of("INTEL-SA-00161", "INTEL-SA-00289");
 
     private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("PRE_COMPUTE_IMAGE")
@@ -63,27 +83,29 @@ class SconeSessionMakerServiceTests {
     private SconeServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
-    @Mock
+
     private SconeSessionSecurityConfig attestationSecurityConfig;
 
     @InjectMocks
     private SconeSessionMakerService palaemonSessionService;
 
-    @BeforeEach
-    void beforeEach() {
-        MockitoAnnotations.openMocks(this);
+    private TeeSessionRequest request;
+
+    private void setupCommonMocks() throws TeeSessionGenerationException {
+        palaemonSessionService = new SconeSessionMakerService(
+                teeSecretsService,
+                teeServicesConfig,
+                attestationSecurityConfig
+        );
+
         when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
         when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
-    }
 
-    // region getSessionYml
-    @Test
-    void shouldGetSessionYml() throws Exception {
         TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
                 .fingerprint(APP_FINGERPRINT)
                 .entrypoint(APP_ENTRYPOINT)
                 .build();
-        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
         SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")
@@ -141,25 +163,57 @@ class SconeSessionMakerServiceTests {
                         .appCompute(appCompute)
                         .postCompute(postCompute)
                         .build());
+    }
 
-        when(attestationSecurityConfig.getToleratedInsecureOptions())
-                .thenReturn(List.of("hyperthreading", "debug-mode"));
-        when(attestationSecurityConfig.getIgnoredSgxAdvisories())
-                .thenReturn(List.of("INTEL-SA-00161", "INTEL-SA-00289"));
+    // region HardwareModeTests
+    @Nested
+    class HardwareModeTests {
+        @BeforeEach
+        void setup() throws TeeSessionGenerationException {
+            attestationSecurityConfig = new SconeSessionSecurityConfig(
+                    toleratedInsecureOptions,
+                    ignoredSgxAdvisories,
+                    "hardware",
+                    null
+            );
+            setupCommonMocks();
+        }
 
-        when(teeSecretsService.getSecretsTokens(request))
-                .thenReturn(SecretSessionBase.builder()
-                        .preCompute(preCompute)
-                        .appCompute(appCompute)
-                        .postCompute(postCompute)
-                        .build());
+        @Test
+        void shouldGenerateHardwareSession() throws Exception {
+            SconeSession actualCasSession = palaemonSessionService.generateSession(request);
+            log.info(actualCasSession.toString());
+            Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+            String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
+            Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
+            assertRecursively(expectedYmlMap, actualYmlMap);
+        }
+    }
+    // endregion
 
-        SconeSession actualCasSession = palaemonSessionService.generateSession(request);
-        log.info(actualCasSession.toString());
-        Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
-        String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session.yml");
-        Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
-        assertRecursively(expectedYmlMap, actualYmlMap);
+    // region MaaModeTests
+    @Nested
+    class MaaModeTests {
+        @BeforeEach
+        void setup() throws TeeSessionGenerationException {
+            attestationSecurityConfig = new SconeSessionSecurityConfig(
+                    toleratedInsecureOptions,
+                    ignoredSgxAdvisories,
+                    "maa",
+                    MAA_URL
+            );
+            setupCommonMocks();
+        }
+
+        @Test
+        void shouldGenerateMaaSession() throws Exception {
+            SconeSession actualCasSession = palaemonSessionService.generateSession(request);
+            log.info(actualCasSession.toString());
+            Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+            String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");
+            Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
+            assertRecursively(expectedYmlMap, actualYmlMap);
+        }
     }
     // endregion
 }
