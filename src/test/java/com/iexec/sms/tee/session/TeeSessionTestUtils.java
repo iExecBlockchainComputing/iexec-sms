@@ -16,6 +16,7 @@
 
 package com.iexec.sms.tee.session;
 
+import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.secret.compute.OnChainObjectType;
@@ -107,11 +108,22 @@ public class TeeSessionTestUtils {
                 .taskDescription(taskDescription);
     }
 
+    public static DealParams.DealParamsBuilder createDealParams() {
+        return DealParams.builder()
+                .iexecArgs(ARGS)
+                .iexecInputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
+                .iexecResultEncryption(true)
+                .iexecResultStorageProvider(STORAGE_PROVIDER)
+                .iexecResultStorageProxy(STORAGE_PROXY)
+                .iexecSecrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2));
+    }
+
     public static TaskDescription.TaskDescriptionBuilder createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
         final String appAddress = createEthereumAddress();
         final String requesterAddress = createEthereumAddress();
         final String beneficiaryAddress = createEthereumAddress();
         final String workerpoolAddress = createEthereumAddress();
+        final DealParams dealParams = createDealParams().build();
         return TaskDescription.builder()
                 .workerpoolOwner(workerpoolAddress)
                 .chainTaskId(TASK_ID)
@@ -124,12 +136,7 @@ public class TeeSessionTestUtils {
                 .datasetChecksum(DATASET_CHECKSUM)
                 .requester(requesterAddress)
                 .beneficiary(beneficiaryAddress)
-                .cmd(ARGS)
-                .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
-                .isResultEncryption(true)
-                .resultStorageProvider(STORAGE_PROVIDER)
-                .resultStorageProxy(STORAGE_PROXY)
-                .secrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2))
+                .dealParams(dealParams)
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0);
