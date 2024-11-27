@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
 - Reorder static and final keywords. (#274)
 - Update methods visibility and remove redundant checks in `SecretSessionBaseService`. (#276)
+- Refactor `SecretSessionBaseService` to use `dealParams` instead of deprecated `TaskDescription` fields. (#277)
 
 ### Dependency Upgrades
 
