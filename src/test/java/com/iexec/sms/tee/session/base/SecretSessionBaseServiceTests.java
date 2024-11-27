@@ -204,7 +204,7 @@ class SecretSessionBaseServiceTests {
                 TeeSessionGenerationException.class,
                 () -> teeSecretsService.getSecretsTokens(request));
         assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
-        assertEquals("Task description must not be null", exception.getMessage());
+        assertEquals("Task description and deal parameters must both not be null", exception.getMessage());
     }
 
     @Test
@@ -216,7 +216,7 @@ class SecretSessionBaseServiceTests {
                 TeeSessionGenerationException.class,
                 () -> teeSecretsService.getSecretsTokens(request));
         assertEquals(TeeSessionGenerationError.NO_TASK_DESCRIPTION, exception.getError());
-        assertEquals("Task description must not be null", exception.getMessage());
+        assertEquals("Task description and deal parameters must both not be null", exception.getMessage());
     }
     // endregion
 
