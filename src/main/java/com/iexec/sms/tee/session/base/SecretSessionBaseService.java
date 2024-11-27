@@ -99,7 +99,7 @@ public class SecretSessionBaseService {
         if (request.getTaskDescription() == null || request.getTaskDescription().getDealParams() == null) {
             throw new TeeSessionGenerationException(
                     NO_TASK_DESCRIPTION,
-                    "Task description must not be null");
+                    "Task description and deal parameters must both not be null");
         }
         final SecretSessionBaseBuilder sessionBase = SecretSessionBase.builder();
         final TaskDescription taskDescription = request.getTaskDescription();
