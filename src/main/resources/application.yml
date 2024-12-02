@@ -45,10 +45,9 @@ metrics:
   storage:
     refresh-interval: ${IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL:30}  # In seconds
 
-#  level:
-#    org.springframework: DEBUG
-#    org.apache.http: DEBUG
-
 springdoc:
   packagesToScan: com.iexec.sms
   pathsToMatch: /**
+
+tee:
+  challenge.cleanup.cron: ${IEXEC_TEE_CHALLENGE_CLEANUP_CRON:@hourly}

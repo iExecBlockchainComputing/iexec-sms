@@ -23,6 +23,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.security.GeneralSecurityException;
+import java.time.Instant;
 
 @Entity
 @Getter
@@ -38,11 +40,14 @@ public class TeeChallenge {
 
     private String taskId;
 
+    private Instant finalDeadline;
+
     @OneToOne(cascade = {CascadeType.ALL})
     private EthereumCredentials credentials;
 
-    public TeeChallenge(String taskId) throws Exception {
+    public TeeChallenge(final String taskId, final Instant finalDeadline) throws GeneralSecurityException {
         this.taskId = taskId;
         this.credentials = EthereumCredentials.generate();
+        this.finalDeadline = finalDeadline;
     }
 }
