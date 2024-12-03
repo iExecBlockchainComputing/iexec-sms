@@ -28,6 +28,7 @@ import org.web3j.utils.Numeric;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.security.GeneralSecurityException;
 
 /**
  * Domain entity
@@ -61,10 +62,9 @@ public class EthereumCredentials {
      * secure random source).
      *
      * @return Ethereum credentials
-     * @throws java.security.GeneralSecurityException exception if failed to
-     *                                                generate credentials
+     * @throws GeneralSecurityException exception if credentials generation failed
      */
-    public static EthereumCredentials generate() throws java.security.GeneralSecurityException {
+    public static EthereumCredentials generate() throws GeneralSecurityException {
         ECKeyPair randomEcKeyPair = Keys.createEcKeyPair();
         String privateKey =
                 Numeric.toHexStringWithPrefixZeroPadded(randomEcKeyPair.getPrivateKey(),

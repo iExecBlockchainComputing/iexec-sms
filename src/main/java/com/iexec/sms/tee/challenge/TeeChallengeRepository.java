@@ -17,9 +17,14 @@
 package com.iexec.sms.tee.challenge;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public interface TeeChallengeRepository extends JpaRepository<TeeChallenge, String> {
     Optional<TeeChallenge> findByTaskId(String taskId);
+
+    @Transactional
+    void deleteByFinalDeadlineBefore(Instant now);
 }

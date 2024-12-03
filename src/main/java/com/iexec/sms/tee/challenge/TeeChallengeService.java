@@ -16,11 +16,14 @@
 
 package com.iexec.sms.tee.challenge;
 
+import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Slf4j
@@ -29,15 +32,18 @@ public class TeeChallengeService {
 
     private final TeeChallengeRepository teeChallengeRepository;
     private final EncryptionService encryptionService;
+    private final IexecHubService iexecHubService;
     private final MeasuredSecretService teeChallengesMeasuredSecretService;
     private final MeasuredSecretService ethereumCredentialsMeasuredSecretService;
 
-    public TeeChallengeService(TeeChallengeRepository teeChallengeRepository,
-                               EncryptionService encryptionService,
-                               MeasuredSecretService teeChallengeMeasuredSecretService,
-                               MeasuredSecretService ethereumCredentialsMeasuredSecretService) {
+    public TeeChallengeService(final TeeChallengeRepository teeChallengeRepository,
+                               final EncryptionService encryptionService,
+                               final IexecHubService iexecHubService,
+                               final MeasuredSecretService teeChallengeMeasuredSecretService,
+                               final MeasuredSecretService ethereumCredentialsMeasuredSecretService) {
         this.teeChallengeRepository = teeChallengeRepository;
         this.encryptionService = encryptionService;
+        this.iexecHubService = iexecHubService;
         this.teeChallengesMeasuredSecretService = teeChallengeMeasuredSecretService;
         this.ethereumCredentialsMeasuredSecretService = ethereumCredentialsMeasuredSecretService;
     }
@@ -54,7 +60,8 @@ public class TeeChallengeService {
 
         // otherwise create it
         try {
-            TeeChallenge teeChallenge = new TeeChallenge(taskId);
+            final long finalDeadline = iexecHubService.getTaskDescription(taskId).getFinalDeadline();
+            TeeChallenge teeChallenge = new TeeChallenge(taskId, Instant.ofEpochMilli(finalDeadline));
             encryptChallengeKeys(teeChallenge);
             teeChallenge = teeChallengeRepository.save(teeChallenge);
             teeChallengesMeasuredSecretService.newlyAddedSecret();
@@ -87,5 +94,17 @@ public class TeeChallengeService {
             String privateKey = encryptionService.decrypt(credentials.getPrivateKey());
             credentials.setPlainTextPrivateKey(privateKey);
         }
+    }
+
+    /**
+     * Clean expired tasks challenges at regular intervals.
+     * <p>
+     * The interval between two consecutive executions is based on the {@code @Scheduled} annotation
+     * and its {@code cron} attribute.
+     */
+    @Scheduled(cron = "${tee.challenge.cleanup.cron}")
+    void cleanExpiredTasksTeeChallenges() {
+        log.debug("cleanExpiredTasksTeeChallenges");
+        teeChallengeRepository.deleteByFinalDeadlineBefore(Instant.now());
     }
 }

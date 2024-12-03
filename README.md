@@ -65,6 +65,7 @@ To support:
 | `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | `8081` | `8080` |
 | `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` | `localhost` |
 | `IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT`|  Secret provisioner server port for retrieving secrets from attested enclaves. | Positive integer | `18765` | `4433` |
+| `IEXEC_TEE_CHALLENGE_CLEANUP_CRON` | Cron expression to configure TEE challenges cleanup policy. | String | `@hourly` | `@hourly` |
 | `IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage of TEE tasks. | String | | |
 | `IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT` | Fingerprint (aka mrenclave) of the TEE enabled worker pre-compute image. | String | | |
 | `IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB` | Required heap size for a worker pre-compute enclave (in Giga Bytes). | Positive integer | `3` | `3` |

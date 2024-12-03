@@ -47,6 +47,8 @@ import org.springframework.http.ResponseEntity;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
 
+import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -241,7 +243,7 @@ class TeeControllerTests {
     }
 
     @Test
-    void shouldGenerateTeeChallenge() throws Exception {
+    void shouldGenerateTeeChallenge() throws GeneralSecurityException {
         final WorkerpoolAuthorization workerpoolAuthorization = WorkerpoolAuthorization
                 .builder()
                 .chainTaskId(TASK_ID)
@@ -249,7 +251,7 @@ class TeeControllerTests {
                 .workerWallet("")
                 .signature(new Signature(AUTHORIZATION))
                 .build();
-        final TeeChallenge teeChallenge = new TeeChallenge(TASK_ID);
+        final TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, Instant.now().plusMillis(1000));
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
         when(teeChallengeService.getOrCreate(TASK_ID, false)).thenReturn(Optional.of(teeChallenge));
