@@ -161,7 +161,7 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToRestoreWhenAesKeyFileMissing() throws IOException {
+    void shouldFailToRestoreWhenAesKeyFileMissing() {
         final String backupName = "backup.sql";
         final String backupPath = tempStorageLocation.getPath();
         final File backupAesKeyFile = new File(backupPath + "/" + backupName + AdminService.AES_KEY_FILENAME_EXTENSION);
@@ -177,7 +177,7 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToRestoreWhenSwitchPermissionToWriteOnAesKeyFileFail() throws IOException {
+    void shouldFailToRestoreWhenSwitchPermissionToWriteOnAesKeyFileFail() {
         final EncryptionService encryptionServiceSpy = Mockito.spy(new EncryptionService(
                 new EncryptionConfiguration(tempDir.getAbsolutePath() + "/aes.key")));
         Mockito.doReturn(false).when(encryptionServiceSpy).setWritePermissions();
@@ -215,7 +215,7 @@ class AdminServiceTests {
 
     // region delete-backup
     @Test
-    void shouldDeleteBackup() throws IOException {
+    void shouldDeleteBackup() {
         final String backupFileName = "backup.sql";
         final File backupDatabaseFile = new File(tempStorageLocation.getPath() + "/" + backupFileName);
         final File backupAesKeyFile = new File(tempStorageLocation.getPath() + "/" + backupFileName + AdminService.AES_KEY_FILENAME_EXTENSION);
@@ -308,7 +308,7 @@ class AdminServiceTests {
     }
 
     @Test
-    void shouldFailToCopyWhenAesKeyDestinationFileAlreadyExist() throws IOException {
+    void shouldFailToCopyWhenAesKeyDestinationFileAlreadyExist() {
         final String validStorageLocation = tempStorageLocation.getPath();
         final String validBackupFileName = "backup.sql";
         adminService.createBackupFile(validStorageLocation, validBackupFileName);

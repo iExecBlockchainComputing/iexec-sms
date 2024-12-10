@@ -161,7 +161,7 @@ public class TeeSessionTestUtils {
         if (expected instanceof Map) {
             Map<?, ?> actualMap = (Map<?, ?>) expected;
             Map<?, ?> expectedMap = (Map<?, ?>) actual;
-            actualMap.keySet().forEach((key) -> {
+            actualMap.keySet().forEach(key -> {
                 final Object expectedObject = expectedMap.get(key);
                 final Object actualObject = actualMap.get(key);
                 log.info("Checking expected map contains valid '{}' key [expected value:{}, actual value:{}]", key, expectedObject, actualObject);

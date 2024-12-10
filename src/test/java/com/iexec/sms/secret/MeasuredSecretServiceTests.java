@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2023-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,22 @@ package com.iexec.sms.secret;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+@ExtendWith(MockitoExtension.class)
 class MeasuredSecretServiceTests {
     private static final String SECRETS_TYPE = "tests_secrets";
     private static final String METRICS_PREFIX = "iexec.sms.secrets.tests_secrets.";
@@ -53,8 +55,6 @@ class MeasuredSecretServiceTests {
 
         meterRegistry = new SimpleMeterRegistry();
         Metrics.globalRegistry.add(meterRegistry);
-
-        MockitoAnnotations.openMocks(this);
 
         this.measuredSecretService = new MeasuredSecretService(
                 SECRETS_TYPE,
@@ -88,7 +88,7 @@ class MeasuredSecretServiceTests {
         for (int i = 0; i < cachedSecretsCount; i++) {
             cacheSecretService.putSecretExistenceInCache("secret-key-" + i, true);
         }
-        Awaitility.await()
+        await()
                 .timeout(5, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(measuredSecretService.getCachedSecretsCount()).isEqualTo(cachedSecretsCount));
     }
@@ -98,13 +98,13 @@ class MeasuredSecretServiceTests {
         MeasuredSecretService measuredSecretServiceWithNullCache = new MeasuredSecretService(
                 SECRETS_TYPE,
                 METRICS_PREFIX,
-                () -> count.get(),
+                count::get,
                 () -> 0L,
                 Executors.newSingleThreadScheduledExecutor(),
                 1);
         measuredSecretServiceWithNullCache.init();
 
-        Awaitility.await().atLeast(5, TimeUnit.SECONDS);
+        await().atLeast(5, TimeUnit.SECONDS);
         assertThat(measuredSecretService.getCachedSecretsCount()).isZero();
     }
 
@@ -121,7 +121,7 @@ class MeasuredSecretServiceTests {
         count.set(storedCount);
 
         // The value requires at least 1 second to be updated by the scheduled executor
-        Awaitility.await()
+        await()
                 .timeout(5, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(measuredSecretService.getStoredSecretsCount()).isEqualTo(storedCount));
     }
@@ -131,7 +131,7 @@ class MeasuredSecretServiceTests {
         this.shouldThrowDatabaseAccessException = true;
 
         // The value requires at least 1 second to be updated by the scheduled executor
-        Awaitility.await()
+        await()
                 .timeout(5, TimeUnit.SECONDS)
                 .untilAsserted(() -> assertThat(measuredSecretService.getStoredSecretsCount()).isEqualTo(-1));
     }
