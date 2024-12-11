@@ -19,14 +19,13 @@ package com.iexec.sms.secret.compute;
 import com.iexec.common.web.ApiResponseBody;
 import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.authorization.AuthorizationService;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -34,8 +33,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AppComputeSecretControllerTest {
     private static final String AUTHORIZATION = "authorization";
     private static final String COMMON_SECRET_VALUE = "I'm a secret.";
@@ -53,15 +54,10 @@ class AppComputeSecretControllerTest {
     @InjectMocks
     AppComputeSecretController appComputeSecretController;
 
-    @BeforeEach
-    void beforeEach() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     // region addAppDeveloperAppComputeSecret
 
     @Test
-    void shouldAddAppDeveloperSecret() {
+    void shouldCallAddApplicationDeveloperAppComputeSecret() {
         final String appAddress = createEthereumAddress();
         final String secretValue = COMMON_SECRET_VALUE;
 
@@ -75,7 +71,31 @@ class AppComputeSecretControllerTest {
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        verify(teeTaskComputeSecretService)
+                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
+    }
+
+    // endregion
+
+    // region addApplicationDeveloperAppComputeSecret
+
+    @Test
+    void shouldAddAppDeveloperSecret() {
+        final String appAddress = createEthereumAddress();
+        final String secretValue = COMMON_SECRET_VALUE;
+
+        requireAuthorizedAppDeveloper(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
+        when(teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue))
+                .thenReturn(true);
+
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addApplicationDeveloperAppComputeSecret(
+                AUTHORIZATION,
+                appAddress,
+                secretValue
+        );
+
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
     }
@@ -90,13 +110,13 @@ class AppComputeSecretControllerTest {
         when(authorizationService.isSignedByOwner(CHALLENGE, AUTHORIZATION, appAddress))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addApplicationDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 appAddress,
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(INVALID_AUTHORIZATION_PAYLOAD));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(INVALID_AUTHORIZATION_PAYLOAD));
 
         verify(teeTaskComputeSecretService, never())
                 .encryptAndSaveSecret(any(), any(), any(), any(), any(), any());
@@ -111,13 +131,13 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue))
                 .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addApplicationDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 appAddress,
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).body(createErrorResponse("Secret already exists")));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).body(createErrorResponse("Secret already exists")));
 
         verify(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(any(), any(), any(), any(), any(), any());
@@ -129,16 +149,14 @@ class AppComputeSecretControllerTest {
         final String secretValue = TOO_LONG_SECRET_VALUE;
 
         requireAuthorizedAppDeveloper(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX))
-                .thenReturn(false);
 
-        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addApplicationDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 appAddress,
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(createErrorResponse("Secret size should not exceed 4 Kb")));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(createErrorResponse("Secret size should not exceed 4 Kb")));
 
         verifyNoInteractions(teeTaskComputeSecretService);
     }
@@ -152,13 +170,13 @@ class AppComputeSecretControllerTest {
         when(teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue))
                 .thenReturn(true);
 
-        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
+        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addApplicationDeveloperAppComputeSecret(
                 AUTHORIZATION,
                 appAddress,
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
     }
@@ -166,8 +184,30 @@ class AppComputeSecretControllerTest {
     // endregion
 
     // region isAppDeveloperAppComputeSecretPresent
+
+    @ParameterizedTest
+    @ValueSource(strings = {"bad-secret-index", "-1"})
+    void isAppDeveloperAppComputeSecretPresentShouldFail(final String secretIndex) {
+        final String appAddress = createEthereumAddress();
+        final ResponseEntity<ApiResponseBody<String, List<String>>> result =
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
+        assertThat(result).isEqualTo(ResponseEntity.badRequest()
+                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
+    }
+
     @Test
-    void appDeveloperSecretShouldExist() {
+    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexGreaterThanOne() {
+        final String secretIndex = "2";
+        final String appAddress = createEthereumAddress();
+        final ResponseEntity<ApiResponseBody<String, List<String>>> result =
+                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
+        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
+    }
+
+    @Test
+    void shouldCallIsApplicationDeveloperAppComputeSecretPresent() {
         final String appAddress = createEthereumAddress();
         when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX))
                 .thenReturn(true);
@@ -175,7 +215,26 @@ class AppComputeSecretControllerTest {
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX);
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        verify(teeTaskComputeSecretService)
+                .isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX);
+        verifyNoInteractions(authorizationService);
+    }
+
+    // endregion
+
+    // region isApplicationDeveloperAppComputeSecretPresent
+
+    @Test
+    void appDeveloperSecretShouldExist() {
+        final String appAddress = createEthereumAddress();
+        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX))
+                .thenReturn(true);
+
+        ResponseEntity<ApiResponseBody<String, List<String>>> result =
+                appComputeSecretController.isApplicationDeveloperAppComputeSecretPresent(appAddress);
+
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService)
                 .isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX);
         verifyNoInteractions(authorizationService);
@@ -188,45 +247,14 @@ class AppComputeSecretControllerTest {
                 .thenReturn(false);
 
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX);
+                appComputeSecretController.isApplicationDeveloperAppComputeSecretPresent(appAddress);
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
         verify(teeTaskComputeSecretService)
                 .isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX);
         verifyNoInteractions(authorizationService);
     }
 
-    @Test
-    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexNotANumber() {
-        final String secretIndex = "bad-secret-index";
-        final String appAddress = createEthereumAddress();
-        ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
-                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
-        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
-    }
-
-    @Test
-    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexLowerThanZero() {
-        final String secretIndex = "-1";
-        final String appAddress = createEthereumAddress();
-        ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
-                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
-        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
-    }
-
-    @Test
-    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexGreaterThanOne() {
-        final String secretIndex = "2";
-        final String appAddress = createEthereumAddress();
-        ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
-        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
-    }
     // endregion
 
     // region addRequesterAppComputeSecret
@@ -247,7 +275,7 @@ class AppComputeSecretControllerTest {
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(authorizationService)
                 .getChallengeForSetRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
         verify(authorizationService)
@@ -274,7 +302,7 @@ class AppComputeSecretControllerTest {
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(INVALID_AUTHORIZATION_PAYLOAD));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(INVALID_AUTHORIZATION_PAYLOAD));
 
         verify(authorizationService)
                 .getChallengeForSetRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
@@ -300,7 +328,7 @@ class AppComputeSecretControllerTest {
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).body(createErrorResponse("Secret already exists")));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.CONFLICT).body(createErrorResponse("Secret already exists")));
 
         verify(authorizationService)
                 .getChallengeForSetRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
@@ -327,7 +355,7 @@ class AppComputeSecretControllerTest {
                 COMMON_SECRET_VALUE
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+        assertThat(result).isEqualTo(ResponseEntity.badRequest()
                 .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_KEY_FORMAT_MSG)));
         verify(authorizationService)
                 .getChallengeForSetRequesterAppComputeSecret(requesterAddress, secretKey, COMMON_SECRET_VALUE);
@@ -351,7 +379,7 @@ class AppComputeSecretControllerTest {
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest().body(createErrorResponse("Secret size should not exceed 4 Kb")));
+        assertThat(result).isEqualTo(ResponseEntity.badRequest().body(createErrorResponse("Secret size should not exceed 4 Kb")));
 
         verify(authorizationService)
                 .getChallengeForSetRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
@@ -378,7 +406,7 @@ class AppComputeSecretControllerTest {
                 secretValue
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(authorizationService)
                 .getChallengeForSetRequesterAppComputeSecret(requesterAddress, secretKey, secretValue);
         verify(authorizationService)
@@ -399,7 +427,7 @@ class AppComputeSecretControllerTest {
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isRequesterAppComputeSecretPresent(requesterAddress, secretKey);
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.noContent().build());
+        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, secretKey);
     }
@@ -414,7 +442,7 @@ class AppComputeSecretControllerTest {
         ResponseEntity<ApiResponseBody<String, List<String>>> result =
                 appComputeSecretController.isRequesterAppComputeSecretPresent(requesterAddress, secretKey);
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
+        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
         verify(teeTaskComputeSecretService, times(1))
                 .isSecretPresent(OnChainObjectType.APPLICATION, "", SecretOwnerRole.REQUESTER, requesterAddress, secretKey);
     }
@@ -431,7 +459,7 @@ class AppComputeSecretControllerTest {
                 secretKey
         );
 
-        Assertions.assertThat(result).isEqualTo(ResponseEntity.badRequest()
+        assertThat(result).isEqualTo(ResponseEntity.badRequest()
                 .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_KEY_FORMAT_MSG)));
         verifyNoInteractions(teeTaskComputeSecretService);
     }

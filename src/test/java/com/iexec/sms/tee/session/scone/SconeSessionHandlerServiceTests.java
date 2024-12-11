@@ -23,11 +23,11 @@ import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.CasClient;
 import com.iexec.sms.tee.session.scone.cas.CasConfiguration;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class SconeSessionHandlerServiceTests {
 
     private static final String CAS_URL = "casUrl";
@@ -48,45 +49,23 @@ class SconeSessionHandlerServiceTests {
     @InjectMocks
     private SconeSessionHandlerService sessionHandlerService;
 
-    @BeforeEach
-    void beforeEach() {
-        MockitoAnnotations.openMocks(this);
+    @Test
+    void shouldBuildAndPostSession() throws TeeSessionGenerationException {
+        TaskDescription taskDescription = TaskDescription.builder().build();
+        TeeSessionRequest request = createSessionRequest(taskDescription);
+        SconeSession casSession = mock(SconeSession.class);
+        when(casSession.toString()).thenReturn("sessionContent");
+        when(sessionService.generateSession(request)).thenReturn(casSession);
+        when(apiClient.postSession(casSession.toString()))
+                .thenReturn(ResponseEntity.created(null).body("sessionId"));
         when(casConfiguration.getEnclaveHost()).thenReturn(CAS_URL);
-    }
-
-    @Test
-    void shouldBuildAndPostSessionWithLogs()
-            throws TeeSessionGenerationException {
-        TaskDescription taskDescription = TaskDescription.builder().build();
-        TeeSessionRequest request = createSessionRequest(taskDescription);
-        SconeSession casSession = mock(SconeSession.class);
-        when(casSession.toString()).thenReturn("sessionContent");
-        when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(apiClient.postSession(casSession.toString()))
-                .thenReturn(ResponseEntity.created(null).body("sessionId"));
 
         assertEquals(CAS_URL,
                 sessionHandlerService.buildAndPostSession(request));
     }
 
     @Test
-    void shouldBuildAndPostSessionWithoutLogs()
-            throws TeeSessionGenerationException {
-        TaskDescription taskDescription = TaskDescription.builder().build();
-        TeeSessionRequest request = createSessionRequest(taskDescription);
-        SconeSession casSession = mock(SconeSession.class);
-        when(casSession.toString()).thenReturn("sessionContent");
-        when(sessionService.generateSession(request)).thenReturn(casSession);
-        when(apiClient.postSession(casSession.toString()))
-                .thenReturn(ResponseEntity.created(null).body("sessionId"));
-
-        assertEquals(CAS_URL,
-                sessionHandlerService.buildAndPostSession(request));
-    }
-
-    @Test
-    void shouldNotBuildAndPostSessionSinceBuildSessionFailed()
-            throws TeeSessionGenerationException {
+    void shouldNotBuildAndPostSessionSinceBuildSessionFailed() throws TeeSessionGenerationException {
         TeeSessionRequest request = TeeSessionRequest.builder().build();
         TeeSessionGenerationException teeSessionGenerationException = new TeeSessionGenerationException(
                 TeeSessionGenerationError.SECURE_SESSION_GENERATION_FAILED,
@@ -99,8 +78,7 @@ class SconeSessionHandlerServiceTests {
     }
 
     @Test
-    void shouldNotBuildAndPostSessionSincePostSessionFailed()
-            throws TeeSessionGenerationException {
+    void shouldNotBuildAndPostSessionSincePostSessionFailed() throws TeeSessionGenerationException {
         TaskDescription taskDescription = TaskDescription.builder().build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
         SconeSession casSession = mock(SconeSession.class);
@@ -113,8 +91,7 @@ class SconeSessionHandlerServiceTests {
     }
 
     @Test
-    void shouldNotBuildAndPostSessionSinceNoResponse()
-            throws TeeSessionGenerationException {
+    void shouldNotBuildAndPostSessionSinceNoResponse() throws TeeSessionGenerationException {
         TaskDescription taskDescription = TaskDescription.builder().build();
         TeeSessionRequest request = createSessionRequest(taskDescription);
         SconeSession casSession = mock(SconeSession.class);

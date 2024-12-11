@@ -18,16 +18,15 @@ package com.iexec.sms.admin;
 
 import com.iexec.sms.encryption.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -40,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
@@ -47,9 +47,11 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 @Slf4j
+@ExtendWith(MockitoExtension.class)
 class AdminControllerTests {
 
     private static final String STORAGE_PATH = "/storage";
@@ -64,51 +66,38 @@ class AdminControllerTests {
     @InjectMocks
     private AdminController adminController;
 
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     // region backup
     @Test
     void shouldReturnCreatedWhenBackupSuccess() {
-        Mockito.doReturn(true).when(adminService).createBackupFile(any(), any());
+        doReturn(true).when(adminService).createBackupFile(any(), any());
         assertEquals(HttpStatus.CREATED, adminController.createBackup().getStatusCode());
     }
 
     @Test
     void shouldReturnErrorWhenBackupFail() {
-        Mockito.doReturn(false).when(adminService).createBackupFile(any(), any());
+        doReturn(false).when(adminService).createBackupFile(any(), any());
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.createBackup().getStatusCode());
     }
 
     @Test
     void shouldReturnTooManyRequestWhenBackupProcessIsAlreadyRunning() throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
-            @Override
-            public boolean createBackupFile(String storageLocation, String backupFileName) {
-                try {
-                    log.info("Long createDatabaseBackupFile action is running ...");
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return true;
-            }
-        }, "");
-
+        final CountDownLatch done = new CountDownLatch(1);
+        final CountDownLatch ready = new CountDownLatch(1);
+        final AdminController adminControllerWithLongAction = provideAdminControllerWithDummyService(ready, done);
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
 
         Thread firstThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.createBackup()));
 
         firstThread.start();
+        ready.await();
+
         secondThread.start();
         responses.add(adminControllerWithLongAction.createBackup());
-
         secondThread.join();
-        firstThread.join();
 
+        done.countDown();
+        firstThread.join();
 
         long code201 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.CREATED).count();
         long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
@@ -135,7 +124,6 @@ class AdminControllerTests {
 
     @Test
     void testInternalServerErrorOnReplicate() {
-        when(adminService.copyBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(RuntimeException.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, adminController.replicateBackup(STORAGE_PATH, FILE_NAME).getStatusCode());
     }
 
@@ -149,25 +137,14 @@ class AdminControllerTests {
     @Test
     void testNotFoundOnReplicate() {
         final String storageID = convertToHex(STORAGE_PATH);
-        when(adminService.copyBackupFile(STORAGE_PATH, FILE_NAME, STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
         assertEquals(HttpStatus.NOT_FOUND, adminController.replicateBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
     void testTooManyRequestOnReplicate(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
-            @Override
-            public boolean copyBackupFile(String backupStoragePath, String backupFileName, String replicateStoragePath, String replicateFileName) {
-                try {
-                    log.info("Long copyOrReplicateBackupFileFromStorageToStorage action is running ...");
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return true;
-            }
-        }, "");
-
+        final CountDownLatch done = new CountDownLatch(1);
+        final CountDownLatch ready = new CountDownLatch(1);
+        final AdminController adminControllerWithLongAction = provideAdminControllerWithDummyService(ready, done);
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
 
@@ -175,12 +152,14 @@ class AdminControllerTests {
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME)));
 
         firstThread.start();
+        ready.await();
+
         secondThread.start();
         responses.add(adminControllerWithLongAction.replicateBackup(storageID, FILE_NAME));
-
         secondThread.join();
-        firstThread.join();
 
+        done.countDown();
+        firstThread.join();
 
         long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
         long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
@@ -221,25 +200,14 @@ class AdminControllerTests {
     @Test
     void testNotFoundOnRestore() {
         final String storageID = convertToHex(STORAGE_PATH);
-        when(adminService.restoreDatabaseFromBackupFile(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
         assertEquals(HttpStatus.NOT_FOUND, adminController.restoreBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
     void testTooManyRequestOnRestore(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
-            @Override
-            public boolean restoreDatabaseFromBackupFile(String storageId, String fileName) {
-                try {
-                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return true;
-            }
-        }, "");
-
+        final CountDownLatch done = new CountDownLatch(1);
+        final CountDownLatch ready = new CountDownLatch(1);
+        final AdminController adminControllerWithLongAction = provideAdminControllerWithDummyService(ready, done);
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
 
@@ -247,12 +215,14 @@ class AdminControllerTests {
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.restoreBackup(storageID, FILE_NAME)));
 
         firstThread.start();
+        ready.await();
+
         secondThread.start();
         responses.add(adminControllerWithLongAction.restoreBackup(storageID, FILE_NAME));
-
         secondThread.join();
-        firstThread.join();
 
+        done.countDown();
+        firstThread.join();
 
         long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
         long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
@@ -316,25 +286,14 @@ class AdminControllerTests {
     @Test
     void testNotFoundOnDelete() {
         final String storageID = convertToHex(STORAGE_PATH);
-        when(adminService.deleteBackupFileFromStorage(STORAGE_PATH, FILE_NAME)).thenThrow(FileSystemNotFoundException.class);
         assertEquals(HttpStatus.NOT_FOUND, adminController.deleteBackup(storageID, FILE_NAME).getStatusCode());
     }
 
     @Test
     void testTooManyRequestOnDelete(@TempDir Path tempDir) throws InterruptedException {
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
-            @Override
-            public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
-                try {
-                    log.info("Long restoreDatabaseFromBackupFile action is running ...");
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return true;
-            }
-        }, "");
-
+        final CountDownLatch done = new CountDownLatch(1);
+        final CountDownLatch ready = new CountDownLatch(1);
+        final AdminController adminControllerWithLongAction = provideAdminControllerWithDummyService(ready, done);
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String storageID = convertToHex(tempDir.toString());
 
@@ -342,12 +301,14 @@ class AdminControllerTests {
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME)));
 
         firstThread.start();
+        ready.await();
+
         secondThread.start();
         responses.add(adminControllerWithLongAction.deleteBackup(storageID, FILE_NAME));
-
         secondThread.join();
-        firstThread.join();
 
+        done.countDown();
+        firstThread.join();
 
         long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
         long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
@@ -395,20 +356,9 @@ class AdminControllerTests {
 
     @Test
     void testTooManyRequestOnCopy(@TempDir Path tempDir) throws InterruptedException {
-
-        AdminController adminControllerWithLongAction = new AdminController(new AdminService(encryptionService, "", "", "", "") {
-            @Override
-            public boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
-                try {
-                    log.info("Long copyOrReplicateBackupFileFromStorageToStorage action is running ...");
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                return true;
-            }
-        }, "");
-
+        final CountDownLatch done = new CountDownLatch(1);
+        final CountDownLatch ready = new CountDownLatch(1);
+        final AdminController adminControllerWithLongAction = provideAdminControllerWithDummyService(ready, done);
         final List<ResponseEntity<Void>> responses = Collections.synchronizedList(new ArrayList<>(3));
         final String sourceStorageID = convertToHex(tempDir.toString());
 
@@ -416,12 +366,14 @@ class AdminControllerTests {
         Thread secondThread = new Thread(() -> responses.add(adminControllerWithLongAction.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql")));
 
         firstThread.start();
+        ready.await();
+
         secondThread.start();
         responses.add(adminControllerWithLongAction.copyBackup(sourceStorageID, sourceStorageID, FILE_NAME, "backup2.sql"));
-
         secondThread.join();
-        firstThread.join();
 
+        done.countDown();
+        firstThread.join();
 
         long code200 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.OK).count();
         long code429 = responses.stream().filter(element -> element.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS).count();
@@ -442,6 +394,41 @@ class AdminControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, adminController.copyBackup(sourceStorageID, destinationStorageID, sourceFileName, "NOT_CONCERNED").getStatusCode());
     }
     // endregion
+
+    private AdminController provideAdminControllerWithDummyService(final CountDownLatch ready, final CountDownLatch done) {
+        return new AdminController(new AdminService(encryptionService, "", "", "", "") {
+            private boolean doLongCompute(final String message) {
+                try {
+                    log.info(message);
+                    ready.countDown();
+                    done.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return true;
+            }
+
+            @Override
+            public boolean createBackupFile(String storageLocation, String backupFileName) {
+                return doLongCompute("Long createBackupFile action is running ...");
+            }
+
+            @Override
+            public boolean restoreDatabaseFromBackupFile(String storageId, String fileName) {
+                return doLongCompute("Long restoreDatabaseFromBackupFile action is running ...");
+            }
+
+            @Override
+            public boolean deleteBackupFileFromStorage(String storageLocation, String backupFileName) {
+                return doLongCompute("Long deleteBackupFileFromStorage action is running ...");
+            }
+
+            @Override
+            public boolean copyBackupFile(String sourceStorageLocation, String sourceBackupFileName, String destinationStorageLocation, String destinationBackupFileName) {
+                return doLongCompute("Long copyBackupFile action is running ...");
+            }
+        }, "");
+    }
 
     private static Stream<Arguments> provideBadRequestParameters() {
         return Stream.of(
