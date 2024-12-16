@@ -16,6 +16,7 @@
 
 package com.iexec.sms.tee.session;
 
+import com.iexec.common.utils.FileHashUtils;
 import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
@@ -69,9 +70,9 @@ public class TeeSessionTestUtils {
     public static final String TEE_CHALLENGE_PRIVATE_KEY = "teeChallengePrivateKey";
     // input files
     public static final String INPUT_FILE_URL_1 = "http://host/file1";
-    public static final String INPUT_FILE_NAME_1 = "file1";
+    public static final String INPUT_FILE_NAME_1 = FileHashUtils.createFileNameFromUri(INPUT_FILE_URL_1);
     public static final String INPUT_FILE_URL_2 = "http://host/file2";
-    public static final String INPUT_FILE_NAME_2 = "file2";
+    public static final String INPUT_FILE_NAME_2 = FileHashUtils.createFileNameFromUri(INPUT_FILE_URL_2);
 
     //region utils
     public static TeeTaskComputeSecret getApplicationDeveloperSecret(String appAddress) {
