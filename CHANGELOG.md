@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
   is specified in deal parameters. (#273)
 - Configure the SMS at startup to generate Scone sessions in Hardware or MAA mode. (#275)
 - Add configurable cron job to delete expired tasks TEE challenges and Ethereum credentials. (#278)
+- Use new `FileHashUtils` API. (#280)
 
 ### Quality
 
