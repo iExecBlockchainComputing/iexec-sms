@@ -118,11 +118,10 @@ public class TeeChallengeService {
      */
     @Scheduled(cron = "#{teeChallengeCleanupConfiguration.cron}")
     void cleanExpiredTasksTeeChallenges() {
-        log.debug("cleanExpiredTasksTeeChallenges");
         final long start = System.currentTimeMillis();
         teeChallengeRepository.deleteByFinalDeadlineBefore(Instant.now());
         final int remaining = teeChallengeRepository.countByFinalDeadlineIsNull();
-        log.debug("cleanExpiredTasksTeeChallenges [duration:{}ms, remaining:{}]",
+        log.info("cleanExpiredTasksTeeChallenges [duration:{}ms, remaining:{}]",
                 System.currentTimeMillis() - start, remaining);
         if (remaining == 0) {
             return;
@@ -131,7 +130,7 @@ public class TeeChallengeService {
                 "UPDATE \"tee_challenge\" SET \"final_deadline\" = ? WHERE \"final_deadline\" IS NULL FETCH FIRST ? ROWS ONLY",
                 Instant.now().plus(teeChallengeCleanupConfiguration.getMissingDeadlineRetentionDuration()),
                 teeChallengeCleanupConfiguration.getMissingDeadlineBatchSize());
-        log.debug("cleanExpiredTasksTeeChallenges [duration:{}ms, updated:{}]",
+        log.info("cleanExpiredTasksTeeChallenges [duration:{}ms, updated:{}]",
                 System.currentTimeMillis() - start, updated);
     }
 }
