@@ -51,3 +51,5 @@ springdoc:
 
 tee:
   challenge.cleanup.cron: ${IEXEC_TEE_CHALLENGE_CLEANUP_CRON:@hourly}
+  challenge.cleanup.missing-deadline.batch-size: ${IEXEC_TEE_CHALLENGE_CLEANUP_BATCH_SIZE:500}
+  challenge.cleanup.missing-deadline.retention-duration: ${IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_TIME:P5D}
