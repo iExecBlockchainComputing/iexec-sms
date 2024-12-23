@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @Import(ProjectInfoAutoConfiguration.class)
-class OpenApiConfigTest {
+class OpenApiConfigTests {
 
     @Autowired
     private BuildProperties buildProperties;

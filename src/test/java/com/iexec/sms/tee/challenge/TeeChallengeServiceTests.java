@@ -20,6 +20,7 @@ import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
+import com.iexec.sms.tee.config.TeeChallengeCleanupConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +28,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.persistence.EntityManager;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -46,6 +50,10 @@ class TeeChallengeServiceTests {
 
     private final Instant finalDeadline = Instant.now().minusMillis(1000);
 
+    @Autowired
+    private EntityManager entityManager;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private EthereumCredentialsRepository ethereumCredentialsRepository;
     @Autowired
@@ -68,12 +76,16 @@ class TeeChallengeServiceTests {
     @BeforeEach
     void beforeEach() {
         teeChallengeRepository.deleteAll();
+        final TeeChallengeCleanupConfiguration cleanupConfiguration = new TeeChallengeCleanupConfiguration(
+                "@hourly", 1, Duration.ofMinutes(1));
         teeChallengeService = new TeeChallengeService(
+                jdbcTemplate,
                 teeChallengeRepository,
                 encryptionService,
                 iexecHubService,
                 teeChallengeMeasuredSecretService,
-                ethereumCredentialsMeasuredSecretService
+                ethereumCredentialsMeasuredSecretService,
+                cleanupConfiguration
         );
     }
 
@@ -178,7 +190,7 @@ class TeeChallengeServiceTests {
     // region cleanExpiredChallenge
     @Test
     void shouldPurgeExpiredChallenge() throws GeneralSecurityException {
-        TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
+        final TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         teeChallengeRepository.save(encryptedTeeChallengeStub);
 
         teeChallengeService.cleanExpiredTasksTeeChallenges();
@@ -188,15 +200,26 @@ class TeeChallengeServiceTests {
     }
 
     @Test
-    void shouldNotPurgeExpiredChallenge() throws GeneralSecurityException {
-        TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, null);
+    void shouldSetChallengeFinalDeadlineWhenUnset() throws GeneralSecurityException {
+        final TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, null);
         teeChallenge.getCredentials().setEncryptedPrivateKey(ENC_PRIVATE);
-        teeChallengeRepository.save(teeChallenge);
+        final TeeChallenge savedChallenge = teeChallengeRepository.save(teeChallenge);
+
+        assertThat(teeChallengeRepository.countByFinalDeadlineIsNull()).isOne();
 
         teeChallengeService.cleanExpiredTasksTeeChallenges();
+        // refresh entity to update cache with new database state
+        entityManager.refresh(savedChallenge);
 
         assertThat(teeChallengeRepository.count()).isOne();
         assertThat(ethereumCredentialsRepository.count()).isOne();
+
+        assertThat(teeChallengeRepository.countByFinalDeadlineIsNull()).isZero();
+        final TeeChallenge currentChallenge = teeChallengeRepository.findByTaskId(TASK_ID).orElseThrow();
+        assertThat(currentChallenge).isNotNull();
+        assertThat(currentChallenge.getFinalDeadline())
+                .isNotNull()
+                .isAfter(Instant.now());
     }
     // endregion
 }

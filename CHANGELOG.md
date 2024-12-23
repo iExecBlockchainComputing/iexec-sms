@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Configure the SMS at startup to generate Scone sessions in Hardware or MAA mode. (#275)
 - Add configurable cron job to delete expired tasks TEE challenges and Ethereum credentials. (#278)
 - Use new `FileHashUtils` API. (#280)
+- When undefined, set final deadline after `retention-duration` for up to `batch-size` TEE challenges during cleanup. (#281)
 
 ### Quality
 
@@ -24,7 +25,7 @@ All notable changes to this project will be documented in this file.
 
 - Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#270)
 - Upgrade to Gradle 8.10.2. (#271)
-- Upgrade to `iexec-commons-poco` 4.1.0-NEXT-SNAPSHOT. (#272)
+- Upgrade to H2 database 2.2.224. (#281)
 
 ## [[8.6.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.6.0) 2024-06-18
 
