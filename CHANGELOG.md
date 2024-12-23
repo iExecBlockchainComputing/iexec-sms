@@ -26,6 +26,8 @@ All notable changes to this project will be documented in this file.
 - Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#270)
 - Upgrade to Gradle 8.10.2. (#271)
 - Upgrade to H2 database 2.2.224. (#281)
+- Upgrade to `iexec-commons-poco` 4.2.0. (#282)
+- Upgrade to `iexec-common` 8.6.0. (#282)
 
 ## [[8.6.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.6.0) 2024-06-18
 
