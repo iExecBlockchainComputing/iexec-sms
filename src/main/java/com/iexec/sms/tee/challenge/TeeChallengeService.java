@@ -116,7 +116,7 @@ public class TeeChallengeService {
      *
      * @see <a href="https://protocol.docs.iex.ec/key-concepts/pay-per-task-model>categories in protocol documentation</a>
      */
-    @Scheduled(cron = "#{teeChallengeCleanupConfiguration.cron}")
+    @Scheduled(cron = "${tee.challenge.cleanup.cron}")
     void cleanExpiredTasksTeeChallenges() {
         final long start = System.currentTimeMillis();
         teeChallengeRepository.deleteByFinalDeadlineBefore(Instant.now());
