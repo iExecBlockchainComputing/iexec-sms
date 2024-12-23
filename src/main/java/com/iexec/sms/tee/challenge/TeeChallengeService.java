@@ -129,7 +129,7 @@ public class TeeChallengeService {
         final int updated = jdbcTemplate.update(
                 "UPDATE \"tee_challenge\" SET \"final_deadline\" = ? WHERE \"final_deadline\" IS NULL FETCH FIRST ? ROWS ONLY",
                 Instant.now().plus(teeChallengeCleanupConfiguration.getMissingDeadlineRetentionDuration()),
-                teeChallengeCleanupConfiguration.getMissingDeadlineBatchSize());
+                teeChallengeCleanupConfiguration.getMissingDeadlineMaxBatchSize());
         log.info("cleanExpiredTasksTeeChallenges [duration:{}ms, updated:{}]",
                 System.currentTimeMillis() - start, updated);
     }

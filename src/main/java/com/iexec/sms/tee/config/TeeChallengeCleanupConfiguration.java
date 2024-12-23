@@ -27,6 +27,6 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "tee.challenge.cleanup")
 public class TeeChallengeCleanupConfiguration {
     String cron;
-    int missingDeadlineBatchSize;
+    int missingDeadlineMaxBatchSize;
     Duration missingDeadlineRetentionDuration;
 }
