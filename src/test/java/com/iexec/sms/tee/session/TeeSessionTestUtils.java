@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.iexec.sms.tee.session;
 
+import com.iexec.common.utils.FileHashUtils;
+import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.secret.compute.OnChainObjectType;
@@ -68,9 +70,9 @@ public class TeeSessionTestUtils {
     public static final String TEE_CHALLENGE_PRIVATE_KEY = "teeChallengePrivateKey";
     // input files
     public static final String INPUT_FILE_URL_1 = "http://host/file1";
-    public static final String INPUT_FILE_NAME_1 = "file1";
+    public static final String INPUT_FILE_NAME_1 = FileHashUtils.createFileNameFromUri(INPUT_FILE_URL_1);
     public static final String INPUT_FILE_URL_2 = "http://host/file2";
-    public static final String INPUT_FILE_NAME_2 = "file2";
+    public static final String INPUT_FILE_NAME_2 = FileHashUtils.createFileNameFromUri(INPUT_FILE_URL_2);
 
     //region utils
     public static TeeTaskComputeSecret getApplicationDeveloperSecret(String appAddress) {
@@ -107,11 +109,24 @@ public class TeeSessionTestUtils {
                 .taskDescription(taskDescription);
     }
 
+    public static DealParams.DealParamsBuilder createDealParams() {
+        return DealParams.builder()
+                .iexecArgs(ARGS)
+                .iexecInputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
+                .iexecResultEncryption(true)
+                .iexecResultStorageProvider(STORAGE_PROVIDER)
+                .iexecResultStorageProxy(STORAGE_PROXY)
+                .iexecSecrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2));
+    }
+
     public static TaskDescription.TaskDescriptionBuilder createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
-        String appAddress = createEthereumAddress();
-        String requesterAddress = createEthereumAddress();
-        String beneficiaryAddress = createEthereumAddress();
+        final String appAddress = createEthereumAddress();
+        final String requesterAddress = createEthereumAddress();
+        final String beneficiaryAddress = createEthereumAddress();
+        final String workerpoolAddress = createEthereumAddress();
+        final DealParams dealParams = createDealParams().build();
         return TaskDescription.builder()
+                .workerpoolOwner(workerpoolAddress)
                 .chainTaskId(TASK_ID)
                 .appUri(APP_URI)
                 .appAddress(appAddress)
@@ -122,12 +137,7 @@ public class TeeSessionTestUtils {
                 .datasetChecksum(DATASET_CHECKSUM)
                 .requester(requesterAddress)
                 .beneficiary(beneficiaryAddress)
-                .cmd(ARGS)
-                .inputFiles(List.of(INPUT_FILE_URL_1, INPUT_FILE_URL_2))
-                .isResultEncryption(true)
-                .resultStorageProvider(STORAGE_PROVIDER)
-                .resultStorageProxy(STORAGE_PROXY)
-                .secrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2))
+                .dealParams(dealParams)
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0);
@@ -152,7 +162,7 @@ public class TeeSessionTestUtils {
         if (expected instanceof Map) {
             Map<?, ?> actualMap = (Map<?, ?>) expected;
             Map<?, ?> expectedMap = (Map<?, ?>) actual;
-            actualMap.keySet().forEach((key) -> {
+            actualMap.keySet().forEach(key -> {
                 final Object expectedObject = expectedMap.get(key);
                 final Object actualObject = actualMap.get(key);
                 log.info("Checking expected map contains valid '{}' key [expected value:{}, actual value:{}]", key, expectedObject, actualObject);

@@ -16,30 +16,44 @@
 
 package com.iexec.sms.tee.challenge;
 
+import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
+import com.iexec.sms.tee.config.TeeChallengeCleanupConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class TeeChallengeService {
 
+    private final JdbcTemplate jdbcTemplate;
     private final TeeChallengeRepository teeChallengeRepository;
     private final EncryptionService encryptionService;
+    private final IexecHubService iexecHubService;
     private final MeasuredSecretService teeChallengesMeasuredSecretService;
     private final MeasuredSecretService ethereumCredentialsMeasuredSecretService;
+    private final TeeChallengeCleanupConfiguration teeChallengeCleanupConfiguration;
 
-    public TeeChallengeService(TeeChallengeRepository teeChallengeRepository,
-                               EncryptionService encryptionService,
-                               MeasuredSecretService teeChallengeMeasuredSecretService,
-                               MeasuredSecretService ethereumCredentialsMeasuredSecretService) {
+    public TeeChallengeService(final JdbcTemplate jdbcTemplate,
+                               final TeeChallengeRepository teeChallengeRepository,
+                               final EncryptionService encryptionService,
+                               final IexecHubService iexecHubService,
+                               final MeasuredSecretService teeChallengeMeasuredSecretService,
+                               final MeasuredSecretService ethereumCredentialsMeasuredSecretService,
+                               final TeeChallengeCleanupConfiguration teeChallengeCleanupConfiguration) {
+        this.jdbcTemplate = jdbcTemplate;
         this.teeChallengeRepository = teeChallengeRepository;
         this.encryptionService = encryptionService;
+        this.iexecHubService = iexecHubService;
         this.teeChallengesMeasuredSecretService = teeChallengeMeasuredSecretService;
         this.ethereumCredentialsMeasuredSecretService = ethereumCredentialsMeasuredSecretService;
+        this.teeChallengeCleanupConfiguration = teeChallengeCleanupConfiguration;
     }
 
     public Optional<TeeChallenge> getOrCreate(String taskId, boolean shouldDecryptKeys) {
@@ -54,7 +68,8 @@ public class TeeChallengeService {
 
         // otherwise create it
         try {
-            TeeChallenge teeChallenge = new TeeChallenge(taskId);
+            final long finalDeadline = iexecHubService.getTaskDescription(taskId).getFinalDeadline();
+            TeeChallenge teeChallenge = new TeeChallenge(taskId, Instant.ofEpochMilli(finalDeadline));
             encryptChallengeKeys(teeChallenge);
             teeChallenge = teeChallengeRepository.save(teeChallenge);
             teeChallengesMeasuredSecretService.newlyAddedSecret();
@@ -74,18 +89,48 @@ public class TeeChallengeService {
     }
 
     public void encryptChallengeKeys(TeeChallenge teeChallenge) {
-        EthereumCredentials credentials = teeChallenge.getCredentials();
+        final EthereumCredentials credentials = teeChallenge.getCredentials();
         if (!credentials.isEncrypted()) {
-            String encPrivateKey = encryptionService.encrypt(credentials.getPrivateKey());
+            final String encPrivateKey = encryptionService.encrypt(credentials.getPrivateKey());
             credentials.setEncryptedPrivateKey(encPrivateKey);
         }
     }
 
     public void decryptChallengeKeys(TeeChallenge teeChallenge) {
-        EthereumCredentials credentials = teeChallenge.getCredentials();
+        final EthereumCredentials credentials = teeChallenge.getCredentials();
         if (credentials.isEncrypted()) {
-            String privateKey = encryptionService.decrypt(credentials.getPrivateKey());
+            final String privateKey = encryptionService.decrypt(credentials.getPrivateKey());
             credentials.setPlainTextPrivateKey(privateKey);
         }
+    }
+
+    /**
+     * Clean expired tasks challenges at regular intervals.
+     * <p>
+     * The interval between two consecutive executions is based on the {@code @Scheduled} annotation
+     * and its {@code cron} attribute.
+     * <p>
+     * Look up for entries without deadlines in the database.
+     * If entries are found, set deadline to {@code retentionDuration} in the future
+     * for up to {@code batchSize} entries.
+     *
+     * @see <a href="https://protocol.docs.iex.ec/key-concepts/pay-per-task-model>categories in protocol documentation</a>
+     */
+    @Scheduled(cron = "${tee.challenge.cleanup.cron}")
+    void cleanExpiredTasksTeeChallenges() {
+        final long start = System.currentTimeMillis();
+        teeChallengeRepository.deleteByFinalDeadlineBefore(Instant.now());
+        final int remaining = teeChallengeRepository.countByFinalDeadlineIsNull();
+        log.info("cleanExpiredTasksTeeChallenges [duration:{}ms, remaining:{}]",
+                System.currentTimeMillis() - start, remaining);
+        if (remaining == 0) {
+            return;
+        }
+        final int updated = jdbcTemplate.update(
+                "UPDATE \"tee_challenge\" SET \"final_deadline\" = ? WHERE \"final_deadline\" IS NULL FETCH FIRST ? ROWS ONLY",
+                Instant.now().plus(teeChallengeCleanupConfiguration.getMissingDeadlineRetentionDuration()),
+                teeChallengeCleanupConfiguration.getMissingDeadlineMaxBatchSize());
+        log.info("cleanExpiredTasksTeeChallenges [duration:{}ms, updated:{}]",
+                System.currentTimeMillis() - start, updated);
     }
 }

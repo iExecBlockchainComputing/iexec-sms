@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.iexec.sms.secret;
 
 import ch.qos.logback.classic.Level;
@@ -29,7 +30,7 @@ class CacheSecretServiceTests {
 
 
     private final CacheSecretService<String> cacheSecretService = new CacheSecretService<>();
-    private final static String KEY = "KEY";
+    private static final String KEY = "KEY";
 
     private static MemoryLogAppender memoryLogAppender;
 

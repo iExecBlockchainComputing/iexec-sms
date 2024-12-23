@@ -145,7 +145,7 @@ public class TeeController {
             @RequestHeader("Authorization") String authorization,
             @RequestBody WorkerpoolAuthorization workerpoolAuthorization) {
         String workerAddress = workerpoolAuthorization.getWorkerWallet();
-        String challenge = authorizationService.getChallengeForWorker(workerpoolAuthorization);
+        String challenge = workerpoolAuthorization.getHash();
         if (!authorizationService.isSignedByHimself(challenge, authorization, workerAddress)) {
             final ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError> body =
                     ApiResponseBody.<TeeSessionGenerationResponse, TeeSessionGenerationError>builder()

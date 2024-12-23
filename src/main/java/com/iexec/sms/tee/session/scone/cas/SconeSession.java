@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URL;
 import java.util.List;
 
 @Slf4j
@@ -85,8 +86,8 @@ public class SconeSession {
         @JsonProperty("attestation")
         private Attestation attestation;
 
-        public Security(List<String> tolerate, List<String> ignoreAdvisories) {
-            this.attestation = new Attestation(tolerate, ignoreAdvisories);
+        public Security(List<String> tolerate, List<String> ignoreAdvisories, String mode, URL url) {
+            this.attestation = new Attestation(tolerate, ignoreAdvisories, mode, url);
         }
 
         @AllArgsConstructor
@@ -96,6 +97,10 @@ public class SconeSession {
             private List<String> tolerate;
             @JsonProperty("ignore_advisories")
             private List<String> ignoreAdvisories;
+            @JsonProperty("mode")
+            private String mode;
+            @JsonProperty("url")
+            private URL url;
         }
     }
 

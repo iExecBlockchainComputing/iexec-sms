@@ -147,12 +147,5 @@ public class AuthorizationService {
                 secretAddress,
                 Hash.sha3String(secretValue));
     }
-
-    public String getChallengeForWorker(WorkerpoolAuthorization workerpoolAuthorization) {
-        return HashUtils.concatenateAndHash(
-                workerpoolAuthorization.getWorkerWallet(),
-                workerpoolAuthorization.getChainTaskId(),
-                workerpoolAuthorization.getEnclaveChallenge());
-    }
     // endregion
 }

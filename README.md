@@ -65,6 +65,9 @@ To support:
 | `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | `8081` | `8080` |
 | `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` | `localhost` |
 | `IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT`|  Secret provisioner server port for retrieving secrets from attested enclaves. | Positive integer | `18765` | `4433` |
+| `IEXEC_TEE_CHALLENGE_CLEANUP_CRON` | Cron expression to configure TEE challenges cleanup policy. | String | `@hourly` | `@hourly` |
+| `IEXEC_TEE_CHALLENGE_CLEANUP_MAX_BATCH_SIZE` | Max number of TEE challenges whose missing deadline could be set at a given time. | Integer | `500` | `500` |
+| `IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_DURATION` | Retention duration when setting missing final deadline. | Duration | `P5D` | `P5D` |
 | `IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage of TEE tasks. | String | | |
 | `IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT` | Fingerprint (aka mrenclave) of the TEE enabled worker pre-compute image. | String | | |
 | `IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB` | Required heap size for a worker pre-compute enclave (in Giga Bytes). | Positive integer | `3` | `3` |
@@ -84,6 +87,8 @@ To support:
 | `IEXEC_SMS_SSL_KEYSTORE_ALIAS` | Alias that identifies the key in the key store. | String | `iexec-core` |
 | `IEXEC_SCONE_TOLERATED_INSECURE_OPTIONS` | List of hardware or software Scone vulnerabilities to ignore. | String | |
 | `IEXEC_IGNORED_SGX_ADVISORIES` | List of hardware or software Intel vulnerabilities to ignore. | String | |
+| `TEE_SCONE_ATTESTATION_MODE` | Attestation mode used for TEE tasks Scone session generation. | String | `maa` |
+| `TEE_SCONE_ATTESTATION_URL` | URL of the Microsoft Azure Attestation service used for TEE tasks Scone session generation. | URL | `https://sharedweu.weu.attest.azure.net` |
 | `IEXEC_SMS_IMAGE_LAS_IMAGE` | Scontain LAS OCI image to be used by workers to execute TEE tasks. LAS performs local attestation which creates a quote that CAS can verify. | String | |
 
 ## Health checks

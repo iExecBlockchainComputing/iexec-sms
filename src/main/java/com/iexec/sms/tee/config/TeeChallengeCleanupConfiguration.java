@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.tee.challenge;
+package com.iexec.sms.tee.config;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.transaction.annotation.Transactional;
+import lombok.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
 
-import java.time.Instant;
-import java.util.Optional;
+import java.time.Duration;
 
-public interface TeeChallengeRepository extends JpaRepository<TeeChallenge, String> {
-    Optional<TeeChallenge> findByTaskId(String taskId);
-
-    @Transactional
-    void deleteByFinalDeadlineBefore(Instant now);
-
-    int countByFinalDeadlineIsNull();
+@Value
+@ConstructorBinding
+@ConfigurationProperties(prefix = "tee.challenge.cleanup")
+public class TeeChallengeCleanupConfiguration {
+    String cron;
+    int missingDeadlineMaxBatchSize;
+    Duration missingDeadlineRetentionDuration;
 }

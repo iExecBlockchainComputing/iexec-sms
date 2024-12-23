@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.7.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.7.0) 2024-12-23
+
+### New Features
+
+- Accept scheduler default result-proxy as a web2 secret to fallback on it when no proxy
+  is specified in deal parameters. (#273)
+- Configure the SMS at startup to generate Scone sessions in Hardware or MAA mode. (#275)
+- Add configurable cron job to delete expired tasks TEE challenges and Ethereum credentials. (#278)
+- Use new `FileHashUtils` API. (#280)
+- When undefined, set final deadline after `retention-duration` for up to `batch-size` TEE challenges during cleanup. (#281)
+
+### Quality
+
+- Use `WorkerpoolAuthorization#getHash` instead of `AuthorizationService#getChallengeForWorker`. (#272)
+- Reorder static and final keywords. (#274)
+- Update methods visibility and remove redundant checks in `SecretSessionBaseService`. (#276)
+- Refactor `SecretSessionBaseService` to use `dealParams` instead of deprecated `TaskDescription` fields. (#277)
+- Fix code quality issues in several test classes. (#279)
+
+### Dependency Upgrades
+
+- Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#270)
+- Upgrade to Gradle 8.10.2. (#271)
+- Upgrade to H2 database 2.2.224. (#281)
+- Upgrade to `iexec-commons-poco` 4.2.0. (#282)
+- Upgrade to `iexec-common` 8.6.0. (#282)
+
 ## [[8.6.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.6.0) 2024-06-18
 
 ### New Features
@@ -22,7 +49,7 @@ All notable changes to this project will be documented in this file.
 - Upgrade to Spring Boot 2.7.18. (#262)
 - Upgrade to sconify tools and Scone runtime 5.8.8 for SGX enclaves. (#263)
 - Upgrade to `iexec-commons-poco` 4.1.0. (#266)
-- Upgrade to `iexce-common` 8.5.0. (#266)
+- Upgrade to `iexec-common` 8.5.0. (#266)
 
 ## [[8.5.1]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.5.1) 2024-04-02
 

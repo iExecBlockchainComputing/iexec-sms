@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import javax.validation.ValidationException;
 
 class TeeTaskComputeSecretHeaderTests {
-    private final static String ON_CHAIN_OBJECT_ADDRESS = "onChainObjectAddress";
-    private final static String FIXED_SECRET_OWNER = "fixedSecretOwner";
-    private final static String KEY = "key";
+    private static final String ON_CHAIN_OBJECT_ADDRESS = "onChainObjectAddress";
+    private static final String FIXED_SECRET_OWNER = "fixedSecretOwner";
+    private static final String KEY = "key";
 
     // region Valid constructions
     @ParameterizedTest
