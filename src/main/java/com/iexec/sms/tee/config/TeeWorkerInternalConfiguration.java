@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,13 @@ import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.unit.DataSize;
 import org.springframework.validation.annotation.Validated;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Positive;
 
 @Configuration
 @Validated

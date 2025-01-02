@@ -18,8 +18,15 @@ package com.iexec.sms.ssl;
 
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -42,19 +49,23 @@ public class TwoWaySslClient {
      * Note: currently not able to avoid 401 responses with feignClient (see feignClient() method starter below)
      * */
     public RestTemplate getRestTemplate() {
-        HttpClientBuilder clientBuilder = HttpClientBuilder.create();
-        clientBuilder.setSSLContext(sslConfig.getFreshSslContext());
-        clientBuilder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
-        factory.setHttpClient(clientBuilder.build());
+        final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+                sslConfig.getFreshSslContext(),
+                NoopHostnameVerifier.INSTANCE);
+
+        final Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("https", sslsf)
+                .register("http", new PlainConnectionSocketFactory())
+                .build();
+
+        final BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
+
+        final CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .build();
+
+        final HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
         return new RestTemplate(factory);
     }
-
-    /*
-    @Bean
-    public Client feignClient() {
-        return new Client.Default(sslConfig.getFreshSslContext().getSocketFactory(), NoopHostnameVerifier.INSTANCE);
-    }
-    */
 
 }

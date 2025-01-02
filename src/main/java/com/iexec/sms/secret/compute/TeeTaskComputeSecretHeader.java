@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 
 package com.iexec.sms.secret.compute;
 
+import jakarta.persistence.Embeddable;
+import jakarta.validation.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,10 +27,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.Embeddable;
-import javax.validation.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.stream.Collectors;

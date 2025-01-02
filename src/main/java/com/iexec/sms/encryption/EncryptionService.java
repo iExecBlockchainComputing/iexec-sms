@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ package com.iexec.sms.encryption;
 import com.iexec.common.security.CipherHelper;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
