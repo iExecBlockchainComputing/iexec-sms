@@ -42,10 +42,11 @@ class SslConfigTests {
     Path tempDir;
 
     private SslConfig sslConfig;
+    private String keystorePath;
 
     @BeforeEach
     void setUp() throws Exception {
-        String keystorePath = createTemporaryKeystore();
+        keystorePath = createTemporaryKeystore();
         sslConfig = new SslConfig(
                 keystorePath,
                 KEYSTORE_TYPE,
@@ -70,6 +71,14 @@ class SslConfigTests {
     void shouldReturnValidContext() {
         SSLContext sslContext = sslConfig.getFreshSslContext();
         assertThat(sslContext).isNotNull();
+    }
+
+    @Test
+    void shouldGetCorrectAttributes() {
+        assertThat(sslConfig.getKeystore()).isEqualTo(keystorePath);
+        assertThat(sslConfig.getKeystoreType()).isEqualTo(KEYSTORE_TYPE);
+        assertThat(sslConfig.getKeyAlias()).isEqualTo(ALIAS);
+        assertThat(sslConfig.getKeystorePassword()).isEqualTo(PASSWORD.toCharArray());
     }
 
     @Test
