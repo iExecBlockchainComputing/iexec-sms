@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@
 package com.iexec.sms.tee.session.generic;
 
 import com.iexec.commons.poco.task.TaskDescription;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-
-import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
