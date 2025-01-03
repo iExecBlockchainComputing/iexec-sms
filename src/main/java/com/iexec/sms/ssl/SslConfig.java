@@ -18,7 +18,6 @@ package com.iexec.sms.ssl;
 
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -33,7 +32,6 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
 @Slf4j
-@Value
 @ConfigurationProperties(prefix = "tee.ssl")
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SslConfig {
@@ -42,6 +40,29 @@ public class SslConfig {
     String keystoreType;
     String keyAlias;
     char[] keystorePassword;
+
+    public SslConfig(String keystore, String keystoreType, String keyAlias, char[] keystorePassword) {
+        this.keystore = keystore;
+        this.keystoreType = keystoreType;
+        this.keyAlias = keyAlias;
+        this.keystorePassword = keystorePassword;
+    }
+
+    public String getKeystore() {
+        return keystore;
+    }
+
+    public String getKeystoreType() {
+        return keystoreType;
+    }
+
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    public char[] getKeystorePassword() {
+        return keystorePassword;
+    }
 
     /*
      * Generates new SSLContext on each call
