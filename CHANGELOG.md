@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Update source and target compatibility to Java 17. (#285)
 - Migrated to Jakarta EE APIs. (#285)
-- Refactor `SslConfig` and `TwoWaySslClient` to use `HttpClient 5` and improve proxy handling. (#285)
+- Refactor `SslConfig` and `TwoWaySslClient` to use `HttpClient 5` and improve ssl handling. (#285)
 
 ### Dependency Upgrades
 
