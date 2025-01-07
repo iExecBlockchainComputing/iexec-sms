@@ -29,7 +29,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Embeddable
 @Slf4j
@@ -86,7 +85,7 @@ public class TeeTaskComputeSecretHeader implements Serializable {
             final Validator validator = factory.getValidator();
             final Set<ConstraintViolation<TeeTaskComputeSecretHeader>> issues = validator.validate(this);
             if (!issues.isEmpty()) {
-                log.warn("{}", issues.stream().map(ConstraintViolation::getMessage).collect(Collectors.toList()));
+                log.warn("{}", issues.stream().map(ConstraintViolation::getMessage).toList());
                 throw new ValidationException("Can't create TeeTaskComputeSecretHeader.");
             }
         }
