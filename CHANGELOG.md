@@ -6,15 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Quality
 
-- Update source and target compatibility to Java 17. (#285)
-- Migrated to Jakarta EE APIs. (#285)
-- Refactor `SslConfig` and `TwoWaySslClient` to use `HttpClient 5` and improve ssl handling. (#285)
+- Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
 
 ### Dependency Upgrades
 
 - Upgrade to `eclipse-temurin:17.0.13_11-jre-focal`. (#285)
-- Upgrade to Spring Boot `3.0.13`. (#285)
-- Update `org.springdoc:springdoc-openapi-ui:1.7.0` to `org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0`. (#285)
+- Upgrade to Spring Boot 3.0.13. (#285)
+- Upgrade to `org.springdoc:springdoc-openapi-starter-webmvc-ui` 2.6.0. (#285)
 
 ## [[8.7.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.7.0) 2024-12-23
 
