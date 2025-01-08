@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -73,7 +72,7 @@ public class Web2SecretService {
     public List<Web2Secret> getSecretsForTeeSession(Iterable<Web2SecretHeader> ids) {
         return web2SecretRepository.findAllById(ids).stream()
                 .map(secret -> secret.withValue(encryptionService.decrypt(secret.getValue())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public boolean isSecretPresent(String ownerAddress, String secretAddress) {
