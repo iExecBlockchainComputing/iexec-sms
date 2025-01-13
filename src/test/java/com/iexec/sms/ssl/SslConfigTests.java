@@ -57,11 +57,11 @@ class SslConfigTests {
 
     private String createTemporaryKeystore() throws KeyStoreException, IOException,
             NoSuchAlgorithmException, CertificateException {
-        KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
+        final KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
         keyStore.load(null, PASSWORD.toCharArray());
 
-        File keystoreFile = tempDir.resolve("keystore.p12").toFile();
-        try (FileOutputStream fos = new FileOutputStream(keystoreFile)) {
+        final File keystoreFile = tempDir.resolve("keystore.p12").toFile();
+        try (final FileOutputStream fos = new FileOutputStream(keystoreFile)) {
             keyStore.store(fos, PASSWORD.toCharArray());
         }
         return keystoreFile.getAbsolutePath();
@@ -69,7 +69,7 @@ class SslConfigTests {
 
     @Test
     void shouldReturnValidContext() {
-        SSLContext sslContext = sslConfig.getFreshSslContext();
+        final SSLContext sslContext = sslConfig.getFreshSslContext();
         assertThat(sslContext).isNotNull();
     }
 
@@ -89,7 +89,7 @@ class SslConfigTests {
                 ALIAS,
                 PASSWORD.toCharArray()
         );
-        SSLContext sslContext = sslConfig.getFreshSslContext();
+        final SSLContext sslContext = sslConfig.getFreshSslContext();
         assertThat(sslContext).isNull();
     }
 }

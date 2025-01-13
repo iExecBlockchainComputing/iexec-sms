@@ -40,12 +40,12 @@ class TwoWaySslClientTests {
 
     @Test
     void shouldReturnConfiguredRestTemplate() throws NoSuchAlgorithmException, KeyManagementException {
-        SSLContext mockSslContext = SSLContext.getInstance("TLS");
+        final SSLContext mockSslContext = SSLContext.getInstance("TLS");
         mockSslContext.init(null, null, null);
         when(sslConfig.getFreshSslContext()).thenReturn(mockSslContext);
 
         twoWaySslClient = new TwoWaySslClient(sslConfig);
-        RestTemplate restTemplate = twoWaySslClient.getRestTemplate();
+        final RestTemplate restTemplate = twoWaySslClient.getRestTemplate();
 
         assertThat(restTemplate).isNotNull();
     }
