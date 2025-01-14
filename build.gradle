@@ -8,10 +8,6 @@ plugins {
     id 'maven-publish'
 }
 
-ext {
-    openFeignVersion = '11.10'
-}
-
 if (!project.hasProperty('gitBranch')) {
     ext.gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
@@ -68,10 +64,6 @@ dependencies {
 
     // observability
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-
-    // feign
-    implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
-    implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
 
     // expiring map
     implementation "net.jodah:expiringmap:0.5.11"
