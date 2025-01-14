@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2025
 
+### Quality
+
+- Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
+
+### Dependency Upgrades
+
+- Upgrade to `eclipse-temurin:17.0.13_11-jre-focal`. (#285)
+- Upgrade to Spring Boot 3.0.13. (#285)
+- Upgrade to Spring Doc OpenAPI 2.6.0. (#285)
+
 ## [[8.7.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.7.0) 2024-12-23
 
 ### New Features
