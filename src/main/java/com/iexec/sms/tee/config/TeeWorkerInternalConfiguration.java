@@ -78,7 +78,8 @@ public class TeeWorkerInternalConfiguration {
             final TeeAppProperties preComputeProperties,
             final TeeAppProperties postComputeProperties,
             @Value("${tee.scone.las-image}")
-            @NotBlank(message = "las image must be provided") final String lasImage
+            @NotBlank(message = "las image must be provided")
+            final String lasImage
     ) {
         return new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
     }

@@ -71,11 +71,11 @@ To support:
 | `TEE_WORKER_PIPELINES_0_VERSION` | Worker pipeline version | String | `v5` | `v5` |
 | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage | String | | |
 | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker pre-compute image | String | | |
-| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_HEAPSIZE` | Required heap size for a worker pre-compute enclave using units like KB, MB, GB | String | `3GB` | `3GB` |
+| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_HEAPSIZE` | Required heap size for a worker pre-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
 | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker pre-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
 | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_IMAGE` | TEE enabled OCI image name for worker post-compute stage | String | | |
 | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker post-compute image | String | | |
-| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_HEAPSIZE` | Required heap size for a worker post-compute enclave using units like KB, MB, GB | String | `3GB` | `3GB` |
+| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_HEAPSIZE` | Required heap size for a worker post-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
 | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
 
 The heap size configuration supports the following units:
