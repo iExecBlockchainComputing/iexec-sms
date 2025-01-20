@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2025
 
+### New Features
+
+- Migrate pre/post-compute configuration to a list. (#286)
+
 ### Quality
 
 - Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)

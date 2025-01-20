@@ -10,15 +10,17 @@ encryption:
 
 tee:
   worker:
-    pre-compute:
-      image: some
-      fingerprint: some
-      heap-size-gb: 3
-      entrypoint: some
-    post-compute:
-      image: some
-      fingerprint: some
-      heap-size-gb: 3
-      entrypoint: some
+    pipelines:
+      - version: v5
+        pre-compute:
+          image: some
+          fingerprint: some
+          heap-size: 3GB
+          entrypoint: some
+        post-compute:
+          image: some
+          fingerprint: some
+          heap-size: 3GB
+          entrypoint: some
   scone:
     las-image: some

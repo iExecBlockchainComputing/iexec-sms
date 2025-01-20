@@ -8,16 +8,18 @@ tee:
       port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:4433}
 
   worker:
-    pre-compute:
-      image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
-      fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
-      heap-size-gb: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB:3}
-      entrypoint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT:/bin/bash /apploader.sh}
-    post-compute:
-      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-post-compute:x.y.z-production
-      fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
-      heap-size-gb: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB:3}
-      entrypoint: ${IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT:/bin/bash /apploader.sh}
+    pipelines:
+      - version: v5
+        pre-compute:
+          image: # e.g.: iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production
+          fingerprint:
+          heap-size: 3GB
+          entrypoint: /bin/bash /apploader.sh
+        post-compute:
+          image: # e.g.: iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production
+          fingerprint:
+          heap-size: 3GB
+          entrypoint: /bin/bash /apploader.sh
 
   gramine:
     sps:
