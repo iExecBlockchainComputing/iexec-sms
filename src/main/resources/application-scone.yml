@@ -9,17 +9,17 @@ tee:
 
   worker:
     pipelines:
-      - version: v5
+      - version: # v5
         pre-compute:
           image: # e.g.: iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production
           fingerprint:
-          heap-size: 3GB
-          entrypoint: java -jar /app/app.jar
+          heap-size: # 3GB
+          entrypoint: # java -jar /app/app.jar
         post-compute:
           image: # e.g.: iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production
           fingerprint:
-          heap-size: 3GB
-          entrypoint: java -jar /app/app.jar
+          heap-size: # 3GB
+          entrypoint: # java -jar /app/app.jar
 
   ssl:
     key-store: ${IEXEC_SMS_SSL_KEYSTORE:/app/ssl-keystore-dev.p12} #iexec-core dev certificate for dev

@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
-- Migrate pre/post-compute configuration to a list. (#286)
+- SMS can now be configured with a list of TEE-ready pre/post-compute applications for SGX tasks. (#286)
 
 ### Quality
 

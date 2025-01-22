@@ -100,6 +100,26 @@ The heap size configuration supports the following units:
 | 1 GB | 1,024 MB (1,073,741,824 B)  |
 | 1 TB | 1,024 GB (1,099,511,627,776 B) |
 
+### Required Pipeline Configuration
+
+The TEE worker pipeline configurations (`application-gramine.yml` and `application-scone.yml`) **no longer provide default values** for pre-compute and post-compute settings.
+The configuration must be set by SMS operator.
+
+#### **Example Configuration (to be provided by SMS operator)**
+```yaml
+- version: v5
+  pre-compute:
+    image: "iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production"
+    fingerprint: "<your-fingerprint>"
+    heap-size: "3GB"
+    entrypoint: "/bin/bash /apploader.sh"
+  post-compute:
+    image: "iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production"
+    fingerprint: "<your-fingerprint>"
+    heap-size: "3GB"
+    entrypoint: "/bin/bash /apploader.sh"
+```
+
 ### Scone specific environment variables
 
 | Environment variable | Description | Type | Default Scone-configuration value |

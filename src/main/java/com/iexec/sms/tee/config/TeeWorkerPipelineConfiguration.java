@@ -35,9 +35,8 @@ public class TeeWorkerPipelineConfiguration {
     List<@NotNull(message = "List elements must not be null") Pipeline> pipelines;
 
     @Value
-    @NotNull
     public static class Pipeline {
-        @NotBlank(message = "Pipeline version must be provided")
+        @NotBlank(message = "Pipeline version must not be blank")
         String version;
 
         @NotNull(message = "Pre-compute configuration must not be null")
@@ -49,18 +48,9 @@ public class TeeWorkerPipelineConfiguration {
         StageConfig postCompute;
     }
 
-    @Value
-    public static class StageConfig {
-        @NotBlank(message = "Image must not be blank")
-        String image;
-
-        @NotBlank(message = "Fingerprint must not be blank")
-        String fingerprint;
-
-        @NotNull(message = "Heap size must not be null")
-        DataSize heapSize;
-
-        @NotBlank(message = "Entrypoint must not be blank")
-        String entrypoint;
+    public record StageConfig(@NotBlank(message = "Image must not be blank") String image,
+                                  @NotBlank(message = "Fingerprint must not be blank") String fingerprint,
+                                  @NotNull(message = "Heap size must not be null") DataSize heapSize,
+                                  @NotBlank(message = "Entrypoint must not be blank") String entrypoint) {
     }
 }

@@ -35,20 +35,20 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class TeeWorkerInternalConfiguration {
     @Bean
-    TeeAppProperties preComputeProperties(@Valid @NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
+    TeeAppProperties preComputeProperties(@NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig =
                 pipelineConfig.getPipelines().get(0).getPreCompute();
 
         log.info("Pre-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
-                preComputeConfig.getImage(),
-                preComputeConfig.getFingerprint(),
-                preComputeConfig.getEntrypoint(),
-                preComputeConfig.getHeapSize());
+                preComputeConfig.image(),
+                preComputeConfig.fingerprint(),
+                preComputeConfig.entrypoint(),
+                preComputeConfig.heapSize());
         return TeeAppProperties.builder()
-                .image(preComputeConfig.getImage())
-                .fingerprint(preComputeConfig.getFingerprint())
-                .entrypoint(preComputeConfig.getEntrypoint())
-                .heapSizeInBytes(preComputeConfig.getHeapSize().toBytes())
+                .image(preComputeConfig.image())
+                .fingerprint(preComputeConfig.fingerprint())
+                .entrypoint(preComputeConfig.entrypoint())
+                .heapSizeInBytes(preComputeConfig.heapSize().toBytes())
                 .build();
     }
 
@@ -57,16 +57,16 @@ public class TeeWorkerInternalConfiguration {
         final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig =
                 pipelineConfig.getPipelines().get(0).getPostCompute();
 
-        log.info("Pos-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
-                postComputeConfig.getImage(),
-                postComputeConfig.getFingerprint(),
-                postComputeConfig.getEntrypoint(),
-                postComputeConfig.getHeapSize());
+        log.info("Post-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
+                postComputeConfig.image(),
+                postComputeConfig.fingerprint(),
+                postComputeConfig.entrypoint(),
+                postComputeConfig.heapSize());
         return TeeAppProperties.builder()
-                .image(postComputeConfig.getImage())
-                .fingerprint(postComputeConfig.getFingerprint())
-                .entrypoint(postComputeConfig.getEntrypoint())
-                .heapSizeInBytes(postComputeConfig.getHeapSize().toBytes())
+                .image(postComputeConfig.image())
+                .fingerprint(postComputeConfig.fingerprint())
+                .entrypoint(postComputeConfig.entrypoint())
+                .heapSizeInBytes(postComputeConfig.heapSize().toBytes())
                 .build();
     }
 

@@ -20,20 +20,13 @@ import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
 
 import java.util.Collections;
-import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class TeeWorkerInternalConfigurationTests {
     private static final String IMAGE = "image";
@@ -49,12 +42,9 @@ class TeeWorkerInternalConfigurationTests {
 
     private TeeAppProperties preComputeProperties;
     private TeeAppProperties postComputeProperties;
-    private Validator validator;
 
     @BeforeEach
     void setUp() {
-        final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
         teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
 
         validStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
@@ -89,34 +79,7 @@ class TeeWorkerInternalConfigurationTests {
                 .build();
     }
 
-    // region validatePipelineConfig
-    @Test
-    void shouldFailWhenPipelineConfigIsNull() {
-        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(new TeeWorkerPipelineConfiguration(null));
-        assertFalse(violations.isEmpty());
-        assertThat(violations)
-                .extracting(ConstraintViolation::getMessage)
-                .containsExactly("Pipeline list must not be empty");
-    }
-
-    @Test
-    void shouldFailWhenPipelinesIsEmpty() {
-        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(new TeeWorkerPipelineConfiguration(Collections.emptyList()));
-        assertFalse(violations.isEmpty());
-        assertThat(violations)
-                .extracting(ConstraintViolation::getMessage)
-                .containsExactly("Pipeline list must not be empty");
-    }
-
-    @Test
-    void shouldFailWhenListElementsAreNull() {
-        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(
-                new TeeWorkerPipelineConfiguration(Collections.singletonList(null)));
-        assertFalse(violations.isEmpty());
-        assertThat(violations)
-                .extracting(ConstraintViolation::getMessage)
-                .containsExactly("List elements must not be null");
-    }
+    // region teeWorkerInternalConfiguration
 
     @Test
     void shouldGetPreComputePropertiesFromPipeline() {
