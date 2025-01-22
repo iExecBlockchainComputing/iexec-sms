@@ -16,46 +16,51 @@
 
 package com.iexec.sms.tee.config;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
-@Data
+@Value
 @Validated
 @ConfigurationProperties(prefix = "tee.worker")
 public class TeeWorkerPipelineConfiguration {
-    @NotNull(message = "Pipelines configuration must be provided")
-    private List<Pipeline> pipelines;
+    @NotEmpty(message = "Pipeline list must not be empty")
+    List<@NotNull(message = "List elements must not be null") Pipeline> pipelines;
 
-    @Data
+    @Value
+    @NotNull
     public static class Pipeline {
         @NotBlank(message = "Pipeline version must be provided")
-        private String version;
+        String version;
 
-        @NotNull(message = "Pre-compute configuration must be provided")
-        private StageConfig preCompute;
+        @NotNull(message = "Pre-compute configuration must not be null")
+        @Valid
+        StageConfig preCompute;
 
-        @NotNull(message = "Post-compute configuration must be provided")
-        private StageConfig postCompute;
+        @NotNull(message = "Post-compute configuration must not be null")
+        @Valid
+        StageConfig postCompute;
     }
 
-    @Data
+    @Value
     public static class StageConfig {
-        @NotBlank(message = "Image must be provided")
-        private String image;
+        @NotBlank(message = "Image must not be blank")
+        String image;
 
-        @NotBlank(message = "Fingerprint must be provided")
-        private String fingerprint;
+        @NotBlank(message = "Fingerprint must not be blank")
+        String fingerprint;
 
-        @NotNull(message = "Heap size must be provided")
-        private DataSize heapSize;
+        @NotNull(message = "Heap size must not be null")
+        DataSize heapSize;
 
-        @NotBlank(message = "Entrypoint must be provided")
-        private String entrypoint;
+        @NotBlank(message = "Entrypoint must not be blank")
+        String entrypoint;
     }
 }

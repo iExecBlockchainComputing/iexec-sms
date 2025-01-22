@@ -20,14 +20,20 @@ import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
 
 import java.util.Collections;
+import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class TeeWorkerInternalConfigurationTests {
     private static final String IMAGE = "image";
@@ -39,53 +45,82 @@ class TeeWorkerInternalConfigurationTests {
 
     private TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
     private TeeWorkerPipelineConfiguration pipelineConfig;
+    private TeeWorkerPipelineConfiguration.StageConfig validStageConfig;
+
+    private TeeAppProperties preComputeProperties;
+    private TeeAppProperties postComputeProperties;
+    private Validator validator;
 
     @BeforeEach
     void setUp() {
+        final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
         teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
 
-        // Setup pipeline configuration
-        TeeWorkerPipelineConfiguration.StageConfig stageConfig = new TeeWorkerPipelineConfiguration.StageConfig();
-        stageConfig.setImage(IMAGE);
-        stageConfig.setFingerprint(FINGERPRINT);
-        stageConfig.setHeapSize(HEAP_SIZE);
-        stageConfig.setEntrypoint(ENTRYPOINT);
+        validStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
+                IMAGE,
+                FINGERPRINT,
+                HEAP_SIZE,
+                ENTRYPOINT
+        );
 
-        TeeWorkerPipelineConfiguration.Pipeline pipeline = new TeeWorkerPipelineConfiguration.Pipeline();
-        pipeline.setVersion("v5");
-        pipeline.setPreCompute(stageConfig);
-        pipeline.setPostCompute(stageConfig);
+        final TeeWorkerPipelineConfiguration.Pipeline pipeline = new TeeWorkerPipelineConfiguration.Pipeline(
+                "v5",
+                validStageConfig,
+                validStageConfig
+        );
 
-        pipelineConfig = new TeeWorkerPipelineConfiguration();
-        pipelineConfig.setPipelines(Collections.singletonList(pipeline));
+        pipelineConfig = new TeeWorkerPipelineConfiguration(
+                Collections.singletonList(pipeline)
+        );
+
+        preComputeProperties = TeeAppProperties.builder()
+                .image("preComputeImage")
+                .fingerprint("preComputeFingerprint")
+                .entrypoint("preComputeEntrypoint")
+                .heapSizeInBytes(1L)
+                .build();
+
+        postComputeProperties = TeeAppProperties.builder()
+                .image("postComputeImage")
+                .fingerprint("postComputeFingerprint")
+                .entrypoint("postComputeEntrypoint")
+                .heapSizeInBytes(1L)
+                .build();
     }
 
     // region validatePipelineConfig
     @Test
-    void shouldFailPreComputePropertiesWhenPipelineConfigIsNull() {
-        assertThrows(IllegalStateException.class,
-                () -> teeWorkerInternalConfiguration.preComputeProperties(null));
+    void shouldFailWhenPipelineConfigIsNull() {
+        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(new TeeWorkerPipelineConfiguration(null));
+        assertFalse(violations.isEmpty());
+        assertThat(violations)
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Pipeline list must not be empty");
     }
 
     @Test
-    void shouldFailPreComputePropertiesWhenPipelinesIsNull() {
-        pipelineConfig.setPipelines(null);
-        assertThrows(IllegalStateException.class,
-                () -> teeWorkerInternalConfiguration.preComputeProperties(pipelineConfig));
+    void shouldFailWhenPipelinesIsEmpty() {
+        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(new TeeWorkerPipelineConfiguration(Collections.emptyList()));
+        assertFalse(violations.isEmpty());
+        assertThat(violations)
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("Pipeline list must not be empty");
     }
 
     @Test
-    void shouldFailPreComputePropertiesWhenFirstPipelineIsNull() {
-        pipelineConfig.setPipelines(Collections.singletonList(null));
-        assertThrows(IllegalStateException.class,
-                () -> teeWorkerInternalConfiguration.preComputeProperties(pipelineConfig));
+    void shouldFailWhenListElementsAreNull() {
+        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(
+                new TeeWorkerPipelineConfiguration(Collections.singletonList(null)));
+        assertFalse(violations.isEmpty());
+        assertThat(violations)
+                .extracting(ConstraintViolation::getMessage)
+                .containsExactly("List elements must not be null");
     }
-    // endregion
 
-    // region preComputeProperties
     @Test
     void shouldGetPreComputePropertiesFromPipeline() {
-        TeeAppProperties properties = teeWorkerInternalConfiguration.preComputeProperties(pipelineConfig);
+        final TeeAppProperties properties = teeWorkerInternalConfiguration.preComputeProperties(pipelineConfig);
 
         assertEquals(IMAGE, properties.getImage());
         assertEquals(FINGERPRINT, properties.getFingerprint());
@@ -93,50 +128,21 @@ class TeeWorkerInternalConfigurationTests {
         assertEquals(HEAP_SIZE_B, properties.getHeapSizeInBytes());
     }
 
-    @Test
-    void shouldFailPreComputePropertiesWhenNoPipeline() {
-        pipelineConfig.setPipelines(Collections.emptyList());
-        assertThrows(IllegalStateException.class,
-                () -> teeWorkerInternalConfiguration.preComputeProperties(pipelineConfig));
-    }
-    // endregion
-
-    // region postComputeProperties
     @Test
     void shouldGetPostComputePropertiesFromPipeline() {
-        TeeAppProperties properties = teeWorkerInternalConfiguration.postComputeProperties(pipelineConfig);
+        final TeeAppProperties properties = teeWorkerInternalConfiguration.postComputeProperties(pipelineConfig);
 
         assertEquals(IMAGE, properties.getImage());
         assertEquals(FINGERPRINT, properties.getFingerprint());
         assertEquals(ENTRYPOINT, properties.getEntrypoint());
         assertEquals(HEAP_SIZE_B, properties.getHeapSizeInBytes());
-    }
-
-    @Test
-    void shouldFailPostComputePropertiesWhenNoPipeline() {
-        pipelineConfig.setPipelines(Collections.emptyList());
-        assertThrows(IllegalStateException.class,
-                () -> teeWorkerInternalConfiguration.postComputeProperties(pipelineConfig));
     }
     // endregion
 
     // region gramineServicesProperties
     @Test
     void shouldBuildGramineServicesProperties() {
-        TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-                .image("preComputeImage")
-                .fingerprint("preComputeFingerprint")
-                .entrypoint("preComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-        TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-                .image("postComputeImage")
-                .fingerprint("postComputeFingerprint")
-                .entrypoint("postComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
-        GramineServicesProperties properties =
+        final GramineServicesProperties properties =
                 teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
 
         assertEquals(TeeFramework.GRAMINE, properties.getTeeFramework());
@@ -148,20 +154,7 @@ class TeeWorkerInternalConfigurationTests {
     // region sconeServicesProperties
     @Test
     void shouldBuildSconeServicesProperties() {
-        TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-                .image("preComputeImage")
-                .fingerprint("preComputeFingerprint")
-                .entrypoint("preComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-        TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-                .image("postComputeImage")
-                .fingerprint("postComputeFingerprint")
-                .entrypoint("postComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
-        SconeServicesProperties properties =
+        final SconeServicesProperties properties =
                 teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
 
         assertEquals(TeeFramework.SCONE, properties.getTeeFramework());

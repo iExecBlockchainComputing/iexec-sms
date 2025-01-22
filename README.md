@@ -78,14 +78,27 @@ To support:
 | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_HEAPSIZE` | Required heap size for a worker post-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
 | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
 
+## Heap Size Configuration
 The heap size configuration supports the following units:
-- B for bytes
-- KB for kilobytes
-- MB for megabytes
-- GB for gigabytes
-- TB for terabytes
 
-For example: `3GB`, `4096MB`, `1TB`
+- **B** for bytes
+- **KB** for kilobytes
+- **MB** for megabytes
+- **GB** for gigabytes
+- **TB** for terabytes
+
+### Example Values
+- `3GB`
+- `4096MB`
+- `1TB`
+
+### Conversion Table
+| Unit | Bytes Equivalent            |
+|------|-----------------------------|
+| 1 KB | 1,024 B                     |
+| 1 MB | 1,024 KB (1,048,576 B)      |
+| 1 GB | 1,024 MB (1,073,741,824 B)  |
+| 1 TB | 1,024 GB (1,099,511,627,776 B) |
 
 ### Scone specific environment variables
 

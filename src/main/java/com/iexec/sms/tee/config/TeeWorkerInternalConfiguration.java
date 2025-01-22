@@ -21,7 +21,9 @@ import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,13 +35,15 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class TeeWorkerInternalConfiguration {
     @Bean
-    TeeAppProperties preComputeProperties(final TeeWorkerPipelineConfiguration pipelineConfig) {
-        validatePipelineConfig(pipelineConfig);
-
+    TeeAppProperties preComputeProperties(@Valid @NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig =
                 pipelineConfig.getPipelines().get(0).getPreCompute();
 
-        log.info("Using pipeline configuration for pre-compute stage");
+        log.info("Pre-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
+                preComputeConfig.getImage(),
+                preComputeConfig.getFingerprint(),
+                preComputeConfig.getEntrypoint(),
+                preComputeConfig.getHeapSize());
         return TeeAppProperties.builder()
                 .image(preComputeConfig.getImage())
                 .fingerprint(preComputeConfig.getFingerprint())
@@ -49,13 +53,15 @@ public class TeeWorkerInternalConfiguration {
     }
 
     @Bean
-    TeeAppProperties postComputeProperties(final TeeWorkerPipelineConfiguration pipelineConfig) {
-        validatePipelineConfig(pipelineConfig);
-
+    TeeAppProperties postComputeProperties(@Valid @NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig =
                 pipelineConfig.getPipelines().get(0).getPostCompute();
 
-        log.info("Using pipeline configuration for post-compute stage");
+        log.info("Pos-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
+                postComputeConfig.getImage(),
+                postComputeConfig.getFingerprint(),
+                postComputeConfig.getEntrypoint(),
+                postComputeConfig.getHeapSize());
         return TeeAppProperties.builder()
                 .image(postComputeConfig.getImage())
                 .fingerprint(postComputeConfig.getFingerprint())
@@ -81,17 +87,5 @@ public class TeeWorkerInternalConfiguration {
             @NotBlank(message = "las image must be provided")
             final String lasImage) {
         return new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
-    }
-
-    private void validatePipelineConfig(final TeeWorkerPipelineConfiguration pipelineConfig) {
-        if (pipelineConfig == null) {
-            throw new IllegalStateException("Pipeline configuration is null");
-        }
-        if (pipelineConfig.getPipelines() == null || pipelineConfig.getPipelines().isEmpty()) {
-            throw new IllegalStateException("No pipeline configuration found");
-        }
-        if (pipelineConfig.getPipelines().get(0) == null) {
-            throw new IllegalStateException("First pipeline configuration is null");
-        }
     }
 }
