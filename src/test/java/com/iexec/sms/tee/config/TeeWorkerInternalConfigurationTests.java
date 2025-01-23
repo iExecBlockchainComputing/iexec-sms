@@ -36,14 +36,13 @@ class TeeWorkerInternalConfigurationTests {
     private static final DataSize HEAP_SIZE = DataSize.parse("3GB");
     private static final long HEAP_SIZE_B = 3221225472L;
 
-    final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("preComputeImage")
             .fingerprint("preComputeFingerprint")
             .entrypoint("preComputeEntrypoint")
             .heapSizeInBytes(1L)
             .build();
-
-    final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
             .image("postComputeImage")
             .fingerprint("postComputeFingerprint")
             .entrypoint("postComputeEntrypoint")
