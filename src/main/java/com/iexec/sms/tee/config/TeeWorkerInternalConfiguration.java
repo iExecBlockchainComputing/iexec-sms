@@ -21,7 +21,6 @@ import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +52,7 @@ public class TeeWorkerInternalConfiguration {
     }
 
     @Bean
-    TeeAppProperties postComputeProperties(@Valid @NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
+    TeeAppProperties postComputeProperties(@NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig =
                 pipelineConfig.getPipelines().get(0).postCompute();
 

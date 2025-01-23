@@ -36,6 +36,20 @@ class TeeWorkerInternalConfigurationTests {
     private static final DataSize HEAP_SIZE = DataSize.parse("3GB");
     private static final long HEAP_SIZE_B = 3221225472L;
 
+    final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("preComputeImage")
+            .fingerprint("preComputeFingerprint")
+            .entrypoint("preComputeEntrypoint")
+            .heapSizeInBytes(1L)
+            .build();
+
+    final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("postComputeImage")
+            .fingerprint("postComputeFingerprint")
+            .entrypoint("postComputeEntrypoint")
+            .heapSizeInBytes(1L)
+            .build();
+
     private TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
     private TeeWorkerPipelineConfiguration pipelineConfig;
 
@@ -87,20 +101,6 @@ class TeeWorkerInternalConfigurationTests {
     // region gramineServicesProperties
     @Test
     void shouldBuildGramineServicesProperties() {
-        final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-                .image("preComputeImage")
-                .fingerprint("preComputeFingerprint")
-                .entrypoint("preComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
-        final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-                .image("postComputeImage")
-                .fingerprint("postComputeFingerprint")
-                .entrypoint("postComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
         final GramineServicesProperties properties =
                 teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
 
@@ -113,20 +113,6 @@ class TeeWorkerInternalConfigurationTests {
     // region sconeServicesProperties
     @Test
     void shouldBuildSconeServicesProperties() {
-        final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-                .image("preComputeImage")
-                .fingerprint("preComputeFingerprint")
-                .entrypoint("preComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
-        final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-                .image("postComputeImage")
-                .fingerprint("postComputeFingerprint")
-                .entrypoint("postComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
         final SconeServicesProperties properties =
                 teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
 
