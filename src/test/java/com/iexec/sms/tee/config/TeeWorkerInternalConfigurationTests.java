@@ -38,16 +38,12 @@ class TeeWorkerInternalConfigurationTests {
 
     private TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
     private TeeWorkerPipelineConfiguration pipelineConfig;
-    private TeeWorkerPipelineConfiguration.StageConfig validStageConfig;
-
-    private TeeAppProperties preComputeProperties;
-    private TeeAppProperties postComputeProperties;
 
     @BeforeEach
     void setUp() {
         teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
 
-        validStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
+        final TeeWorkerPipelineConfiguration.StageConfig validStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
                 IMAGE,
                 FINGERPRINT,
                 HEAP_SIZE,
@@ -63,20 +59,6 @@ class TeeWorkerInternalConfigurationTests {
         pipelineConfig = new TeeWorkerPipelineConfiguration(
                 Collections.singletonList(pipeline)
         );
-
-        preComputeProperties = TeeAppProperties.builder()
-                .image("preComputeImage")
-                .fingerprint("preComputeFingerprint")
-                .entrypoint("preComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
-
-        postComputeProperties = TeeAppProperties.builder()
-                .image("postComputeImage")
-                .fingerprint("postComputeFingerprint")
-                .entrypoint("postComputeEntrypoint")
-                .heapSizeInBytes(1L)
-                .build();
     }
 
     // region teeWorkerInternalConfiguration
@@ -105,6 +87,20 @@ class TeeWorkerInternalConfigurationTests {
     // region gramineServicesProperties
     @Test
     void shouldBuildGramineServicesProperties() {
+        final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+                .image("preComputeImage")
+                .fingerprint("preComputeFingerprint")
+                .entrypoint("preComputeEntrypoint")
+                .heapSizeInBytes(1L)
+                .build();
+
+        final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+                .image("postComputeImage")
+                .fingerprint("postComputeFingerprint")
+                .entrypoint("postComputeEntrypoint")
+                .heapSizeInBytes(1L)
+                .build();
+
         final GramineServicesProperties properties =
                 teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
 
@@ -117,6 +113,20 @@ class TeeWorkerInternalConfigurationTests {
     // region sconeServicesProperties
     @Test
     void shouldBuildSconeServicesProperties() {
+        final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+                .image("preComputeImage")
+                .fingerprint("preComputeFingerprint")
+                .entrypoint("preComputeEntrypoint")
+                .heapSizeInBytes(1L)
+                .build();
+
+        final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+                .image("postComputeImage")
+                .fingerprint("postComputeFingerprint")
+                .entrypoint("postComputeEntrypoint")
+                .heapSizeInBytes(1L)
+                .build();
+
         final SconeServicesProperties properties =
                 teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
 

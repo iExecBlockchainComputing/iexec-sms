@@ -29,7 +29,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class TeeWorkerPipelineConfigurationTests {
     private static final String VERSION = "v5";
@@ -56,8 +55,9 @@ class TeeWorkerPipelineConfigurationTests {
 
     @BeforeEach
     void setUp() {
-        final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        }
     }
 
     @Test
@@ -71,25 +71,28 @@ class TeeWorkerPipelineConfigurationTests {
 
         assertEquals(1, config.getPipelines().size());
         final TeeWorkerPipelineConfiguration.Pipeline firstPipeline = config.getPipelines().get(0);
-        assertEquals(VERSION, firstPipeline.getVersion());
+        assertEquals(VERSION, firstPipeline.version());
 
-        final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig = firstPipeline.getPreCompute();
+        final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig = firstPipeline.preCompute();
         assertEquals(PRE_IMAGE, preComputeConfig.image());
         assertEquals(PRE_FINGERPRINT, preComputeConfig.fingerprint());
         assertEquals(PRE_HEAP_SIZE, preComputeConfig.heapSize());
         assertEquals(PRE_ENTRYPOINT, preComputeConfig.entrypoint());
 
-        final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig = firstPipeline.getPostCompute();
+        final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig = firstPipeline.postCompute();
         assertEquals(POST_IMAGE, postComputeConfig.image());
         assertEquals(POST_FINGERPRINT, postComputeConfig.fingerprint());
         assertEquals(POST_HEAP_SIZE, postComputeConfig.heapSize());
         assertEquals(POST_ENTRYPOINT, postComputeConfig.entrypoint());
+
+        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(config);
+        assertThat(violations).isEmpty();
     }
 
     @Test
     void shouldFailWhenPipelineConfigIsNull() {
         final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(new TeeWorkerPipelineConfiguration(null));
-        assertFalse(violations.isEmpty());
+        assertThat(violations).isNotEmpty();
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactly("Pipeline list must not be empty");
@@ -98,7 +101,7 @@ class TeeWorkerPipelineConfigurationTests {
     @Test
     void shouldFailIfEmptyPipelineList() {
         final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(new TeeWorkerPipelineConfiguration(Collections.emptyList()));
-        assertFalse(violations.isEmpty());
+        assertThat(violations).isNotEmpty();
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactly("Pipeline list must not be empty");
@@ -108,7 +111,7 @@ class TeeWorkerPipelineConfigurationTests {
     void shouldFailWhenListElementsAreNull() {
         final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> violations = validator.validate(
                 new TeeWorkerPipelineConfiguration(Collections.singletonList(null)));
-        assertFalse(violations.isEmpty());
+        assertThat(violations).isNotEmpty();
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactly("List elements must not be null");
@@ -122,7 +125,7 @@ class TeeWorkerPipelineConfigurationTests {
                 postCompute
         );
         final Set<ConstraintViolation<TeeWorkerPipelineConfiguration.Pipeline>> violations = validator.validate(pipeline);
-        assertFalse(violations.isEmpty());
+        assertThat(violations).isNotEmpty();
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactly("Pipeline version must not be blank");
@@ -136,30 +139,45 @@ class TeeWorkerPipelineConfigurationTests {
                 null
         );
         final Set<ConstraintViolation<TeeWorkerPipelineConfiguration.Pipeline>> violations = validator.validate(pipeline);
-        assertEquals(2, violations.size());
+        assertThat(violations).hasSize(2);
         assertThat(violations)
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactlyInAnyOrder(
                         "Pre-compute configuration must not be null",
-                        "Post-compute configuration must not be null");
+                        "Post-compute configuration must not be null"
+                );
     }
 
     @Test
     void shouldFailIfStageConfigFieldsAreInvalid() {
-        final TeeWorkerPipelineConfiguration.StageConfig config = new TeeWorkerPipelineConfiguration.StageConfig(
+        final TeeWorkerPipelineConfiguration.StageConfig stageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
                 "",
                 "",
                 null,
                 ""
         );
-        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration.StageConfig>> violations = validator.validate(config);
-        assertEquals(4, violations.size());
-        assertThat(violations)
+
+        final TeeWorkerPipelineConfiguration.Pipeline pipeline = new TeeWorkerPipelineConfiguration.Pipeline(
+                VERSION,
+                stageConfig,
+                stageConfig
+        );
+        final TeeWorkerPipelineConfiguration config = new TeeWorkerPipelineConfiguration(
+                Collections.singletonList(pipeline)
+        );
+        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>>  configurationViolations = validator.validate(config);
+        assertThat(configurationViolations).isNotEmpty();
+        assertThat(configurationViolations)
                 .extracting(ConstraintViolation::getMessage)
                 .containsExactlyInAnyOrder(
-                        "Fingerprint must not be blank",
-                        "Image must not be blank",
                         "Heap size must not be null",
-                        "Entrypoint must not be blank");
+                        "Heap size must not be null",
+                        "Entrypoint must not be blank",
+                        "Entrypoint must not be blank",
+                        "Image must not be blank",
+                        "Image must not be blank",
+                        "Fingerprint must not be blank",
+                        "Fingerprint must not be blank"
+                );
     }
 }

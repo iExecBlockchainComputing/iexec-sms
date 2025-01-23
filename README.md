@@ -109,15 +109,15 @@ The configuration must be set by SMS operator.
 ```yaml
 - version: v5
   pre-compute:
-    image: "iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production"
-    fingerprint: "<your-fingerprint>"
-    heap-size: "3GB"
-    entrypoint: "/bin/bash /apploader.sh"
+    image: iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production
+    fingerprint: <tee-worker-pre-compute-fingerprint>
+    heap-size: 3GB
+    entrypoint: java -jar /app/app.jar
   post-compute:
-    image: "iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production"
-    fingerprint: "<your-fingerprint>"
-    heap-size: "3GB"
-    entrypoint: "/bin/bash /apploader.sh"
+    image: iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production
+    fingerprint: <tee-worker-post-compute-fingerprint>
+    heap-size: 3GB
+    entrypoint: java -jar /app/app.jar
 ```
 
 ### Scone specific environment variables

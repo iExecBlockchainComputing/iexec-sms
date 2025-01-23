@@ -37,7 +37,7 @@ public class TeeWorkerInternalConfiguration {
     @Bean
     TeeAppProperties preComputeProperties(@NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig =
-                pipelineConfig.getPipelines().get(0).getPreCompute();
+                pipelineConfig.getPipelines().get(0).preCompute();
 
         log.info("Pre-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
                 preComputeConfig.image(),
@@ -55,7 +55,7 @@ public class TeeWorkerInternalConfiguration {
     @Bean
     TeeAppProperties postComputeProperties(@Valid @NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig =
-                pipelineConfig.getPipelines().get(0).getPostCompute();
+                pipelineConfig.getPipelines().get(0).postCompute();
 
         log.info("Post-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
                 postComputeConfig.image(),
