@@ -8,16 +8,18 @@ tee:
       port: ${IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT:18765}
 
   worker:
-    pre-compute:
-      image: ${IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-pre-compute:x.y.z-production
-      fingerprint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT:}
-      heap-size-gb: ${IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB:3}
-      entrypoint: ${IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
-    post-compute:
-      image: ${IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE:} # e.g.: docker.io/iexechub/tee-worker-post-compute:x.y.z-production
-      fingerprint: ${IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT:}
-      heap-size-gb: ${IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB:3}
-      entrypoint: ${IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT:java -jar /app/app.jar}
+    pipelines:
+      - version: # v5
+        pre-compute:
+          image: # e.g.: iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production
+          fingerprint:
+          heap-size: # 3GB
+          entrypoint: # java -jar /app/app.jar
+        post-compute:
+          image: # e.g.: iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production
+          fingerprint:
+          heap-size: # 3GB
+          entrypoint: # java -jar /app/app.jar
 
   ssl:
     key-store: ${IEXEC_SMS_SSL_KEYSTORE:/app/ssl-keystore-dev.p12} #iexec-core dev certificate for dev

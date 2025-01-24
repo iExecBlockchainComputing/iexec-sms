@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/vNEXT) 2025
 
+### New Features
+
+- SMS can now be configured with a list of TEE-ready pre/post-compute applications for SGX tasks. (#286)
+
 ### Quality
 
 - Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
