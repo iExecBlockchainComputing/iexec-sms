@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import lombok.Getter;
 // TODO upgrade to sealed class in Java 17
 public abstract class TeeServicesProperties {
     private final TeeFramework teeFramework;
+    private final String version;
     private final TeeAppProperties preComputeProperties;
     private final TeeAppProperties postComputeProperties;
 }

@@ -35,6 +35,7 @@ class TeeWorkerInternalConfigurationTests {
     private static final String LAS_IMAGE = "lasImage";
     private static final DataSize HEAP_SIZE = DataSize.parse("3GB");
     private static final long HEAP_SIZE_B = 3221225472L;
+    private static final String VERSION = "v5";
 
     private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("preComputeImage")
@@ -101,7 +102,7 @@ class TeeWorkerInternalConfigurationTests {
     @Test
     void shouldBuildGramineServicesProperties() {
         final GramineServicesProperties properties =
-                teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
+                teeWorkerInternalConfiguration.gramineServicesProperties(VERSION, preComputeProperties, postComputeProperties);
 
         assertEquals(TeeFramework.GRAMINE, properties.getTeeFramework());
         assertEquals(preComputeProperties, properties.getPreComputeProperties());
@@ -113,7 +114,7 @@ class TeeWorkerInternalConfigurationTests {
     @Test
     void shouldBuildSconeServicesProperties() {
         final SconeServicesProperties properties =
-                teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
+                teeWorkerInternalConfiguration.sconeServicesProperties(VERSION, preComputeProperties, postComputeProperties, LAS_IMAGE);
 
         assertEquals(TeeFramework.SCONE, properties.getTeeFramework());
         assertEquals(preComputeProperties, properties.getPreComputeProperties());

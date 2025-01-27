@@ -34,6 +34,11 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class TeeWorkerInternalConfiguration {
     @Bean
+    String version(@NotNull TeeWorkerPipelineConfiguration pipelineConfig) {
+        return pipelineConfig.getPipelines().get(0).version();
+    }
+
+    @Bean
     TeeAppProperties preComputeProperties(@NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
         final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig =
                 pipelineConfig.getPipelines().get(0).preCompute();
@@ -72,19 +77,20 @@ public class TeeWorkerInternalConfiguration {
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
     GramineServicesProperties gramineServicesProperties(
+            final String version,
             final TeeAppProperties preComputeProperties,
             final TeeAppProperties postComputeProperties) {
-        return new GramineServicesProperties(preComputeProperties, postComputeProperties);
+        return new GramineServicesProperties(version, preComputeProperties, postComputeProperties);
     }
 
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
     SconeServicesProperties sconeServicesProperties(
+            final String version,
             final TeeAppProperties preComputeProperties,
             final TeeAppProperties postComputeProperties,
             @Value("${tee.scone.las-image}")
-            @NotBlank(message = "las image must be provided")
-            final String lasImage) {
-        return new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
+            @NotBlank(message = "las image must be provided") final String lasImage) {
+        return new SconeServicesProperties(version, preComputeProperties, postComputeProperties, lasImage);
     }
 }

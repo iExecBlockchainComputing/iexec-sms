@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ class TeeControllerTests {
     private static final String SESSION_ID = "SESSION_ID";
     private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
     private static final String LAS_IMAGE = "lasImage";
+    private static final String VERSION = "v5";
 
 
     @Mock
@@ -87,6 +88,7 @@ class TeeControllerTests {
     @Test
     void shouldGetSconeFramework() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
+                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -105,6 +107,7 @@ class TeeControllerTests {
     @Test
     void shouldGetGramineFramework() {
         final TeeServicesProperties gramineProperties = new GramineServicesProperties(
+                VERSION,
                 preComputeProperties,
                 postComputeProperties
         );
@@ -124,6 +127,7 @@ class TeeControllerTests {
     @Test
     void shouldGetSconeProperties() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
+                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -151,6 +155,7 @@ class TeeControllerTests {
     @Test
     void shouldGetGramineProperties() {
         final TeeServicesProperties gramineProperties = new GramineServicesProperties(
+                VERSION,
                 preComputeProperties,
                 postComputeProperties
         );
@@ -175,6 +180,7 @@ class TeeControllerTests {
     @Test
     void shouldNotGetSconePropertiesSinceGramineSms() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
+                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -193,6 +199,7 @@ class TeeControllerTests {
     @Test
     void shouldNotGetGraminePropertiesSinceSconeSms() {
         final TeeServicesProperties gramineProperties = new GramineServicesProperties(
+                VERSION,
                 preComputeProperties,
                 postComputeProperties
         );

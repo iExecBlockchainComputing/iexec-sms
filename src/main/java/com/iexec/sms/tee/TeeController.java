@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,6 +95,30 @@ public class TeeController {
         if (teeFramework != teeServicesProperties.getTeeFramework()) {
             log.error("SMS configured to use another TeeFramework " +
                     "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return ResponseEntity.ok(teeServicesProperties);
+    }
+
+    /**
+     * Retrieve properties for TEE services related to the asked version. This includes properties
+     * for pre-compute and post-compute stages
+     * and potential TEE framework's specific data.
+     *
+     * @return TEE services properties (pre-compute image uri, post-compute image uri,
+     * heap size, ...)
+     */
+    @GetMapping("/properties/{teeFramework}/{version}")
+    public ResponseEntity<TeeServicesProperties> getTeeServicesPropertiesVersion(
+            @PathVariable TeeFramework teeFramework, @PathVariable String version) {
+        if (teeFramework != teeServicesProperties.getTeeFramework()) {
+            log.error("SMS configured to use another TeeFramework " +
+                    "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        if (!version.equals(teeServicesProperties.getVersion())) {
+            log.error("SMS configured to use another version " +
+                    "[required:{}, actual:{}]", version, teeServicesProperties.getVersion());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         return ResponseEntity.ok(teeServicesProperties);
