@@ -215,6 +215,137 @@ class TeeControllerTests {
     }
     // endregion
 
+    // region getTeeServicesPropertiesVersion
+    @Test
+    void shouldGetSconePropertiesVersion() {
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
+                VERSION,
+                preComputeProperties,
+                postComputeProperties,
+                LAS_IMAGE
+        );
+
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
+        );
+
+        final ResponseEntity<TeeServicesProperties> response =
+                sconeTeeController.getTeeServicesPropertiesVersion(TeeFramework.SCONE, VERSION);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        final TeeServicesProperties result = response.getBody();
+        assertNotNull(result);
+        assertInstanceOf(SconeServicesProperties.class, result);
+        assertEquals(TeeFramework.SCONE, result.getTeeFramework());
+        assertEquals("v5", result.getVersion());
+        assertEquals(preComputeProperties, result.getPreComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
+        assertEquals(LAS_IMAGE, ((SconeServicesProperties) result).getLasImage());
+    }
+
+    @Test
+    void shouldGetGraminePropertiesVersion() {
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
+                VERSION,
+                preComputeProperties,
+                postComputeProperties
+        );
+
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
+        );
+
+        final ResponseEntity<TeeServicesProperties> response =
+                gramineTeeController.getTeeServicesPropertiesVersion(TeeFramework.GRAMINE, VERSION);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        final TeeServicesProperties result = response.getBody();
+        assertNotNull(result);
+        assertInstanceOf(GramineServicesProperties.class, result);
+        assertEquals(TeeFramework.GRAMINE, result.getTeeFramework());
+        assertEquals("v5", result.getVersion());
+        assertEquals(preComputeProperties, result.getPreComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
+    }
+
+    @Test
+    void shouldNotGetSconePropertiesVersionSinceGramineSms() {
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
+                VERSION,
+                preComputeProperties,
+                postComputeProperties,
+                LAS_IMAGE
+        );
+
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
+        );
+
+        final ResponseEntity<TeeServicesProperties> response =
+                sconeTeeController.getTeeServicesPropertiesVersion(TeeFramework.GRAMINE, VERSION);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void shouldNotGetSconePropertiesVersionSinceWrongVersion() {
+        final TeeServicesProperties sconeProperties = new SconeServicesProperties(
+                VERSION,
+                preComputeProperties,
+                postComputeProperties,
+                LAS_IMAGE
+        );
+
+        final TeeController sconeTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties
+        );
+
+        final ResponseEntity<TeeServicesProperties> response =
+                sconeTeeController.getTeeServicesPropertiesVersion(TeeFramework.SCONE, "v6.0.4");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void shouldNotGetGraminePropertiesVersionSinceSconeSms() {
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
+                VERSION,
+                preComputeProperties,
+                postComputeProperties
+        );
+
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
+        );
+
+        final ResponseEntity<TeeServicesProperties> response =
+                gramineTeeController.getTeeServicesPropertiesVersion(TeeFramework.SCONE, VERSION);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void shouldNotGetGraminePropertiesVersionSinceWrongVersion() {
+        final TeeServicesProperties gramineProperties = new GramineServicesProperties(
+                VERSION,
+                preComputeProperties,
+                postComputeProperties
+        );
+
+        final TeeController gramineTeeController = new TeeController(
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties
+        );
+
+        final ResponseEntity<TeeServicesProperties> response =
+                gramineTeeController.getTeeServicesPropertiesVersion(TeeFramework.GRAMINE, "v6.0.4");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    }
+    // endregion
+
     // region generateTeeChallenge
     @ParameterizedTest
     @EnumSource(value = AuthorizationError.class)

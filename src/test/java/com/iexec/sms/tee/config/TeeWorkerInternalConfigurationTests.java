@@ -76,6 +76,12 @@ class TeeWorkerInternalConfigurationTests {
     }
 
     // region teeWorkerInternalConfiguration
+    @Test
+    void shouldGetVersionFromPipeline() {
+        final String version = teeWorkerInternalConfiguration.version(pipelineConfig);
+
+        assertEquals(VERSION, version);
+    }
 
     @Test
     void shouldGetPreComputePropertiesFromPipeline() {
@@ -105,6 +111,7 @@ class TeeWorkerInternalConfigurationTests {
                 teeWorkerInternalConfiguration.gramineServicesProperties(VERSION, preComputeProperties, postComputeProperties);
 
         assertEquals(TeeFramework.GRAMINE, properties.getTeeFramework());
+        assertEquals(VERSION, properties.getVersion());
         assertEquals(preComputeProperties, properties.getPreComputeProperties());
         assertEquals(postComputeProperties, properties.getPostComputeProperties());
     }
@@ -117,6 +124,7 @@ class TeeWorkerInternalConfigurationTests {
                 teeWorkerInternalConfiguration.sconeServicesProperties(VERSION, preComputeProperties, postComputeProperties, LAS_IMAGE);
 
         assertEquals(TeeFramework.SCONE, properties.getTeeFramework());
+        assertEquals(VERSION, properties.getVersion());
         assertEquals(preComputeProperties, properties.getPreComputeProperties());
         assertEquals(postComputeProperties, properties.getPostComputeProperties());
         assertEquals(LAS_IMAGE, properties.getLasImage());

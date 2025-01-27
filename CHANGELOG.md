@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### New Features
 
 - SMS can now be configured with a list of TEE-ready pre/post-compute applications for SGX tasks. (#286)
+- Add an endpoint to retrieve a known pre/post-compute configuration pair. (#287)
 
 ### Quality
 
