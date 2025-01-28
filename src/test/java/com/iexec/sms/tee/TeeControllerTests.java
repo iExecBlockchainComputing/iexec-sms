@@ -70,7 +70,6 @@ class TeeControllerTests {
     private static final String LAS_IMAGE = "lasImage";
     private static final String VERSION = "v5";
 
-
     @Mock
     AuthorizationService authorizationService;
     @Mock
@@ -88,7 +87,6 @@ class TeeControllerTests {
     @Test
     void shouldGetSconeFramework() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -107,7 +105,6 @@ class TeeControllerTests {
     @Test
     void shouldGetGramineFramework() {
         final TeeServicesProperties gramineProperties = new GramineServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties
         );
@@ -127,7 +124,6 @@ class TeeControllerTests {
     @Test
     void shouldGetSconeProperties() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -155,7 +151,6 @@ class TeeControllerTests {
     @Test
     void shouldGetGramineProperties() {
         final TeeServicesProperties gramineProperties = new GramineServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties
         );
@@ -180,7 +175,6 @@ class TeeControllerTests {
     @Test
     void shouldNotGetSconePropertiesSinceGramineSms() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE
@@ -199,7 +193,6 @@ class TeeControllerTests {
     @Test
     void shouldNotGetGraminePropertiesSinceSconeSms() {
         final TeeServicesProperties gramineProperties = new GramineServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties
         );
@@ -219,7 +212,6 @@ class TeeControllerTests {
     @Test
     void shouldGetSconePropertiesVersion() {
         final TeeServicesProperties sconeProperties = new SconeServicesProperties(
-                VERSION,
                 preComputeProperties,
                 postComputeProperties,
                 LAS_IMAGE

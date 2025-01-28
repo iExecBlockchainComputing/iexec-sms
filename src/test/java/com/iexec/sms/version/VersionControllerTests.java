@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(SpringExtension.class)
 @Import(ProjectInfoAutoConfiguration.class)
 class VersionControllerTests {
-    String version = "v5";
     TeeAppProperties preComputeProperties;
     TeeAppProperties postComputeProperties;
     private VersionController versionController;
@@ -63,7 +62,6 @@ class VersionControllerTests {
     @Test
     void testVersionController() {
         TeeServicesProperties properties = new SconeServicesProperties(
-                version,
                 preComputeProperties,
                 postComputeProperties,
                 "lasImage"
@@ -78,14 +76,12 @@ class VersionControllerTests {
         TeeServicesProperties properties;
         if (teeFramework == TeeFramework.SCONE) {
             properties = new SconeServicesProperties(
-                    version,
                     preComputeProperties,
                     postComputeProperties,
                     "lasImage"
             );
         } else {
             properties = new GramineServicesProperties(
-                    version,
                     preComputeProperties,
                     postComputeProperties
             );

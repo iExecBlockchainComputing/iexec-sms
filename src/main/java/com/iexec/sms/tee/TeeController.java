@@ -27,6 +27,7 @@ import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.config.TeeWorkerPipelineConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -59,16 +61,19 @@ public class TeeController {
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
     private final TeeServicesProperties teeServicesProperties;
+    private final TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeServicesProperties teeServicesProperties) {
+            TeeServicesProperties teeServicesProperties,
+            TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
         this.teeServicesProperties = teeServicesProperties;
+        this.teeWorkerPipelineConfiguration = teeWorkerPipelineConfiguration;
     }
 
     /**
@@ -116,12 +121,20 @@ public class TeeController {
                     "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        if (!version.equals(teeServicesProperties.getVersion())) {
-            log.error("SMS configured to use another version " +
-                    "[required:{}, actual:{}]", version, teeServicesProperties.getVersion());
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-        return ResponseEntity.ok(teeServicesProperties);
+        final List<String> supportedVersions = teeWorkerPipelineConfiguration.getPipelines()
+                .stream()
+                .map(TeeWorkerPipelineConfiguration.Pipeline::version)
+                .toList();
+        return teeWorkerPipelineConfiguration.getPipelines()
+                .stream()
+                .filter(pipeline -> version.equals(pipeline.version()))
+                .findFirst()
+                .map(pipeline -> ResponseEntity.ok(teeServicesProperties))
+                .orElseGet(() -> {
+                    log.error("SMS configured to use another version " +
+                            "[required:{}, actual:{}]", supportedVersions, version);
+                    return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                });
     }
 
     /**
