@@ -16,6 +16,11 @@
 
 package com.iexec.sms.tee.config;
 
+import com.iexec.commons.poco.tee.TeeFramework;
+import com.iexec.sms.api.config.GramineServicesProperties;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -165,7 +170,7 @@ class TeeWorkerPipelineConfigurationTests {
         final TeeWorkerPipelineConfiguration config = new TeeWorkerPipelineConfiguration(
                 Collections.singletonList(pipeline)
         );
-        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>>  configurationViolations = validator.validate(config);
+        final Set<ConstraintViolation<TeeWorkerPipelineConfiguration>> configurationViolations = validator.validate(config);
         assertThat(configurationViolations).isNotEmpty();
         assertThat(configurationViolations)
                 .extracting(ConstraintViolation::getMessage)
@@ -180,4 +185,91 @@ class TeeWorkerPipelineConfigurationTests {
                         "Fingerprint must not be blank"
                 );
     }
+
+    // region StageConfig.toTeeAppProperties
+    @Test
+    void shouldConvertStageConfigToTeeAppProperties() {
+        TeeWorkerPipelineConfiguration.StageConfig stageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
+                PRE_IMAGE,
+                PRE_FINGERPRINT,
+                PRE_HEAP_SIZE,
+                PRE_ENTRYPOINT
+        );
+
+        TeeAppProperties properties = stageConfig.toTeeAppProperties();
+
+        assertThat(properties)
+                .isNotNull()
+                .satisfies(props -> {
+                    assertEquals(PRE_IMAGE, props.getImage());
+                    assertEquals(PRE_FINGERPRINT, props.getFingerprint());
+                    assertEquals(PRE_HEAP_SIZE.toBytes(), props.getHeapSizeInBytes());
+                    assertEquals(PRE_ENTRYPOINT, props.getEntrypoint());
+                });
+    }
+    // endregion
+
+    // region Pipeline.toTeeServicesProperties
+    @Test
+    void shouldConvertPipelineToGramineServicesProperties() {
+        TeeWorkerPipelineConfiguration.Pipeline pipeline = new TeeWorkerPipelineConfiguration.Pipeline(
+                VERSION,
+                preCompute,
+                postCompute
+        );
+
+        TeeServicesProperties properties = pipeline.toTeeServicesProperties(null);
+
+        assertThat(properties)
+                .isNotNull()
+                .isInstanceOf(GramineServicesProperties.class)
+                .satisfies(props -> {
+                    assertEquals(TeeFramework.GRAMINE, props.getTeeFramework());
+
+                    TeeAppProperties preProps = props.getPreComputeProperties();
+                    assertEquals(PRE_IMAGE, preProps.getImage());
+                    assertEquals(PRE_FINGERPRINT, preProps.getFingerprint());
+                    assertEquals(PRE_HEAP_SIZE.toBytes(), preProps.getHeapSizeInBytes());
+                    assertEquals(PRE_ENTRYPOINT, preProps.getEntrypoint());
+
+                    TeeAppProperties postProps = props.getPostComputeProperties();
+                    assertEquals(POST_IMAGE, postProps.getImage());
+                    assertEquals(POST_FINGERPRINT, postProps.getFingerprint());
+                    assertEquals(POST_HEAP_SIZE.toBytes(), postProps.getHeapSizeInBytes());
+                    assertEquals(POST_ENTRYPOINT, postProps.getEntrypoint());
+                });
+    }
+
+    @Test
+    void shouldConvertPipelineToSconeServicesProperties() {
+        String lasImage = "las-image";
+        TeeWorkerPipelineConfiguration.Pipeline pipeline = new TeeWorkerPipelineConfiguration.Pipeline(
+                VERSION,
+                preCompute,
+                postCompute
+        );
+
+        TeeServicesProperties properties = pipeline.toTeeServicesProperties(lasImage);
+
+        assertThat(properties)
+                .isNotNull()
+                .isInstanceOf(SconeServicesProperties.class)
+                .satisfies(props -> {
+                    assertEquals(TeeFramework.SCONE, props.getTeeFramework());
+                    assertEquals(lasImage, ((SconeServicesProperties) props).getLasImage());
+
+                    TeeAppProperties preProps = props.getPreComputeProperties();
+                    assertEquals(PRE_IMAGE, preProps.getImage());
+                    assertEquals(PRE_FINGERPRINT, preProps.getFingerprint());
+                    assertEquals(PRE_HEAP_SIZE.toBytes(), preProps.getHeapSizeInBytes());
+                    assertEquals(PRE_ENTRYPOINT, preProps.getEntrypoint());
+
+                    TeeAppProperties postProps = props.getPostComputeProperties();
+                    assertEquals(POST_IMAGE, postProps.getImage());
+                    assertEquals(POST_FINGERPRINT, postProps.getFingerprint());
+                    assertEquals(POST_HEAP_SIZE.toBytes(), postProps.getHeapSizeInBytes());
+                    assertEquals(POST_ENTRYPOINT, postProps.getEntrypoint());
+                });
+    }
+    // endregion
 }

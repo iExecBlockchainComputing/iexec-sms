@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,12 @@ import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
+import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.config.TeeWorkerPipelineConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -59,16 +62,24 @@ public class TeeController {
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
     private final TeeServicesProperties teeServicesProperties;
+    private final TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration;
+    private final List<String> supportedVersions;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeServicesProperties teeServicesProperties) {
+            TeeServicesProperties teeServicesProperties,
+            TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
         this.teeServicesProperties = teeServicesProperties;
+        this.teeWorkerPipelineConfiguration = teeWorkerPipelineConfiguration;
+        this.supportedVersions = teeWorkerPipelineConfiguration.getPipelines()
+                .stream()
+                .map(TeeWorkerPipelineConfiguration.Pipeline::version)
+                .toList();
     }
 
     /**
@@ -98,6 +109,39 @@ public class TeeController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         return ResponseEntity.ok(teeServicesProperties);
+    }
+
+    /**
+     * Retrieve properties for TEE services related to the asked version. This includes properties
+     * for pre-compute and post-compute stages
+     * and potential TEE framework's specific data.
+     *
+     * @return TEE services properties (pre-compute image uri, post-compute image uri,
+     * heap size, ...)
+     */
+    @GetMapping("/properties/{teeFramework}/{version}")
+    public ResponseEntity<TeeServicesProperties> getTeeServicesPropertiesVersion(
+            @PathVariable TeeFramework teeFramework,
+            @PathVariable String version) {
+        if (teeFramework != teeServicesProperties.getTeeFramework()) {
+            log.error("SMS configured to use another TeeFramework " +
+                    "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        final String lasImage = teeServicesProperties.getTeeFramework() == TeeFramework.SCONE ?
+                ((SconeServicesProperties) teeServicesProperties).getLasImage() : "";
+
+        return teeWorkerPipelineConfiguration.getPipelines()
+                .stream()
+                .filter(pipeline -> pipeline.version().equals(version))
+                .findFirst()
+                .map(pipeline -> ResponseEntity.ok(pipeline.toTeeServicesProperties(lasImage)))
+                .orElseGet(() -> {
+                    log.error("SMS is not configured to use required {} framework version [required:{}, supported:{}]",
+                            teeFramework, version, supportedVersions);
+                    return ResponseEntity.status(HttpStatus.CONFLICT).build();
+                });
     }
 
     /**
