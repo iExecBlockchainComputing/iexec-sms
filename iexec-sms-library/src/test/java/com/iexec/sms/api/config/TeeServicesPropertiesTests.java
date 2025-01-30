@@ -27,8 +27,7 @@ class TeeServicesPropertiesTests {
 
         String jsonString = mapper.writeValueAsString(teeProperties);
 
-        List<TeeServicesProperties> deserializedProperties = mapper.readValue(jsonString, new TypeReference<>() {
-        });
+        List<TeeServicesProperties> deserializedProperties = mapper.readValue(jsonString, new TypeReference<>() {});
         assertThat(deserializedProperties).usingRecursiveComparison().isEqualTo(teeProperties);
     }
 }

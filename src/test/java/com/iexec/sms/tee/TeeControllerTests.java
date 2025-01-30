@@ -290,7 +290,6 @@ class TeeControllerTests {
         assertEquals(TeeFramework.SCONE, result.getTeeFramework());
         assertEquals(preComputeProperties, result.getPreComputeProperties());
         assertEquals(postComputeProperties, result.getPostComputeProperties());
-        assertEquals(postComputeProperties, result.getPostComputeProperties());
         assertEquals(LAS_IMAGE, ((SconeServicesProperties) result).getLasImage());
     }
 
