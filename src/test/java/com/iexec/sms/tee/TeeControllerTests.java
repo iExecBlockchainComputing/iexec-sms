@@ -31,6 +31,7 @@ import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
+import com.iexec.sms.tee.config.TeeWorkerInternalConfiguration;
 import com.iexec.sms.tee.config.TeeWorkerPipelineConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -79,6 +80,8 @@ class TeeControllerTests {
     TeeChallengeService teeChallengeService;
     @Mock
     TeeSessionService teeSessionService;
+    @Mock
+    TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
 
     TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration = new TeeWorkerPipelineConfiguration(List.of(
             new TeeWorkerPipelineConfiguration.Pipeline(
@@ -114,7 +117,8 @@ class TeeControllerTests {
         );
 
         final TeeController sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeFramework> response =
@@ -131,7 +135,8 @@ class TeeControllerTests {
         );
 
         final TeeController gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeFramework> response =
@@ -151,7 +156,8 @@ class TeeControllerTests {
         );
 
         final TeeController sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -177,7 +183,8 @@ class TeeControllerTests {
         );
 
         final TeeController gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -202,7 +209,8 @@ class TeeControllerTests {
         );
 
         final TeeController sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -219,7 +227,8 @@ class TeeControllerTests {
         );
 
         final TeeController gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -239,8 +248,16 @@ class TeeControllerTests {
         );
 
         final TeeController sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
+
+        when(teeWorkerInternalConfiguration.getPropertiesForVersion(
+                TeeFramework.SCONE,
+                VERSION,
+                teeWorkerPipelineConfiguration,
+                LAS_IMAGE))
+                .thenReturn(Optional.of(sconeProperties));
 
         final ResponseEntity<TeeServicesProperties> response =
                 sconeTeeController.getTeeServicesPropertiesVersion(TeeFramework.SCONE, VERSION);
@@ -265,8 +282,16 @@ class TeeControllerTests {
         );
 
         final TeeController gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
+
+        when(teeWorkerInternalConfiguration.getPropertiesForVersion(
+                TeeFramework.GRAMINE,
+                VERSION,
+                teeWorkerPipelineConfiguration,
+                null))
+                .thenReturn(Optional.of(gramineProperties));
 
         final ResponseEntity<TeeServicesProperties> response =
                 gramineTeeController.getTeeServicesPropertiesVersion(TeeFramework.GRAMINE, VERSION);
@@ -290,7 +315,8 @@ class TeeControllerTests {
         );
 
         final TeeController sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -308,7 +334,8 @@ class TeeControllerTests {
         );
 
         final TeeController sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -325,7 +352,8 @@ class TeeControllerTests {
         );
 
         final TeeController gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =
@@ -342,7 +370,8 @@ class TeeControllerTests {
         );
 
         final TeeController gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties, teeWorkerPipelineConfiguration
+                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
+                teeWorkerPipelineConfiguration, teeWorkerInternalConfiguration
         );
 
         final ResponseEntity<TeeServicesProperties> response =

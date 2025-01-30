@@ -20,70 +20,75 @@ import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Optional;
+
 @Slf4j
 @Configuration
 @Validated
 public class TeeWorkerInternalConfiguration {
-    @Bean
-    TeeAppProperties preComputeProperties(@NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
-        final TeeWorkerPipelineConfiguration.StageConfig preComputeConfig =
-                pipelineConfig.getPipelines().get(0).preCompute();
 
-        log.info("Pre-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
-                preComputeConfig.image(),
-                preComputeConfig.fingerprint(),
-                preComputeConfig.entrypoint(),
-                preComputeConfig.heapSize());
+    private TeeAppProperties buildProperties(TeeWorkerPipelineConfiguration.StageConfig config) {
         return TeeAppProperties.builder()
-                .image(preComputeConfig.image())
-                .fingerprint(preComputeConfig.fingerprint())
-                .entrypoint(preComputeConfig.entrypoint())
-                .heapSizeInBytes(preComputeConfig.heapSize().toBytes())
+                .image(config.image())
+                .fingerprint(config.fingerprint())
+                .entrypoint(config.entrypoint())
+                .heapSizeInBytes(config.heapSize().toBytes())
                 .build();
     }
 
-    @Bean
-    TeeAppProperties postComputeProperties(@NotNull final TeeWorkerPipelineConfiguration pipelineConfig) {
-        final TeeWorkerPipelineConfiguration.StageConfig postComputeConfig =
-                pipelineConfig.getPipelines().get(0).postCompute();
+    public Optional<TeeServicesProperties> getPropertiesForVersion(
+            final TeeFramework framework,
+            final String version,
+            final TeeWorkerPipelineConfiguration pipelineConfig,
+            final String lasImage) {
 
-        log.info("Post-compute stage configured with [image={}, fingerprint={}, entrypoint={}, heapSize={}]",
-                postComputeConfig.image(),
-                postComputeConfig.fingerprint(),
-                postComputeConfig.entrypoint(),
-                postComputeConfig.heapSize());
-        return TeeAppProperties.builder()
-                .image(postComputeConfig.image())
-                .fingerprint(postComputeConfig.fingerprint())
-                .entrypoint(postComputeConfig.entrypoint())
-                .heapSizeInBytes(postComputeConfig.heapSize().toBytes())
-                .build();
+        return pipelineConfig.getPipelines()
+                .stream()
+                .filter(pipeline -> version.equals(pipeline.version()))
+                .findFirst()
+                .map(versionedPipeline -> {
+                    final TeeAppProperties preComputeProperties = buildProperties(versionedPipeline.preCompute());
+                    final TeeAppProperties postComputeProperties = buildProperties(versionedPipeline.postCompute());
+
+                    return switch (framework) {
+                        case GRAMINE -> new GramineServicesProperties(preComputeProperties, postComputeProperties);
+                        case SCONE ->
+                                new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
+                    };
+                });
     }
 
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
-    GramineServicesProperties gramineServicesProperties(
-            final TeeAppProperties preComputeProperties,
-            final TeeAppProperties postComputeProperties) {
+    GramineServicesProperties gramineServicesProperties(final TeeWorkerPipelineConfiguration pipelineConfig) {
+        TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
+
+        TeeAppProperties preComputeProperties = buildProperties(defaultPipeline.preCompute());
+        TeeAppProperties postComputeProperties = buildProperties(defaultPipeline.postCompute());
+
         return new GramineServicesProperties(preComputeProperties, postComputeProperties);
     }
 
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
-    SconeServicesProperties sconeServicesProperties(
-            final TeeAppProperties preComputeProperties,
-            final TeeAppProperties postComputeProperties,
-            @Value("${tee.scone.las-image}")
-            @NotBlank(message = "las image must be provided") final String lasImage) {
+    SconeServicesProperties sconeServicesProperties(final TeeWorkerPipelineConfiguration pipelineConfig,
+                                                    @Value("${tee.scone.las-image}")
+                                                    @NotBlank(message = "las image must be provided") final String lasImage) {
+        TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
+
+        TeeAppProperties preComputeProperties = buildProperties(defaultPipeline.preCompute());
+        TeeAppProperties postComputeProperties = buildProperties(defaultPipeline.postCompute());
+
         return new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
     }
+
 }
