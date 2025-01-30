@@ -28,7 +28,6 @@ import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.config.TeeWorkerInternalConfiguration;
 import com.iexec.sms.tee.config.TeeWorkerPipelineConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -64,21 +63,23 @@ public class TeeController {
     private final TeeSessionService teeSessionService;
     private final TeeServicesProperties teeServicesProperties;
     private final TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration;
-    private final TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
+    private final List<String> supportedVersions;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
             TeeServicesProperties teeServicesProperties,
-            TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration,
-            TeeWorkerInternalConfiguration teeWorkerInternalConfiguration) {
+            TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
         this.teeServicesProperties = teeServicesProperties;
         this.teeWorkerPipelineConfiguration = teeWorkerPipelineConfiguration;
-        this.teeWorkerInternalConfiguration = teeWorkerInternalConfiguration;
+        this.supportedVersions = teeWorkerPipelineConfiguration.getPipelines()
+                .stream()
+                .map(TeeWorkerPipelineConfiguration.Pipeline::version)
+                .toList();
     }
 
     /**
@@ -129,21 +130,16 @@ public class TeeController {
         }
 
         final String lasImage = teeServicesProperties.getTeeFramework() == TeeFramework.SCONE ?
-                ((SconeServicesProperties) teeServicesProperties).getLasImage() : null;
+                ((SconeServicesProperties) teeServicesProperties).getLasImage() : "";
 
-        return teeWorkerInternalConfiguration.getPropertiesForVersion(
-                        teeFramework,
-                        version,
-                        teeWorkerPipelineConfiguration,
-                        lasImage)
-                .map(ResponseEntity::ok)
+        return teeWorkerPipelineConfiguration.getPipelines()
+                .stream()
+                .filter(pipeline -> pipeline.version().equals(version))
+                .findFirst()
+                .map(pipeline -> ResponseEntity.ok(pipeline.toTeeServicesProperties(lasImage)))
                 .orElseGet(() -> {
-                    final List<String> supportedVersions = teeWorkerPipelineConfiguration.getPipelines()
-                            .stream()
-                            .map(TeeWorkerPipelineConfiguration.Pipeline::version)
-                            .toList();
-                    log.error("SMS is not configured to use required {} framework version " +
-                            "[required:{}, supported:{}]", teeFramework, version, supportedVersions);
+                    log.error("SMS is not configured to use required {} framework version [required:{}, supported:{}]",
+                            teeFramework, version, supportedVersions);
                     return ResponseEntity.status(HttpStatus.CONFLICT).build();
                 });
     }

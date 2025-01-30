@@ -20,7 +20,6 @@ import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
-import com.iexec.sms.api.config.TeeServicesProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
@@ -83,44 +82,6 @@ class TeeWorkerInternalConfigurationTests {
                 Collections.singletonList(pipeline)
         );
     }
-
-    // region getPropertiesForVersion
-    @Test
-    void shouldGetSconePropertiesFromVersion() {
-        final TeeServicesProperties properties = teeWorkerInternalConfiguration.getPropertiesForVersion(
-                TeeFramework.SCONE,
-                "v5",
-                pipelineConfig,
-                LAS_IMAGE
-        ).orElseThrow();
-        assertEquals(PRE_IMAGE, properties.getPreComputeProperties().getImage());
-        assertEquals(PRE_FINGERPRINT, properties.getPreComputeProperties().getFingerprint());
-        assertEquals(PRE_ENTRYPOINT, properties.getPreComputeProperties().getEntrypoint());
-        assertEquals(HEAP_SIZE_B, properties.getPreComputeProperties().getHeapSizeInBytes());
-        assertEquals(POST_IMAGE, properties.getPostComputeProperties().getImage());
-        assertEquals(POST_FINGERPRINT, properties.getPostComputeProperties().getFingerprint());
-        assertEquals(POST_ENTRYPOINT, properties.getPostComputeProperties().getEntrypoint());
-        assertEquals(HEAP_SIZE_B, properties.getPostComputeProperties().getHeapSizeInBytes());
-    }
-
-    @Test
-    void shouldGetGraminePropertiesFromVersion() {
-        final TeeServicesProperties properties = teeWorkerInternalConfiguration.getPropertiesForVersion(
-                TeeFramework.GRAMINE,
-                "v5",
-                pipelineConfig,
-                null
-        ).orElseThrow();
-        assertEquals(PRE_IMAGE, properties.getPreComputeProperties().getImage());
-        assertEquals(PRE_FINGERPRINT, properties.getPreComputeProperties().getFingerprint());
-        assertEquals(PRE_ENTRYPOINT, properties.getPreComputeProperties().getEntrypoint());
-        assertEquals(HEAP_SIZE_B, properties.getPreComputeProperties().getHeapSizeInBytes());
-        assertEquals(POST_IMAGE, properties.getPostComputeProperties().getImage());
-        assertEquals(POST_FINGERPRINT, properties.getPostComputeProperties().getFingerprint());
-        assertEquals(POST_ENTRYPOINT, properties.getPostComputeProperties().getEntrypoint());
-        assertEquals(HEAP_SIZE_B, properties.getPostComputeProperties().getHeapSizeInBytes());
-    }
-    // endregion
 
     // region gramineServicesProperties
     @Test
