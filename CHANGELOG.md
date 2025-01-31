@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Quality
 
 - Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
+- Remove references to Ownable Smart Contract wrapper in integration test. (#288)
 
 ### Dependency Upgrades
 
