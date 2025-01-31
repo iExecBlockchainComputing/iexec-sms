@@ -16,7 +16,6 @@
 
 package com.iexec.sms.secret.compute;
 
-import com.iexec.commons.poco.contract.generated.Ownable;
 import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.api.SmsClient;
@@ -46,15 +45,14 @@ import java.util.Random;
 
 import static com.iexec.commons.poco.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static com.iexec.sms.MockChainConfiguration.MOCK_CHAIN_PROFILE;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
 @ActiveProfiles({"scone", MOCK_CHAIN_PROFILE, "test"})
-public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
+class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS = "0xABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
-    private static final String SECRET_VALUE = generateRandomAscii(4096);
+    private static final String SECRET_VALUE = generateRandomAscii();
     private static final String OWNER_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String REQUESTER_ADDRESS = "0x123790ae4E14865B972ee04a5f9FD5fB153Cd5e7";
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";
@@ -72,14 +70,15 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @Autowired
     private IexecHubService iexecHubService;
 
-    /*
+    /**
      * Generate random ASCII from seed for re-testability.
      * See also {@link org.apache.commons.lang3.RandomStringUtils#randomAscii(int)}
-     * */
-    private static String generateRandomAscii(int count) {
+     */
+    private static String generateRandomAscii() {
         long seed = new Date().getTime();
         log.info("Generating random ascii from seed: {}", seed);
-        return RandomStringUtils.random(count,
+        return RandomStringUtils.random(
+                4096,
                 32,
                 127,
                 false,
@@ -91,10 +90,6 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @BeforeEach
     public void setUp() {
         apiClient = SmsClientBuilder.getInstance(Logger.Level.FULL, "http://localhost:" + randomServerPort);
-        final Ownable appContract = mock(Ownable.class);
-        when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
-        when(iexecHubService.getOwnableContract(APP_ADDRESS))
-                .thenReturn(appContract);
         repository.deleteAll();
     }
 
@@ -104,9 +99,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
-        final String ownerAddress = OWNER_ADDRESS;
 
-        addNewAppDeveloperSecret(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue, ownerAddress);
+        addNewAppDeveloperSecret(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue, OWNER_ADDRESS);
         addNewRequesterSecret(requesterAddress, requesterSecretKey, secretValue);
 
         // Check the new secrets exists for the API
@@ -188,8 +182,6 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         // We shouldn't be able to add a new secret to the database with the same index
         // and an appAddress whose only difference is the case.
         try {
-            when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
-
             final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
             apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretValue);
             Assertions.fail("A second app developer secret with the same index " +
