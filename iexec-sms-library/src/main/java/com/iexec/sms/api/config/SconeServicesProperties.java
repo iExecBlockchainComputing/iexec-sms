@@ -26,10 +26,11 @@ public class SconeServicesProperties extends TeeServicesProperties {
     private final String lasImage;
 
     @JsonCreator
-    public SconeServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+    public SconeServicesProperties(@JsonProperty("teeFrameworkVersion") String teeFrameworkVersion,
+                                   @JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
                                    @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties,
                                    @JsonProperty("lasImage") String lasImage) {
-        super(TeeFramework.SCONE, preComputeProperties, postComputeProperties);
+        super(TeeFramework.SCONE, teeFrameworkVersion, preComputeProperties, postComputeProperties);
         this.lasImage = lasImage;
     }
 }

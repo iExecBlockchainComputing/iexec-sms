@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - SMS can now be configured with a list of TEE-ready pre/post-compute applications for SGX tasks. (#286)
 - Add `getTeeServicesPropertiesVersion` endpoint to retrieve a specific pre/post-compute configuration pair version. (#287)
+- Add `teeFrameworkVersion` field to `TeeServicesProperties`. (#289)
 
 ### Quality
 

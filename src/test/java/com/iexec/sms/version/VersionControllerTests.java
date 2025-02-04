@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(SpringExtension.class)
 @Import(ProjectInfoAutoConfiguration.class)
 class VersionControllerTests {
+    private final String teeFrameworkVersion = "v5";
     TeeAppProperties preComputeProperties;
     TeeAppProperties postComputeProperties;
     private VersionController versionController;
@@ -62,6 +63,7 @@ class VersionControllerTests {
     @Test
     void testVersionController() {
         TeeServicesProperties properties = new SconeServicesProperties(
+                teeFrameworkVersion,
                 preComputeProperties,
                 postComputeProperties,
                 "lasImage"
@@ -76,12 +78,14 @@ class VersionControllerTests {
         TeeServicesProperties properties;
         if (teeFramework == TeeFramework.SCONE) {
             properties = new SconeServicesProperties(
+                    teeFrameworkVersion,
                     preComputeProperties,
                     postComputeProperties,
                     "lasImage"
             );
         } else {
             properties = new GramineServicesProperties(
+                    teeFrameworkVersion,
                     preComputeProperties,
                     postComputeProperties
             );

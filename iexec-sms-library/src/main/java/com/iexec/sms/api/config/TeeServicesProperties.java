@@ -32,6 +32,7 @@ import lombok.Getter;
 // TODO upgrade to sealed class in Java 17
 public abstract class TeeServicesProperties {
     private final TeeFramework teeFramework;
+    private final String teeFrameworkVersion;
     private final TeeAppProperties preComputeProperties;
     private final TeeAppProperties postComputeProperties;
 }

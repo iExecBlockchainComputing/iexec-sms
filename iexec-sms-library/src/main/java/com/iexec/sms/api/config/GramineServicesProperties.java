@@ -25,8 +25,9 @@ import lombok.Getter;
 public class GramineServicesProperties extends TeeServicesProperties {
 
     @JsonCreator
-    public GramineServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+    public GramineServicesProperties(@JsonProperty("teeFrameworkVersion") String teeFrameworkVersion,
+                                     @JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
                                      @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties) {
-        super(TeeFramework.GRAMINE, preComputeProperties, postComputeProperties);
+        super(TeeFramework.GRAMINE, teeFrameworkVersion, preComputeProperties, postComputeProperties);
     }
 }
