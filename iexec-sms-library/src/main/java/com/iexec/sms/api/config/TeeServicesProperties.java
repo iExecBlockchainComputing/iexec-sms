@@ -16,7 +16,6 @@
 
 package com.iexec.sms.api.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.iexec.commons.poco.tee.TeeFramework;
@@ -32,12 +31,8 @@ import lombok.Getter;
 })
 // TODO upgrade to sealed class in Java 17
 public abstract class TeeServicesProperties {
-    @JsonProperty("teeFramework")
     private final TeeFramework teeFramework;
-    @JsonProperty("teeFrameworkVersion")
     private final String teeFrameworkVersion;
-    @JsonProperty("preComputeProperties")
     private final TeeAppProperties preComputeProperties;
-    @JsonProperty("postComputeProperties")
     private final TeeAppProperties postComputeProperties;
 }
