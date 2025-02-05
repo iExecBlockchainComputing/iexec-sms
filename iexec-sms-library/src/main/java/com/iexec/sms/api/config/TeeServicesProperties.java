@@ -35,4 +35,12 @@ public abstract class TeeServicesProperties {
     private final String teeFrameworkVersion;
     private final TeeAppProperties preComputeProperties;
     private final TeeAppProperties postComputeProperties;
+
+    @Deprecated(forRemoval = true)
+    protected TeeServicesProperties(TeeFramework teeFramework, TeeAppProperties preComputeProperties, TeeAppProperties postComputeProperties) {
+        this.teeFramework = teeFramework;
+        this.teeFrameworkVersion = "";
+        this.preComputeProperties = preComputeProperties;
+        this.postComputeProperties = postComputeProperties;
+    }
 }
