@@ -25,6 +25,21 @@ import lombok.Getter;
 public class SconeServicesProperties extends TeeServicesProperties {
     private final String lasImage;
 
+    /**
+     * SconeServicesProperties constructor.
+     *
+     * @deprecated This method is no longer acceptable to create a SconeServicesProperties object since we need the
+     * TEE framework version also now.
+     * Use {@link SconeServicesProperties(String, TeeAppProperties, TeeAppProperties, String)} instead.
+     */
+    @Deprecated(since = "8.7.0", forRemoval = true)
+    public SconeServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+                                   @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties,
+                                   @JsonProperty("lasImage") String lasImage) {
+        super(TeeFramework.SCONE, preComputeProperties, postComputeProperties);
+        this.lasImage = lasImage;
+    }
+
     @JsonCreator
     public SconeServicesProperties(@JsonProperty("teeFrameworkVersion") String teeFrameworkVersion,
                                    @JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,

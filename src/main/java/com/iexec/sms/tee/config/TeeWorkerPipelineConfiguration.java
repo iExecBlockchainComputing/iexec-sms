@@ -45,12 +45,11 @@ public class TeeWorkerPipelineConfiguration {
             @NotNull(message = "Post-compute configuration must not be null") @Valid StageConfig postCompute
     ) {
         public TeeServicesProperties toTeeServicesProperties(final String lasImage) {
-            final String teeFrameworkVersion = version();
             final TeeAppProperties preComputeProperties = preCompute().toTeeAppProperties();
             final TeeAppProperties postComputeProperties = postCompute().toTeeAppProperties();
             return StringUtils.isBlank(lasImage) ?
-                    new GramineServicesProperties(teeFrameworkVersion, preComputeProperties, postComputeProperties) :
-                    new SconeServicesProperties(teeFrameworkVersion, preComputeProperties, postComputeProperties, lasImage);
+                    new GramineServicesProperties(version, preComputeProperties, postComputeProperties) :
+                    new SconeServicesProperties(version, preComputeProperties, postComputeProperties, lasImage);
         }
     }
 
@@ -62,10 +61,10 @@ public class TeeWorkerPipelineConfiguration {
     ) {
         public TeeAppProperties toTeeAppProperties() {
             return TeeAppProperties.builder()
-                    .image(image())
-                    .fingerprint(fingerprint())
-                    .heapSizeInBytes(heapSize().toBytes())
-                    .entrypoint(entrypoint())
+                    .image(image)
+                    .fingerprint(fingerprint)
+                    .heapSizeInBytes(heapSize.toBytes())
+                    .entrypoint(entrypoint)
                     .build();
         }
     }

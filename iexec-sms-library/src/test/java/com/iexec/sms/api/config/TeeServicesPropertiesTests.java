@@ -16,92 +16,94 @@
 
 package com.iexec.sms.api.config;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iexec.commons.poco.tee.TeeFramework;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TeeServicesPropertiesTests {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String FRAMEWORK_VERSION = "v5";
-
-    private static final String SCONE_PRE_COMPUTE_NAME = "scone-pre-compute";
-    private static final String SCONE_POST_COMPUTE_NAME = "scone-post-compute";
-    private static final String GRAMINE_PRE_COMPUTE_NAME = "gramine-pre-compute";
-    private static final String GRAMINE_POST_COMPUTE_NAME = "gramine-post-compute";
-    private static final String LAS_IMAGE = "lasImage";
     private static final long HEAP_SIZE = 1L;
 
-    private List<TeeServicesProperties> teeProperties;
-
-    @BeforeEach
-    void setUp() {
-        final TeeAppProperties sconePreCompute = createTeeAppProperties(
-                SCONE_PRE_COMPUTE_NAME,
-                SCONE_PRE_COMPUTE_NAME + "-fingerprint",
-                SCONE_PRE_COMPUTE_NAME + "-entrypoint"
-        );
-        final TeeAppProperties sconePostCompute = createTeeAppProperties(
-                SCONE_POST_COMPUTE_NAME,
-                SCONE_POST_COMPUTE_NAME + "-fingerprint",
-                SCONE_POST_COMPUTE_NAME + "-entrypoint"
-        );
-        final TeeAppProperties graminePreCompute = createTeeAppProperties(
-                GRAMINE_PRE_COMPUTE_NAME,
-                GRAMINE_PRE_COMPUTE_NAME + "-fingerprint",
-                GRAMINE_PRE_COMPUTE_NAME + "-entrypoint"
-        );
-        final TeeAppProperties graminePostCompute = createTeeAppProperties(
-                GRAMINE_POST_COMPUTE_NAME,
-                GRAMINE_POST_COMPUTE_NAME + "-fingerprint",
-                GRAMINE_POST_COMPUTE_NAME + "-entrypoint"
-        );
-
-        teeProperties = new ArrayList<>();
-        teeProperties.add(new SconeServicesProperties(FRAMEWORK_VERSION, sconePreCompute, sconePostCompute, LAS_IMAGE));
-        teeProperties.add(new GramineServicesProperties(FRAMEWORK_VERSION, graminePreCompute, graminePostCompute));
+    private static TeeAppProperties createTeeAppProperties(String name) {
+        return TeeAppProperties.builder()
+                .image(name)
+                .fingerprint(name + "-fingerprint")
+                .entrypoint(name + "-entrypoint")
+                .heapSizeInBytes(HEAP_SIZE)
+                .build();
     }
 
     @Test
-    void shouldSerializeAndDeserialize() throws JsonProcessingException {
-        final String jsonString = mapper.writeValueAsString(teeProperties);
-        final List<TeeServicesProperties> deserializedProperties = mapper.readValue(
-                jsonString,
-                new TypeReference<>() {
-                }
+    void shouldCreateWithDeprecatedConstructor() {
+        final TeeAppProperties preCompute = createTeeAppProperties("pre-compute");
+        final TeeAppProperties postCompute = createTeeAppProperties("post-compute");
+
+        TeeServicesProperties properties = new TestTeeServicesProperties(
+                TeeFramework.SCONE,
+                preCompute,
+                postCompute
         );
 
-        assertThat(deserializedProperties)
-                .usingRecursiveComparison()
-                .isEqualTo(teeProperties);
+        assertThat(properties.getTeeFramework()).isEqualTo(TeeFramework.SCONE);
+        assertThat(properties.getTeeFrameworkVersion()).isEmpty();
+        assertThat(properties.getPreComputeProperties()).isEqualTo(preCompute);
+        assertThat(properties.getPostComputeProperties()).isEqualTo(postCompute);
     }
 
     @Test
-    void shouldPreserveFrameworkVersion() throws JsonProcessingException {
-        final String jsonString = mapper.writeValueAsString(teeProperties);
-        final List<TeeServicesProperties> deserializedProperties = mapper.readValue(
-                jsonString,
-                new TypeReference<>() {
-                }
+    void shouldCreateWithNewConstructor() {
+        final TeeAppProperties preCompute = createTeeAppProperties("pre-compute");
+        final TeeAppProperties postCompute = createTeeAppProperties("post-compute");
+
+        final TeeServicesProperties properties = new TestTeeServicesProperties(
+                TeeFramework.SCONE,
+                FRAMEWORK_VERSION,
+                preCompute,
+                postCompute
         );
 
-        assertThat(deserializedProperties.get(0).getTeeFrameworkVersion())
-                .isEqualTo(FRAMEWORK_VERSION);
-        assertThat(deserializedProperties.get(1).getTeeFrameworkVersion())
-                .isEqualTo(FRAMEWORK_VERSION);
+        assertThat(properties.getTeeFramework()).isEqualTo(TeeFramework.SCONE);
+        assertThat(properties.getTeeFrameworkVersion()).isEqualTo(FRAMEWORK_VERSION);
+        assertThat(properties.getPreComputeProperties()).isEqualTo(preCompute);
+        assertThat(properties.getPostComputeProperties()).isEqualTo(postCompute);
     }
 
-    private TeeAppProperties createTeeAppProperties(
-            final String name,
-            final String fingerprint,
-            final String entrypoint
-    ) {
-        return new TeeAppProperties(name, fingerprint, entrypoint, HEAP_SIZE);
+    @Test
+    void shouldSerializeWithTypeInfo() throws JsonProcessingException {
+        final TeeServicesProperties properties = new TestTeeServicesProperties(
+                TeeFramework.SCONE,
+                FRAMEWORK_VERSION,
+                createTeeAppProperties("pre-compute"),
+                createTeeAppProperties("post-compute")
+        );
+        final String json = mapper.writeValueAsString(properties);
+
+        assertThat(json)
+                .contains("\"teeFramework\":\"SCONE\"")
+                .contains("\"teeFrameworkVersion\":\"" + FRAMEWORK_VERSION + "\"")
+                .contains("\"preComputeProperties\"")
+                .contains("\"postComputeProperties\"");
+    }
+
+    // Test implementation of TeeServicesProperties for testing purposes
+    private static class TestTeeServicesProperties extends TeeServicesProperties {
+        @Deprecated(forRemoval = true)
+        TestTeeServicesProperties(TeeFramework teeFramework,
+                                  TeeAppProperties preComputeProperties,
+                                  TeeAppProperties postComputeProperties) {
+            super(teeFramework, preComputeProperties, postComputeProperties);
+        }
+
+        TestTeeServicesProperties(TeeFramework teeFramework,
+                                  String teeFrameworkVersion,
+                                  TeeAppProperties preComputeProperties,
+                                  TeeAppProperties postComputeProperties) {
+            super(teeFramework, teeFrameworkVersion, preComputeProperties, postComputeProperties);
+        }
     }
 }

@@ -24,6 +24,19 @@ import lombok.Getter;
 @Getter
 public class GramineServicesProperties extends TeeServicesProperties {
 
+    /**
+     * GramineServicesProperties constructor.
+     *
+     * @deprecated This method is no longer acceptable to create a GramineServicesProperties object since we need the
+     * TEE framework version also now.
+     * Use {@link GramineServicesProperties(String, TeeAppProperties, TeeAppProperties)} instead.
+     */
+    @Deprecated(since = "8.7.0", forRemoval = true)
+    public GramineServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+                                     @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties) {
+        super(TeeFramework.GRAMINE, preComputeProperties, postComputeProperties);
+    }
+
     @JsonCreator
     public GramineServicesProperties(@JsonProperty("teeFrameworkVersion") String teeFrameworkVersion,
                                      @JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
