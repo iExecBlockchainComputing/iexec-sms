@@ -35,16 +35,4 @@ public abstract class TeeServicesProperties {
     private final String teeFrameworkVersion;
     private final TeeAppProperties preComputeProperties;
     private final TeeAppProperties postComputeProperties;
-
-    /**
-     * TeeServicesProperties constructor.
-     *
-     * @deprecated This method is no longer acceptable to create a TeeServicesProperties object since we need the
-     * TEE framework version also now.
-     * Use {@link TeeServicesProperties(TeeFramework, String, TeeAppProperties, TeeAppProperties)} instead.
-     */
-    @Deprecated(since = "8.7.0", forRemoval = true)
-    protected TeeServicesProperties(TeeFramework teeFramework, TeeAppProperties preComputeProperties, TeeAppProperties postComputeProperties) {
-        this(teeFramework, "", preComputeProperties, postComputeProperties);
-    }
 }

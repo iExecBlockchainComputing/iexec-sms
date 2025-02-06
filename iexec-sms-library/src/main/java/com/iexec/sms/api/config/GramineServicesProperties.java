@@ -34,7 +34,7 @@ public class GramineServicesProperties extends TeeServicesProperties {
     @Deprecated(since = "8.7.0", forRemoval = true)
     public GramineServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
                                      @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties) {
-        super(TeeFramework.GRAMINE, preComputeProperties, postComputeProperties);
+        super(TeeFramework.GRAMINE, "", preComputeProperties, postComputeProperties);
     }
 
     @JsonCreator
