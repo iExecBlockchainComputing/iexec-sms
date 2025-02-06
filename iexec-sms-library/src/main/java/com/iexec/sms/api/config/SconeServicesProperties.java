@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,27 @@ import lombok.Getter;
 public class SconeServicesProperties extends TeeServicesProperties {
     private final String lasImage;
 
-    @JsonCreator
+    /**
+     * SconeServicesProperties constructor.
+     *
+     * @deprecated This method is no longer acceptable to create a SconeServicesProperties object since we need the
+     * TEE framework version also now.
+     * Use {@link SconeServicesProperties(String, TeeAppProperties, TeeAppProperties, String)} instead.
+     */
+    @Deprecated(since = "8.7.0", forRemoval = true)
     public SconeServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
                                    @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties,
                                    @JsonProperty("lasImage") String lasImage) {
-        super(TeeFramework.SCONE, preComputeProperties, postComputeProperties);
+        super(TeeFramework.SCONE, "", preComputeProperties, postComputeProperties);
+        this.lasImage = lasImage;
+    }
+
+    @JsonCreator
+    public SconeServicesProperties(@JsonProperty("teeFrameworkVersion") String teeFrameworkVersion,
+                                   @JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
+                                   @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties,
+                                   @JsonProperty("lasImage") String lasImage) {
+        super(TeeFramework.SCONE, teeFrameworkVersion, preComputeProperties, postComputeProperties);
         this.lasImage = lasImage;
     }
 }

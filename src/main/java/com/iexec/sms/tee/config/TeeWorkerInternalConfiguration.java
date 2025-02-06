@@ -36,12 +36,12 @@ public class TeeWorkerInternalConfiguration {
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
     GramineServicesProperties gramineServicesProperties(final TeeWorkerPipelineConfiguration pipelineConfig) {
-        TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
+        final TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
+        final String frameworkVersion = defaultPipeline.version();
+        final TeeAppProperties preComputeProperties = defaultPipeline.preCompute().toTeeAppProperties();
+        final TeeAppProperties postComputeProperties = defaultPipeline.postCompute().toTeeAppProperties();
 
-        TeeAppProperties preComputeProperties = defaultPipeline.preCompute().toTeeAppProperties();
-        TeeAppProperties postComputeProperties = defaultPipeline.postCompute().toTeeAppProperties();
-
-        return new GramineServicesProperties(preComputeProperties, postComputeProperties);
+        return new GramineServicesProperties(frameworkVersion, preComputeProperties, postComputeProperties);
     }
 
     @Bean
@@ -49,12 +49,12 @@ public class TeeWorkerInternalConfiguration {
     SconeServicesProperties sconeServicesProperties(final TeeWorkerPipelineConfiguration pipelineConfig,
                                                     @Value("${tee.scone.las-image}")
                                                     @NotBlank(message = "las image must be provided") final String lasImage) {
-        TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
+        final TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
+        final String frameworkVersion = defaultPipeline.version();
+        final TeeAppProperties preComputeProperties = defaultPipeline.preCompute().toTeeAppProperties();
+        final TeeAppProperties postComputeProperties = defaultPipeline.postCompute().toTeeAppProperties();
 
-        TeeAppProperties preComputeProperties = defaultPipeline.preCompute().toTeeAppProperties();
-        TeeAppProperties postComputeProperties = defaultPipeline.postCompute().toTeeAppProperties();
-
-        return new SconeServicesProperties(preComputeProperties, postComputeProperties, lasImage);
+        return new SconeServicesProperties(frameworkVersion, preComputeProperties, postComputeProperties, lasImage);
     }
 
 }
