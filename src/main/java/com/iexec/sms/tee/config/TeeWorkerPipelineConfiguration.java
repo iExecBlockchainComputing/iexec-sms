@@ -45,8 +45,8 @@ public class TeeWorkerPipelineConfiguration {
             @NotNull(message = "Post-compute configuration must not be null") @Valid StageConfig postCompute
     ) {
         public TeeServicesProperties toTeeServicesProperties(final String lasImage) {
-            final TeeAppProperties preComputeProperties = preCompute().toTeeAppProperties();
-            final TeeAppProperties postComputeProperties = postCompute().toTeeAppProperties();
+            final TeeAppProperties preComputeProperties = preCompute.toTeeAppProperties();
+            final TeeAppProperties postComputeProperties = postCompute.toTeeAppProperties();
             return StringUtils.isBlank(lasImage) ?
                     new GramineServicesProperties(version, preComputeProperties, postComputeProperties) :
                     new SconeServicesProperties(version, preComputeProperties, postComputeProperties, lasImage);
