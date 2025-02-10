@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,15 @@ package com.iexec.sms.tee.session;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
 import static com.iexec.sms.api.TeeSessionGenerationError.SECURE_SESSION_NO_TEE_FRAMEWORK;
@@ -34,13 +37,15 @@ public class TeeSessionService {
 
     private final IexecHubService iexecHubService;
     private final TeeSessionHandler teeSessionHandler;
-
+    final Map<String, TeeServicesProperties> teeServicesPropertiesMap;
 
     public TeeSessionService(
             IexecHubService iexecService,
-            TeeSessionHandler teeSessionHandler) {
+            TeeSessionHandler teeSessionHandler,
+            Map<String, TeeServicesProperties> teeServicesPropertiesMap) {
         this.iexecHubService = iexecService;
         this.teeSessionHandler = teeSessionHandler;
+        this.teeServicesPropertiesMap = teeServicesPropertiesMap;
     }
 
     public TeeSessionGenerationResponse generateTeeSession(
@@ -54,9 +59,11 @@ public class TeeSessionService {
                     GET_TASK_DESCRIPTION_FAILED,
                     String.format("Failed to get task description [taskId:%s]", taskId));
         }
+        final String version = taskDescription.getAppEnclaveConfiguration().getVersion();
         TeeSessionRequest request = TeeSessionRequest.builder()
                 .sessionId(sessionId)
                 .taskDescription(taskDescription)
+                .teeServicesProperties(teeServicesPropertiesMap.get(version))
                 .workerAddress(workerAddress)
                 .enclaveChallenge(teeChallenge)
                 .build();

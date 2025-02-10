@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import com.iexec.common.utils.FileHashUtils;
 import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.compute.OnChainObjectType;
 import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
@@ -59,7 +62,6 @@ public class TeeSessionTestUtils {
     public static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     public static final String APP_ENTRYPOINT = "appEntrypoint";
     public static final String ARGS = "args";
-    public static final String IEXEC_APP_DEVELOPER_SECRET_1 = "IEXEC_APP_DEVELOPER_SECRET_1";
     // post-compute
     public static final String POST_COMPUTE_FINGERPRINT = "mrEnclave3";
     public static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
@@ -67,12 +69,27 @@ public class TeeSessionTestUtils {
     public static final String STORAGE_PROXY = "storageProxy";
     public static final String STORAGE_TOKEN = "storageToken";
     public static final String ENCRYPTION_PUBLIC_KEY = "encryptionPublicKey";
-    public static final String TEE_CHALLENGE_PRIVATE_KEY = "teeChallengePrivateKey";
     // input files
     public static final String INPUT_FILE_URL_1 = "http://host/file1";
     public static final String INPUT_FILE_NAME_1 = FileHashUtils.createFileNameFromUri(INPUT_FILE_URL_1);
     public static final String INPUT_FILE_URL_2 = "http://host/file2";
     public static final String INPUT_FILE_NAME_2 = FileHashUtils.createFileNameFromUri(INPUT_FILE_URL_2);
+
+    private static final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("PRE_COMPUTE_IMAGE")
+            .fingerprint(PRE_COMPUTE_FINGERPRINT)
+            .entrypoint(PRE_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
+
+    private static final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("POST_COMPUTE_IMAGE")
+            .fingerprint(POST_COMPUTE_FINGERPRINT)
+            .entrypoint(POST_COMPUTE_ENTRYPOINT)
+            .heapSizeInBytes(1L)
+            .build();
+
+    private static final TeeServicesProperties sconeProperties = new SconeServicesProperties("v5", preComputeProperties, postComputeProperties, "lasImage");
 
     //region utils
     public static TeeTaskComputeSecret getApplicationDeveloperSecret(String appAddress) {
@@ -106,7 +123,8 @@ public class TeeSessionTestUtils {
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
-                .taskDescription(taskDescription);
+                .taskDescription(taskDescription)
+                .teeServicesProperties(sconeProperties);
     }
 
     public static DealParams.DealParamsBuilder createDealParams() {

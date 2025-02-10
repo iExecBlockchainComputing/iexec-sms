@@ -17,9 +17,7 @@
 package com.iexec.sms.tee.config;
 
 import com.iexec.commons.poco.tee.TeeFramework;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.SconeServicesProperties;
-import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
@@ -28,33 +26,38 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Configuration
 @Validated
 public class TeeWorkerInternalConfiguration {
-
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.GRAMINE)
-    GramineServicesProperties gramineServicesProperties(final TeeWorkerPipelineConfiguration pipelineConfig) {
-        final TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
-        final String frameworkVersion = defaultPipeline.version();
-        final TeeAppProperties preComputeProperties = defaultPipeline.preCompute().toTeeAppProperties();
-        final TeeAppProperties postComputeProperties = defaultPipeline.postCompute().toTeeAppProperties();
-
-        return new GramineServicesProperties(frameworkVersion, preComputeProperties, postComputeProperties);
+    public Map<String, TeeServicesProperties> gramineServicesPropertiesMap(
+            final TeeWorkerPipelineConfiguration pipelineConfig) {
+        return pipelineConfig.getPipelines().stream()
+                .map(pipeline -> pipeline.toTeeServicesProperties(null))
+                .collect(Collectors.toMap(
+                        TeeServicesProperties::getTeeFrameworkVersion,
+                        Function.identity()
+                ));
     }
 
     @Bean
     @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
-    SconeServicesProperties sconeServicesProperties(final TeeWorkerPipelineConfiguration pipelineConfig,
-                                                    @Value("${tee.scone.las-image}")
-                                                    @NotBlank(message = "las image must be provided") final String lasImage) {
-        final TeeWorkerPipelineConfiguration.Pipeline defaultPipeline = pipelineConfig.getPipelines().get(0);
-        final String frameworkVersion = defaultPipeline.version();
-        final TeeAppProperties preComputeProperties = defaultPipeline.preCompute().toTeeAppProperties();
-        final TeeAppProperties postComputeProperties = defaultPipeline.postCompute().toTeeAppProperties();
-
-        return new SconeServicesProperties(frameworkVersion, preComputeProperties, postComputeProperties, lasImage);
+    public Map<String, TeeServicesProperties> sconeServicesPropertiesMap(
+            final TeeWorkerPipelineConfiguration pipelineConfig,
+            @Value("${tee.scone.las-image}")
+            @NotBlank(message = "las image must be provided") final String lasImage) {
+        return pipelineConfig.getPipelines().stream()
+                .map(pipeline -> pipeline.toTeeServicesProperties(lasImage))
+                .collect(Collectors.toMap(
+                        TeeServicesProperties::getTeeFrameworkVersion,
+                        Function.identity()
+                ));
     }
 
 }

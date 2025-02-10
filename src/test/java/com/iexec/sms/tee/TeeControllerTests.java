@@ -31,7 +31,6 @@ import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.config.TeeWorkerPipelineConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,18 +40,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.unit.DataSize;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -80,78 +77,36 @@ class TeeControllerTests {
     TeeChallengeService teeChallengeService;
     @Mock
     TeeSessionService teeSessionService;
-    @Mock
-    TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration;
 
-    TeeWorkerPipelineConfiguration.Pipeline teeWorkerPipelineValidVersion =
-            new TeeWorkerPipelineConfiguration.Pipeline(
-                    VERSION,
-                    new TeeWorkerPipelineConfiguration.StageConfig(
-                            "pre-image",
-                            "pre-fingerprint",
-                            DataSize.ofBytes(3L),
-                            "pre-entrypoint"
-                    ),
-                    new TeeWorkerPipelineConfiguration.StageConfig(
-                            "post-image",
-                            "post-fingerprint",
-                            DataSize.ofBytes(5L),
-                            "post-entrypoint"
-                    )
-            );
-
-    TeeWorkerPipelineConfiguration.Pipeline teeWorkerPipelineOtherVersion =
-            new TeeWorkerPipelineConfiguration.Pipeline(
-                    "v6",
-                    new TeeWorkerPipelineConfiguration.StageConfig(
-                            "pre-image",
-                            "pre-fingerprint",
-                            DataSize.parse("3GB"),
-                            "pre-entrypoint"
-                    ),
-                    new TeeWorkerPipelineConfiguration.StageConfig(
-                            "post-image",
-                            "post-fingerprint",
-                            DataSize.parse("3GB"),
-                            "post-entrypoint"
-                    )
-            );
-
-    TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+    final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("pre-image")
             .fingerprint("pre-fingerprint")
             .heapSizeInBytes(3L)
             .entrypoint("pre-entrypoint")
             .build();
-    TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+    final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
             .image("post-image")
             .fingerprint("post-fingerprint")
             .heapSizeInBytes(5L)
             .entrypoint("post-entrypoint")
             .build();
 
-    TeeServicesProperties sconeProperties = teeWorkerPipelineValidVersion.toTeeServicesProperties(LAS_IMAGE);
-    TeeController sconeTeeController;
-    TeeServicesProperties gramineProperties = teeWorkerPipelineValidVersion.toTeeServicesProperties(null);
-    TeeController gramineTeeController;
+    final TeeServicesProperties sconeProperties = new SconeServicesProperties(VERSION, preComputeProperties, postComputeProperties, LAS_IMAGE);
+    final TeeServicesProperties gramineProperties = new GramineServicesProperties(VERSION, preComputeProperties, postComputeProperties);
 
-    @InjectMocks
-    TeeController teeController;
+    TeeController sconeTeeController;
+    TeeController gramineTeeController;
+    TeeController teeController; // used for challenge generation tests
 
     @BeforeEach
     void setUp() {
-        when(teeWorkerPipelineConfiguration.getPipelines()).thenReturn(List.of(
-                teeWorkerPipelineValidVersion,
-                teeWorkerPipelineOtherVersion
-        ));
-        sconeTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, sconeProperties,
-                teeWorkerPipelineConfiguration
-        );
-        gramineTeeController = new TeeController(
-                authorizationService, teeChallengeService, teeSessionService, gramineProperties,
-                teeWorkerPipelineConfiguration
-        );
+        final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(VERSION, sconeProperties);
+        final Map<String, TeeServicesProperties> graminePropertiesMap = Map.of(VERSION, gramineProperties);
+
+        sconeTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionService, sconePropertiesMap);
+        gramineTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionService, graminePropertiesMap);
+
+        teeController = sconeTeeController;
     }
 
     // region getTeeFramework

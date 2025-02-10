@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
-import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.secret.compute.*;
 import com.iexec.sms.secret.web2.Web2Secret;
 import com.iexec.sms.secret.web2.Web2SecretHeader;
@@ -66,19 +65,16 @@ public class SecretSessionBaseService {
     private final Web3SecretService web3SecretService;
     private final Web2SecretService web2SecretService;
     private final TeeChallengeService teeChallengeService;
-    private final TeeServicesProperties teeServicesConfig;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
             final Web3SecretService web3SecretService,
             final Web2SecretService web2SecretService,
             final TeeChallengeService teeChallengeService,
-            final TeeServicesProperties teeServicesConfig,
             final TeeTaskComputeSecretService teeTaskComputeSecretService) {
         this.web3SecretService = web3SecretService;
         this.web2SecretService = web2SecretService;
         this.teeChallengeService = teeChallengeService;
-        this.teeServicesConfig = teeServicesConfig;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
     }
 
@@ -130,7 +126,7 @@ public class SecretSessionBaseService {
         final Map<String, Object> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
         final String taskId = taskDescription.getChainTaskId();
-        enclaveBase.mrenclave(teeServicesConfig.getPreComputeProperties().getFingerprint());
+        enclaveBase.mrenclave(request.getTeeServicesProperties().getPreComputeProperties().getFingerprint());
         tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED, taskDescription.containsDataset());
@@ -298,7 +294,7 @@ public class SecretSessionBaseService {
     SecretEnclaveBase getPostComputeTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
         final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
                 .name("post-compute")
-                .mrenclave(teeServicesConfig.getPostComputeProperties().getFingerprint());
+                .mrenclave(request.getTeeServicesProperties().getPostComputeProperties().getFingerprint());
         final Map<String, Object> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
         final List<Web2SecretHeader> ids = getPostComputeSecretHeaders(taskDescription, request.getWorkerAddress());

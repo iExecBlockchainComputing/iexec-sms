@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package com.iexec.sms.tee.session.scone;
 
 import com.iexec.commons.poco.tee.TeeFramework;
-import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
@@ -42,15 +41,12 @@ import java.util.*;
 public class SconeSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
-    private final TeeServicesProperties teeServicesConfig;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
 
     public SconeSessionMakerService(
             SecretSessionBaseService secretSessionBaseService,
-            TeeServicesProperties teeServicesConfig,
             SconeSessionSecurityConfig attestationSecurityConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
-        this.teeServicesConfig = teeServicesConfig;
         this.attestationSecurityConfig = attestationSecurityConfig;
     }
 
@@ -82,7 +78,7 @@ public class SconeSessionMakerService {
         if (baseSession.getPreCompute() != null) {
             SconeEnclave sconePreEnclave = toSconeEnclave(
                     baseSession.getPreCompute(),
-                    teeServicesConfig.getPreComputeProperties().getEntrypoint(),
+                    request.getTeeServicesProperties().getPreComputeProperties().getEntrypoint(),
                     true);
             services.add(sconePreEnclave);
             images.add(new Image(
@@ -101,7 +97,7 @@ public class SconeSessionMakerService {
         // post
         SconeEnclave sconePostEnclave = toSconeEnclave(
                 baseSession.getPostCompute(),
-                teeServicesConfig.getPostComputeProperties().getEntrypoint(),
+                request.getTeeServicesProperties().getPostComputeProperties().getEntrypoint(),
                 true);
         services.add(sconePostEnclave);
         images.add(new Image(

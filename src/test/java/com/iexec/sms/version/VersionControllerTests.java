@@ -37,6 +37,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -68,7 +70,8 @@ class VersionControllerTests {
                 postComputeProperties,
                 "lasImage"
         );
-        versionController = new VersionController(buildProperties, properties);
+        final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(teeFrameworkVersion, properties);
+        versionController = new VersionController(buildProperties, sconePropertiesMap);
         assertEquals(ResponseEntity.ok(buildProperties.getVersion()), versionController.getVersion());
     }
 
@@ -90,7 +93,8 @@ class VersionControllerTests {
                     postComputeProperties
             );
         }
-        versionController = new VersionController(buildProperties, properties);
+        final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(teeFrameworkVersion, properties);
+        versionController = new VersionController(buildProperties, sconePropertiesMap);
         versionController.initializeGaugeVersion();
 
         final Gauge info = Metrics.globalRegistry.find(VersionController.METRIC_INFO_GAUGE_NAME).gauge();
