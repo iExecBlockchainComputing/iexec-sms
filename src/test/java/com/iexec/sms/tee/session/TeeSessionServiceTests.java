@@ -36,7 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
-import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -132,6 +132,40 @@ class TeeSessionServiceTests {
                 teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
         assertEquals(GET_TASK_DESCRIPTION_FAILED, exception.getError());
         assertEquals(String.format("Failed to get task description [taskId:%s]", TASK_ID), exception.getMessage());
+    }
+
+    @Test
+    void shouldNotGenerateTeeSessionSinceTeeEnclaveConfigurationIsNull() {
+        final TaskDescription taskDescription = TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .teeFramework(TeeFramework.GRAMINE)
+                .appEnclaveConfiguration(null)
+                .build();
+        when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
+
+        final TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class, () ->
+                teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
+        assertEquals(SECURE_SESSION_NO_TEE_ENCLAVE_CONFIGURATION, exception.getError());
+        assertEquals(String.format("TEE enclave configuration can't be null [taskId:%s]", TASK_ID), exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVersionUnsupported() {
+        final TaskDescription taskDescription = TaskDescription.builder()
+                .chainTaskId(TASK_ID)
+                .teeFramework(TeeFramework.GRAMINE)
+                .appEnclaveConfiguration(
+                        TeeEnclaveConfiguration.builder()
+                                .version("v1.2.3")
+                                .build()
+                )
+                .build();
+        when(iexecHubService.getTaskDescription(TASK_ID)).thenReturn(taskDescription);
+
+        final TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class, () ->
+                teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
+        assertEquals(SECURE_SESSION_UNSUPPORTED_TEE_FRAMEWORK_VERSION, exception.getError());
+        assertEquals(String.format("TEE framework version unsupported [taskId:%s]", TASK_ID), exception.getMessage());
     }
 
     @Test
