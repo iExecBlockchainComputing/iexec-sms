@@ -192,14 +192,14 @@ class TeeSessionServiceTests {
     }
 
     @Test
-    public void testResolveTeeServicePropertiesWithNullVersion() {
+    void testResolveTeeServicePropertiesWithNullVersion() {
         final TeeServicesProperties result = teeSessionService.resolveTeeServiceProperties(null);
         assertNotNull(result);
-        assertTrue(teeServicesPropertiesMap.values().contains(result));
+        assertTrue(teeServicesPropertiesMap.containsValue(result));
     }
 
     @Test
-    public void testResolveTeeServicePropertiesWithExistingVersion() {
+    void testResolveTeeServicePropertiesWithExistingVersion() {
         final TeeServicesProperties result = teeSessionService.resolveTeeServiceProperties(VERSION);
 
         assertNotNull(result);
@@ -210,7 +210,7 @@ class TeeSessionServiceTests {
     }
 
     @Test
-    public void testResolveTeeServicePropertiesWithNonExistingVersion() {
+    void testResolveTeeServicePropertiesWithNonExistingVersion() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             teeSessionService.resolveTeeServiceProperties("v3");
         });
