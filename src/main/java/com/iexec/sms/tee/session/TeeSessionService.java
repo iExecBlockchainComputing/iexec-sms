@@ -17,6 +17,7 @@
 package com.iexec.sms.tee.session;
 
 import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
 import com.iexec.sms.api.config.TeeServicesProperties;
@@ -28,16 +29,16 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Optional;
 
-import static com.iexec.sms.api.TeeSessionGenerationError.GET_TASK_DESCRIPTION_FAILED;
-import static com.iexec.sms.api.TeeSessionGenerationError.SECURE_SESSION_NO_TEE_FRAMEWORK;
+import static com.iexec.sms.api.TeeSessionGenerationError.*;
 
 @Service
 public class TeeSessionService {
 
     private final IexecHubService iexecHubService;
     private final TeeSessionHandler teeSessionHandler;
-    final Map<String, TeeServicesProperties> teeServicesPropertiesMap;
+    private final Map<String, TeeServicesProperties> teeServicesPropertiesMap;
 
     public TeeSessionService(
             IexecHubService iexecService,
@@ -59,14 +60,27 @@ public class TeeSessionService {
                     GET_TASK_DESCRIPTION_FAILED,
                     String.format("Failed to get task description [taskId:%s]", taskId));
         }
-        final String version = taskDescription.getAppEnclaveConfiguration().getVersion();
-        TeeSessionRequest request = TeeSessionRequest.builder()
-                .sessionId(sessionId)
-                .taskDescription(taskDescription)
-                .teeServicesProperties(teeServicesPropertiesMap.get(version))
-                .workerAddress(workerAddress)
-                .enclaveChallenge(teeChallenge)
-                .build();
+        final TeeSessionRequest request;
+        final TeeEnclaveConfiguration teeEnclaveConfiguration = taskDescription.getAppEnclaveConfiguration();
+        if (teeEnclaveConfiguration == null) {
+            throw new TeeSessionGenerationException(
+                    SECURE_SESSION_NO_TEE_ENCLAVE_CONFIGURATION,
+                    String.format("TEE enclave configuration can't be null [taskId:%s]", taskId));
+        }
+
+        try {
+            request = TeeSessionRequest.builder()
+                    .sessionId(sessionId)
+                    .taskDescription(taskDescription)
+                    .teeServicesProperties(resolveTeeServiceProperties(teeEnclaveConfiguration.getVersion()))
+                    .workerAddress(workerAddress)
+                    .enclaveChallenge(teeChallenge)
+                    .build();
+        } catch (IllegalArgumentException e) {
+            throw new TeeSessionGenerationException(
+                    SECURE_SESSION_UNSUPPORTED_TEE_FRAMEWORK_VERSION,
+                    String.format("TEE framework version unsupported [taskId:%s]", taskId));
+        }
 
         final TeeFramework teeFramework = taskDescription.getTeeFramework();
         if (teeFramework == null) {
@@ -78,6 +92,17 @@ public class TeeSessionService {
         // /!\ TODO clean expired tasks sessions
         String secretProvisioningUrl = teeSessionHandler.buildAndPostSession(request);
         return new TeeSessionGenerationResponse(sessionId, secretProvisioningUrl);
+    }
+
+    public TeeServicesProperties resolveTeeServiceProperties(String version) {
+        if (version == null) {
+            return teeServicesPropertiesMap.values().iterator().next();
+        }
+
+        return Optional.ofNullable(teeServicesPropertiesMap.get(version))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        String.format("SMS is not configured to use required framework version [required:%s, supported:%s]",
+                                version, teeServicesPropertiesMap.keySet())));
     }
 
     private String createSessionId(String taskId) {

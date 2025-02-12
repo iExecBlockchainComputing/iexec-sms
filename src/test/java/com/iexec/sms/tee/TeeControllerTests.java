@@ -49,7 +49,6 @@ import org.web3j.crypto.Keys;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -57,6 +56,7 @@ import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.authorization.AuthorizationError.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -76,7 +76,9 @@ class TeeControllerTests {
     @Mock
     TeeChallengeService teeChallengeService;
     @Mock
-    TeeSessionService teeSessionService;
+    TeeSessionService teeSessionServiceScone;
+    @Mock
+    TeeSessionService teeSessionServiceGramine;
 
     final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
             .image("pre-image")
@@ -96,17 +98,28 @@ class TeeControllerTests {
 
     TeeController sconeTeeController;
     TeeController gramineTeeController;
-    TeeController teeController; // used for challenge generation tests
 
     @BeforeEach
     void setUp() {
-        final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(VERSION, sconeProperties);
-        final Map<String, TeeServicesProperties> graminePropertiesMap = Map.of(VERSION, gramineProperties);
+        when(teeSessionServiceScone.resolveTeeServiceProperties(any()))
+                .thenAnswer(invocation -> {
+                    final String version = invocation.getArgument(0, String.class);
+                    if (version == null || VERSION.equals(version)) {
+                        return sconeProperties;
+                    }
+                    throw new IllegalArgumentException("SMS is not configured to use required framework version");
+                });
+        sconeTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceScone);
 
-        sconeTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionService, sconePropertiesMap);
-        gramineTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionService, graminePropertiesMap);
-
-        teeController = sconeTeeController;
+        when(teeSessionServiceGramine.resolveTeeServiceProperties(any()))
+                .thenAnswer(invocation -> {
+                    final String version = invocation.getArgument(0, String.class);
+                    if (version == null || VERSION.equals(version)) {
+                        return gramineProperties;
+                    }
+                    throw new IllegalArgumentException("SMS is not configured to use required framework version");
+                });
+        gramineTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceGramine);
     }
 
     // region getTeeFramework
@@ -222,7 +235,7 @@ class TeeControllerTests {
         final ResponseEntity<TeeServicesProperties> response =
                 sconeTeeController.getTeeServicesPropertiesVersion(TeeFramework.SCONE, "v6.0.4");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -238,7 +251,7 @@ class TeeControllerTests {
         final ResponseEntity<TeeServicesProperties> response =
                 gramineTeeController.getTeeServicesPropertiesVersion(TeeFramework.GRAMINE, "v6.0.4");
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
     // endregion
 
@@ -255,7 +268,7 @@ class TeeControllerTests {
                 .build();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.of(cause));
-        final ResponseEntity<String> response = teeController.generateTeeChallenge(AUTHORIZATION, TASK_ID);
+        final ResponseEntity<String> response = sconeTeeController.generateTeeChallenge(AUTHORIZATION, TASK_ID);
         assertThat(response).isEqualTo(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         verifyNoInteractions(teeChallengeService);
     }
@@ -272,7 +285,7 @@ class TeeControllerTests {
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
         when(teeChallengeService.getOrCreate(TASK_ID, false)).thenReturn(Optional.empty());
-        final ResponseEntity<String> response = teeController.generateTeeChallenge(AUTHORIZATION, TASK_ID);
+        final ResponseEntity<String> response = sconeTeeController.generateTeeChallenge(AUTHORIZATION, TASK_ID);
         assertThat(response).isEqualTo(ResponseEntity.notFound().build());
     }
 
@@ -289,7 +302,7 @@ class TeeControllerTests {
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
         when(teeChallengeService.getOrCreate(TASK_ID, false)).thenReturn(Optional.of(teeChallenge));
-        final ResponseEntity<String> response = teeController.generateTeeChallenge(AUTHORIZATION, TASK_ID);
+        final ResponseEntity<String> response = sconeTeeController.generateTeeChallenge(AUTHORIZATION, TASK_ID);
         assertThat(response).isEqualTo(ResponseEntity.ok(teeChallenge.getCredentials().getAddress()));
     }
     // endregion
@@ -312,10 +325,10 @@ class TeeControllerTests {
         when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
-        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
+        when(teeSessionServiceScone.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
                 .thenReturn(new TeeSessionGenerationResponse(SESSION_ID, SECRET_PROVISIONING_URL));
 
-        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
+        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = sconeTeeController
                 .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -341,7 +354,7 @@ class TeeControllerTests {
                 .getValue();
         when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
 
-        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
+        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = sconeTeeController
                 .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(null, response.getBody());
@@ -380,7 +393,7 @@ class TeeControllerTests {
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.of(cause));
 
-        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
+        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = sconeTeeController
                 .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotEquals(null, response.getBody());
@@ -406,10 +419,10 @@ class TeeControllerTests {
         when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
-        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
+        when(teeSessionServiceScone.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
                 .thenReturn(null);
 
-        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
+        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = sconeTeeController
                 .generateTeeSession(authorization, workerpoolAuthorization);
 
         assertThat(response).isEqualTo(ResponseEntity.notFound().build());
@@ -448,10 +461,10 @@ class TeeControllerTests {
         when(authorizationService.isSignedByHimself(challenge, authorization, workerAddress)).thenCallRealMethod();
         when(authorizationService.isAuthorizedOnExecutionWithDetailedIssue(workerpoolAuthorization))
                 .thenReturn(Optional.empty());
-        when(teeSessionService.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
+        when(teeSessionServiceScone.generateTeeSession(TASK_ID, Keys.toChecksumAddress(workerAddress), ENCLAVE_CHALLENGE))
                 .thenThrow(exception);
 
-        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = teeController
+        final ResponseEntity<ApiResponseBody<TeeSessionGenerationResponse, TeeSessionGenerationError>> response = sconeTeeController
                 .generateTeeSession(authorization, workerpoolAuthorization);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotEquals(null, response.getBody());

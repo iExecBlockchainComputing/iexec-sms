@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ public enum TeeSessionGenerationError {
     SECURE_SESSION_STORAGE_CALL_FAILED,
     SECURE_SESSION_GENERATION_FAILED,
     SECURE_SESSION_NO_TEE_FRAMEWORK,
+    SECURE_SESSION_NO_TEE_ENCLAVE_CONFIGURATION,
+    SECURE_SESSION_UNSUPPORTED_TEE_FRAMEWORK_VERSION,
     @Deprecated(forRemoval = true)
     SECURE_SESSION_NO_TEE_PROVIDER,
     // endregion

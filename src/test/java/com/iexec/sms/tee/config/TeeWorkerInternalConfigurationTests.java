@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,50 +81,6 @@ class TeeWorkerInternalConfigurationTests {
                 validPostComputeStageConfig
         );
 
-        pipelineConfig = new TeeWorkerPipelineConfiguration(
-                Collections.singletonList(pipeline)
-        );
-    }
-
-    @Test
-    void shouldBuildGramineServicesPropertiesMap() {
-        final Map<String, TeeServicesProperties> propertiesMap =
-                teeWorkerInternalConfiguration.gramineServicesPropertiesMap(pipelineConfig);
-
-        assertNotNull(propertiesMap);
-        assertEquals(1, propertiesMap.size());
-
-        final TeeServicesProperties properties = propertiesMap.get(VERSION);
-        assertNotNull(properties);
-        assertTrue(properties instanceof GramineServicesProperties);
-
-        final GramineServicesProperties gramineProperties = (GramineServicesProperties) properties;
-        assertEquals(TeeFramework.GRAMINE, gramineProperties.getTeeFramework());
-        assertEquals(preComputeProperties, gramineProperties.getPreComputeProperties());
-        assertEquals(postComputeProperties, gramineProperties.getPostComputeProperties());
-    }
-
-    @Test
-    void shouldBuildSconeServicesPropertiesMap() {
-        final Map<String, TeeServicesProperties> propertiesMap =
-                teeWorkerInternalConfiguration.sconeServicesPropertiesMap(pipelineConfig, LAS_IMAGE);
-
-        assertNotNull(propertiesMap);
-        assertEquals(1, propertiesMap.size());
-
-        final TeeServicesProperties properties = propertiesMap.get(VERSION);
-        assertNotNull(properties);
-        assertTrue(properties instanceof SconeServicesProperties);
-
-        final SconeServicesProperties sconeProperties = (SconeServicesProperties) properties;
-        assertEquals(TeeFramework.SCONE, sconeProperties.getTeeFramework());
-        assertEquals(preComputeProperties, sconeProperties.getPreComputeProperties());
-        assertEquals(postComputeProperties, sconeProperties.getPostComputeProperties());
-        assertEquals(LAS_IMAGE, sconeProperties.getLasImage());
-    }
-
-    @Test
-    void shouldHandleMultiplePipelinesInMap() {
         final TeeWorkerPipelineConfiguration.StageConfig additionalPreComputeStageConfig =
                 new TeeWorkerPipelineConfiguration.StageConfig(
                         "additionalPreImage",
@@ -149,17 +104,46 @@ class TeeWorkerInternalConfigurationTests {
                         additionalPostComputeStageConfig
                 );
 
-        final TeeWorkerPipelineConfiguration multiPipelineConfig = new TeeWorkerPipelineConfiguration(
-                Arrays.asList(pipelineConfig.getPipelines().get(0), additionalPipeline)
+        pipelineConfig = new TeeWorkerPipelineConfiguration(
+                Arrays.asList(pipeline, additionalPipeline)
         );
+    }
 
-        final Map<String, TeeServicesProperties> propertiesMap =
-                teeWorkerInternalConfiguration.gramineServicesPropertiesMap(multiPipelineConfig);
+    @Test
+    void shouldBuildGramineServicesPropertiesMap() {
+        final Map<String, TeeServicesProperties> multiPropertiesMap =
+                teeWorkerInternalConfiguration.gramineServicesPropertiesMap(pipelineConfig);
 
-        assertNotNull(propertiesMap);
-        assertEquals(2, propertiesMap.size());
-        assertTrue(propertiesMap.containsKey(VERSION));
-        assertTrue(propertiesMap.containsKey("v6"));
+        assertNotNull(multiPropertiesMap);
+        assertEquals(2, multiPropertiesMap.size());
+
+        final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
+        assertNotNull(properties);
+        assertTrue(properties instanceof GramineServicesProperties);
+
+        final GramineServicesProperties gramineProperties = (GramineServicesProperties) properties;
+        assertEquals(TeeFramework.GRAMINE, gramineProperties.getTeeFramework());
+        assertEquals(preComputeProperties, gramineProperties.getPreComputeProperties());
+        assertEquals(postComputeProperties, gramineProperties.getPostComputeProperties());
+    }
+
+    @Test
+    void shouldBuildSconeServicesPropertiesMap() {
+        final Map<String, TeeServicesProperties> multiPropertiesMap =
+                teeWorkerInternalConfiguration.sconeServicesPropertiesMap(pipelineConfig, LAS_IMAGE);
+
+        assertNotNull(multiPropertiesMap);
+        assertEquals(2, multiPropertiesMap.size());
+
+        final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
+        assertNotNull(properties);
+        assertTrue(properties instanceof SconeServicesProperties);
+
+        final SconeServicesProperties sconeProperties = (SconeServicesProperties) properties;
+        assertEquals(TeeFramework.SCONE, sconeProperties.getTeeFramework());
+        assertEquals(preComputeProperties, sconeProperties.getPreComputeProperties());
+        assertEquals(postComputeProperties, sconeProperties.getPostComputeProperties());
+        assertEquals(LAS_IMAGE, sconeProperties.getLasImage());
     }
 
 }

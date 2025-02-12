@@ -21,6 +21,8 @@ import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
+import com.iexec.sms.api.config.SconeServicesProperties;
+import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.blockchain.IexecHubService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
@@ -46,17 +48,32 @@ class TeeSessionServiceTests {
     private static final String TEE_CHALLENGE = "0x2";
     private static final String SECRET_PROVISIONING_URL = "https://secretProvisioningUrl";
     private static final String VERSION = "v5";
+    private static final String LAS_IMAGE = "lasImage";
     @Mock
     private IexecHubService iexecHubService;
     @Mock
     private TeeSessionHandler teeSessionHandler;
 
-    private final TeeServicesProperties dummyProperties = mock(TeeServicesProperties.class);
+    final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
+            .image("pre-image")
+            .fingerprint("pre-fingerprint")
+            .heapSizeInBytes(3L)
+            .entrypoint("pre-entrypoint")
+            .build();
+    final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
+            .image("post-image")
+            .fingerprint("post-fingerprint")
+            .heapSizeInBytes(5L)
+            .entrypoint("post-entrypoint")
+            .build();
+
+    private final TeeServicesProperties teeServicesProperties = new SconeServicesProperties(VERSION, preComputeProperties, postComputeProperties, LAS_IMAGE);
     private TeeSessionService teeSessionService;
+    Map<String, TeeServicesProperties> teeServicesPropertiesMap;
 
     @BeforeEach
     void setUp() {
-        Map<String, TeeServicesProperties> teeServicesPropertiesMap = Map.of(VERSION, dummyProperties);
+        teeServicesPropertiesMap = Map.of(VERSION, teeServicesProperties);
         teeSessionService = new TeeSessionService(iexecHubService, teeSessionHandler, teeServicesPropertiesMap);
     }
 
@@ -138,6 +155,34 @@ class TeeSessionServiceTests {
                 teeSessionGenerationException.getError());
         assertEquals(String.format("TEE framework can't be null [taskId:%s]", TASK_ID),
                 teeSessionGenerationException.getMessage());
+    }
+
+    @Test
+    public void testResolveTeeServicePropertiesWithNullVersion() {
+        final TeeServicesProperties result = teeSessionService.resolveTeeServiceProperties(null);
+        assertNotNull(result);
+        assertTrue(teeServicesPropertiesMap.values().contains(result));
+    }
+
+    @Test
+    public void testResolveTeeServicePropertiesWithExistingVersion() {
+        final TeeServicesProperties result = teeSessionService.resolveTeeServiceProperties(VERSION);
+
+        assertNotNull(result);
+        assertEquals(VERSION, result.getTeeFrameworkVersion());
+        assertEquals(TeeFramework.SCONE, result.getTeeFramework());
+        assertEquals(preComputeProperties, result.getPreComputeProperties());
+        assertEquals(postComputeProperties, result.getPostComputeProperties());
+    }
+
+    @Test
+    public void testResolveTeeServicePropertiesWithNonExistingVersion() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            teeSessionService.resolveTeeServiceProperties("v3");
+        });
+
+        final String expectedMessagePart = "SMS is not configured to use required framework version [required:v3, supported:[v5]]";
+        assertEquals(expectedMessagePart, exception.getMessage());
     }
 
 }

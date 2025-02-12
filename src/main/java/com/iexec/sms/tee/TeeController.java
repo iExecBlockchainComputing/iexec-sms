@@ -59,18 +59,15 @@ public class TeeController {
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
     private final TeeServicesProperties teeServicesProperties;
-    private final Map<String, TeeServicesProperties> teeServicesPropertiesMap;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
-            TeeSessionService teeSessionService,
-            Map<String, TeeServicesProperties> teeServicesPropertiesMap) {
+            TeeSessionService teeSessionService) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeServicesProperties = teeServicesPropertiesMap.entrySet().iterator().next().getValue();
-        this.teeServicesPropertiesMap = teeServicesPropertiesMap;
+        this.teeServicesProperties = teeSessionService.resolveTeeServiceProperties(null);
     }
 
     /**
@@ -114,21 +111,21 @@ public class TeeController {
     public ResponseEntity<TeeServicesProperties> getTeeServicesPropertiesVersion(
             @PathVariable TeeFramework teeFramework,
             @PathVariable String version) {
-        if (teeFramework != teeServicesProperties.getTeeFramework()) {
-            log.error("SMS configured to use another TeeFramework " +
-                    "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
+        final TeeServicesProperties teeServicePropertiesVersion;
+        try {
+            teeServicePropertiesVersion = teeSessionService.resolveTeeServiceProperties(version);
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (teeFramework != teeServicePropertiesVersion.getTeeFramework()) {
+            log.error("SMS configured to use another TeeFramework [required:{}, actual:{}]",
+                    teeFramework, teeServicePropertiesVersion.getTeeFramework());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        final TeeServicesProperties properties = teeServicesPropertiesMap.get(version);
-
-        if (properties == null) {
-            log.error("SMS is not configured to use required {} framework version [required:{}, supported:{}]",
-                    teeFramework, version, teeServicesPropertiesMap.keySet());
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
-        return ResponseEntity.ok(properties);
+        return ResponseEntity.ok(teeServicePropertiesVersion);
     }
 
     /**
