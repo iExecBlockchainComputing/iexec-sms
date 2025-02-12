@@ -59,27 +59,32 @@ public class TeeSessionService {
                     GET_TASK_DESCRIPTION_FAILED,
                     String.format("Failed to get task description [taskId:%s]", taskId));
         }
-        final TeeSessionRequest request;
+
         final TeeEnclaveConfiguration teeEnclaveConfiguration = taskDescription.getAppEnclaveConfiguration();
         if (teeEnclaveConfiguration == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
                     String.format("TEE enclave configuration can't be null [taskId:%s]", taskId));
         }
-        // TODO Add appropriate error type
+
+        final TeeServicesProperties teeServicesProperties;
+
         try {
-            request = TeeSessionRequest.builder()
-                    .sessionId(sessionId)
-                    .taskDescription(taskDescription)
-                    .teeServicesProperties(resolveTeeServiceProperties(teeEnclaveConfiguration.getVersion()))
-                    .workerAddress(workerAddress)
-                    .enclaveChallenge(teeChallenge)
-                    .build();
+            teeServicesProperties = resolveTeeServiceProperties(teeEnclaveConfiguration.getVersion());
         } catch (IllegalArgumentException e) {
+            // TODO Add appropriate error type
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
                     String.format("TEE framework version unsupported [taskId:%s]", taskId));
         }
+
+        final TeeSessionRequest request = TeeSessionRequest.builder()
+                .sessionId(sessionId)
+                .taskDescription(taskDescription)
+                .teeServicesProperties(teeServicesProperties)
+                .workerAddress(workerAddress)
+                .enclaveChallenge(teeChallenge)
+                .build();
 
         final TeeFramework teeFramework = taskDescription.getTeeFramework();
         if (teeFramework == null) {
