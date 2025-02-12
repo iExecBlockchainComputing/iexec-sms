@@ -104,22 +104,22 @@ class TeeControllerTests {
         when(teeSessionServiceScone.resolveTeeServiceProperties(any()))
                 .thenAnswer(invocation -> {
                     final String version = invocation.getArgument(0, String.class);
-                    if (version == null || VERSION.equals(version)) {
+                    if (VERSION.equals(version)) {
                         return sconeProperties;
                     }
                     throw new IllegalArgumentException("SMS is not configured to use required framework version");
                 });
-        sconeTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceScone);
+        sconeTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceScone, VERSION);
 
         when(teeSessionServiceGramine.resolveTeeServiceProperties(any()))
                 .thenAnswer(invocation -> {
                     final String version = invocation.getArgument(0, String.class);
-                    if (version == null || VERSION.equals(version)) {
+                    if (VERSION.equals(version)) {
                         return gramineProperties;
                     }
                     throw new IllegalArgumentException("SMS is not configured to use required framework version");
                 });
-        gramineTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceGramine);
+        gramineTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceGramine, VERSION);
     }
 
     // region getTeeFramework

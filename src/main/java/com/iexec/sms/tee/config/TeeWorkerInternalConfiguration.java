@@ -40,7 +40,7 @@ public class TeeWorkerInternalConfiguration {
             final TeeWorkerPipelineConfiguration pipelineConfig) {
         return pipelineConfig.getPipelines().stream()
                 .map(pipeline -> pipeline.toTeeServicesProperties(null))
-                .collect(Collectors.toMap(
+                .collect(Collectors.toUnmodifiableMap(
                         TeeServicesProperties::getTeeFrameworkVersion,
                         Function.identity()
                 ));
@@ -54,7 +54,7 @@ public class TeeWorkerInternalConfiguration {
             @NotBlank(message = "las image must be provided") final String lasImage) {
         return pipelineConfig.getPipelines().stream()
                 .map(pipeline -> pipeline.toTeeServicesProperties(lasImage))
-                .collect(Collectors.toMap(
+                .collect(Collectors.toUnmodifiableMap(
                         TeeServicesProperties::getTeeFrameworkVersion,
                         Function.identity()
                 ));

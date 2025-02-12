@@ -30,6 +30,7 @@ import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,11 +64,12 @@ public class TeeController {
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
-            TeeSessionService teeSessionService) {
+            TeeSessionService teeSessionService,
+            @Value("${tee.worker.pipelines[0].version}") String version) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeServicesProperties = teeSessionService.resolveTeeServiceProperties(null);
+        this.teeServicesProperties = teeSessionService.resolveTeeServiceProperties(version);
     }
 
     /**

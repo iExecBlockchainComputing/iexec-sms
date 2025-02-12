@@ -145,7 +145,7 @@ class TeeSessionServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class, () ->
                 teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(SECURE_SESSION_NO_TEE_ENCLAVE_CONFIGURATION, exception.getError());
+        assertEquals(APP_COMPUTE_NO_ENCLAVE_CONFIG, exception.getError());
         assertEquals(String.format("TEE enclave configuration can't be null [taskId:%s]", TASK_ID), exception.getMessage());
     }
 
@@ -164,7 +164,7 @@ class TeeSessionServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class, () ->
                 teeSessionService.generateTeeSession(TASK_ID, WORKER_ADDRESS, TEE_CHALLENGE));
-        assertEquals(SECURE_SESSION_UNSUPPORTED_TEE_FRAMEWORK_VERSION, exception.getError());
+        assertEquals(APP_COMPUTE_INVALID_ENCLAVE_CONFIG, exception.getError());
         assertEquals(String.format("TEE framework version unsupported [taskId:%s]", TASK_ID), exception.getMessage());
     }
 
@@ -189,13 +189,6 @@ class TeeSessionServiceTests {
                 teeSessionGenerationException.getError());
         assertEquals(String.format("TEE framework can't be null [taskId:%s]", TASK_ID),
                 teeSessionGenerationException.getMessage());
-    }
-
-    @Test
-    void testResolveTeeServicePropertiesWithNullVersion() {
-        final TeeServicesProperties result = teeSessionService.resolveTeeServiceProperties(null);
-        assertNotNull(result);
-        assertTrue(teeServicesPropertiesMap.containsValue(result));
     }
 
     @Test

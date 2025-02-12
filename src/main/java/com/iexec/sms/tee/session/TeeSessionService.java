@@ -29,7 +29,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 
@@ -64,10 +63,10 @@ public class TeeSessionService {
         final TeeEnclaveConfiguration teeEnclaveConfiguration = taskDescription.getAppEnclaveConfiguration();
         if (teeEnclaveConfiguration == null) {
             throw new TeeSessionGenerationException(
-                    SECURE_SESSION_NO_TEE_ENCLAVE_CONFIGURATION,
+                    APP_COMPUTE_NO_ENCLAVE_CONFIG,
                     String.format("TEE enclave configuration can't be null [taskId:%s]", taskId));
         }
-
+        // TODO Add appropriate error type
         try {
             request = TeeSessionRequest.builder()
                     .sessionId(sessionId)
@@ -78,7 +77,7 @@ public class TeeSessionService {
                     .build();
         } catch (IllegalArgumentException e) {
             throw new TeeSessionGenerationException(
-                    SECURE_SESSION_UNSUPPORTED_TEE_FRAMEWORK_VERSION,
+                    APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
                     String.format("TEE framework version unsupported [taskId:%s]", taskId));
         }
 
@@ -95,14 +94,13 @@ public class TeeSessionService {
     }
 
     public TeeServicesProperties resolveTeeServiceProperties(String version) {
-        if (version == null) {
-            return teeServicesPropertiesMap.values().iterator().next();
+        final TeeServicesProperties teeServicesProperties = teeServicesPropertiesMap.get(version);
+        if (teeServicesProperties == null) {
+            throw new IllegalArgumentException(
+                    String.format("SMS is not configured to use required framework version [required:%s, supported:%s]",
+                            version, teeServicesPropertiesMap.keySet()));
         }
-
-        return Optional.ofNullable(teeServicesPropertiesMap.get(version))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        String.format("SMS is not configured to use required framework version [required:%s, supported:%s]",
-                                version, teeServicesPropertiesMap.keySet())));
+        return teeServicesProperties;
     }
 
     private String createSessionId(String taskId) {
