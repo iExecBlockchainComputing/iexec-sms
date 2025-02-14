@@ -49,6 +49,7 @@ import org.web3j.crypto.Keys;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -107,7 +108,7 @@ class TeeControllerTests {
                     if (VERSION.equals(version)) {
                         return sconeProperties;
                     }
-                    throw new IllegalArgumentException("SMS is not configured to use required framework version");
+                    throw new NoSuchElementException("SMS is not configured to use required framework version");
                 });
         sconeTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceScone, VERSION);
 
@@ -117,7 +118,7 @@ class TeeControllerTests {
                     if (VERSION.equals(version)) {
                         return gramineProperties;
                     }
-                    throw new IllegalArgumentException("SMS is not configured to use required framework version");
+                    throw new NoSuchElementException("SMS is not configured to use required framework version");
                 });
         gramineTeeController = new TeeController(authorizationService, teeChallengeService, teeSessionServiceGramine, VERSION);
     }

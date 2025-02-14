@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
@@ -120,7 +121,7 @@ public class TeeController {
         final TeeServicesProperties teeServicePropertiesVersion;
         try {
             teeServicePropertiesVersion = teeSessionService.resolveTeeServiceProperties(version);
-        } catch (IllegalArgumentException e) {
+        } catch (NoSuchElementException e) {
             log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
