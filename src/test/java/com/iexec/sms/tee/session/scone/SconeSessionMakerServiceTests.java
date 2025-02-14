@@ -69,12 +69,12 @@ class SconeSessionMakerServiceTests {
     private SconeSessionSecurityConfig attestationSecurityConfig;
 
     @InjectMocks
-    private SconeSessionMakerService palaemonSessionService;
+    private SconeSessionMakerService sconeSessionMakerService;
 
     private TeeSessionRequest request;
 
     private void setupCommonMocks() throws TeeSessionGenerationException {
-        palaemonSessionService = new SconeSessionMakerService(
+        sconeSessionMakerService = new SconeSessionMakerService(
                 teeSecretsService,
                 attestationSecurityConfig
         );
@@ -159,7 +159,7 @@ class SconeSessionMakerServiceTests {
 
         @Test
         void shouldGenerateHardwareSession() throws Exception {
-            final SconeSession actualCasSession = palaemonSessionService.generateSession(request);
+            final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
             log.info(actualCasSession.toString());
             final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
             final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
@@ -185,7 +185,7 @@ class SconeSessionMakerServiceTests {
 
         @Test
         void shouldGenerateMaaSession() throws Exception {
-            final SconeSession actualCasSession = palaemonSessionService.generateSession(request);
+            final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
             log.info(actualCasSession.toString());
             final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
             final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");

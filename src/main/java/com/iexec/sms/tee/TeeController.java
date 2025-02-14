@@ -83,13 +83,17 @@ public class TeeController {
     }
 
     /**
+     * @return TEE services properties (pre-compute image uri, post-compute image uri, heap size, ...)
+     * @deprecated Use {@link #getTeeServicesPropertiesVersion(TeeFramework, String)} instead.
+     * This endpoint will be removed in future versions.
+     *
+     * <p>
      * Retrieve properties for TEE services. This includes properties
      * for pre-compute and post-compute stages
      * and potential TEE framework's specific data.
-     *
-     * @return TEE services properties (pre-compute image uri, post-compute image uri,
-     * heap size, ...)
+     * </p>
      */
+    @Deprecated(since = "8.7.0", forRemoval = true)
     @GetMapping("/properties/{teeFramework}")
     public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
             @PathVariable TeeFramework teeFramework) {

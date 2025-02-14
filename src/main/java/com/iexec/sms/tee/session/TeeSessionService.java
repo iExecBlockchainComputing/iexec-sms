@@ -29,6 +29,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 
@@ -98,10 +99,10 @@ public class TeeSessionService {
         return new TeeSessionGenerationResponse(sessionId, secretProvisioningUrl);
     }
 
-    public TeeServicesProperties resolveTeeServiceProperties(String version) {
+    public TeeServicesProperties resolveTeeServiceProperties(final String version) {
         final TeeServicesProperties teeServicesProperties = teeServicesPropertiesMap.get(version);
         if (teeServicesProperties == null) {
-            throw new IllegalArgumentException(
+            throw new NoSuchElementException(
                     String.format("SMS is not configured to use required framework version [required:%s, supported:%s]",
                             version, teeServicesPropertiesMap.keySet()));
         }
