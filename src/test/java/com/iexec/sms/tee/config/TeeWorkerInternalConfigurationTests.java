@@ -61,6 +61,15 @@ class TeeWorkerInternalConfigurationTests {
     void setUp() {
         teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
 
+        final TeeWorkerPipelineConfiguration.Pipeline pipeline = getPipeline(VERSION);
+        final TeeWorkerPipelineConfiguration.Pipeline additionalPipeline = getPipeline("v6");
+
+        pipelineConfig = new TeeWorkerPipelineConfiguration(
+                Arrays.asList(pipeline, additionalPipeline)
+        );
+    }
+
+    private static TeeWorkerPipelineConfiguration.Pipeline getPipeline(final String version) {
         final TeeWorkerPipelineConfiguration.StageConfig validPreComputeStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
                 PRE_IMAGE,
                 PRE_FINGERPRINT,
@@ -75,37 +84,10 @@ class TeeWorkerInternalConfigurationTests {
                 POST_ENTRYPOINT
         );
 
-        final TeeWorkerPipelineConfiguration.Pipeline pipeline = new TeeWorkerPipelineConfiguration.Pipeline(
-                VERSION,
+        return new TeeWorkerPipelineConfiguration.Pipeline(
+                version,
                 validPreComputeStageConfig,
                 validPostComputeStageConfig
-        );
-
-        final TeeWorkerPipelineConfiguration.StageConfig additionalPreComputeStageConfig =
-                new TeeWorkerPipelineConfiguration.StageConfig(
-                        "additionalPreImage",
-                        "additionalPreFingerprint",
-                        DataSize.ofBytes(HEAP_SIZE_B),
-                        "additionalPreEntrypoint"
-                );
-
-        final TeeWorkerPipelineConfiguration.StageConfig additionalPostComputeStageConfig =
-                new TeeWorkerPipelineConfiguration.StageConfig(
-                        "additionalPostImage",
-                        "additionalPostFingerprint",
-                        DataSize.ofBytes(HEAP_SIZE_B),
-                        "additionalPostEntrypoint"
-                );
-
-        final TeeWorkerPipelineConfiguration.Pipeline additionalPipeline =
-                new TeeWorkerPipelineConfiguration.Pipeline(
-                        "v6",
-                        additionalPreComputeStageConfig,
-                        additionalPostComputeStageConfig
-                );
-
-        pipelineConfig = new TeeWorkerPipelineConfiguration(
-                Arrays.asList(pipeline, additionalPipeline)
         );
     }
 
@@ -119,7 +101,7 @@ class TeeWorkerInternalConfigurationTests {
 
         final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
         assertNotNull(properties);
-        assertTrue(properties instanceof GramineServicesProperties);
+        assertInstanceOf(GramineServicesProperties.class, properties);
 
         final GramineServicesProperties gramineProperties = (GramineServicesProperties) properties;
         assertEquals(TeeFramework.GRAMINE, gramineProperties.getTeeFramework());
@@ -137,7 +119,7 @@ class TeeWorkerInternalConfigurationTests {
 
         final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
         assertNotNull(properties);
-        assertTrue(properties instanceof SconeServicesProperties);
+        assertInstanceOf(SconeServicesProperties.class, properties);
 
         final SconeServicesProperties sconeProperties = (SconeServicesProperties) properties;
         assertEquals(TeeFramework.SCONE, sconeProperties.getTeeFramework());
