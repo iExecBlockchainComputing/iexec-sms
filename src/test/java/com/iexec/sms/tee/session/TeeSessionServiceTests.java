@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -204,7 +205,7 @@ class TeeSessionServiceTests {
 
     @Test
     void testResolveTeeServicePropertiesWithNonExistingVersion() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () -> {
             teeSessionService.resolveTeeServiceProperties("v3");
         });
 

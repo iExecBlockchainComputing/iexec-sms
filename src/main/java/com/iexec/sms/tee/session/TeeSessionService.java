@@ -72,7 +72,7 @@ public class TeeSessionService {
 
         try {
             teeServicesProperties = resolveTeeServiceProperties(teeEnclaveConfiguration.getVersion());
-        } catch (IllegalArgumentException e) {
+        } catch (NoSuchElementException e) {
             // TODO Add appropriate error type
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
