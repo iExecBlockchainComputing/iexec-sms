@@ -25,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 public class VersionController {
 
@@ -36,11 +38,11 @@ public class VersionController {
     // Must be static final to avoid garbage collect and side effect on gauge
     public static final int METRIC_VALUE = 1;
     private final BuildProperties buildProperties;
-    private final TeeServicesProperties teeServicesProperties;
+    private final Map<String, TeeServicesProperties> teeServicesPropertiesMap;
 
-    public VersionController(BuildProperties buildProperties, TeeServicesProperties teeServicesProperties) {
+    public VersionController(BuildProperties buildProperties, Map<String, TeeServicesProperties> teeServicesPropertiesMap) {
         this.buildProperties = buildProperties;
-        this.teeServicesProperties = teeServicesProperties;
+        this.teeServicesPropertiesMap = teeServicesPropertiesMap;
     }
 
     @PostConstruct
@@ -49,7 +51,7 @@ public class VersionController {
                 .description(METRIC_INFO_GAUGE_DESC)
                 .tags(METRIC_INFO_LABEL_APP_VERSION, buildProperties.getVersion(),
                         METRIC_INFO_LABEL_APP_NAME, buildProperties.getName(),
-                        METRIC_INFO_LABEL_TEE_FRAMEWORK, teeServicesProperties.getTeeFramework().name())
+                        METRIC_INFO_LABEL_TEE_FRAMEWORK, teeServicesPropertiesMap.entrySet().iterator().next().getValue().getTeeFramework().name())
                 .register(Metrics.globalRegistry);
     }
 

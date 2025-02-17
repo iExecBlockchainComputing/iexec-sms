@@ -17,6 +17,7 @@
 package com.iexec.sms.tee.session.generic;
 
 import com.iexec.commons.poco.task.TaskDescription;
+import com.iexec.sms.api.config.TeeServicesProperties;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -28,6 +29,8 @@ public class TeeSessionRequest {
     String sessionId;
     @NotNull
     TaskDescription taskDescription;
+    @NotNull
+    TeeServicesProperties teeServicesProperties;
     String workerAddress;
     String enclaveChallenge;
 }

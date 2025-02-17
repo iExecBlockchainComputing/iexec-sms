@@ -23,22 +23,21 @@ import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.TeeSessionGenerationResponse;
-import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.authorization.AuthorizationError;
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
-import com.iexec.sms.tee.config.TeeWorkerPipelineConfiguration;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
-import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
@@ -62,24 +61,16 @@ public class TeeController {
     private final TeeChallengeService teeChallengeService;
     private final TeeSessionService teeSessionService;
     private final TeeServicesProperties teeServicesProperties;
-    private final TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration;
-    private final List<String> supportedVersions;
 
     public TeeController(
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeServicesProperties teeServicesProperties,
-            TeeWorkerPipelineConfiguration teeWorkerPipelineConfiguration) {
+            @Value("${tee.worker.pipelines[0].version}") String version) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeServicesProperties = teeServicesProperties;
-        this.teeWorkerPipelineConfiguration = teeWorkerPipelineConfiguration;
-        this.supportedVersions = teeWorkerPipelineConfiguration.getPipelines()
-                .stream()
-                .map(TeeWorkerPipelineConfiguration.Pipeline::version)
-                .toList();
+        this.teeServicesProperties = teeSessionService.resolveTeeServiceProperties(version);
     }
 
     /**
@@ -93,13 +84,17 @@ public class TeeController {
     }
 
     /**
+     * @return TEE services properties (pre-compute image uri, post-compute image uri, heap size, ...)
+     * @deprecated Use {@link #getTeeServicesPropertiesVersion(TeeFramework, String)} instead.
+     * This endpoint will be removed in future versions.
+     *
+     * <p>
      * Retrieve properties for TEE services. This includes properties
      * for pre-compute and post-compute stages
      * and potential TEE framework's specific data.
-     *
-     * @return TEE services properties (pre-compute image uri, post-compute image uri,
-     * heap size, ...)
+     * </p>
      */
+    @Deprecated(since = "8.7.0", forRemoval = true)
     @GetMapping("/properties/{teeFramework}")
     public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
             @PathVariable TeeFramework teeFramework) {
@@ -123,25 +118,21 @@ public class TeeController {
     public ResponseEntity<TeeServicesProperties> getTeeServicesPropertiesVersion(
             @PathVariable TeeFramework teeFramework,
             @PathVariable String version) {
-        if (teeFramework != teeServicesProperties.getTeeFramework()) {
-            log.error("SMS configured to use another TeeFramework " +
-                    "[required:{}, actual:{}]", teeFramework, teeServicesProperties.getTeeFramework());
+        final TeeServicesProperties teeServicePropertiesVersion;
+        try {
+            teeServicePropertiesVersion = teeSessionService.resolveTeeServiceProperties(version);
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (teeFramework != teeServicePropertiesVersion.getTeeFramework()) {
+            log.error("SMS configured to use another TeeFramework [required:{}, actual:{}]",
+                    teeFramework, teeServicePropertiesVersion.getTeeFramework());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        final String lasImage = teeServicesProperties.getTeeFramework() == TeeFramework.SCONE ?
-                ((SconeServicesProperties) teeServicesProperties).getLasImage() : "";
-
-        return teeWorkerPipelineConfiguration.getPipelines()
-                .stream()
-                .filter(pipeline -> pipeline.version().equals(version))
-                .findFirst()
-                .map(pipeline -> ResponseEntity.ok(pipeline.toTeeServicesProperties(lasImage)))
-                .orElseGet(() -> {
-                    log.error("SMS is not configured to use required {} framework version [required:{}, supported:{}]",
-                            teeFramework, version, supportedVersions);
-                    return ResponseEntity.status(HttpStatus.CONFLICT).build();
-                });
+        return ResponseEntity.ok(teeServicePropertiesVersion);
     }
 
     /**

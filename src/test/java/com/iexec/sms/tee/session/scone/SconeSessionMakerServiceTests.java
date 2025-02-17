@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
-import com.iexec.sms.api.config.SconeServicesProperties;
-import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
@@ -50,10 +48,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SconeSessionMakerServiceTests {
 
-    private static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
-    private static final String POST_COMPUTE_ENTRYPOINT = "entrypoint3";
     private static final URL MAA_URL;
 
     static {
@@ -67,47 +63,29 @@ class SconeSessionMakerServiceTests {
     private final List<String> toleratedInsecureOptions = List.of("hyperthreading", "debug-mode");
     private final List<String> ignoredSgxAdvisories = List.of("INTEL-SA-00161", "INTEL-SA-00289");
 
-    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-            .image("PRE_COMPUTE_IMAGE")
-            .fingerprint(PRE_COMPUTE_FINGERPRINT)
-            .entrypoint(PRE_COMPUTE_ENTRYPOINT)
-            .heapSizeInBytes(1L)
-            .build();
-    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-            .image("POST_COMPUTE_IMAGE")
-            .fingerprint(POST_COMPUTE_FINGERPRINT)
-            .entrypoint(POST_COMPUTE_ENTRYPOINT)
-            .heapSizeInBytes(1L)
-            .build();
-    @Mock
-    private SconeServicesProperties teeServicesConfig;
     @Mock
     private SecretSessionBaseService teeSecretsService;
 
     private SconeSessionSecurityConfig attestationSecurityConfig;
 
     @InjectMocks
-    private SconeSessionMakerService palaemonSessionService;
+    private SconeSessionMakerService sconeSessionMakerService;
 
     private TeeSessionRequest request;
 
     private void setupCommonMocks() throws TeeSessionGenerationException {
-        palaemonSessionService = new SconeSessionMakerService(
+        sconeSessionMakerService = new SconeSessionMakerService(
                 teeSecretsService,
-                teeServicesConfig,
                 attestationSecurityConfig
         );
 
-        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
-        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
-
-        TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
+        final TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
                 .fingerprint(APP_FINGERPRINT)
                 .entrypoint(APP_ENTRYPOINT)
                 .build();
         request = createSessionRequest(createTaskDescription(enclaveConfig).build());
 
-        SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
+        final SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")
                 .mrenclave("mrEnclave1")
                 .environment(Map.ofEntries(
@@ -125,7 +103,7 @@ class SconeSessionMakerServiceTests {
                         Map.entry("IEXEC_INPUT_FILE_URL_1", "http://host/file1"),
                         Map.entry("IEXEC_INPUT_FILE_URL_2", "http://host/file2")))
                 .build();
-        SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
+        final SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
                 .name("app")
                 .mrenclave(APP_FINGERPRINT)
                 .environment(Map.ofEntries(
@@ -142,7 +120,7 @@ class SconeSessionMakerServiceTests {
                         Map.entry("IEXEC_INPUT_FILE_NAME_1", "file1"),
                         Map.entry("IEXEC_INPUT_FILE_NAME_2", "file2")))
                 .build();
-        SecretEnclaveBase postCompute = SecretEnclaveBase.builder()
+        final SecretEnclaveBase postCompute = SecretEnclaveBase.builder()
                 .name("post-compute")
                 .mrenclave("mrEnclave3")
                 .environment(Map.ofEntries(
@@ -181,11 +159,11 @@ class SconeSessionMakerServiceTests {
 
         @Test
         void shouldGenerateHardwareSession() throws Exception {
-            SconeSession actualCasSession = palaemonSessionService.generateSession(request);
+            final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
             log.info(actualCasSession.toString());
-            Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
-            String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
-            Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
+            final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+            final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
+            final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
             assertRecursively(expectedYmlMap, actualYmlMap);
         }
     }
@@ -207,11 +185,11 @@ class SconeSessionMakerServiceTests {
 
         @Test
         void shouldGenerateMaaSession() throws Exception {
-            SconeSession actualCasSession = palaemonSessionService.generateSession(request);
+            final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
             log.info(actualCasSession.toString());
-            Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
-            String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");
-            Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
+            final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+            final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");
+            final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
             assertRecursively(expectedYmlMap, actualYmlMap);
         }
     }
