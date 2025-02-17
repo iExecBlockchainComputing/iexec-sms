@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '8.10.2'
-    id 'org.springframework.boot' version '3.0.13'
+    id 'org.springframework.boot' version '3.3.8'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'jacoco'
     id 'org.sonarqube' version '5.1.0.4882'
@@ -37,6 +37,10 @@ allprojects {
         }
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs.add('-parameters')
     }
 }
 
@@ -85,7 +89,6 @@ testing {
         configureEach {
             dependencies {
                 implementation 'org.springframework.boot:spring-boot-starter-test'
-                implementation 'org.mockito:mockito-inline'
                 runtimeOnly 'com.h2database:h2:2.2.222'
             }
         }
