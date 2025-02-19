@@ -18,7 +18,7 @@ All notable changes to this project will be documented in this file.
 
 ### Dependency Upgrades
 
-- Upgrade to Java 17. (#285)
+- Upgrade to `eclipse-temurin:17.0.13_11-jre-focal`. (#285)
 - Upgrade to Spring Doc OpenAPI 2.6.0. (#285)
 - Upgrade to Spring Boot 3.3.8. (#292)
 
