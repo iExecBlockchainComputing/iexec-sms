@@ -49,16 +49,6 @@ public interface SmsClient {
             String secretValue
     );
 
-    /**
-     * @deprecated Call {@code isAppDeveloperAppComputeSecretPresent(appAddress)}
-     */
-    @Deprecated(forRemoval = true)
-    @RequestLine("HEAD /apps/{appAddress}/secrets/{secretIndex}")
-    ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
-            @Param("appAddress") String appAddress,
-            @Param("secretIndex") String secretIndex
-    );
-
     @RequestLine("HEAD /apps/{appAddress}/secrets")
     ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
             @Param("appAddress") String appAddress
@@ -118,13 +108,6 @@ public interface SmsClient {
     // endregion
 
     // region TEE
-
-    /**
-     * @deprecated use {@link SmsClient#generateTeeChallenge(String, String)}
-     */
-    @Deprecated(forRemoval = true)
-    @RequestLine("POST /tee/challenges/{chainTaskId}")
-    String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
 
     @Headers("Authorization: {authorization}")
     @RequestLine("POST /tee/challenges/{chainTaskId}")
