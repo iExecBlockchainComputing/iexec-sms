@@ -20,7 +20,7 @@ import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.api.SmsClientBuilder;
-import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
 import feign.Logger;

@@ -17,7 +17,7 @@
 package com.iexec.sms.tee.challenge;
 
 import com.iexec.commons.poco.task.TaskDescription;
-import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.tee.config.TeeChallengeCleanupConfiguration;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.blockchain;
+package com.iexec.sms.chain;
 
 import lombok.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -23,7 +23,7 @@ import java.time.Duration;
 
 @Value
 @ConfigurationProperties(prefix = "blockchain")
-public class BlockchainConfig {
+public class ChainConfig {
     int id;
     boolean isSidechain;
     String nodeAddress;

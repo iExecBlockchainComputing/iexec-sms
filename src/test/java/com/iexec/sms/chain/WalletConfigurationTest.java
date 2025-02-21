@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2024-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.blockchain;
+package com.iexec.sms.chain;
 
 import com.iexec.commons.poco.chain.SignerService;
 import org.junit.jupiter.api.Test;
@@ -30,12 +30,12 @@ class WalletConfigurationTest {
 
     @Test
     void shouldCreateBeans() {
-        runner.withBean(BlockchainConfig.class, 65535, true, "http://localhost:8545", "0xC129e7917b7c7DeDfAa5Fff1FB18d5D7050fE8ca", Duration.ofSeconds(5L), 1.0f, 0L)
+        runner.withBean(ChainConfig.class, 65535, true, "http://localhost:8545", "0xC129e7917b7c7DeDfAa5Fff1FB18d5D7050fE8ca", Duration.ofSeconds(5L), 1.0f, 0L)
                 .withBean(IexecHubService.class)
                 .withBean(Web3jService.class)
                 .withConfiguration(UserConfigurations.of(WalletConfiguration.class))
                 .run(context -> assertThat(context)
-                        .hasSingleBean(BlockchainConfig.class)
+                        .hasSingleBean(ChainConfig.class)
                         .hasSingleBean(IexecHubService.class)
                         .hasSingleBean(SignerService.class)
                         .hasSingleBean(WalletConfiguration.class)

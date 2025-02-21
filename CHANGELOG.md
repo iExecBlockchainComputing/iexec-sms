@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
 - Remove references to Ownable Smart Contract wrapper in integration test. (#288)
 - Remove deprecated code from `AppComputeSecretController` and `SmsClient`. (#293)
+- Rename `blockchain` package to `chain` and `BlockchainConfig` class to `ChainConfig`. (#294)
 
 ### Dependency Upgrades
 
