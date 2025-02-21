@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,30 +53,6 @@ class AppComputeSecretControllerTest {
 
     @InjectMocks
     AppComputeSecretController appComputeSecretController;
-
-    // region addAppDeveloperAppComputeSecret
-
-    @Test
-    void shouldCallAddApplicationDeveloperAppComputeSecret() {
-        final String appAddress = createEthereumAddress();
-        final String secretValue = COMMON_SECRET_VALUE;
-
-        requireAuthorizedAppDeveloper(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
-        when(teeTaskComputeSecretService.encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue))
-                .thenReturn(true);
-
-        ResponseEntity<ApiResponseBody<String, List<String>>> result = appComputeSecretController.addAppDeveloperAppComputeSecret(
-                AUTHORIZATION,
-                appAddress,
-                secretValue
-        );
-
-        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
-        verify(teeTaskComputeSecretService)
-                .encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
-    }
-
-    // endregion
 
     // region addApplicationDeveloperAppComputeSecret
 
@@ -179,46 +155,6 @@ class AppComputeSecretControllerTest {
         assertThat(result).isEqualTo(ResponseEntity.noContent().build());
         verify(teeTaskComputeSecretService)
                 .encryptAndSaveSecret(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
-    }
-
-    // endregion
-
-    // region isAppDeveloperAppComputeSecretPresent
-
-    @ParameterizedTest
-    @ValueSource(strings = {"bad-secret-index", "-1"})
-    void isAppDeveloperAppComputeSecretPresentShouldFail(final String secretIndex) {
-        final String appAddress = createEthereumAddress();
-        final ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
-        assertThat(result).isEqualTo(ResponseEntity.badRequest()
-                .body(createErrorResponse(AppComputeSecretController.INVALID_SECRET_INDEX_FORMAT_MSG)));
-        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
-    }
-
-    @Test
-    void isAppDeveloperAppComputeSecretPresentShouldFailWhenIndexGreaterThanOne() {
-        final String secretIndex = "2";
-        final String appAddress = createEthereumAddress();
-        final ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, secretIndex);
-        assertThat(result).isEqualTo(ResponseEntity.status(HttpStatus.NOT_FOUND).body(createErrorResponse(AppComputeSecretController.SECRET_NOT_FOUND_MSG)));
-        verifyNoInteractions(authorizationService, teeTaskComputeSecretService);
-    }
-
-    @Test
-    void shouldCallIsApplicationDeveloperAppComputeSecretPresent() {
-        final String appAddress = createEthereumAddress();
-        when(teeTaskComputeSecretService.isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX))
-                .thenReturn(true);
-
-        ResponseEntity<ApiResponseBody<String, List<String>>> result =
-                appComputeSecretController.isAppDeveloperAppComputeSecretPresent(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX);
-
-        assertThat(result).isEqualTo(ResponseEntity.noContent().build());
-        verify(teeTaskComputeSecretService)
-                .isSecretPresent(OnChainObjectType.APPLICATION, appAddress, SecretOwnerRole.APPLICATION_DEVELOPER, "", SmsClient.APP_DEVELOPER_SECRET_INDEX);
-        verifyNoInteractions(authorizationService);
     }
 
     // endregion

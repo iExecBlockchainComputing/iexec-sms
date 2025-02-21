@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ public class AppComputeSecretController {
 
     private static final ApiResponseBody<String, List<String>> invalidAuthorizationPayload = createErrorPayload("Invalid authorization");
 
-    static final String INVALID_SECRET_INDEX_FORMAT_MSG = "Secret index should be a positive number";
     static final String INVALID_SECRET_KEY_FORMAT_MSG = "Secret key should contain at most 64 characters from [0-9A-Za-z-_]";
     static final String SECRET_NOT_FOUND_MSG = "Secret not found";
     private static final Pattern secretKeyPattern = Pattern.compile("^[\\p{Alnum}-_]{"
@@ -54,16 +53,6 @@ public class AppComputeSecretController {
     }
 
     // region App developer endpoints
-
-    /**
-     * @deprecated Call /apps/{appAddress}/secrets endpoints in {@code AppComputeSecretController}
-     */
-    @Deprecated(forRemoval = true)
-    @PostMapping("/apps/{appAddress}/secrets/1")
-    public ResponseEntity<ApiResponseBody<String, List<String>>> addAppDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
-                                                                                                 @PathVariable String appAddress, @RequestBody String secretValue) {
-        return addApplicationDeveloperAppComputeSecret(authorization, appAddress, secretValue);
-    }
 
     @PostMapping("/apps/{appAddress}/secrets")
     public ResponseEntity<ApiResponseBody<String, List<String>>> addApplicationDeveloperAppComputeSecret(@RequestHeader("Authorization") String authorization,
@@ -103,31 +92,6 @@ public class AppComputeSecretController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * @deprecated Call /apps/{appAddress}/secrets endpoints in {@code AppComputeSecretController}
-     */
-    @Deprecated(forRemoval = true)
-    @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets/{secretIndex}")
-    public ResponseEntity<ApiResponseBody<String, List<String>>> isAppDeveloperAppComputeSecretPresent(@PathVariable String appAddress,
-                                                                                                       @PathVariable String secretIndex) {
-        //We're keeping this test anyway, because we still consider that a call to this old endpoint
-        //with an invalid secretIndex should not go through, even if the secretIndex is no longer in the signature of the new method.
-        try {
-            checkSecretIndex(secretIndex);
-        } catch (NumberFormatException e) {
-            log.error(INVALID_SECRET_INDEX_FORMAT_MSG, e);
-            return ResponseEntity
-                    .badRequest()
-                    .body(createErrorPayload(INVALID_SECRET_INDEX_FORMAT_MSG));
-        }
-        if (SmsClient.APP_DEVELOPER_SECRET_INDEX.equals(secretIndex)) {
-            return isApplicationDeveloperAppComputeSecretPresent(appAddress);
-        }
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(createErrorPayload(SECRET_NOT_FOUND_MSG));
-    }
-
     @RequestMapping(method = RequestMethod.HEAD, path = "/apps/{appAddress}/secrets")
     public ResponseEntity<ApiResponseBody<String, List<String>>> isApplicationDeveloperAppComputeSecretPresent(@PathVariable String appAddress) {
         appAddress = appAddress.toLowerCase();
@@ -148,19 +112,6 @@ public class AppComputeSecretController {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(createErrorPayload(SECRET_NOT_FOUND_MSG));
-    }
-
-    /**
-     * Checks provided application developer index is in a valid range.
-     * A valid index is a positive number.
-     *
-     * @param secretIndex Secret index value to check.
-     */
-    private void checkSecretIndex(String secretIndex) {
-        int idx = Integer.parseInt(secretIndex);
-        if (idx <= 0) {
-            throw new NumberFormatException();
-        }
     }
     // endregion
 
