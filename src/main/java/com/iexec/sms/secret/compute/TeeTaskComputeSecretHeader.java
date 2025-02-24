@@ -42,7 +42,7 @@ public class TeeTaskComputeSecretHeader implements Serializable {
     @NotNull
     private OnChainObjectType onChainObjectType;
     /**
-     * Represents the chain address of the deployed object
+     * Represents the blockchain address of the deployed object
      * (0xapplication, 0xdataset, 0xworkerpool)
      * as a lower case string.
      * <p>

@@ -41,20 +41,20 @@ public class TeeSessionService {
     private final Map<String, TeeServicesProperties> teeServicesPropertiesMap;
 
     public TeeSessionService(
-            IexecHubService iexecService,
-            TeeSessionHandler teeSessionHandler,
-            Map<String, TeeServicesProperties> teeServicesPropertiesMap) {
+            final IexecHubService iexecService,
+            final TeeSessionHandler teeSessionHandler,
+            final Map<String, TeeServicesProperties> teeServicesPropertiesMap) {
         this.iexecHubService = iexecService;
         this.teeSessionHandler = teeSessionHandler;
         this.teeServicesPropertiesMap = teeServicesPropertiesMap;
     }
 
     public TeeSessionGenerationResponse generateTeeSession(
-            String taskId,
-            String workerAddress,
-            String teeChallenge) throws TeeSessionGenerationException {
-        String sessionId = createSessionId(taskId);
-        TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
+            final String taskId,
+            final String workerAddress,
+            final String teeChallenge) throws TeeSessionGenerationException {
+        final String sessionId = createSessionId(taskId);
+        final TaskDescription taskDescription = iexecHubService.getTaskDescription(taskId);
         if (taskDescription == null) {
             throw new TeeSessionGenerationException(
                     GET_TASK_DESCRIPTION_FAILED,
@@ -95,7 +95,7 @@ public class TeeSessionService {
         }
 
         // /!\ TODO clean expired tasks sessions
-        String secretProvisioningUrl = teeSessionHandler.buildAndPostSession(request);
+        final String secretProvisioningUrl = teeSessionHandler.buildAndPostSession(request);
         return new TeeSessionGenerationResponse(sessionId, secretProvisioningUrl);
     }
 
@@ -109,8 +109,8 @@ public class TeeSessionService {
         return teeServicesProperties;
     }
 
-    private String createSessionId(String taskId) {
-        String randomString = RandomStringUtils.randomAlphanumeric(10);
+    private String createSessionId(final String taskId) {
+        final String randomString = RandomStringUtils.randomAlphanumeric(10);
         return String.format("%s0000%s", randomString, taskId);
     }
 

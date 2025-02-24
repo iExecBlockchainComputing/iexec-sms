@@ -42,7 +42,7 @@ public class AuthorizationService {
 
     private final IexecHubService iexecHubService;
 
-    public AuthorizationService(IexecHubService iexecHubService) {
+    public AuthorizationService(final IexecHubService iexecHubService) {
         this.iexecHubService = iexecHubService;
     }
 
@@ -52,7 +52,7 @@ public class AuthorizationService {
      * @param workerpoolAuthorization The workerpool authorization to check
      * @return {@code Optional.empty()} if all checks passed, the failure reason otherwise
      */
-    public Optional<AuthorizationError> isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization workerpoolAuthorization) {
+    public Optional<AuthorizationError> isAuthorizedOnExecutionWithDetailedIssue(final WorkerpoolAuthorization workerpoolAuthorization) {
         if (workerpoolAuthorization == null || StringUtils.isEmpty(workerpoolAuthorization.getChainTaskId())) {
             log.error("Not authorized with empty params");
             return Optional.of(EMPTY_PARAMS_UNAUTHORIZED);
@@ -98,20 +98,20 @@ public class AuthorizationService {
     }
 
     // region isSignedBy
-    public boolean isSignedByHimself(String message, String signature, String address) {
+    public boolean isSignedByHimself(final String message, final String signature, final String address) {
         return SignatureUtils.isSignatureValid(BytesUtils.stringToBytes(message), new Signature(signature), address);
     }
 
-    public boolean isSignedByOwner(String message, String signature, String address) {
-        String owner = iexecHubService.getOwner(address);
+    public boolean isSignedByOwner(final String message, final String signature, final String address) {
+        final String owner = iexecHubService.getOwner(address);
         return !owner.isEmpty() && isSignedByHimself(message, signature, owner);
     }
     // endregion
 
     // region challenges
-    public String getChallengeForSetAppDeveloperAppComputeSecret(String appAddress,
-                                                                 String secretIndex,
-                                                                 String secretValue) {
+    public String getChallengeForSetAppDeveloperAppComputeSecret(final String appAddress,
+                                                                 final String secretIndex,
+                                                                 final String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
@@ -120,9 +120,9 @@ public class AuthorizationService {
     }
 
     public String getChallengeForSetRequesterAppComputeSecret(
-            String requesterAddress,
-            String secretKey,
-            String secretValue) {
+            final String requesterAddress,
+            final String secretKey,
+            final String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 requesterAddress,
@@ -130,9 +130,9 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetWeb2Secret(String ownerAddress,
-                                               String secretKey,
-                                               String secretValue) {
+    public String getChallengeForSetWeb2Secret(final String ownerAddress,
+                                               final String secretKey,
+                                               final String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 ownerAddress,
@@ -140,8 +140,8 @@ public class AuthorizationService {
                 Hash.sha3String(secretValue));
     }
 
-    public String getChallengeForSetWeb3Secret(String secretAddress,
-                                               String secretValue) {
+    public String getChallengeForSetWeb3Secret(final String secretAddress,
+                                               final String secretValue) {
         return HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 secretAddress,

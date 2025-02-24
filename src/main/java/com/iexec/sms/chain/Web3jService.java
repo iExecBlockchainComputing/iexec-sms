@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class Web3jService extends Web3jAbstractService {
 
-    public Web3jService(ChainConfig chainConfig) {
+    public Web3jService(final ChainConfig chainConfig) {
         super(
                 chainConfig.getId(),
                 chainConfig.getNodeAddress(),

@@ -25,9 +25,9 @@ import org.springframework.stereotype.Service;
 public class IexecHubService extends IexecHubAbstractService {
 
     @Autowired
-    public IexecHubService(SignerService signerService,
-                           Web3jService web3jService,
-                           ChainConfig chainConfig) {
+    public IexecHubService(final SignerService signerService,
+                           final Web3jService web3jService,
+                           final ChainConfig chainConfig) {
         super(signerService.getCredentials(), web3jService, chainConfig.getHubAddress());
     }
 

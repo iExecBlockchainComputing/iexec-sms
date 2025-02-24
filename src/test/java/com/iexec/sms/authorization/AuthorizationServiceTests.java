@@ -51,92 +51,92 @@ class AuthorizationServiceTests {
     // region isAuthorizedOnExecutionWithDetailedIssue
     @Test
     void shouldBeAuthorizedOnExecutionOfTeeTaskWithDetails() {
-        ChainDeal chainDeal = getChainDeal();
-        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final ChainDeal chainDeal = getChainDeal();
+        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
 
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
         assertThat(isAuth).isEmpty();
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithNullAuthorizationWithDetails() {
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(null);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(null);
         assertThat(isAuth).isNotEmpty()
                 .contains(EMPTY_PARAMS_UNAUTHORIZED);
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWithEmptyAuthorizationWithDetails() {
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization.builder().build());
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(WorkerpoolAuthorization.builder().build());
         assertThat(isAuth).isNotEmpty()
                 .contains(EMPTY_PARAMS_UNAUTHORIZED);
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskTypeNotTeeOnchainWithDetails() {
-        ChainDeal chainDeal = ChainDeal.builder()
+        final ChainDeal chainDeal = ChainDeal.builder()
                 .poolOwner("0xc911f9345717ba7c8ec862ce002af3e058df84e4")
                 .tag(BytesUtils.EMPTY_HEX_STRING_32)
                 .build();
-        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
         WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
 
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
         assertThat(isAuth).isNotEmpty()
                 .contains(NO_MATCH_ONCHAIN_TYPE);
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenGetTaskFailedWithDetails() {
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        final WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.empty());
 
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
         assertThat(isAuth).isNotEmpty()
                 .contains(GET_CHAIN_TASK_FAILED);
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActiveWithDetails() {
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
-        ChainTask chainTask = TestUtils.getChainTask(UNSET);
+        final WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        final ChainTask chainTask = TestUtils.getChainTask(UNSET);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
 
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
         assertThat(isAuth).isNotEmpty()
                 .contains(TASK_NOT_ACTIVE);
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenGetDealFailedWithDetails() {
-        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
 
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.empty());
 
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
         assertThat(isAuth).isNotEmpty()
                 .contains(GET_CHAIN_DEAL_FAILED);
     }
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValidWithDetails() {
-        ChainDeal chainDeal = getChainDeal();
-        ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        final ChainDeal chainDeal = getChainDeal();
+        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
 
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
 
-        Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
+        final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
         assertThat(isAuth).isNotEmpty()
                 .contains(INVALID_SIGNATURE);
     }
@@ -145,7 +145,7 @@ class AuthorizationServiceTests {
     // region challenges
     @Test
     void getChallengeForSetRequesterAppComputeSecret() {
-        String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
+        final String challenge = authorizationService.getChallengeForSetRequesterAppComputeSecret(
                 "", "0", "");
         Assertions.assertEquals("0x31991eefc2731228bdd25dbc5a242722eda3869f9b06536dbd96a774e5228509",
                 challenge);
@@ -153,10 +153,10 @@ class AuthorizationServiceTests {
 
     @Test
     void getChallengeForSetWeb3Secret() {
-        String secretAddress = "0x123";
-        String secretValue = "ghijk";
+        final String secretAddress = "0x123";
+        final String secretValue = "ghijk";
 
-        String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
+        final String challenge = authorizationService.getChallengeForSetWeb3Secret(secretAddress, secretValue);
         Assertions.assertEquals("0x8d0b92aaf96f66f172d7615b81f257ebdece2278b7da6c60127cad45852eaaf6",
                 challenge);
     }
