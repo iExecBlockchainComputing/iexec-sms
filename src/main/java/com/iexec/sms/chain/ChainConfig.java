@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.time.Duration;
 
 @Value
-@ConfigurationProperties(prefix = "blockchain")
+@ConfigurationProperties(prefix = "chain")
 public class ChainConfig {
     int id;
     boolean isSidechain;

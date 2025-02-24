@@ -30,13 +30,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @EnableConfigurationProperties(value = ChainConfig.class)
 @TestPropertySource(properties = {
-        "blockchain.id=134",
-        "blockchain.is-sidechain=true",
-        "blockchain.node-address=https://bellecour.iex.ec",
-        "blockchain.hub-address=0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f",
-        "blockchain.block-time=PT5S",
-        "blockchain.gas-price-multiplier=1.0",
-        "blockchain.gas-price-cap=22000000000"})
+        "chain.id=134",
+        "chain.is-sidechain=true",
+        "chain.node-address=https://bellecour.iex.ec",
+        "chain.hub-address=0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f",
+        "chain.block-time=PT5S",
+        "chain.gas-price-multiplier=1.0",
+        "chain.gas-price-cap=22000000000"})
 class Web3jServiceTests {
     @Autowired
     private ChainConfig chainConfig;
