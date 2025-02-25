@@ -20,7 +20,7 @@ import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.api.SmsClientBuilder;
-import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
 import feign.Logger;
@@ -193,12 +193,12 @@ class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void addMultipleRequesterSecrets() {
-        List<String> keys = List.of("secret-key-1", "secret-key-2", "secret-key-3");
+        final List<String> keys = List.of("secret-key-1", "secret-key-2", "secret-key-3");
         for (String key : keys) {
             addNewRequesterSecret(REQUESTER_ADDRESS, key, SECRET_VALUE);
         }
         Assertions.assertThat(repository.count()).isEqualTo(keys.size());
-        List<TeeTaskComputeSecret> secrets = repository.findAll();
+        final List<TeeTaskComputeSecret> secrets = repository.findAll();
         final List<String> retrievedKeys = secrets
                 .stream()
                 .map(TeeTaskComputeSecret::getHeader)
@@ -214,7 +214,7 @@ class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             "this-is-a-really-long-key-with-far-too-many-characters-in-its-name",
             "this-is-a-key-with-invalid-characters:!*~"
     })
-    void checkInvalidRequesterSecretKey(String secretKey) {
+    void checkInvalidRequesterSecretKey(final String secretKey) {
         Assertions.assertThatThrownBy(() -> addNewRequesterSecret(REQUESTER_ADDRESS, secretKey, SECRET_VALUE))
                 .isInstanceOf(FeignException.BadRequest.class);
         Assertions.assertThat(repository.count()).isZero();
@@ -225,7 +225,7 @@ class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * and adds a new application developer secret to the database
      */
     @SuppressWarnings("SameParameterValue")
-    private void addNewAppDeveloperSecret(String appAddress, String secretIndex, String secretValue, String ownerAddress) {
+    private void addNewAppDeveloperSecret(final String appAddress, final String secretIndex, final String secretValue, final String ownerAddress) {
         when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
 
         final String authorization = getAuthorizationForAppDeveloper(appAddress, secretIndex, secretValue);
@@ -251,9 +251,9 @@ class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * and adds a new requester secret to the database
      */
     @SuppressWarnings("SameParameterValue")
-    private void addNewRequesterSecret(String requesterAddress,
-                                       String secretKey,
-                                       String secretValue) {
+    private void addNewRequesterSecret(final String requesterAddress,
+                                       final String secretKey,
+                                       final String secretValue) {
         final String authorization = getAuthorizationForRequester(requesterAddress, secretKey, secretValue);
 
         // At first, no secret should be in the database
@@ -277,9 +277,9 @@ class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * given application developer secret to database.
      */
     private String getAuthorizationForAppDeveloper(
-            String appAddress,
-            String secretIndex,
-            String secretValue) {
+            final String appAddress,
+            final String secretIndex,
+            final String secretValue) {
         final String challenge = HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
@@ -293,9 +293,9 @@ class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * given requester secret to database.
      */
     private String getAuthorizationForRequester(
-            String requesterAddress,
-            String secretKey,
-            String secretValue) {
+            final String requesterAddress,
+            final String secretKey,
+            final String secretValue) {
 
         final String challenge = HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),

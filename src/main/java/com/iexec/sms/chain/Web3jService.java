@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.blockchain;
+package com.iexec.sms.chain;
 
-import lombok.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.iexec.commons.poco.chain.Web3jAbstractService;
+import org.springframework.stereotype.Service;
 
-import java.time.Duration;
+@Service
+public class Web3jService extends Web3jAbstractService {
 
-@Value
-@ConfigurationProperties(prefix = "blockchain")
-public class BlockchainConfig {
-    int id;
-    boolean isSidechain;
-    String nodeAddress;
-    String hubAddress;
-    Duration blockTime;
-    float gasPriceMultiplier;
-    long gasPriceCap;
+    public Web3jService(final ChainConfig chainConfig) {
+        super(
+                chainConfig.getId(),
+                chainConfig.getNodeAddress(),
+                chainConfig.getBlockTime(),
+                chainConfig.getGasPriceMultiplier(),
+                chainConfig.getGasPriceCap(),
+                chainConfig.isSidechain()
+        );
+    }
+
 }

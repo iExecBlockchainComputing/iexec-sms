@@ -32,7 +32,7 @@ encryption:
   # this file shouldn't be clearly readable outside the enclave (but encrypted content could be copied outside)
   aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/data/iexec-sms-aes.key}
 
-blockchain:
+chain:
   id: ${IEXEC_CHAIN_ID:134}
   is-sidechain: ${IEXEC_IS_SIDECHAIN:true}
   node-address: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:https://bellecour.iex.ec}
