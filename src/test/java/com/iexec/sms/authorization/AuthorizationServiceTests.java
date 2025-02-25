@@ -53,7 +53,7 @@ class AuthorizationServiceTests {
     void shouldBeAuthorizedOnExecutionOfTeeTaskWithDetails() {
         final ChainDeal chainDeal = getChainDeal();
         final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        final WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
 
@@ -82,7 +82,7 @@ class AuthorizationServiceTests {
                 .tag(BytesUtils.EMPTY_HEX_STRING_32)
                 .build();
         final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
-        WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
+        final WorkerpoolAuthorization auth = TestUtils.getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
 

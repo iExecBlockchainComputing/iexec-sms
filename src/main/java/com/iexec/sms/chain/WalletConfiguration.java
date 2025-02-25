@@ -25,7 +25,7 @@ import java.security.GeneralSecurityException;
 @Configuration
 public class WalletConfiguration {
     @Bean
-    SignerService signerService(Web3jService web3jService, ChainConfig chainConfig) throws GeneralSecurityException {
+    SignerService signerService(final Web3jService web3jService, final ChainConfig chainConfig) throws GeneralSecurityException {
         return new SignerService(web3jService.getWeb3j(), chainConfig.getId());
     }
 }
