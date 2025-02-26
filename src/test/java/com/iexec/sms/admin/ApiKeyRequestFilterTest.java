@@ -36,7 +36,7 @@ class ApiKeyRequestFilterTest {
     private MockFilterChain chain;
 
     @BeforeEach
-    public void init() {
+    void init() {
         req = new MockHttpServletRequest();
         res = new MockHttpServletResponse();
         chain = new MockFilterChain();

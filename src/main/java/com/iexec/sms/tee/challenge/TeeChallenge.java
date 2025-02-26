@@ -21,7 +21,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.security.GeneralSecurityException;
 import java.time.Instant;
@@ -34,8 +33,7 @@ import java.time.Instant;
 public class TeeChallenge {
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String taskId;
