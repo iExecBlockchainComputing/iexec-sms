@@ -35,7 +35,7 @@ import static com.iexec.common.utils.FileHelper.createFileWithContent;
 @Service
 public class EncryptionService {
 
-    private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
+    private static final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
     private byte[] aesKey;
 
     @Getter
@@ -84,16 +84,16 @@ public class EncryptionService {
             }
         }
 
-        final byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+        final byte[] parsedAesKey = FileHelper.readFileBytes(aesKeyPath);
 
-        if (aesKey == null) {
+        if (parsedAesKey == null) {
             throw new ExceptionInInitializerError("Failed to load AES key");
         }
 
         log.info("AES key loaded [isNewAesKey:{}, aesKeyPath:{}, aesKeyHash:{}]",
-                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
+                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(parsedAesKey)));
 
-        return aesKey;
+        return parsedAesKey;
     }
 
     public String encrypt(String data) {

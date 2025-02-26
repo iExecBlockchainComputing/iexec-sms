@@ -28,13 +28,11 @@ import com.iexec.sms.secret.compute.SecretOwnerRole;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ClassUtils;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.iexec.sms.Web3jUtils.createEthereumAddress;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 public class TeeSessionTestUtils {
@@ -46,7 +44,6 @@ public class TeeSessionTestUtils {
     public static final String PRE_COMPUTE_FINGERPRINT = "mrEnclave1";
     public static final String PRE_COMPUTE_ENTRYPOINT = "entrypoint1";
     public static final String DATASET_ADDRESS = "0xDatasetAddress";
-    public static final String DATASET_NAME = "datasetName";
     public static final String DATASET_CHECKSUM = "datasetChecksum";
     public static final String DATASET_URL = "http://datasetUrl"; // 0x687474703a2f2f646174617365742d75726c in hex
     // keys with leading/trailing \n should not break the workflow
@@ -151,7 +148,6 @@ public class TeeSessionTestUtils {
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
-                .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
                 .requester(requesterAddress)
                 .beneficiary(beneficiaryAddress)
@@ -159,34 +155,6 @@ public class TeeSessionTestUtils {
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0);
-    }
-
-    public static void assertRecursively(Object expected, Object actual) {
-        if (expected == null ||
-                expected instanceof String ||
-                ClassUtils.isPrimitiveOrWrapper(expected.getClass())) {
-            log.info("Comparing [actual:{}, expected:{}]", expected, actual);
-            assertThat(expected).isEqualTo(actual);
-            return;
-        }
-        if (expected instanceof List) {
-            List<?> actualList = (List<?>) expected;
-            List<?> expectedList = (List<?>) actual;
-            for (int i = 0; i < actualList.size(); i++) {
-                assertRecursively(actualList.get(i), expectedList.get(i));
-            }
-            return;
-        }
-        if (expected instanceof Map) {
-            Map<?, ?> actualMap = (Map<?, ?>) expected;
-            Map<?, ?> expectedMap = (Map<?, ?>) actual;
-            actualMap.keySet().forEach(key -> {
-                final Object expectedObject = expectedMap.get(key);
-                final Object actualObject = actualMap.get(key);
-                log.info("Checking expected map contains valid '{}' key [expected value:{}, actual value:{}]", key, expectedObject, actualObject);
-                assertRecursively(expectedObject, actualObject);
-            });
-        }
     }
     //endregion
 }
