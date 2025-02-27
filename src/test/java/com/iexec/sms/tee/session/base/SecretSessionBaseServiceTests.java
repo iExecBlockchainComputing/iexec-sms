@@ -64,6 +64,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SecretSessionBaseServiceTests {
 
+    private static final String POST_COMPUTE_STAGE = "post-compute";
+
     private static final TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
             .framework(TeeFramework.SCONE)// any would be fine
             .entrypoint(APP_ENTRYPOINT)
@@ -223,6 +225,12 @@ class SecretSessionBaseServiceTests {
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
                 .thenReturn(Optional.of(DATASET_KEY));
 
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        when(teeChallengeService.getOrCreate(TASK_ID, true))
+                .thenReturn(Optional.of(challenge));
+
         final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
@@ -238,6 +246,9 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
+        expectedTokens.put("PRE_COMPUTE_TASK_ID", TASK_ID);
+        expectedTokens.put("PRE_COMPUTE_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("PRE_COMPUTE_SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
@@ -257,6 +268,11 @@ class SecretSessionBaseServiceTests {
                 .teeServicesProperties(new SconeServicesProperties("v5", preComputeProperties, postComputeProperties, "las_image"))
                 .taskDescription(taskDescription)
                 .build();
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        when(teeChallengeService.getOrCreate(TASK_ID, true))
+                .thenReturn(Optional.of(challenge));
 
         final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
@@ -269,6 +285,10 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
+        expectedTokens.put("PRE_COMPUTE_TASK_ID", TASK_ID);
+        expectedTokens.put("PRE_COMPUTE_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("PRE_COMPUTE_SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
     // endregion
@@ -613,7 +633,7 @@ class SecretSessionBaseServiceTests {
                 .thenReturn(Optional.of(TeeChallenge.builder().credentials(credentials).build()));
 
         final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
@@ -634,7 +654,7 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
                 .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
@@ -652,7 +672,7 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError()).isEqualTo(
                 TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
@@ -669,7 +689,7 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
                 .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
@@ -686,7 +706,7 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
                 .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
@@ -704,7 +724,7 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
                 .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
