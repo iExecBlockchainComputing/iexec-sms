@@ -41,7 +41,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
+import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
+import static com.iexec.sms.tee.session.TeeSessionTestUtils.createTaskDescription;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -164,7 +166,9 @@ class SconeSessionMakerServiceTests {
             final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
             final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
             final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
-            assertRecursively(expectedYmlMap, actualYmlMap);
+            assertThat(actualYmlMap)
+                    .usingRecursiveComparison()
+                    .isEqualTo(expectedYmlMap);
         }
     }
     // endregion
@@ -190,7 +194,9 @@ class SconeSessionMakerServiceTests {
             final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
             final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");
             final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
-            assertRecursively(expectedYmlMap, actualYmlMap);
+            assertThat(actualYmlMap)
+                    .usingRecursiveComparison()
+                    .isEqualTo(expectedYmlMap);
         }
     }
     // endregion

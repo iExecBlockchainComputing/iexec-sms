@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,53 +18,33 @@ package com.iexec.sms.tee.session.gramine;
 
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
 import com.iexec.sms.tee.session.base.SecretSessionBase;
 import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.sps.GramineSession;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.Map;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @Slf4j
+@ExtendWith(MockitoExtension.class)
 class GramineSessionMakerServiceTests {
-    private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-            .image("PRE_COMPUTE_IMAGE")
-            .fingerprint(PRE_COMPUTE_FINGERPRINT)
-            .entrypoint(PRE_COMPUTE_ENTRYPOINT)
-            .heapSizeInBytes(1L)
-            .build();
-    private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-            .image("POST_COMPUTE_IMAGE")
-            .fingerprint(POST_COMPUTE_FINGERPRINT)
-            .entrypoint(POST_COMPUTE_ENTRYPOINT)
-            .heapSizeInBytes(1L)
-            .build();
-    @Mock
-    private GramineServicesProperties teeServicesConfig;
+
     @Mock
     private SecretSessionBaseService teeSecretsService;
     @InjectMocks
     private GramineSessionMakerService gramineSessionService;
-
-    @BeforeEach
-    void beforeEach() {
-        MockitoAnnotations.openMocks(this);
-        when(teeServicesConfig.getPreComputeProperties()).thenReturn(preComputeProperties);
-        when(teeServicesConfig.getPostComputeProperties()).thenReturn(postComputeProperties);
-    }
 
     // region getSessionYml
     @Test
@@ -117,7 +97,9 @@ class GramineSessionMakerServiceTests {
         Map<String, Object> actualJsonMap = new Yaml().load(actualSpsSession.toString());
         String expectedJsonString = FileHelper.readFile("src/test/resources/gramine-tee-session.json");
         Map<String, Object> expectedYmlMap = new Yaml().load(expectedJsonString);
-        assertRecursively(expectedYmlMap, actualJsonMap);
+        assertThat(actualJsonMap)
+                .usingRecursiveComparison()
+                .isEqualTo(expectedYmlMap);
     }
     // endregion
 }

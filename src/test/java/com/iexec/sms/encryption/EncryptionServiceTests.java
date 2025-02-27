@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.iexec.sms.MemoryLogAppender;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -109,21 +109,21 @@ class EncryptionServiceTests {
     }
 
     @Test
-    void shouldReturnExceptionInInitializerErrorWhenAesKeyFileIsEmpty() {
-        final String aesKeyPath = tempDir.getAbsolutePath() + "/aes2.key";
-        final File aesKeyFile = new File(aesKeyPath);
-        Assertions.assertThatCode(aesKeyFile::createNewFile).doesNotThrowAnyException();
+    void shouldReturnExceptionInInitializerErrorWhenAesKeyFileIsEmpty() throws IOException {
+        final String aesKeyPath2 = tempDir.getAbsolutePath() + "/aes2.key";
+        final File aesKeyFile = new File(aesKeyPath2);
+        assertThat(aesKeyFile.createNewFile()).isTrue();
 
-        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath2);
         assertThatExceptionOfType(ExceptionInInitializerError.class)
                 .isThrownBy(() -> new EncryptionService(encryptionConfiguration));
     }
 
     @Test
     void shouldReturnExceptionInInitializerErrorWhenFailedToCreateAesKeyFile() {
-        final String aesKeyPath = tempDir.getAbsolutePath() + "/aes2.key";
+        final String aesKeyPath2 = tempDir.getAbsolutePath() + "/aes2.key";
         assertThat(tempDir.setWritable(false)).isTrue();
-        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath);
+        final EncryptionConfiguration encryptionConfiguration = new EncryptionConfiguration(aesKeyPath2);
         assertThatExceptionOfType(ExceptionInInitializerError.class)
                 .isThrownBy(() -> new EncryptionService(encryptionConfiguration));
     }

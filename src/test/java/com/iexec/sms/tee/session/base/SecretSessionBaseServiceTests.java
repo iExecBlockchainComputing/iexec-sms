@@ -348,7 +348,6 @@ class SecretSessionBaseServiceTests {
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(DATASET_ADDRESS)
                 .datasetUri(DATASET_URL)
-                .datasetName(DATASET_NAME)
                 .datasetChecksum(DATASET_CHECKSUM)
                 .requester(requesterAddress)
                 .dealParams(dealParams)
