@@ -246,7 +246,6 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
-        expectedTokens.put("PRE_COMPUTE_TASK_ID", TASK_ID);
         expectedTokens.put("PRE_COMPUTE_WORKER_ADDRESS", WORKER_ADDRESS);
         expectedTokens.put("PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
@@ -285,7 +284,6 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
-        expectedTokens.put("PRE_COMPUTE_TASK_ID", TASK_ID);
         expectedTokens.put("PRE_COMPUTE_WORKER_ADDRESS", WORKER_ADDRESS);
         expectedTokens.put("PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
 

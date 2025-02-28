@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
+import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
 import static com.iexec.common.worker.result.ResultUtils.*;
 import static com.iexec.commons.poco.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.commons.poco.tee.TeeUtils.booleanToYesNo;
@@ -175,7 +176,7 @@ public class SecretSessionBaseService {
     private String selectedTokenForStage(final String computeStage, final String token) {
         final boolean isPreCompute = computeStage.equals(PRE_COMPUTE_STAGE);
         return switch (token) {
-            case "taskIdToken" -> isPreCompute ? "PRE_COMPUTE_TASK_ID" : RESULT_TASK_ID;
+            case "taskIdToken" -> isPreCompute ? IEXEC_TASK_ID : RESULT_TASK_ID;
             case "workerAddressToken" -> isPreCompute ? "PRE_COMPUTE_WORKER_ADDRESS" : RESULT_SIGN_WORKER_ADDRESS;
             case "enclaveChallengeToken" ->
                     isPreCompute ? "PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY" : RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY;
@@ -221,7 +222,7 @@ public class SecretSessionBaseService {
             log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
         trustedEnv.addAll(List.of(
-                IexecEnvUtils.IEXEC_TASK_ID,
+                IEXEC_TASK_ID,
                 IexecEnvUtils.IEXEC_INPUT_FILES_FOLDER,
                 IexecEnvUtils.IEXEC_INPUT_FILES_NUMBER));
         IexecEnvUtils.getAllIexecEnv(taskDescription)
