@@ -178,7 +178,7 @@ public class SecretSessionBaseService {
             case "taskIdToken" -> isPreCompute ? "PRE_COMPUTE_TASK_ID" : RESULT_TASK_ID;
             case "workerAddressToken" -> isPreCompute ? "PRE_COMPUTE_WORKER_ADDRESS" : RESULT_SIGN_WORKER_ADDRESS;
             case "enclaveChallengeToken" ->
-                    isPreCompute ? "PRE_COMPUTE_SIGN_TEE_CHALLENGE_PRIVATE_KEY" : RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY;
+                    isPreCompute ? "PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY" : RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY;
             /* default case will never be reached since method usage is restricted to and controlled in getSignTokens()
                (no empty values can be returned) */
             default -> "";
