@@ -34,6 +34,8 @@ import com.iexec.sms.tee.session.base.SecretEnclaveBase.SecretEnclaveBaseBuilder
 import com.iexec.sms.tee.session.base.SecretSessionBase.SecretSessionBaseBuilder;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
+import com.iexec.sms.tee.session.scone.SconeSessionMakerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -50,8 +52,8 @@ import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 /**
  * Service to fetch secrets from SMS database in order to prepare TEE tasks sessions for CAS or SPS.
  *
- * @see com.iexec.sms.tee.session.gramine.GramineSessionMakerService
- * @see com.iexec.sms.tee.session.scone.SconeSessionMakerService
+ * @see GramineSessionMakerService
+ * @see SconeSessionMakerService
  */
 @Slf4j
 @Service
@@ -63,6 +65,7 @@ public class SecretSessionBaseService {
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
     static final String PRE_COMPUTE_STAGE = "pre-compute";
+    static final String POST_COMPUTE_STAGE = "post-compute";
 
     private final Web3SecretService web3SecretService;
     private final Web2SecretService web2SecretService;
@@ -122,10 +125,11 @@ public class SecretSessionBaseService {
      * @throws TeeSessionGenerationException if any of the required tokens is missing
      */
     Map<String, String> getSignTokens(final TeeSessionRequest request, final String computeStage) throws TeeSessionGenerationException {
+        final boolean isPreCompute = computeStage.equals(PRE_COMPUTE_STAGE);
         final String taskId = request.getTaskDescription().getChainTaskId();
         final String workerAddress = request.getWorkerAddress();
         if (StringUtils.isEmpty(workerAddress)) {
-            final TeeSessionGenerationError emptyWorkerAddressError = computeStage.equals(PRE_COMPUTE_STAGE) ?
+            final TeeSessionGenerationError emptyWorkerAddressError = isPreCompute ?
                     PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS :
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS;
             throw new TeeSessionGenerationException(
@@ -133,7 +137,7 @@ public class SecretSessionBaseService {
                     "Empty worker address - taskId: " + taskId);
         }
         if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
-            final TeeSessionGenerationError emptyPublicEnclaveChallengeError = computeStage.equals(PRE_COMPUTE_STAGE) ?
+            final TeeSessionGenerationError emptyPublicEnclaveChallengeError = isPreCompute ?
                     PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE :
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE;
             throw new TeeSessionGenerationException(
@@ -142,7 +146,7 @@ public class SecretSessionBaseService {
         }
         final Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
         if (teeChallenge.isEmpty()) {
-            final TeeSessionGenerationError emptyTeeChallengeError = computeStage.equals(PRE_COMPUTE_STAGE) ?
+            final TeeSessionGenerationError emptyTeeChallengeError = isPreCompute ?
                     PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE :
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE;
             throw new TeeSessionGenerationException(
@@ -151,7 +155,7 @@ public class SecretSessionBaseService {
         }
         final EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
         if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
-            final TeeSessionGenerationError emptyTeeCredentialsError = computeStage.equals(PRE_COMPUTE_STAGE) ?
+            final TeeSessionGenerationError emptyTeeCredentialsError = isPreCompute ?
                     PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS :
                     POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS;
             throw new TeeSessionGenerationException(
@@ -159,15 +163,26 @@ public class SecretSessionBaseService {
                     "Empty TEE challenge credentials - taskId: " + taskId);
         }
         final Map<String, String> tokens = new HashMap<>();
-        final String taskIdToken = computeStage.equals(PRE_COMPUTE_STAGE) ? "PRE_COMPUTE_TASK_ID" : RESULT_TASK_ID;
+        final String taskIdToken = selectedTokenForStage(computeStage, "taskIdToken");
         tokens.put(taskIdToken, taskId);
-        final String workerAddressToken = computeStage.equals(PRE_COMPUTE_STAGE) ?
-                "PRE_COMPUTE_WORKER_ADDRESS" : RESULT_SIGN_WORKER_ADDRESS;
+        final String workerAddressToken = selectedTokenForStage(computeStage, "workerAddressToken");
         tokens.put(workerAddressToken, workerAddress);
-        final String enclaveChallengeToken = computeStage.equals(PRE_COMPUTE_STAGE) ?
-                "PRE_COMPUTE_SIGN_TEE_CHALLENGE_PRIVATE_KEY" : RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY;
+        final String enclaveChallengeToken = selectedTokenForStage(computeStage, "enclaveChallengeToken");
         tokens.put(enclaveChallengeToken, enclaveCredentials.getPrivateKey());
         return tokens;
+    }
+
+    private String selectedTokenForStage(final String computeStage, final String token) {
+        final boolean isPreCompute = computeStage.equals(PRE_COMPUTE_STAGE);
+        return switch (token) {
+            case "taskIdToken" -> isPreCompute ? "PRE_COMPUTE_TASK_ID" : RESULT_TASK_ID;
+            case "workerAddressToken" -> isPreCompute ? "PRE_COMPUTE_WORKER_ADDRESS" : RESULT_SIGN_WORKER_ADDRESS;
+            case "enclaveChallengeToken" ->
+                    isPreCompute ? "PRE_COMPUTE_SIGN_TEE_CHALLENGE_PRIVATE_KEY" : RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY;
+            /* default case will never be reached since method usage is restricted to and controlled in getSignTokens()
+               (no empty values can be returned) */
+            default -> "";
+        };
     }
 
     // region pre-compute
@@ -357,7 +372,7 @@ public class SecretSessionBaseService {
      */
     SecretEnclaveBase getPostComputeTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
         final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
-                .name("post-compute")
+                .name(POST_COMPUTE_STAGE)
                 .mrenclave(request.getTeeServicesProperties().getPostComputeProperties().getFingerprint());
         final Map<String, Object> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
@@ -406,7 +421,7 @@ public class SecretSessionBaseService {
             tokens.putAll(getPostComputeStorageTokens(request, storageToken, storageProxy));
         }
         // enclave signature
-        final Map<String, String> signTokens = getSignTokens(request, "post-compute");
+        final Map<String, String> signTokens = getSignTokens(request, POST_COMPUTE_STAGE);
         tokens.putAll(signTokens);
         return enclaveBase
                 .environment(tokens)
