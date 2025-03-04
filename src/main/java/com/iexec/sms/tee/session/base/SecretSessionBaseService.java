@@ -62,8 +62,6 @@ public class SecretSessionBaseService {
     static final String IEXEC_DATASET_KEY = "IEXEC_DATASET_KEY";
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
-    static final String PRE_COMPUTE_STAGE = "pre-compute";
-    static final String POST_COMPUTE_STAGE = "post-compute";
 
     private final Web3SecretService web3SecretService;
     private final Web2SecretService web2SecretService;
@@ -102,27 +100,27 @@ public class SecretSessionBaseService {
         }
         final SecretSessionBaseBuilder sessionBase = SecretSessionBase.builder();
         final TaskDescription taskDescription = request.getTaskDescription();
+        final Map<String, String> signTokens = getSignTokens(request);
         // pre-compute
         final boolean isPreComputeRequired = taskDescription.containsDataset() || taskDescription.containsInputFiles();
         if (isPreComputeRequired) {
-            sessionBase.preCompute(getPreComputeTokens(request));
+            sessionBase.preCompute(getPreComputeTokens(request, signTokens));
         }
         // app
         sessionBase.appCompute(getAppTokens(request));
         // post compute
-        sessionBase.postCompute(getPostComputeTokens(request));
+        sessionBase.postCompute(getPostComputeTokens(request, signTokens));
         return sessionBase.build();
     }
 
     /**
      * Get tokens required for different signature-related features.
      *
-     * @param request      Session request details
-     * @param computeStage The compute stage (pre-compute or post-compute)
+     * @param request Session request details
      * @return A {@code Map} containing tokens required for the signature
      * @throws TeeSessionGenerationException if any of the required tokens is missing
      */
-    Map<String, String> getSignTokens(final TeeSessionRequest request, final String computeStage) throws TeeSessionGenerationException {
+    Map<String, String> getSignTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
         final String taskId = request.getTaskDescription().getChainTaskId();
         final String workerAddress = request.getWorkerAddress();
         if (StringUtils.isEmpty(workerAddress)) {
@@ -147,11 +145,11 @@ public class SecretSessionBaseService {
                     GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
                     "Empty TEE challenge credentials - taskId: " + taskId);
         }
-        final Map<String, String> tokens = new HashMap<>();
-        tokens.put(IEXEC_TASK_ID.name(), taskId);
-        tokens.put(SIGN_WORKER_ADDRESS.name(), workerAddress);
-        tokens.put(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), enclaveCredentials.getPrivateKey());
-        return tokens;
+        return Map.of(
+                IEXEC_TASK_ID.name(), taskId,
+                SIGN_WORKER_ADDRESS.name(), workerAddress,
+                SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), enclaveCredentials.getPrivateKey()
+        );
     }
 
     // region pre-compute
@@ -159,13 +157,14 @@ public class SecretSessionBaseService {
     /**
      * Get tokens to be injected in the pre-compute enclave.
      *
-     * @param request Session request details
+     * @param request    Session request details
+     * @param signTokens Tokens required for the signature of the communications with the worker
      * @return A {@link SecretEnclaveBase} instance
      * @throws TeeSessionGenerationException if dataset secret is not found
      */
-    SecretEnclaveBase getPreComputeTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
+    SecretEnclaveBase getPreComputeTokens(final TeeSessionRequest request, final Map<String, String> signTokens) throws TeeSessionGenerationException {
         final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
-        enclaveBase.name(PRE_COMPUTE_STAGE);
+        enclaveBase.name("pre-compute");
         final Map<String, Object> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
         final String taskId = taskDescription.getChainTaskId();
@@ -203,8 +202,7 @@ public class SecretSessionBaseService {
                                 || e.getKey().startsWith(IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX))
                 .forEach(e -> tokens.put(e.getKey(), e.getValue()));
 
-        // enclave signature
-        final Map<String, String> signTokens = getSignTokens(request, PRE_COMPUTE_STAGE);
+        // for communication with worker
         tokens.putAll(signTokens);
 
         return enclaveBase
@@ -335,13 +333,14 @@ public class SecretSessionBaseService {
     /**
      * Get tokens to be injected in the post-compute enclave.
      *
-     * @param request Session request details
+     * @param request    Session request details
+     * @param signTokens
      * @return A {@link SecretEnclaveBase} instance
      * @throws TeeSessionGenerationException if {@code TaskDescription} is {@literal null}
      */
-    SecretEnclaveBase getPostComputeTokens(final TeeSessionRequest request) throws TeeSessionGenerationException {
+    SecretEnclaveBase getPostComputeTokens(final TeeSessionRequest request, final Map<String, String> signTokens) throws TeeSessionGenerationException {
         final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
-                .name(POST_COMPUTE_STAGE)
+                .name("post-compute")
                 .mrenclave(request.getTeeServicesProperties().getPostComputeProperties().getFingerprint());
         final Map<String, Object> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
@@ -389,9 +388,9 @@ public class SecretSessionBaseService {
                     isWorkerTokenPresent, tokenOwner);
             tokens.putAll(getPostComputeStorageTokens(request, storageToken, storageProxy));
         }
-        // enclave signature
-        final Map<String, String> signTokens = getSignTokens(request, POST_COMPUTE_STAGE);
+        // for communication with worker
         tokens.putAll(signTokens);
+
         return enclaveBase
                 .environment(tokens)
                 .build();
