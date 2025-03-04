@@ -21,7 +21,6 @@ import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
-import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.secret.compute.*;
 import com.iexec.sms.secret.web2.Web2Secret;
 import com.iexec.sms.secret.web2.Web2SecretHeader;
@@ -45,6 +44,7 @@ import java.util.*;
 import static com.iexec.common.precompute.PreComputeUtils.IS_DATASET_REQUIRED;
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
 import static com.iexec.common.worker.result.ResultUtils.*;
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
 import static com.iexec.commons.poco.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
 import static com.iexec.commons.poco.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
@@ -126,64 +126,35 @@ public class SecretSessionBaseService {
      * @throws TeeSessionGenerationException if any of the required tokens is missing
      */
     Map<String, String> getSignTokens(final TeeSessionRequest request, final String computeStage) throws TeeSessionGenerationException {
-        final boolean isPreCompute = computeStage.equals(PRE_COMPUTE_STAGE);
         final String taskId = request.getTaskDescription().getChainTaskId();
         final String workerAddress = request.getWorkerAddress();
         if (StringUtils.isEmpty(workerAddress)) {
-            final TeeSessionGenerationError emptyWorkerAddressError = isPreCompute ?
-                    PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS :
-                    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS;
             throw new TeeSessionGenerationException(
-                    emptyWorkerAddressError,
+                    TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
                     "Empty worker address - taskId: " + taskId);
         }
         if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
-            final TeeSessionGenerationError emptyPublicEnclaveChallengeError = isPreCompute ?
-                    PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE :
-                    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE;
             throw new TeeSessionGenerationException(
-                    emptyPublicEnclaveChallengeError,
+                    TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
                     "Empty public enclave challenge - taskId: " + taskId);
         }
         final Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
         if (teeChallenge.isEmpty()) {
-            final TeeSessionGenerationError emptyTeeChallengeError = isPreCompute ?
-                    PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE :
-                    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE;
             throw new TeeSessionGenerationException(
-                    emptyTeeChallengeError,
+                    TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
                     "Empty TEE challenge  - taskId: " + taskId);
         }
         final EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
         if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
-            final TeeSessionGenerationError emptyTeeCredentialsError = isPreCompute ?
-                    PRE_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS :
-                    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS;
             throw new TeeSessionGenerationException(
-                    emptyTeeCredentialsError,
+                    TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
                     "Empty TEE challenge credentials - taskId: " + taskId);
         }
         final Map<String, String> tokens = new HashMap<>();
-        final String taskIdToken = selectedTokenForStage(computeStage, "taskIdToken");
-        tokens.put(taskIdToken, taskId);
-        final String workerAddressToken = selectedTokenForStage(computeStage, "workerAddressToken");
-        tokens.put(workerAddressToken, workerAddress);
-        final String enclaveChallengeToken = selectedTokenForStage(computeStage, "enclaveChallengeToken");
-        tokens.put(enclaveChallengeToken, enclaveCredentials.getPrivateKey());
+        tokens.put(IEXEC_TASK_ID, taskId);
+        tokens.put(SIGN_WORKER_ADDRESS, workerAddress);
+        tokens.put(SIGN_TEE_CHALLENGE_PRIVATE_KEY, enclaveCredentials.getPrivateKey());
         return tokens;
-    }
-
-    private String selectedTokenForStage(final String computeStage, final String token) {
-        final boolean isPreCompute = computeStage.equals(PRE_COMPUTE_STAGE);
-        return switch (token) {
-            case "taskIdToken" -> isPreCompute ? IEXEC_TASK_ID : RESULT_TASK_ID;
-            case "workerAddressToken" -> isPreCompute ? "PRE_COMPUTE_WORKER_ADDRESS" : RESULT_SIGN_WORKER_ADDRESS;
-            case "enclaveChallengeToken" ->
-                    isPreCompute ? "PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY" : RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY;
-            /* default case will never be reached since method usage is restricted to and controlled in getSignTokens()
-               (no empty values can be returned) */
-            default -> "";
-        };
     }
 
     // region pre-compute

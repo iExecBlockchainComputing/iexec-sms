@@ -246,8 +246,8 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
-        expectedTokens.put("PRE_COMPUTE_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
@@ -284,8 +284,8 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
-        expectedTokens.put("PRE_COMPUTE_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
 
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
@@ -481,9 +481,9 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("RESULT_STORAGE_PROXY", STORAGE_PROXY);
         expectedTokens.put("RESULT_STORAGE_TOKEN", STORAGE_TOKEN);
         // sign tokens
-        expectedTokens.put("RESULT_TASK_ID", TASK_ID);
-        expectedTokens.put("RESULT_SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
+        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
 
         assertThat(enclaveBase.getEnvironment()).containsExactlyEntriesOf(expectedTokens);
     }
@@ -635,9 +635,9 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_TASK_ID", taskId,
-                                "RESULT_SIGN_WORKER_ADDRESS", sessionRequest.getWorkerAddress(),
-                                "RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY", credentials.getPrivateKey()));
+                                "IEXEC_TASK_ID", taskId,
+                                "SIGN_WORKER_ADDRESS", sessionRequest.getWorkerAddress(),
+                                "SIGN_TEE_CHALLENGE_PRIVATE_KEY", credentials.getPrivateKey()));
     }
 
     @ParameterizedTest
@@ -654,7 +654,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
+                .isEqualTo(TeeSessionGenerationError.TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
         assertThat(exception.getMessage()).isEqualTo("Empty worker address - taskId: " + taskId);
     }
 
@@ -672,7 +672,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError()).isEqualTo(
-                TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
+                TeeSessionGenerationError.TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
         assertThat(exception.getMessage()).isEqualTo("Empty public enclave challenge - taskId: " + taskId);
     }
 
@@ -689,7 +689,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
+                .isEqualTo(TeeSessionGenerationError.TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge  - taskId: " + taskId);
     }
 
@@ -706,7 +706,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+                .isEqualTo(TeeSessionGenerationError.TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
 
@@ -724,7 +724,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+                .isEqualTo(TeeSessionGenerationError.TEE_SESSION_GENERATION_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
     // endregion
