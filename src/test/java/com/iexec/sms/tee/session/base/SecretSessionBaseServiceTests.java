@@ -505,7 +505,7 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldGetPostComputeTokensForDropbox() throws TeeSessionGenerationException, GeneralSecurityException {
+    void shouldGetPostComputeTokensForDropbox() throws TeeSessionGenerationException {
         final DealParams dealParams = DealParams.builder()
                 .iexecResultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
                 .iexecResultEncryption(true)
@@ -526,7 +526,7 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException, GeneralSecurityException {
+    void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
                 .callback("callback")
                 .build();
