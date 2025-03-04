@@ -148,9 +148,9 @@ public class SecretSessionBaseService {
                     "Empty TEE challenge credentials - taskId: " + taskId);
         }
         final Map<String, String> tokens = new HashMap<>();
-        tokens.put(IEXEC_TASK_ID.toString(), taskId);
-        tokens.put(SIGN_WORKER_ADDRESS.toString(), workerAddress);
-        tokens.put(SIGN_TEE_CHALLENGE_PRIVATE_KEY.toString(), enclaveCredentials.getPrivateKey());
+        tokens.put(IEXEC_TASK_ID.name(), taskId);
+        tokens.put(SIGN_WORKER_ADDRESS.name(), workerAddress);
+        tokens.put(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), enclaveCredentials.getPrivateKey());
         return tokens;
     }
 
@@ -172,7 +172,7 @@ public class SecretSessionBaseService {
         enclaveBase.mrenclave(request.getTeeServicesProperties().getPreComputeProperties().getFingerprint());
         tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
-        tokens.put(IS_DATASET_REQUIRED.toString(), taskDescription.containsDataset());
+        tokens.put(IS_DATASET_REQUIRED.name(), taskDescription.containsDataset());
 
         final List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
@@ -183,16 +183,16 @@ public class SecretSessionBaseService {
                             "Empty dataset secret - taskId: " + taskId));
             tokens.put(IEXEC_DATASET_KEY, datasetKey);
             trustedEnv.addAll(List.of(
-                    IEXEC_DATASET_URL.toString(),
-                    IEXEC_DATASET_FILENAME.toString(),
-                    IEXEC_DATASET_CHECKSUM.toString()));
+                    IEXEC_DATASET_URL.name(),
+                    IEXEC_DATASET_FILENAME.name(),
+                    IEXEC_DATASET_CHECKSUM.name()));
         } else {
             log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
         trustedEnv.addAll(List.of(
-                IEXEC_TASK_ID.toString(),
-                IEXEC_INPUT_FILES_FOLDER.toString(),
-                IEXEC_INPUT_FILES_NUMBER.toString()));
+                IEXEC_TASK_ID.name(),
+                IEXEC_INPUT_FILES_FOLDER.name(),
+                IEXEC_INPUT_FILES_NUMBER.name()));
         IexecEnvUtils.getAllIexecEnv(taskDescription)
                 .entrySet()
                 .stream()
@@ -419,8 +419,8 @@ public class SecretSessionBaseService {
         final Map<String, String> tokens = new HashMap<>();
         final boolean shouldEncrypt = taskDescription.getDealParams().isIexecResultEncryption();
         // TODO use boolean with quotes instead of yes/no
-        tokens.put(RESULT_ENCRYPTION.toString(), booleanToYesNo(shouldEncrypt));
-        tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY.toString(), EMPTY_STRING_VALUE);
+        tokens.put(RESULT_ENCRYPTION.name(), booleanToYesNo(shouldEncrypt));
+        tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY.name(), EMPTY_STRING_VALUE);
         if (!shouldEncrypt) {
             return tokens;
         }
@@ -429,7 +429,7 @@ public class SecretSessionBaseService {
                     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
                     "Empty beneficiary encryption key - taskId: " + taskId);
         }
-        tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY.toString(), resultEncryptionKey); // base64 encoded by client
+        tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY.name(), resultEncryptionKey); // base64 encoded by client
         return tokens;
     }
 
@@ -444,10 +444,10 @@ public class SecretSessionBaseService {
         final String taskId = taskDescription.getChainTaskId();
         final Map<String, String> tokens = new HashMap<>();
         final boolean isCallbackRequested = taskDescription.containsCallback();
-        tokens.put(RESULT_STORAGE_CALLBACK.toString(), booleanToYesNo(isCallbackRequested));
-        tokens.put(RESULT_STORAGE_PROVIDER.toString(), EMPTY_STRING_VALUE);
-        tokens.put(RESULT_STORAGE_PROXY.toString(), EMPTY_STRING_VALUE);
-        tokens.put(RESULT_STORAGE_TOKEN.toString(), EMPTY_STRING_VALUE);
+        tokens.put(RESULT_STORAGE_CALLBACK.name(), booleanToYesNo(isCallbackRequested));
+        tokens.put(RESULT_STORAGE_PROVIDER.name(), EMPTY_STRING_VALUE);
+        tokens.put(RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE);
+        tokens.put(RESULT_STORAGE_TOKEN.name(), EMPTY_STRING_VALUE);
         if (isCallbackRequested) {
             return tokens;
         }
@@ -462,9 +462,9 @@ public class SecretSessionBaseService {
                     POST_COMPUTE_GET_STORAGE_TOKENS_FAILED,
                     "Empty requester storage token - taskId: " + taskId);
         }
-        tokens.put(RESULT_STORAGE_PROVIDER.toString(), storageProvider);
-        tokens.put(RESULT_STORAGE_PROXY.toString(), storageProxy);
-        tokens.put(RESULT_STORAGE_TOKEN.toString(), storageToken);
+        tokens.put(RESULT_STORAGE_PROVIDER.name(), storageProvider);
+        tokens.put(RESULT_STORAGE_PROXY.name(), storageProxy);
+        tokens.put(RESULT_STORAGE_TOKEN.name(), storageToken);
         return tokens;
     }
 
