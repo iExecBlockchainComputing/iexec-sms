@@ -27,6 +27,13 @@ public enum TeeSessionGenerationError {
     EXECUTION_NOT_AUTHORIZED_INVALID_SIGNATURE,
     // endregion
 
+    // region Signature token retrieval
+    EMPTY_WORKER_ADDRESS,
+    EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
+    EMPTY_TEE_CHALLENGE,
+    EMPTY_TEE_CREDENTIALS,
+    // endregion
+
     // region Pre-compute
     PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
     // endregion
@@ -39,15 +46,6 @@ public enum TeeSessionGenerationError {
     // region Post-compute
     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
     POST_COMPUTE_GET_STORAGE_TOKENS_FAILED,
-
-    @Deprecated(forRemoval = true)
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
-    @Deprecated(forRemoval = true)
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
-    @Deprecated(forRemoval = true)
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
-    @Deprecated(forRemoval = true)
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
     // endregion
 
     // region Secure session generation
