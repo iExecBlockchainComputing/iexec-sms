@@ -654,7 +654,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.EMPTY_WORKER_ADDRESS);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
         assertThat(exception.getMessage()).isEqualTo("Empty worker address - taskId: " + taskId);
     }
 
@@ -672,7 +672,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError()).isEqualTo(
-                TeeSessionGenerationError.EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
+                TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
         assertThat(exception.getMessage()).isEqualTo("Empty public enclave challenge - taskId: " + taskId);
     }
 
@@ -689,7 +689,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.EMPTY_TEE_CHALLENGE);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge  - taskId: " + taskId);
     }
 
@@ -706,7 +706,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.EMPTY_TEE_CREDENTIALS);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
 
@@ -724,7 +724,7 @@ class SecretSessionBaseServiceTests {
                 () -> teeSecretsService.getSignTokens(sessionRequest, POST_COMPUTE_STAGE));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.EMPTY_TEE_CREDENTIALS);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
     // endregion

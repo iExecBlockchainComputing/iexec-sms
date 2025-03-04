@@ -127,24 +127,24 @@ public class SecretSessionBaseService {
         final String workerAddress = request.getWorkerAddress();
         if (StringUtils.isEmpty(workerAddress)) {
             throw new TeeSessionGenerationException(
-                    EMPTY_WORKER_ADDRESS,
+                    GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
                     "Empty worker address - taskId: " + taskId);
         }
         if (StringUtils.isEmpty(request.getEnclaveChallenge())) {
             throw new TeeSessionGenerationException(
-                    EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
+                    GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
                     "Empty public enclave challenge - taskId: " + taskId);
         }
         final Optional<TeeChallenge> teeChallenge = teeChallengeService.getOrCreate(taskId, true);
         if (teeChallenge.isEmpty()) {
             throw new TeeSessionGenerationException(
-                    EMPTY_TEE_CHALLENGE,
+                    GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
                     "Empty TEE challenge  - taskId: " + taskId);
         }
         final EthereumCredentials enclaveCredentials = teeChallenge.get().getCredentials();
         if (enclaveCredentials == null || enclaveCredentials.getPrivateKey().isEmpty()) {
             throw new TeeSessionGenerationException(
-                    EMPTY_TEE_CREDENTIALS,
+                    GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
                     "Empty TEE challenge credentials - taskId: " + taskId);
         }
         final Map<String, String> tokens = new HashMap<>();
