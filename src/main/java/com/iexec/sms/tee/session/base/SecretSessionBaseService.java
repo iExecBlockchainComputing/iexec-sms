@@ -334,7 +334,7 @@ public class SecretSessionBaseService {
      * Get tokens to be injected in the post-compute enclave.
      *
      * @param request    Session request details
-     * @param signTokens
+     * @param signTokens Tokens required for the signature of the communications with the worker
      * @return A {@link SecretEnclaveBase} instance
      * @throws TeeSessionGenerationException if {@code TaskDescription} is {@literal null}
      */
