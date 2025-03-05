@@ -623,9 +623,9 @@ class SecretSessionBaseServiceTests {
                 .isEqualTo("Empty requester storage token - taskId: " + taskDescription.getChainTaskId());
     }
 
-    // region getPostComputeSignTokens
+    // region getSignTokens
     @Test
-    void shouldGetPostComputeSignTokens() throws GeneralSecurityException {
+    void shouldGetSignTokens() throws GeneralSecurityException {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
         final String taskId = taskDescription.getChainTaskId();
@@ -648,7 +648,7 @@ class SecretSessionBaseServiceTests {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
+    void shouldNotGetSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
         final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
                 .workerAddress(emptyWorkerAddress)
                 .build();
@@ -666,7 +666,7 @@ class SecretSessionBaseServiceTests {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
+    void shouldNotGetSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
         final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
                 .enclaveChallenge(emptyEnclaveChallenge)
                 .build();
@@ -682,7 +682,7 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldNotGetPostComputeSignTokensSinceNoTeeChallenge() {
+    void shouldNotGetSignTokensSinceNoTeeChallenge() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
@@ -699,7 +699,7 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentials() {
+    void shouldNotGetSignTokensSinceNoEnclaveCredentials() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
@@ -716,7 +716,7 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentialsPrivateKey() {
+    void shouldNotGetSignTokensSinceNoEnclaveCredentialsPrivateKey() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
