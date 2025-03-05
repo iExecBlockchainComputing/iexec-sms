@@ -505,7 +505,7 @@ class SecretSessionBaseServiceTests {
     }
 
     @Test
-    void shouldGetPostComputeTokensForDropbox() throws TeeSessionGenerationException {
+    void shouldGetPostComputeTokensForDropbox() throws TeeSessionGenerationException, GeneralSecurityException {
         final DealParams dealParams = DealParams.builder()
                 .iexecResultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
                 .iexecResultEncryption(true)
@@ -520,13 +520,28 @@ class SecretSessionBaseServiceTests {
         final Web2Secret dropboxToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_DROPBOX_TOKEN, "Secret value");
         when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), dropboxToken.getHeader())))
                 .thenReturn(List.of(resultEncryption, dropboxToken));
-        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(anyString()));
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()));
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
+        final Map<String, Object> expectedTokens = Map.of(
+                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
+                RESULT_STORAGE_CALLBACK.name(), "no",
+                RESULT_STORAGE_PROVIDER.name(), "dropbox",
+                RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
+                RESULT_STORAGE_TOKEN.name(), "Secret value",
+                IEXEC_TASK_ID.name(), TASK_ID,
+                SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS,
+                SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), challenge.getCredentials().getPrivateKey()
+        );
+        assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
     @Test
-    void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException {
+    void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException, GeneralSecurityException {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
                 .callback("callback")
                 .build();
@@ -540,9 +555,24 @@ class SecretSessionBaseServiceTests {
         when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader(), resultProxyUrl.getHeader())))
                 .thenReturn(List.of(resultEncryption, workerStorageToken, resultProxyUrl));
 
-        SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(anyString()));
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()));
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
+        final Map<String, Object> expectedTokens = Map.of(
+                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
+                RESULT_STORAGE_CALLBACK.name(), "yes",
+                RESULT_STORAGE_PROVIDER.name(), EMPTY_STRING_VALUE,
+                RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
+                RESULT_STORAGE_TOKEN.name(), EMPTY_STRING_VALUE,
+                IEXEC_TASK_ID.name(), TASK_ID,
+                SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS,
+                SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), challenge.getCredentials().getPrivateKey()
+        );
+        assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
     // endregion
 
