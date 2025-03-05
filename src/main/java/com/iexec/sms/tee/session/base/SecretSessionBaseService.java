@@ -58,8 +58,6 @@ import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 public class SecretSessionBaseService {
 
     static final String EMPTY_STRING_VALUE = "";
-    static final String IEXEC_PRE_COMPUTE_OUT = "IEXEC_PRE_COMPUTE_OUT";
-    static final String IEXEC_DATASET_KEY = "IEXEC_DATASET_KEY";
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
 
@@ -169,7 +167,7 @@ public class SecretSessionBaseService {
         final TaskDescription taskDescription = request.getTaskDescription();
         final String taskId = taskDescription.getChainTaskId();
         enclaveBase.mrenclave(request.getTeeServicesProperties().getPreComputeProperties().getFingerprint());
-        tokens.put(IEXEC_PRE_COMPUTE_OUT, IexecFileHelper.SLASH_IEXEC_IN);
+        tokens.put(IEXEC_PRE_COMPUTE_OUT.name(), IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED.name(), taskDescription.containsDataset());
 
@@ -180,7 +178,7 @@ public class SecretSessionBaseService {
                     .orElseThrow(() -> new TeeSessionGenerationException(
                             PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
                             "Empty dataset secret - taskId: " + taskId));
-            tokens.put(IEXEC_DATASET_KEY, datasetKey);
+            tokens.put(IEXEC_DATASET_KEY.name(), datasetKey);
             trustedEnv.addAll(List.of(
                     IEXEC_DATASET_URL.name(),
                     IEXEC_DATASET_FILENAME.name(),
