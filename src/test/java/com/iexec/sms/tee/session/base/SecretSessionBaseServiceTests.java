@@ -526,7 +526,7 @@ class SecretSessionBaseServiceTests {
         final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()));
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.of(
+        final Map<String, String> expectedTokens = Map.of(
                 RESULT_ENCRYPTION.name(), "yes",
                 RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
                 RESULT_STORAGE_CALLBACK.name(), "no",
@@ -561,7 +561,7 @@ class SecretSessionBaseServiceTests {
         final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()));
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.of(
+        final Map<String, String> expectedTokens = Map.of(
                 RESULT_ENCRYPTION.name(), "yes",
                 RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
                 RESULT_STORAGE_CALLBACK.name(), "yes",
