@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add `getTeeServicesPropertiesVersion` endpoint to retrieve a specific pre/post-compute configuration pair version. (#287)
 - Add `teeFrameworkVersion` field to `TeeServicesProperties`. (#289)
 - Refactor `TeeWorkerInternalConfiguration` and related services to use `Map<String, TeeServicesProperties>`. (#290 #291)
+- Add enclave challenge private key, worker address and task ID related tokens in pre-compute session. (#296)
 
 ### Quality
 

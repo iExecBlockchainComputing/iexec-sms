@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static com.iexec.sms.tee.session.base.SecretSessionBaseService.EMPTY_STRING_VALUE;
@@ -63,6 +64,14 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SecretSessionBaseServiceTests {
+
+    private Map<String, String> getSignTokens(final String privateKey) {
+        return Map.of(
+                IEXEC_TASK_ID.name(), TASK_ID,
+                SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS,
+                SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), privateKey
+        );
+    }
 
     private static final TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
             .framework(TeeFramework.SCONE)// any would be fine
@@ -126,7 +135,9 @@ class SecretSessionBaseServiceTests {
         assertEquals("pre-compute", preComputeBase.getName());
         assertEquals(PRE_COMPUTE_FINGERPRINT, preComputeBase.getMrenclave());
         // environment content checks are handled in dedicated tests below
-        assertEquals(teeSecretsService.getPreComputeTokens(request).getEnvironment(),
+        assertEquals(teeSecretsService
+                        .getPreComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()))
+                        .getEnvironment(),
                 preComputeBase.getEnvironment());
 
         final SecretEnclaveBase appComputeBase = sessionBase.getAppCompute();
@@ -140,7 +151,9 @@ class SecretSessionBaseServiceTests {
         assertEquals("post-compute", postComputeBase.getName());
         assertEquals(POST_COMPUTE_FINGERPRINT, postComputeBase.getMrenclave());
         // environment content checks are handled in dedicated tests below
-        assertEquals(teeSecretsService.getPostComputeTokens(request).getEnvironment(),
+        assertEquals(teeSecretsService
+                        .getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()))
+                        .getEnvironment(),
                 postComputeBase.getEnvironment());
     }
 
@@ -178,7 +191,9 @@ class SecretSessionBaseServiceTests {
         assertEquals("post-compute", postComputeBase.getName());
         assertEquals(POST_COMPUTE_FINGERPRINT, postComputeBase.getMrenclave());
         // environment content checks are handled in dedicated tests below
-        assertEquals(teeSecretsService.getPostComputeTokens(request).getEnvironment(),
+        assertEquals(teeSecretsService
+                        .getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()))
+                        .getEnvironment(),
                 postComputeBase.getEnvironment());
     }
 
@@ -223,7 +238,14 @@ class SecretSessionBaseServiceTests {
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
                 .thenReturn(Optional.of(DATASET_KEY));
 
-        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
         final Map<String, Object> expectedTokens = new HashMap<>();
@@ -238,6 +260,8 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
+        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
@@ -257,8 +281,14 @@ class SecretSessionBaseServiceTests {
                 .teeServicesProperties(new SconeServicesProperties("v5", preComputeProperties, postComputeProperties, "las_image"))
                 .taskDescription(taskDescription)
                 .build();
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
 
-        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(request);
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
         Map<String, Object> expectedTokens = new HashMap<>();
@@ -269,6 +299,9 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
         expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
         expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
+        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
     // endregion
@@ -447,10 +480,11 @@ class SecretSessionBaseServiceTests {
         final TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
-        when(teeChallengeService.getOrCreate(TASK_ID, true))
-                .thenReturn(Optional.of(challenge));
 
-        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request);
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
         final Map<String, Object> expectedTokens = new HashMap<>();
@@ -463,9 +497,9 @@ class SecretSessionBaseServiceTests {
         expectedTokens.put("RESULT_STORAGE_PROXY", STORAGE_PROXY);
         expectedTokens.put("RESULT_STORAGE_TOKEN", STORAGE_TOKEN);
         // sign tokens
-        expectedTokens.put("RESULT_TASK_ID", TASK_ID);
-        expectedTokens.put("RESULT_SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
+        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
+        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
 
         assertThat(enclaveBase.getEnvironment()).containsExactlyEntriesOf(expectedTokens);
     }
@@ -489,12 +523,21 @@ class SecretSessionBaseServiceTests {
         final TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
-        when(teeChallengeService.getOrCreate(TASK_ID, true))
-                .thenReturn(Optional.of(challenge));
-
-        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request);
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()));
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
+        final Map<String, String> expectedTokens = Map.of(
+                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
+                RESULT_STORAGE_CALLBACK.name(), "no",
+                RESULT_STORAGE_PROVIDER.name(), "dropbox",
+                RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
+                RESULT_STORAGE_TOKEN.name(), "Secret value",
+                IEXEC_TASK_ID.name(), TASK_ID,
+                SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS,
+                SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), challenge.getCredentials().getPrivateKey()
+        );
+        assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
     @Test
@@ -511,15 +554,25 @@ class SecretSessionBaseServiceTests {
         final Web2Secret resultProxyUrl = new Web2Secret(taskDescription.getWorkerpoolOwner(), IEXEC_RESULT_IEXEC_RESULT_PROXY_URL, "");
         when(web2SecretService.getSecretsForTeeSession(List.of(resultEncryption.getHeader(), requesterStorageToken.getHeader(), workerStorageToken.getHeader(), resultProxyUrl.getHeader())))
                 .thenReturn(List.of(resultEncryption, workerStorageToken, resultProxyUrl));
+
         final TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
-        when(teeChallengeService.getOrCreate(TASK_ID, true))
-                .thenReturn(Optional.of(challenge));
-
-        SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request);
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPostComputeTokens(request, getSignTokens(challenge.getCredentials().getPrivateKey()));
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
+        final Map<String, String> expectedTokens = Map.of(
+                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
+                RESULT_STORAGE_CALLBACK.name(), "yes",
+                RESULT_STORAGE_PROVIDER.name(), EMPTY_STRING_VALUE,
+                RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
+                RESULT_STORAGE_TOKEN.name(), EMPTY_STRING_VALUE,
+                IEXEC_TASK_ID.name(), TASK_ID,
+                SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS,
+                SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), challenge.getCredentials().getPrivateKey()
+        );
+        assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
     // endregion
 
@@ -600,9 +653,9 @@ class SecretSessionBaseServiceTests {
                 .isEqualTo("Empty requester storage token - taskId: " + taskDescription.getChainTaskId());
     }
 
-    // region getPostComputeSignTokens
+    // region getSignTokens
     @Test
-    void shouldGetPostComputeSignTokens() throws GeneralSecurityException {
+    void shouldGetSignTokens() throws GeneralSecurityException {
         final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
         final String taskId = taskDescription.getChainTaskId();
@@ -612,20 +665,20 @@ class SecretSessionBaseServiceTests {
                 .thenReturn(Optional.of(TeeChallenge.builder().credentials(credentials).build()));
 
         final Map<String, String> tokens = assertDoesNotThrow(
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest));
 
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_TASK_ID", taskId,
-                                "RESULT_SIGN_WORKER_ADDRESS", sessionRequest.getWorkerAddress(),
-                                "RESULT_SIGN_TEE_CHALLENGE_PRIVATE_KEY", credentials.getPrivateKey()));
+                                "IEXEC_TASK_ID", taskId,
+                                "SIGN_WORKER_ADDRESS", sessionRequest.getWorkerAddress(),
+                                "SIGN_TEE_CHALLENGE_PRIVATE_KEY", credentials.getPrivateKey()));
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldNotGetPostComputeSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
+    void shouldNotGetSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
         final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
                 .workerAddress(emptyWorkerAddress)
                 .build();
@@ -633,17 +686,17 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS);
         assertThat(exception.getMessage()).isEqualTo("Empty worker address - taskId: " + taskId);
     }
 
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {""})
-    void shouldNotGetPostComputeSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
+    void shouldNotGetSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
         final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
                 .enclaveChallenge(emptyEnclaveChallenge)
                 .build();
@@ -651,15 +704,15 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest));
 
         assertThat(exception.getError()).isEqualTo(
-                TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
+                TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE);
         assertThat(exception.getMessage()).isEqualTo("Empty public enclave challenge - taskId: " + taskId);
     }
 
     @Test
-    void shouldNotGetPostComputeSignTokensSinceNoTeeChallenge() {
+    void shouldNotGetSignTokensSinceNoTeeChallenge() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
@@ -668,15 +721,15 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge  - taskId: " + taskId);
     }
 
     @Test
-    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentials() {
+    void shouldNotGetSignTokensSinceNoEnclaveCredentials() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
@@ -685,15 +738,15 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
 
     @Test
-    void shouldNotGetPostComputeSignTokensSinceNoEnclaveCredentialsPrivateKey() {
+    void shouldNotGetSignTokensSinceNoEnclaveCredentialsPrivateKey() {
         final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
@@ -703,10 +756,10 @@ class SecretSessionBaseServiceTests {
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,
-                () -> teeSecretsService.getPostComputeSignTokens(sessionRequest));
+                () -> teeSecretsService.getSignTokens(sessionRequest));
 
         assertThat(exception.getError())
-                .isEqualTo(TeeSessionGenerationError.POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
+                .isEqualTo(TeeSessionGenerationError.GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS);
         assertThat(exception.getMessage()).isEqualTo("Empty TEE challenge credentials - taskId: " + taskId);
     }
     // endregion
