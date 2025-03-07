@@ -48,7 +48,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -248,20 +247,21 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = new HashMap<>();
-        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
-        expectedTokens.put("IEXEC_PRE_COMPUTE_OUT", "/iexec_in");
-        expectedTokens.put("IS_DATASET_REQUIRED", true);
-        expectedTokens.put("IEXEC_DATASET_KEY", DATASET_KEY);
-        expectedTokens.put("IEXEC_DATASET_URL", DATASET_URL);
-        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_DATASET_CHECKSUM", DATASET_CHECKSUM);
-        expectedTokens.put("IEXEC_INPUT_FILES_FOLDER", "/iexec_in");
-        expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
-        expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
-        expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
-        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        final Map<String, Object> expectedTokens = Map.ofEntries(
+                Map.entry("IEXEC_TASK_ID", TASK_ID),
+                Map.entry("IEXEC_PRE_COMPUTE_OUT", "/iexec_in"),
+                Map.entry("IS_DATASET_REQUIRED", true),
+                Map.entry("IEXEC_DATASET_KEY", DATASET_KEY),
+                Map.entry("IEXEC_DATASET_URL", DATASET_URL),
+                Map.entry("IEXEC_DATASET_FILENAME", DATASET_ADDRESS),
+                Map.entry("IEXEC_DATASET_CHECKSUM", DATASET_CHECKSUM),
+                Map.entry("IEXEC_INPUT_FILES_FOLDER", "/iexec_in"),
+                Map.entry("IEXEC_INPUT_FILES_NUMBER", "2"),
+                Map.entry("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1),
+                Map.entry("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2),
+                Map.entry("SIGN_WORKER_ADDRESS", WORKER_ADDRESS),
+                Map.entry("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey())
+        );
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
@@ -291,16 +291,17 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        Map<String, Object> expectedTokens = new HashMap<>();
-        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
-        expectedTokens.put("IEXEC_PRE_COMPUTE_OUT", "/iexec_in");
-        expectedTokens.put("IS_DATASET_REQUIRED", false);
-        expectedTokens.put("IEXEC_INPUT_FILES_FOLDER", "/iexec_in");
-        expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
-        expectedTokens.put("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1);
-        expectedTokens.put("IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2);
-        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        final Map<String, Object> expectedTokens = Map.of(
+                "IEXEC_TASK_ID", TASK_ID,
+                "IEXEC_PRE_COMPUTE_OUT", "/iexec_in",
+                "IS_DATASET_REQUIRED", false,
+                "IEXEC_INPUT_FILES_FOLDER", "/iexec_in",
+                "IEXEC_INPUT_FILES_NUMBER", "2",
+                "IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1,
+                "IEXEC_INPUT_FILE_URL_2", INPUT_FILE_URL_2,
+                "SIGN_WORKER_ADDRESS", WORKER_ADDRESS,
+                "SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey()
+        );
 
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
@@ -323,23 +324,24 @@ class SecretSessionBaseServiceTests {
         final SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("app");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
-        final Map<String, Object> expectedTokens = new HashMap<>();
-        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
-        expectedTokens.put("IEXEC_IN", "/iexec_in");
-        expectedTokens.put("IEXEC_OUT", "/iexec_out");
-        expectedTokens.put("IEXEC_DATASET_ADDRESS", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_BOT_SIZE", "1");
-        expectedTokens.put("IEXEC_BOT_FIRST_INDEX", "0");
-        expectedTokens.put("IEXEC_BOT_TASK_INDEX", "0");
-        expectedTokens.put("IEXEC_INPUT_FILES_FOLDER", "/iexec_in");
-        expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
-        expectedTokens.put("IEXEC_INPUT_FILE_NAME_1", INPUT_FILE_NAME_1);
-        expectedTokens.put("IEXEC_INPUT_FILE_NAME_2", INPUT_FILE_NAME_2);
-        expectedTokens.put("IEXEC_APP_DEVELOPER_SECRET", APP_DEVELOPER_SECRET_VALUE);
-        expectedTokens.put("IEXEC_APP_DEVELOPER_SECRET_1", APP_DEVELOPER_SECRET_VALUE);
-        expectedTokens.put("IEXEC_REQUESTER_SECRET_1", REQUESTER_SECRET_VALUE_1);
-        expectedTokens.put("IEXEC_REQUESTER_SECRET_2", REQUESTER_SECRET_VALUE_2);
+        final Map<String, Object> expectedTokens = Map.ofEntries(
+                Map.entry("IEXEC_TASK_ID", TASK_ID),
+                Map.entry("IEXEC_IN", "/iexec_in"),
+                Map.entry("IEXEC_OUT", "/iexec_out"),
+                Map.entry("IEXEC_DATASET_ADDRESS", DATASET_ADDRESS),
+                Map.entry("IEXEC_DATASET_FILENAME", DATASET_ADDRESS),
+                Map.entry("IEXEC_BOT_SIZE", "1"),
+                Map.entry("IEXEC_BOT_FIRST_INDEX", "0"),
+                Map.entry("IEXEC_BOT_TASK_INDEX", "0"),
+                Map.entry("IEXEC_INPUT_FILES_FOLDER", "/iexec_in"),
+                Map.entry("IEXEC_INPUT_FILES_NUMBER", "2"),
+                Map.entry("IEXEC_INPUT_FILE_NAME_1", INPUT_FILE_NAME_1),
+                Map.entry("IEXEC_INPUT_FILE_NAME_2", INPUT_FILE_NAME_2),
+                Map.entry("IEXEC_APP_DEVELOPER_SECRET", APP_DEVELOPER_SECRET_VALUE),
+                Map.entry("IEXEC_APP_DEVELOPER_SECRET_1", APP_DEVELOPER_SECRET_VALUE),
+                Map.entry("IEXEC_REQUESTER_SECRET_1", REQUESTER_SECRET_VALUE_1),
+                Map.entry("IEXEC_REQUESTER_SECRET_2", REQUESTER_SECRET_VALUE_2)
+        );
 
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
         assertThat(teeTaskComputeSecretIds.getValue()).containsExactlyInAnyOrder(
@@ -377,19 +379,20 @@ class SecretSessionBaseServiceTests {
         final SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("app");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
-        final Map<String, Object> expectedTokens = new HashMap<>();
-        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
-        expectedTokens.put("IEXEC_IN", "/iexec_in");
-        expectedTokens.put("IEXEC_OUT", "/iexec_out");
-        expectedTokens.put("IEXEC_DATASET_ADDRESS", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_DATASET_FILENAME", DATASET_ADDRESS);
-        expectedTokens.put("IEXEC_BOT_SIZE", "1");
-        expectedTokens.put("IEXEC_BOT_FIRST_INDEX", "0");
-        expectedTokens.put("IEXEC_BOT_TASK_INDEX", "0");
-        expectedTokens.put("IEXEC_INPUT_FILES_FOLDER", "/iexec_in");
-        expectedTokens.put("IEXEC_INPUT_FILES_NUMBER", "2");
-        expectedTokens.put("IEXEC_INPUT_FILE_NAME_1", INPUT_FILE_NAME_1);
-        expectedTokens.put("IEXEC_INPUT_FILE_NAME_2", INPUT_FILE_NAME_2);
+        final Map<String, Object> expectedTokens = Map.ofEntries(
+                Map.entry("IEXEC_TASK_ID", TASK_ID),
+                Map.entry("IEXEC_IN", "/iexec_in"),
+                Map.entry("IEXEC_OUT", "/iexec_out"),
+                Map.entry("IEXEC_DATASET_ADDRESS", DATASET_ADDRESS),
+                Map.entry("IEXEC_DATASET_FILENAME", DATASET_ADDRESS),
+                Map.entry("IEXEC_BOT_SIZE", "1"),
+                Map.entry("IEXEC_BOT_FIRST_INDEX", "0"),
+                Map.entry("IEXEC_BOT_TASK_INDEX", "0"),
+                Map.entry("IEXEC_INPUT_FILES_FOLDER", "/iexec_in"),
+                Map.entry("IEXEC_INPUT_FILES_NUMBER", "2"),
+                Map.entry("IEXEC_INPUT_FILE_NAME_1", INPUT_FILE_NAME_1),
+                Map.entry("IEXEC_INPUT_FILE_NAME_2", INPUT_FILE_NAME_2)
+        );
 
         assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
         verify(teeTaskComputeSecretService).getSecretsForTeeSession(anyCollection());
@@ -487,21 +490,22 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = new HashMap<>();
-        // encryption tokens
-        expectedTokens.put("RESULT_ENCRYPTION", "yes");
-        expectedTokens.put("RESULT_ENCRYPTION_PUBLIC_KEY", ENCRYPTION_PUBLIC_KEY);
-        // storage tokens
-        expectedTokens.put("RESULT_STORAGE_CALLBACK", "no");
-        expectedTokens.put("RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER);
-        expectedTokens.put("RESULT_STORAGE_PROXY", STORAGE_PROXY);
-        expectedTokens.put("RESULT_STORAGE_TOKEN", STORAGE_TOKEN);
-        // sign tokens
-        expectedTokens.put("IEXEC_TASK_ID", TASK_ID);
-        expectedTokens.put("SIGN_WORKER_ADDRESS", WORKER_ADDRESS);
-        expectedTokens.put("SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey());
+        final Map<String, Object> expectedTokens = Map.of(
+                // encryption tokens
+                "RESULT_ENCRYPTION", "true",
+                "RESULT_ENCRYPTION_PUBLIC_KEY", ENCRYPTION_PUBLIC_KEY,
+                // storage tokens
+                "RESULT_STORAGE_CALLBACK", "false",
+                "RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER,
+                "RESULT_STORAGE_PROXY", STORAGE_PROXY,
+                "RESULT_STORAGE_TOKEN", STORAGE_TOKEN,
+                // sign tokens
+                "IEXEC_TASK_ID", TASK_ID,
+                "SIGN_WORKER_ADDRESS", WORKER_ADDRESS,
+                "SIGN_TEE_CHALLENGE_PRIVATE_KEY", challenge.getCredentials().getPrivateKey()
+        );
 
-        assertThat(enclaveBase.getEnvironment()).containsExactlyEntriesOf(expectedTokens);
+        assertThat(enclaveBase.getEnvironment()).containsExactlyInAnyOrderEntriesOf(expectedTokens);
     }
 
     @Test
@@ -527,9 +531,9 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
         final Map<String, String> expectedTokens = Map.of(
-                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION.name(), "true",
                 RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
-                RESULT_STORAGE_CALLBACK.name(), "no",
+                RESULT_STORAGE_CALLBACK.name(), "false",
                 RESULT_STORAGE_PROVIDER.name(), "dropbox",
                 RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
                 RESULT_STORAGE_TOKEN.name(), "Secret value",
@@ -562,9 +566,9 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
         final Map<String, String> expectedTokens = Map.of(
-                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION.name(), "true",
                 RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
-                RESULT_STORAGE_CALLBACK.name(), "yes",
+                RESULT_STORAGE_CALLBACK.name(), "true",
                 RESULT_STORAGE_PROVIDER.name(), EMPTY_STRING_VALUE,
                 RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
                 RESULT_STORAGE_TOKEN.name(), EMPTY_STRING_VALUE,
@@ -590,7 +594,7 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_STORAGE_CALLBACK", "yes",
+                                "RESULT_STORAGE_CALLBACK", "true",
                                 "RESULT_STORAGE_PROVIDER", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_TOKEN", EMPTY_STRING_VALUE));
@@ -608,7 +612,7 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_STORAGE_CALLBACK", "no",
+                                "RESULT_STORAGE_CALLBACK", "false",
                                 "RESULT_STORAGE_PROVIDER", DealParams.IPFS_RESULT_STORAGE_PROVIDER,
                                 "RESULT_STORAGE_PROXY", STORAGE_PROXY,
                                 "RESULT_STORAGE_TOKEN", storageToken));
@@ -633,7 +637,7 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_STORAGE_CALLBACK", "no",
+                                "RESULT_STORAGE_CALLBACK", "false",
                                 "RESULT_STORAGE_PROVIDER", DealParams.DROPBOX_RESULT_STORAGE_PROVIDER,
                                 "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_TOKEN", secretValue));
@@ -774,7 +778,7 @@ class SecretSessionBaseServiceTests {
         assertThat(encryptionTokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_ENCRYPTION", "yes",
+                                "RESULT_ENCRYPTION", "true",
                                 "RESULT_ENCRYPTION_PUBLIC_KEY", ENCRYPTION_PUBLIC_KEY));
     }
 
@@ -793,7 +797,7 @@ class SecretSessionBaseServiceTests {
         assertThat(encryptionTokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_ENCRYPTION", "no",
+                                "RESULT_ENCRYPTION", "false",
                                 "RESULT_ENCRYPTION_PUBLIC_KEY", ""));
     }
 
