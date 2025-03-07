@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Remove deprecated code from `AppComputeSecretController` and `SmsClient`. (#293)
 - Rename `blockchain` package to `chain` and `BlockchainConfig` class to `ChainConfig`. (#294)
 - Fix several SonarQube Cloud issues. (#295)
+- Replace custom yes/no boolean serialization with standard Java boolean strings in TEE sessions. (#297)
 
 ### Dependency Upgrades
 

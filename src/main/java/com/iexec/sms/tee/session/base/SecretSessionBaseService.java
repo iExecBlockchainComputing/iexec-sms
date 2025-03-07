@@ -43,7 +43,6 @@ import java.util.*;
 
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
 import static com.iexec.commons.poco.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
-import static com.iexec.commons.poco.tee.TeeUtils.booleanToYesNo;
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 
@@ -415,8 +414,7 @@ public class SecretSessionBaseService {
         final String taskId = taskDescription.getChainTaskId();
         final Map<String, String> tokens = new HashMap<>();
         final boolean shouldEncrypt = taskDescription.getDealParams().isIexecResultEncryption();
-        // TODO use boolean with quotes instead of yes/no
-        tokens.put(RESULT_ENCRYPTION.name(), booleanToYesNo(shouldEncrypt));
+        tokens.put(RESULT_ENCRYPTION.name(), Boolean.toString(shouldEncrypt));
         tokens.put(RESULT_ENCRYPTION_PUBLIC_KEY.name(), EMPTY_STRING_VALUE);
         if (!shouldEncrypt) {
             return tokens;
@@ -441,7 +439,7 @@ public class SecretSessionBaseService {
         final String taskId = taskDescription.getChainTaskId();
         final Map<String, String> tokens = new HashMap<>();
         final boolean isCallbackRequested = taskDescription.containsCallback();
-        tokens.put(RESULT_STORAGE_CALLBACK.name(), booleanToYesNo(isCallbackRequested));
+        tokens.put(RESULT_STORAGE_CALLBACK.name(), Boolean.toString(isCallbackRequested));
         tokens.put(RESULT_STORAGE_PROVIDER.name(), EMPTY_STRING_VALUE);
         tokens.put(RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE);
         tokens.put(RESULT_STORAGE_TOKEN.name(), EMPTY_STRING_VALUE);
