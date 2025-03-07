@@ -489,10 +489,10 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
         final Map<String, Object> expectedTokens = new HashMap<>();
         // encryption tokens
-        expectedTokens.put("RESULT_ENCRYPTION", "yes");
+        expectedTokens.put("RESULT_ENCRYPTION", "true");
         expectedTokens.put("RESULT_ENCRYPTION_PUBLIC_KEY", ENCRYPTION_PUBLIC_KEY);
         // storage tokens
-        expectedTokens.put("RESULT_STORAGE_CALLBACK", "no");
+        expectedTokens.put("RESULT_STORAGE_CALLBACK", "false");
         expectedTokens.put("RESULT_STORAGE_PROVIDER", STORAGE_PROVIDER);
         expectedTokens.put("RESULT_STORAGE_PROXY", STORAGE_PROXY);
         expectedTokens.put("RESULT_STORAGE_TOKEN", STORAGE_TOKEN);
@@ -527,9 +527,9 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
         final Map<String, String> expectedTokens = Map.of(
-                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION.name(), "true",
                 RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
-                RESULT_STORAGE_CALLBACK.name(), "no",
+                RESULT_STORAGE_CALLBACK.name(), "false",
                 RESULT_STORAGE_PROVIDER.name(), "dropbox",
                 RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
                 RESULT_STORAGE_TOKEN.name(), "Secret value",
@@ -562,9 +562,9 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
         final Map<String, String> expectedTokens = Map.of(
-                RESULT_ENCRYPTION.name(), "yes",
+                RESULT_ENCRYPTION.name(), "true",
                 RESULT_ENCRYPTION_PUBLIC_KEY.name(), ENCRYPTION_PUBLIC_KEY,
-                RESULT_STORAGE_CALLBACK.name(), "yes",
+                RESULT_STORAGE_CALLBACK.name(), "true",
                 RESULT_STORAGE_PROVIDER.name(), EMPTY_STRING_VALUE,
                 RESULT_STORAGE_PROXY.name(), EMPTY_STRING_VALUE,
                 RESULT_STORAGE_TOKEN.name(), EMPTY_STRING_VALUE,
@@ -590,7 +590,7 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_STORAGE_CALLBACK", "yes",
+                                "RESULT_STORAGE_CALLBACK", "true",
                                 "RESULT_STORAGE_PROVIDER", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_TOKEN", EMPTY_STRING_VALUE));
@@ -608,7 +608,7 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_STORAGE_CALLBACK", "no",
+                                "RESULT_STORAGE_CALLBACK", "false",
                                 "RESULT_STORAGE_PROVIDER", DealParams.IPFS_RESULT_STORAGE_PROVIDER,
                                 "RESULT_STORAGE_PROXY", STORAGE_PROXY,
                                 "RESULT_STORAGE_TOKEN", storageToken));
@@ -633,7 +633,7 @@ class SecretSessionBaseServiceTests {
         assertThat(tokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_STORAGE_CALLBACK", "no",
+                                "RESULT_STORAGE_CALLBACK", "false",
                                 "RESULT_STORAGE_PROVIDER", DealParams.DROPBOX_RESULT_STORAGE_PROVIDER,
                                 "RESULT_STORAGE_PROXY", EMPTY_STRING_VALUE,
                                 "RESULT_STORAGE_TOKEN", secretValue));
@@ -774,7 +774,7 @@ class SecretSessionBaseServiceTests {
         assertThat(encryptionTokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_ENCRYPTION", "yes",
+                                "RESULT_ENCRYPTION", "true",
                                 "RESULT_ENCRYPTION_PUBLIC_KEY", ENCRYPTION_PUBLIC_KEY));
     }
 
@@ -793,7 +793,7 @@ class SecretSessionBaseServiceTests {
         assertThat(encryptionTokens)
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of(
-                                "RESULT_ENCRYPTION", "no",
+                                "RESULT_ENCRYPTION", "false",
                                 "RESULT_ENCRYPTION_PUBLIC_KEY", ""));
     }
 
