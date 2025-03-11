@@ -30,14 +30,14 @@ admin:
 encryption:
   # Will get previous key or else create one on this path
   # this file shouldn't be clearly readable outside the enclave (but encrypted content could be copied outside)
-  aesKeyPath: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/data/iexec-sms-aes.key}
+  aes-key-path: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/data/iexec-sms-aes.key}
 
 chain:
   id: ${IEXEC_CHAIN_ID:134}
-  is-sidechain: ${IEXEC_IS_SIDECHAIN:true}
+  sidechain: ${IEXEC_IS_SIDECHAIN:true}
   node-address: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:https://bellecour.iex.ec}
   hub-address: ${IEXEC_HUB_ADDRESS:0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f}
-  block-time: ${IEXEC_BLOCK_TIME:PT5S}
+  block-time: ${IEXEC_BLOCK_TIME:5}
   gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
 
@@ -50,6 +50,8 @@ springdoc:
   pathsToMatch: /**
 
 tee:
-  challenge.cleanup.cron: ${IEXEC_TEE_CHALLENGE_CLEANUP_CRON:@hourly}
-  challenge.cleanup.missing-deadline-max-batch-size: ${IEXEC_TEE_CHALLENGE_CLEANUP_MAX_BATCH_SIZE:500}
-  challenge.cleanup.missing-deadline-retention-duration: ${IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_DURATION:P5D}
+  challenge:
+    cleanup:
+      cron: ${IEXEC_TEE_CHALLENGE_CLEANUP_CRON:@hourly}
+      missing-deadline-max-batch-size: ${IEXEC_TEE_CHALLENGE_CLEANUP_MAX_BATCH_SIZE:500}
+      missing-deadline-retention-duration: ${IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_DURATION:P5D}

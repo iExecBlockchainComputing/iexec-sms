@@ -16,19 +16,41 @@
 
 package com.iexec.sms.chain;
 
+import com.iexec.common.chain.validation.ValidNonZeroEthereumAddress;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Value;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.time.Duration;
+import org.springframework.validation.annotation.Validated;
 
 @Value
+@Validated
 @ConfigurationProperties(prefix = "chain")
 public class ChainConfig {
+
+    @Positive
+    @NotNull
     int id;
-    boolean isSidechain;
+
+    boolean sidechain;
+
+    @URL
+    @NotEmpty
     String nodeAddress;
+
+    @ValidNonZeroEthereumAddress
     String hubAddress;
-    Duration blockTime;
+
+    @Positive
+    @NotNull
+    int blockTime;
+
+    @Positive
     float gasPriceMultiplier;
+
+    @PositiveOrZero
     long gasPriceCap;
 }
