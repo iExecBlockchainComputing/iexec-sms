@@ -16,7 +16,7 @@
 
 package com.iexec.sms.chain;
 
-import com.iexec.common.chain.validation.ValidNonZeroEthereumAddress;
+import com.iexec.commons.poco.chain.validation.ValidNonZeroEthereumAddress;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -24,7 +24,11 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Value;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationFormat;
+import org.springframework.boot.convert.DurationStyle;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.Duration;
 
 @Value
 @Validated
@@ -44,9 +48,8 @@ public class ChainConfig {
     @ValidNonZeroEthereumAddress
     String hubAddress;
 
-    @Positive
-    @NotNull
-    int blockTime;
+    @DurationFormat(DurationStyle.ISO8601)
+    Duration blockTime;
 
     @Positive
     float gasPriceMultiplier;

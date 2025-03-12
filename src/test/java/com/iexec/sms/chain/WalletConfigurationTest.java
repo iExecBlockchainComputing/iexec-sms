@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.annotation.UserConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WalletConfigurationTest {
@@ -28,7 +30,7 @@ class WalletConfigurationTest {
 
     @Test
     void shouldCreateBeans() {
-        runner.withBean(ChainConfig.class, 65535, true, "http://localhost:8545", "0xC129e7917b7c7DeDfAa5Fff1FB18d5D7050fE8ca", 5, 1.0f, 0L)
+        runner.withBean(ChainConfig.class, 65535, true, "http://localhost:8545", "0xC129e7917b7c7DeDfAa5Fff1FB18d5D7050fE8ca", Duration.ofSeconds(5L), 1.0f, 0L)
                 .withBean(IexecHubService.class)
                 .withBean(Web3jService.class)
                 .withConfiguration(UserConfigurations.of(WalletConfiguration.class))

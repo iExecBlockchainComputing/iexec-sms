@@ -23,6 +23,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -32,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "chain.sidechain=true",
         "chain.node-address=https://bellecour.iex.ec",
         "chain.hub-address=0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f",
-        "chain.block-time=5",
+        "chain.block-time=PT5S",
         "chain.gas-price-multiplier=1.0",
         "chain.gas-price-cap=22000000000"})
 class Web3jServiceTests {
@@ -43,7 +45,7 @@ class Web3jServiceTests {
     void checkChainConfig() {
         final ChainConfig expectedConfig = new ChainConfig(
                 134, true, "https://bellecour.iex.ec",
-                "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f", 5,
+                "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f", Duration.ofSeconds(5),
                 1.0f, 22_000_000_000L
         );
         assertThat(chainConfig).isEqualTo(expectedConfig);
