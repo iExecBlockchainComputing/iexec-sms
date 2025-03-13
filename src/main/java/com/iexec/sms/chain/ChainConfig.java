@@ -23,9 +23,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Value;
 import org.hibernate.validator.constraints.URL;
+import org.hibernate.validator.constraints.time.DurationMax;
+import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.convert.DurationFormat;
-import org.springframework.boot.convert.DurationStyle;
+
 import org.springframework.validation.annotation.Validated;
 
 import java.time.Duration;
@@ -48,7 +49,9 @@ public class ChainConfig {
     @ValidNonZeroEthereumAddress
     String hubAddress;
 
-    @DurationFormat(DurationStyle.ISO8601)
+    @DurationMin(millis=100, inclusive=true)
+    @DurationMax(seconds=20, inclusive=true)
+    @NotNull
     Duration blockTime;
 
     @Positive

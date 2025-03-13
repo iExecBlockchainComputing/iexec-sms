@@ -21,7 +21,8 @@ spring:
   h2:
     console:
       enabled: ${IEXEC_SMS_H2_CONSOLE:false} # http://localhost:13300/h2-console/
-      settings.web-allow-others: ${IEXEC_SMS_H2_CONSOLE:false} # Get console if Docker run
+      settings:
+        web-allow-others: ${IEXEC_SMS_H2_CONSOLE:false} # Get console if Docker run
 
 admin:
   api-key: ${IEXEC_SMS_ADMIN_API_KEY:}
@@ -46,8 +47,8 @@ metrics:
     refresh-interval: ${IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL:30}  # In seconds
 
 springdoc:
-  packagesToScan: com.iexec.sms
-  pathsToMatch: /**
+  packages-to-scan: com.iexec.sms
+  paths-to-match: /**
 
 tee:
   challenge:
