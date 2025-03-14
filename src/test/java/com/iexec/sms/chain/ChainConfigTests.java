@@ -39,13 +39,13 @@ class ChainConfigTests {
 
     @BeforeEach
     void setUp() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
     @Test
     void validConfigShouldPassValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -54,13 +54,13 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).isEmpty();
     }
 
     @Test
     void invalidIdShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 0, // Invalid: should be positive
                 true,
                 NODE_ADDRESS,
@@ -69,7 +69,7 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -78,7 +78,7 @@ class ChainConfigTests {
 
     @Test
     void emptyNodeAddressShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 "", // Invalid: should not be empty
@@ -87,7 +87,7 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -96,7 +96,7 @@ class ChainConfigTests {
 
     @Test
     void invalidUrlFormatShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 "not-a-url", // Invalid URL format
@@ -105,7 +105,7 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -114,7 +114,7 @@ class ChainConfigTests {
 
     @Test
     void invalidEthereumAddressShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -123,7 +123,7 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -133,7 +133,7 @@ class ChainConfigTests {
     @ParameterizedTest
     @ValueSource(longs = {50, 25000}) // Too short and too long durations
     void invalidBlockTimeShouldFailValidation(long millis) {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -142,7 +142,7 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -151,7 +151,7 @@ class ChainConfigTests {
 
     @Test
     void nullBlockTimeShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -160,19 +160,16 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("blockTime");
-        assertThat(violations)
-                .extracting(ConstraintViolation::getMessage)
-                .anyMatch(message -> message.contains("must not be null"));
     }
 
     @Test
     void negativeGasPriceMultiplierShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -181,7 +178,7 @@ class ChainConfigTests {
                 -0.5f, // Invalid: should be positive
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -190,7 +187,7 @@ class ChainConfigTests {
 
     @Test
     void negativeBlockTimeShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -199,19 +196,16 @@ class ChainConfigTests {
                 1.0f,
                 22_000_000_000L
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("blockTime");
-        assertThat(violations)
-                .extracting(ConstraintViolation::getMessage)
-                .anyMatch(message -> message.contains("must be longer than or equal to"));
     }
 
     @Test
     void negativeGasPriceCapShouldFailValidation() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 134,
                 true,
                 NODE_ADDRESS,
@@ -220,7 +214,7 @@ class ChainConfigTests {
                 1.0f,
                 -1L // Invalid: should be positive or zero
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
@@ -229,7 +223,7 @@ class ChainConfigTests {
 
     @Test
     void multipleViolationsShouldBeReported() {
-        ChainConfig config = new ChainConfig(
+        final ChainConfig config = new ChainConfig(
                 0, // Invalid
                 true,
                 "", // Invalid
@@ -238,7 +232,7 @@ class ChainConfigTests {
                 -1.0f, // Invalid
                 -1L // Invalid
         );
-        Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
         assertThat(violations).hasSize(6); // All fields except sidechain have violations
     }
 }

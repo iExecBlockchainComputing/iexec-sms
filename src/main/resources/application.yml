@@ -36,7 +36,7 @@ encryption:
 chain:
   id: ${IEXEC_CHAIN_ID:134}
   sidechain: ${IEXEC_IS_SIDECHAIN:true}
-  node-address: ${IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS:https://bellecour.iex.ec}
+  node-address: ${IEXEC_BLOCKCHAIN_NODE_ADDRESS:https://bellecour.iex.ec}
   hub-address: ${IEXEC_HUB_ADDRESS:0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f}
   block-time: ${IEXEC_BLOCK_TIME:PT5S}
   gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast

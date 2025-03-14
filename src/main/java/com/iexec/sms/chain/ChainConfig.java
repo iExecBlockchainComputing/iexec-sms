@@ -49,8 +49,8 @@ public class ChainConfig {
     @ValidNonZeroEthereumAddress
     String hubAddress;
 
-    @DurationMin(millis=100, inclusive=true)
-    @DurationMax(seconds=20, inclusive=true)
+    @DurationMin(millis=100)
+    @DurationMax(seconds=20)
     @NotNull
     Duration blockTime;
 
