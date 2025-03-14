@@ -18,191 +18,214 @@ package com.iexec.sms.chain;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
-import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import org.junit.jupiter.api.BeforeEach;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Duration;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
+@Slf4j
 class ChainConfigTests {
-    
+
+    private static final int CHAIN_ID = 1;
     private static final String HUB_ADDRESS = "0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f";
     private static final String NODE_ADDRESS = "https://bellecour.iex.ec";
-    
-    private Validator validator;
+    private static final Duration BLOCK_TIME = Duration.ofSeconds(1);
+    private static final float GAS_PRICE_MULTIPLIER = 1.0f;
+    private static final long GAS_PRICE_CAP = 22_000_000_000L;
 
-    @BeforeEach
-    void setUp() {
-        final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        validator = factory.getValidator();
+    private Set<ConstraintViolation<ChainConfig>> validate(ChainConfig chainConfig) {
+        try (final ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            return factory.getValidator().validate(chainConfig);
+        }
     }
 
-    @Test
-    void validConfigShouldPassValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
-                true,
-                NODE_ADDRESS,
-                HUB_ADDRESS,
-                Duration.ofSeconds(5),
-                1.0f,
-                22_000_000_000L
+    // region Valid data
+    static Stream<Arguments> validData() {
+        return Stream.of(
+                Arguments.of(100, true, "http://localhost:8545", "0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002", "PT0.1S", 1.0f, 11_000_000_000L),
+                Arguments.of(42, true, "https://localhost:8545", "0x0000000000000000000000000000000000000001", "PT10S", 1.0f, 22_000_000_000L),
+                Arguments.of(10, true, "https://www.classic-url.com", "0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002", "PT20S", 1.0f, 22_000_000_000L),
+                Arguments.of(1, true, "http://ibaa.iex.ec:443/test?validation=should:be@OK", "0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002", "PT5S", 1.0f, 0L),
+                Arguments.of(CHAIN_ID, true, NODE_ADDRESS, HUB_ADDRESS, BLOCK_TIME, GAS_PRICE_MULTIPLIER, GAS_PRICE_CAP)
         );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).isEmpty();
-    }
-
-    @Test
-    void invalidIdShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                0, // Invalid: should be positive
-                true,
-                NODE_ADDRESS,
-                HUB_ADDRESS,
-                Duration.ofSeconds(5),
-                1.0f,
-                22_000_000_000L
-        );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
-                .extracting(v -> v.getPropertyPath().toString())
-                .containsExactly("id");
-    }
-
-    @Test
-    void emptyNodeAddressShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
-                true,
-                "", // Invalid: should not be empty
-                HUB_ADDRESS,
-                Duration.ofSeconds(5),
-                1.0f,
-                22_000_000_000L
-        );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
-                .extracting(v -> v.getPropertyPath().toString())
-                .containsExactly("nodeAddress");
-    }
-
-    @Test
-    void invalidUrlFormatShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
-                true,
-                "not-a-url", // Invalid URL format
-                HUB_ADDRESS,
-                Duration.ofSeconds(5),
-                1.0f,
-                22_000_000_000L
-        );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
-                .extracting(v -> v.getPropertyPath().toString())
-                .containsExactly("nodeAddress");
-    }
-
-    @Test
-    void invalidEthereumAddressShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
-                true,
-                NODE_ADDRESS,
-                "0x0000000000000000000000000000000000000000", // Zero address
-                Duration.ofSeconds(5),
-                1.0f,
-                22_000_000_000L
-        );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
-                .extracting(v -> v.getPropertyPath().toString())
-                .containsExactly("hubAddress");
     }
 
     @ParameterizedTest
-    @ValueSource(longs = {50, 25000}) // Too short and too long durations
-    void invalidBlockTimeShouldFailValidation(long millis) {
-        final ChainConfig config = new ChainConfig(
-                134,
+    @MethodSource("validData")
+    void shouldValidate(Integer chainId,
+                        boolean sidechain,
+                        String nodeAddress,
+                        String hubAddress,
+                        Duration blockTime,
+                        float gasPriceMultiplier,
+                        long gasPriceCap) {
+        final ChainConfig chainConfig = new ChainConfig(
+                chainId,
+                sidechain,
+                nodeAddress,
+                hubAddress,
+                blockTime,
+                gasPriceMultiplier,
+                gasPriceCap);
+
+        log.info("{}", chainConfig);
+        assertThatCode(() -> validate(chainConfig)).doesNotThrowAnyException();
+    }
+    // endregion
+
+    // region Invalid chain ids
+    static Stream<Integer> invalidChainIds() {
+        return Stream.of(
+                0,      // Chain id should be strictly positive
+                -1      // Chain id should be strictly positive
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidChainIds")
+    void shouldNotValidateChainId(int chainId) {
+
+        final ChainConfig chainConfig = new ChainConfig(
+                chainId,
                 true,
                 NODE_ADDRESS,
                 HUB_ADDRESS,
-                Duration.ofMillis(millis),
-                1.0f,
-                22_000_000_000L
+                BLOCK_TIME,
+                GAS_PRICE_MULTIPLIER,
+                GAS_PRICE_CAP);
+
+        log.info("{}", chainConfig);
+        assertThat(validate(chainConfig))
+                .extracting(v -> v.getPropertyPath().toString())
+                .containsExactly("id");
+    }
+    // endregion
+
+    // region Invalid node addresses
+    static Stream<String> invalidNodeAddresses() {
+        return Stream.of(
+                null,       // Node address should not be null
+                "",         // Node address should be a valid URL
+                "12345",    // Node address should be a valid URL
+                "0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd2002"    // Node address should be a valid URL
         );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidNodeAddresses")
+    void shouldNotValidateNodeAddress(String nodeAddress) {
+        final ChainConfig chainConfig = new ChainConfig(
+                CHAIN_ID,
+                true,
+                nodeAddress,
+                HUB_ADDRESS,
+                BLOCK_TIME,
+                GAS_PRICE_MULTIPLIER,
+                GAS_PRICE_CAP);
+
+        log.info("{}", chainConfig);
+        assertThat(validate(chainConfig))
+                .extracting(v -> v.getPropertyPath().toString())
+                .containsExactly("nodeAddress");
+    }
+    // endregion
+
+    // region Invalid hub address
+    static Stream<String> invalidHubAddresses() {
+        return Stream.of(
+                null,       // Hub address should not be null
+                "0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd200211111111111111", // Hub address size should be exactly 40
+                "0xBF6B2B07e47326B7c8bfCb4A5460bef9f0Fd200",    // Hub address size should be exactly 40
+                "0x0000000000000000000000000000000000000000",    // Hub address should not be zero
+                "http://hub.address"   // Hub address should be an Ethereum address
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidHubAddresses")
+    void shouldNotValidateHubAddress(String hubAddress) {
+        final ChainConfig chainConfig = new ChainConfig(
+                CHAIN_ID,
+                true,
+                NODE_ADDRESS,
+                hubAddress,
+                BLOCK_TIME,
+                GAS_PRICE_MULTIPLIER,
+                GAS_PRICE_CAP);
+
+        log.info("{}", chainConfig);
+        assertThat(validate(chainConfig))
+                .extracting(v -> v.getPropertyPath().toString())
+                .containsExactly("hubAddress");
+    }
+    // endregion
+
+    // region Invalid block time
+    static Stream<Duration> invalidBlockTimes() {
+        return Stream.of(
+                Duration.ofSeconds(0),    // Block time should be more than 100 milliseconds
+                Duration.ofSeconds(25),   // Block time should be less than 20 seconds
+                Duration.ofSeconds(-1),    // Block time should be strictly positive
+                null    // Block time should not be null
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidBlockTimes")
+    void shouldNotValidateBlockTime(Duration blockTime) {
+        final ChainConfig chainConfig = new ChainConfig(
+                CHAIN_ID,
+                true,
+                NODE_ADDRESS,
+                HUB_ADDRESS,
+                blockTime,
+                GAS_PRICE_MULTIPLIER,
+                GAS_PRICE_CAP);
+
+        log.info("{}", chainConfig);
+        assertThat(validate(chainConfig))
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("blockTime");
     }
+    // endregion
 
-    @Test
-    void nullBlockTimeShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
-                true,
-                NODE_ADDRESS,
-                HUB_ADDRESS,
-                null, // Invalid: cannot be null
-                1.0f,
-                22_000_000_000L
+    // region Invalid gas price multiplier
+    static Stream<Float> invalidGasPriceMultiplier() {
+        return Stream.of(
+                0f, // Gas Price Multiplier should be strictly positive
+                -0.5f // Gas Price Multiplier should be strictly positive
         );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
-                .extracting(v -> v.getPropertyPath().toString())
-                .containsExactly("blockTime");
     }
 
-    @Test
-    void negativeGasPriceMultiplierShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
+    @ParameterizedTest
+    @MethodSource("invalidGasPriceMultiplier")
+    void shouldNotValidateGasPriceMultiplier(Float gasPriceMultiplier) {
+        final ChainConfig chainConfig = new ChainConfig(
+                CHAIN_ID,
                 true,
                 NODE_ADDRESS,
                 HUB_ADDRESS,
-                Duration.ofSeconds(5),
-                -0.5f, // Invalid: should be positive
-                22_000_000_000L
-        );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+                BLOCK_TIME,
+                gasPriceMultiplier,
+                GAS_PRICE_CAP);
+        final Set<ConstraintViolation<ChainConfig>> violations = validate(chainConfig);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("gasPriceMultiplier");
     }
+    // endregion
 
-    @Test
-    void negativeBlockTimeShouldFailValidation() {
-        final ChainConfig config = new ChainConfig(
-                134,
-                true,
-                NODE_ADDRESS,
-                HUB_ADDRESS,
-                Duration.ofMillis(-1000), // Negative duration
-                1.0f,
-                22_000_000_000L
-        );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
-        assertThat(violations).hasSize(1);
-        assertThat(violations)
-                .extracting(v -> v.getPropertyPath().toString())
-                .containsExactly("blockTime");
-    }
-
+    // region Invalid gas price cap
     @Test
     void negativeGasPriceCapShouldFailValidation() {
         final ChainConfig config = new ChainConfig(
@@ -214,12 +237,13 @@ class ChainConfigTests {
                 1.0f,
                 -1L // Invalid: should be positive or zero
         );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validate(config);
         assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("gasPriceCap");
     }
+    // endregion
 
     @Test
     void multipleViolationsShouldBeReported() {
@@ -232,7 +256,8 @@ class ChainConfigTests {
                 -1.0f, // Invalid
                 -1L // Invalid
         );
-        final Set<ConstraintViolation<ChainConfig>> violations = validator.validate(config);
+        final Set<ConstraintViolation<ChainConfig>> violations = validate(config);
         assertThat(violations).hasSize(6); // All fields except sidechain have violations
     }
+
 }
