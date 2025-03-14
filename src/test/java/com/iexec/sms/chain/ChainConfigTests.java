@@ -76,8 +76,6 @@ class ChainConfigTests {
                 blockTime,
                 gasPriceMultiplier,
                 gasPriceCap);
-
-        log.info("{}", chainConfig);
         assertThatCode(() -> validate(chainConfig)).doesNotThrowAnyException();
     }
     // endregion
@@ -102,8 +100,6 @@ class ChainConfigTests {
                 BLOCK_TIME,
                 GAS_PRICE_MULTIPLIER,
                 GAS_PRICE_CAP);
-
-        log.info("{}", chainConfig);
         assertThat(validate(chainConfig))
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("id");
@@ -131,8 +127,6 @@ class ChainConfigTests {
                 BLOCK_TIME,
                 GAS_PRICE_MULTIPLIER,
                 GAS_PRICE_CAP);
-
-        log.info("{}", chainConfig);
         assertThat(validate(chainConfig))
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("nodeAddress");
@@ -161,8 +155,6 @@ class ChainConfigTests {
                 BLOCK_TIME,
                 GAS_PRICE_MULTIPLIER,
                 GAS_PRICE_CAP);
-
-        log.info("{}", chainConfig);
         assertThat(validate(chainConfig))
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("hubAddress");
@@ -190,8 +182,6 @@ class ChainConfigTests {
                 blockTime,
                 GAS_PRICE_MULTIPLIER,
                 GAS_PRICE_CAP);
-
-        log.info("{}", chainConfig);
         assertThat(validate(chainConfig))
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("blockTime");
@@ -218,7 +208,6 @@ class ChainConfigTests {
                 gasPriceMultiplier,
                 GAS_PRICE_CAP);
         final Set<ConstraintViolation<ChainConfig>> violations = validate(chainConfig);
-        assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("gasPriceMultiplier");
@@ -238,7 +227,6 @@ class ChainConfigTests {
                 -1L // Invalid: should be positive or zero
         );
         final Set<ConstraintViolation<ChainConfig>> violations = validate(config);
-        assertThat(violations).hasSize(1);
         assertThat(violations)
                 .extracting(v -> v.getPropertyPath().toString())
                 .containsExactly("gasPriceCap");
