@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 @Slf4j
 class ChainConfigTests {
@@ -61,7 +60,7 @@ class ChainConfigTests {
 
     @ParameterizedTest
     @MethodSource("validData")
-    void shouldValidate(Integer chainId,
+    void shouldValidate(int chainId,
                         boolean sidechain,
                         String nodeAddress,
                         String hubAddress,
@@ -76,7 +75,7 @@ class ChainConfigTests {
                 blockTime,
                 gasPriceMultiplier,
                 gasPriceCap);
-        assertThatCode(() -> validate(chainConfig)).doesNotThrowAnyException();
+        assertThat(validate(chainConfig)).isEmpty();
     }
     // endregion
 
