@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnableConfigurationProperties(value = ChainConfig.class)
 @TestPropertySource(properties = {
         "chain.id=134",
-        "chain.is-sidechain=true",
+        "chain.sidechain=true",
         "chain.node-address=https://bellecour.iex.ec",
         "chain.hub-address=0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f",
         "chain.block-time=PT5S",
