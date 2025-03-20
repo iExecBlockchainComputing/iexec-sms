@@ -18,13 +18,13 @@ package com.iexec.sms.authorization;
 
 import com.iexec.commons.poco.chain.ChainDeal;
 import com.iexec.commons.poco.chain.ChainTask;
+import com.iexec.commons.poco.chain.ChainTaskStatus;
 import com.iexec.commons.poco.chain.WorkerpoolAuthorization;
 import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.tee.TeeUtils;
 import com.iexec.commons.poco.utils.BytesUtils;
 import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.commons.poco.utils.SignatureUtils;
-import com.iexec.commons.poco.utils.TestUtils;
 import com.iexec.sms.chain.IexecHubService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,13 +37,18 @@ import java.util.Optional;
 
 import static com.iexec.commons.poco.chain.ChainTaskStatus.ACTIVE;
 import static com.iexec.commons.poco.chain.ChainTaskStatus.UNSET;
-import static com.iexec.commons.poco.utils.TestUtils.*;
 import static com.iexec.sms.authorization.AuthorizationError.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthorizationServiceTests {
+
+    private static final String ENCLAVE_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+    private static final String DEAL_ID = "0x2222222222222222222222222222222222222222222222222222222222222222";
+    private static final String WORKER_ADDRESS = "0x87ae2b87b5db23830572988fb1f51242fbc471ce";
+    private static final String CHAIN_TASK_ID = "0x1111111111111111111111111111111111111111111111111111111111111111";
+    private static final String POOL_PRIVATE = "0xe2a973b083fae8043543f15313955aecee9de809a318656c1cfb22d3a6d52de1";
 
     @Mock
     IexecHubService iexecHubService;
@@ -55,7 +60,7 @@ class AuthorizationServiceTests {
     @Test
     void shouldBeAuthorizedOnExecutionOfTeeTaskWithDetails() {
         final ChainDeal chainDeal = getChainDeal();
-        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final ChainTask chainTask = getChainTask(ACTIVE);
         final WorkerpoolAuthorization auth = getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
@@ -84,7 +89,7 @@ class AuthorizationServiceTests {
                 .poolOwner("0xc911f9345717ba7c8ec862ce002af3e058df84e4")
                 .tag(BytesUtils.EMPTY_HEX_STRING_32)
                 .build();
-        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final ChainTask chainTask = getChainTask(ACTIVE);
         final WorkerpoolAuthorization auth = getTeeWorkerpoolAuth();
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
@@ -107,7 +112,7 @@ class AuthorizationServiceTests {
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenTaskNotActiveWithDetails() {
         final WorkerpoolAuthorization auth = getTeeWorkerpoolAuth();
-        final ChainTask chainTask = TestUtils.getChainTask(UNSET);
+        final ChainTask chainTask = getChainTask(UNSET);
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
 
         final Optional<AuthorizationError> isAuth = authorizationService.isAuthorizedOnExecutionWithDetailedIssue(auth);
@@ -117,9 +122,8 @@ class AuthorizationServiceTests {
 
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenGetDealFailedWithDetails() {
-        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final ChainTask chainTask = getChainTask(ACTIVE);
         final WorkerpoolAuthorization auth = getTeeWorkerpoolAuth();
-        auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
 
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.empty());
@@ -132,9 +136,8 @@ class AuthorizationServiceTests {
     @Test
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValidWithDetails() {
         final ChainDeal chainDeal = getChainDeal();
-        final ChainTask chainTask = TestUtils.getChainTask(ACTIVE);
+        final ChainTask chainTask = getChainTask(ACTIVE);
         final WorkerpoolAuthorization auth = getTeeWorkerpoolAuth();
-        auth.setSignature(new Signature(TestUtils.POOL_WRONG_SIGNATURE));
 
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
@@ -166,11 +169,15 @@ class AuthorizationServiceTests {
     // endregion
 
     // region utils
-    ChainDeal getChainDeal() {
+    private ChainDeal getChainDeal() {
         return ChainDeal.builder()
                 .poolOwner("0xc911f9345717ba7c8ec862ce002af3e058df84e4")
                 .tag(TeeUtils.TEE_SCONE_ONLY_TAG)
                 .build();
+    }
+
+    private static ChainTask getChainTask(ChainTaskStatus status) {
+        return ChainTask.builder().dealid(DEAL_ID).status(status).build();
     }
 
     private WorkerpoolAuthorization getTeeWorkerpoolAuth() {
