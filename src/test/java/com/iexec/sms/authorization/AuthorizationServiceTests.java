@@ -173,7 +173,7 @@ class AuthorizationServiceTests {
                 .build();
     }
 
-    WorkerpoolAuthorization getTeeWorkerpoolAuth() {
+    private WorkerpoolAuthorization getTeeWorkerpoolAuth() {
         final String hash = HashUtils.concatenateAndHash(WORKER_ADDRESS, CHAIN_TASK_ID, ENCLAVE_ADDRESS);
         final Signature signature = SignatureUtils.signMessageHashAndGetSignature(hash, POOL_PRIVATE);
         return WorkerpoolAuthorization.builder()
