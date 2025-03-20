@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Rename `blockchain` package to `chain` and `BlockchainConfig` class to `ChainConfig`. (#294)
 - Fix several SonarQube Cloud issues. (#295)
 - Harmonize YML internal variables to proper case. (#299)
+- Stop using `TestUtils` in `AuthorizationServiceTests.java`. (#300)
 
 ### Breaking API changes
 
