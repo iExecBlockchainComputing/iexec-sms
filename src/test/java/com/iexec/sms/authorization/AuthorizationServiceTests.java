@@ -49,6 +49,7 @@ class AuthorizationServiceTests {
     private static final String WORKER_ADDRESS = "0x87ae2b87b5db23830572988fb1f51242fbc471ce";
     private static final String CHAIN_TASK_ID = "0x1111111111111111111111111111111111111111111111111111111111111111";
     private static final String POOL_PRIVATE = "0xe2a973b083fae8043543f15313955aecee9de809a318656c1cfb22d3a6d52de1";
+    private static final String POOL_WRONG_SIGNATURE = "0xf869daaca2407b7eabd27c3c4c5a3f3565172ca7211ac1d8bfacea2beb511a4029446a07cccc0884c2193b269dfb341461db8c680a8898bb53862d6e48340c2e1b";
 
     @Mock
     IexecHubService iexecHubService;
@@ -137,7 +138,13 @@ class AuthorizationServiceTests {
     void shouldNotBeAuthorizedOnExecutionOfTeeTaskWhenPoolSignatureIsNotValidWithDetails() {
         final ChainDeal chainDeal = getChainDeal();
         final ChainTask chainTask = getChainTask(ACTIVE);
-        final WorkerpoolAuthorization auth = getTeeWorkerpoolAuth();
+        final Signature signature = new Signature(POOL_WRONG_SIGNATURE);
+        final WorkerpoolAuthorization auth = WorkerpoolAuthorization.builder()
+                .chainTaskId(CHAIN_TASK_ID)
+                .workerWallet(WORKER_ADDRESS)
+                .enclaveChallenge(ENCLAVE_ADDRESS)
+                .signature(signature)
+                .build();
 
         when(iexecHubService.getChainTask(auth.getChainTaskId())).thenReturn(Optional.of(chainTask));
         when(iexecHubService.getChainDeal(chainTask.getDealid())).thenReturn(Optional.of(chainDeal));
