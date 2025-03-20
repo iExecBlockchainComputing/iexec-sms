@@ -183,7 +183,7 @@ class AuthorizationServiceTests {
                 .build();
     }
 
-    private static ChainTask getChainTask(ChainTaskStatus status) {
+    private ChainTask getChainTask(ChainTaskStatus status) {
         return ChainTask.builder().dealid(DEAL_ID).status(status).build();
     }
 
