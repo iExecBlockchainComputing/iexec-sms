@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,14 @@ import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.TeeSessionService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.Keys;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static com.iexec.sms.api.TeeSessionGenerationError.*;
@@ -64,11 +66,11 @@ public class TeeController {
             AuthorizationService authorizationService,
             TeeChallengeService teeChallengeService,
             TeeSessionService teeSessionService,
-            TeeServicesProperties teeServicesProperties) {
+            @Value("${tee.worker.pipelines[0].version}") String version) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
-        this.teeServicesProperties = teeServicesProperties;
+        this.teeServicesProperties = teeSessionService.resolveTeeServiceProperties(version);
     }
 
     /**
@@ -82,13 +84,17 @@ public class TeeController {
     }
 
     /**
+     * @return TEE services properties (pre-compute image uri, post-compute image uri, heap size, ...)
+     * @deprecated Use {@link #getTeeServicesPropertiesVersion(TeeFramework, String)} instead.
+     * This endpoint will be removed in future versions.
+     *
+     * <p>
      * Retrieve properties for TEE services. This includes properties
      * for pre-compute and post-compute stages
      * and potential TEE framework's specific data.
-     *
-     * @return TEE services properties (pre-compute image uri, post-compute image uri,
-     * heap size, ...)
+     * </p>
      */
+    @Deprecated(since = "8.7.0", forRemoval = true)
     @GetMapping("/properties/{teeFramework}")
     public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
             @PathVariable TeeFramework teeFramework) {
@@ -98,6 +104,35 @@ public class TeeController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         return ResponseEntity.ok(teeServicesProperties);
+    }
+
+    /**
+     * Retrieve properties for TEE services related to the asked version. This includes properties
+     * for pre-compute and post-compute stages
+     * and potential TEE framework's specific data.
+     *
+     * @return TEE services properties (pre-compute image uri, post-compute image uri,
+     * heap size, ...)
+     */
+    @GetMapping("/properties/{teeFramework}/{version}")
+    public ResponseEntity<TeeServicesProperties> getTeeServicesPropertiesVersion(
+            @PathVariable TeeFramework teeFramework,
+            @PathVariable String version) {
+        final TeeServicesProperties teeServicePropertiesVersion;
+        try {
+            teeServicePropertiesVersion = teeSessionService.resolveTeeServiceProperties(version);
+        } catch (NoSuchElementException e) {
+            log.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (teeFramework != teeServicePropertiesVersion.getTeeFramework()) {
+            log.error("SMS configured to use another TeeFramework [required:{}, actual:{}]",
+                    teeFramework, teeServicePropertiesVersion.getTeeFramework());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        return ResponseEntity.ok(teeServicePropertiesVersion);
     }
 
     /**

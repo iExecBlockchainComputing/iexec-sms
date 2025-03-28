@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 package com.iexec.sms.tee.challenge;
 
 import com.iexec.commons.poco.task.TaskDescription;
-import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.tee.config.TeeChallengeCleanupConfiguration;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.persistence.EntityManager;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.Instant;
@@ -90,7 +90,7 @@ class TeeChallengeServiceTests {
     }
 
     private TeeChallenge getEncryptedTeeChallengeStub() throws GeneralSecurityException {
-        TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, finalDeadline);
+        final TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, finalDeadline);
         teeChallenge.getCredentials().setEncryptedPrivateKey(ENC_PRIVATE);
         return teeChallenge;
     }
@@ -98,10 +98,10 @@ class TeeChallengeServiceTests {
     // region getOrCreate
     @Test
     void shouldGetExistingChallengeWithoutDecryptingKeys() throws GeneralSecurityException {
-        TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
+        final TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         teeChallengeRepository.save(encryptedTeeChallengeStub);
 
-        Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
+        final Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
 
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
@@ -113,11 +113,11 @@ class TeeChallengeServiceTests {
 
     @Test
     void shouldGetExistingChallengeAndDecryptKeys() throws GeneralSecurityException {
-        TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
+        final TeeChallenge encryptedTeeChallengeStub = getEncryptedTeeChallengeStub();
         teeChallengeRepository.save(encryptedTeeChallengeStub);
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
-        Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
+        final Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
 
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
@@ -133,7 +133,7 @@ class TeeChallengeServiceTests {
                 .thenReturn(TaskDescription.builder().finalDeadline(finalDeadline.toEpochMilli()).build());
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
 
-        Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
+        final Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, false);
 
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(ENC_PRIVATE);
@@ -151,7 +151,7 @@ class TeeChallengeServiceTests {
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
         when(encryptionService.decrypt(anyString())).thenReturn(PLAIN_PRIVATE);
 
-        Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
+        final Optional<TeeChallenge> oTeeChallenge = teeChallengeService.getOrCreate(TASK_ID, true);
 
         assertThat(oTeeChallenge).isPresent();
         assertThat(oTeeChallenge.get().getCredentials().getPrivateKey()).isEqualTo(PLAIN_PRIVATE);
@@ -165,7 +165,7 @@ class TeeChallengeServiceTests {
     // region encryptChallengeKeys
     @Test
     void shouldEncryptChallengeKeys() throws GeneralSecurityException {
-        TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, finalDeadline);
+        final TeeChallenge teeChallenge = new TeeChallenge(TASK_ID, finalDeadline);
         when(encryptionService.encrypt(anyString())).thenReturn(ENC_PRIVATE);
         teeChallengeService.encryptChallengeKeys(teeChallenge);
 
@@ -176,7 +176,7 @@ class TeeChallengeServiceTests {
     // region decryptChallengeKeys
     @Test
     void shouldDecryptChallengeKeys() {
-        TeeChallenge teeChallenge = TeeChallenge.builder()
+        final TeeChallenge teeChallenge = TeeChallenge.builder()
                 .taskId(TASK_ID)
                 .credentials(new EthereumCredentials("id", "pk", true, "address"))
                 .build();

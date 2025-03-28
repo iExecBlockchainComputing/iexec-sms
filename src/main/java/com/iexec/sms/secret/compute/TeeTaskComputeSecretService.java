@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -82,7 +81,7 @@ public class TeeTaskComputeSecretService {
     public List<TeeTaskComputeSecret> getSecretsForTeeSession(Iterable<TeeTaskComputeSecretHeader> ids) {
         return teeTaskComputeSecretRepository.findAllById(ids).stream()
                 .map(secret -> secret.withValue(encryptionService.decrypt(secret.getValue())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

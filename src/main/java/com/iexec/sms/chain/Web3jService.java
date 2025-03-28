@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.blockchain;
+package com.iexec.sms.chain;
 
 import com.iexec.commons.poco.chain.Web3jAbstractService;
 import org.springframework.stereotype.Service;
@@ -22,14 +22,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class Web3jService extends Web3jAbstractService {
 
-    public Web3jService(BlockchainConfig blockchainConfig) {
+    public Web3jService(final ChainConfig chainConfig) {
         super(
-                blockchainConfig.getId(),
-                blockchainConfig.getNodeAddress(),
-                blockchainConfig.getBlockTime(),
-                blockchainConfig.getGasPriceMultiplier(),
-                blockchainConfig.getGasPriceCap(),
-                blockchainConfig.isSidechain()
+                chainConfig.getId(),
+                chainConfig.getNodeAddress(),
+                chainConfig.getBlockTime(),
+                chainConfig.getGasPriceMultiplier(),
+                chainConfig.getGasPriceCap(),
+                chainConfig.isSidechain()
         );
     }
 

@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[9.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v9.0.0) 2025-03-28
+
+### New Features
+
+- SMS can now be configured with a list of TEE-ready pre/post-compute applications for SGX tasks. (#286)
+- Add `getTeeServicesPropertiesVersion` endpoint to retrieve a specific pre/post-compute configuration pair version. (#287)
+- Add `teeFrameworkVersion` field to `TeeServicesProperties`. (#289)
+- Refactor `TeeWorkerInternalConfiguration` and related services to use `Map<String, TeeServicesProperties>`. (#290 #291)
+- Add enclave challenge private key, worker address and task ID related tokens in pre-compute session. (#296)
+
+### Quality
+
+- Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
+- Remove references to Ownable Smart Contract wrapper in integration test. (#288)
+- Rename `blockchain` package to `chain` and `BlockchainConfig` class to `ChainConfig`. (#294)
+- Fix several SonarQube Cloud issues. (#295)
+- Stop using `TestUtils` in `AuthorizationServiceTests.java`. (#300)
+
+### Breaking API changes
+
+- Remove deprecated code from `AppComputeSecretController` and `SmsClient`. (#293)
+- Replace custom yes/no boolean serialization with standard Java boolean strings in TEE sessions. (#297)
+- Harmonize YML internal variables to proper case. (#299)
+
+### Dependency Upgrades
+
+- Upgrade to `eclipse-temurin:17.0.13_11-jre-focal`. (#285)
+- Upgrade to Spring Doc OpenAPI 2.6.0. (#285)
+- Upgrade to Spring Boot 3.3.8. (#292)
+- Upgrade to `iexec-common` 9.0.0. (#301)
+- Upgrade to `iexec-commons-poco` 5.0.0. (#301)
+
 ## [[8.7.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v8.7.0) 2024-12-23
 
 ### New Features

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,14 @@ package com.iexec.sms.tee.session.scone;
 
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 
-import javax.validation.constraints.NotBlank;
 import java.net.URL;
 import java.util.List;
 
 @Value
-@ConstructorBinding
 @ConfigurationProperties(prefix = "tee.scone.attestation")
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionSecurityConfig {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,91 +20,112 @@ import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.config.GramineServicesProperties;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.api.config.TeeServicesProperties;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.util.unit.DataSize;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Arrays;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class TeeWorkerInternalConfigurationTests {
-    private static final String IMAGE = "image";
-    private static final String FINGERPRINT = "fingerprint";
-    private static final String ENTRYPOINT = "entrypoint";
+    private static final String PRE_IMAGE = "preComputeImage";
+    private static final String PRE_FINGERPRINT = "preComputeFingerprint";
+    private static final String PRE_ENTRYPOINT = "preComputeEntrypoint";
+    private static final String POST_IMAGE = "postComputeImage";
+    private static final String POST_FINGERPRINT = "postComputeFingerprint";
+    private static final String POST_ENTRYPOINT = "postComputeEntrypoint";
     private static final String LAS_IMAGE = "lasImage";
-    private static final long HEAP_SIZE_GB = 3;
+    private static final String VERSION = "v5";
     private static final long HEAP_SIZE_B = 3221225472L;
 
     private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
-            .image("preComputeImage")
-            .fingerprint("preComputeFingerprint")
-            .entrypoint("preComputeEntrypoint")
-            .heapSizeInBytes(1L)
+            .image(PRE_IMAGE)
+            .fingerprint(PRE_FINGERPRINT)
+            .entrypoint(PRE_ENTRYPOINT)
+            .heapSizeInBytes(HEAP_SIZE_B)
             .build();
     private final TeeAppProperties postComputeProperties = TeeAppProperties.builder()
-            .image("postComputeImage")
-            .fingerprint("postComputeFingerprint")
-            .entrypoint("postComputeEntrypoint")
-            .heapSizeInBytes(1L)
+            .image(POST_IMAGE)
+            .fingerprint(POST_FINGERPRINT)
+            .entrypoint(POST_ENTRYPOINT)
+            .heapSizeInBytes(HEAP_SIZE_B)
             .build();
 
+    private TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
+    private TeeWorkerPipelineConfiguration pipelineConfig;
 
-    private final TeeWorkerInternalConfiguration teeWorkerInternalConfiguration =
-            new TeeWorkerInternalConfiguration();
+    @BeforeEach
+    void setUp() {
+        teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
 
-    // region preComputeProperties
-    @Test
-    void preComputeProperties() {
-        TeeAppProperties properties = teeWorkerInternalConfiguration.preComputeProperties(
-                IMAGE,
-                FINGERPRINT,
-                ENTRYPOINT,
-                HEAP_SIZE_GB
+        final TeeWorkerPipelineConfiguration.Pipeline pipeline = getPipeline(VERSION);
+        final TeeWorkerPipelineConfiguration.Pipeline additionalPipeline = getPipeline("v6");
+
+        pipelineConfig = new TeeWorkerPipelineConfiguration(
+                Arrays.asList(pipeline, additionalPipeline)
+        );
+    }
+
+    private static TeeWorkerPipelineConfiguration.Pipeline getPipeline(final String version) {
+        final TeeWorkerPipelineConfiguration.StageConfig validPreComputeStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
+                PRE_IMAGE,
+                PRE_FINGERPRINT,
+                DataSize.ofBytes(HEAP_SIZE_B),
+                PRE_ENTRYPOINT
         );
 
-        assertEquals(IMAGE, properties.getImage());
-        assertEquals(FINGERPRINT, properties.getFingerprint());
-        assertEquals(ENTRYPOINT, properties.getEntrypoint());
-        assertEquals(HEAP_SIZE_B, properties.getHeapSizeInBytes());
-    }
-    // endregion
-
-    // region postComputeProperties
-    @Test
-    void postComputeProperties() {
-        TeeAppProperties properties = teeWorkerInternalConfiguration.postComputeProperties(
-                IMAGE,
-                FINGERPRINT,
-                ENTRYPOINT,
-                HEAP_SIZE_GB
+        final TeeWorkerPipelineConfiguration.StageConfig validPostComputeStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
+                POST_IMAGE,
+                POST_FINGERPRINT,
+                DataSize.ofBytes(HEAP_SIZE_B),
+                POST_ENTRYPOINT
         );
 
-        assertEquals(IMAGE, properties.getImage());
-        assertEquals(FINGERPRINT, properties.getFingerprint());
-        assertEquals(ENTRYPOINT, properties.getEntrypoint());
-        assertEquals(HEAP_SIZE_B, properties.getHeapSizeInBytes());
+        return new TeeWorkerPipelineConfiguration.Pipeline(
+                version,
+                validPreComputeStageConfig,
+                validPostComputeStageConfig
+        );
     }
-    // endregion
 
-    // region gramineServicesProperties
     @Test
-    void gramineServicesProperties() {
-        GramineServicesProperties properties =
-                teeWorkerInternalConfiguration.gramineServicesProperties(preComputeProperties, postComputeProperties);
+    void shouldBuildGramineServicesPropertiesMap() {
+        final Map<String, TeeServicesProperties> multiPropertiesMap =
+                teeWorkerInternalConfiguration.gramineServicesPropertiesMap(pipelineConfig);
 
-        assertEquals(TeeFramework.GRAMINE, properties.getTeeFramework());
-        assertEquals(preComputeProperties, properties.getPreComputeProperties());
-        assertEquals(postComputeProperties, properties.getPostComputeProperties());
+        assertNotNull(multiPropertiesMap);
+        assertEquals(2, multiPropertiesMap.size());
+
+        final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
+        assertNotNull(properties);
+        assertInstanceOf(GramineServicesProperties.class, properties);
+
+        final GramineServicesProperties gramineProperties = (GramineServicesProperties) properties;
+        assertEquals(TeeFramework.GRAMINE, gramineProperties.getTeeFramework());
+        assertEquals(preComputeProperties, gramineProperties.getPreComputeProperties());
+        assertEquals(postComputeProperties, gramineProperties.getPostComputeProperties());
     }
-    // endregion
 
-    // region sconeServicesProperties
     @Test
-    void sconeServicesProperties() {
-        SconeServicesProperties properties =
-                teeWorkerInternalConfiguration.sconeServicesProperties(preComputeProperties, postComputeProperties, LAS_IMAGE);
+    void shouldBuildSconeServicesPropertiesMap() {
+        final Map<String, TeeServicesProperties> multiPropertiesMap =
+                teeWorkerInternalConfiguration.sconeServicesPropertiesMap(pipelineConfig, LAS_IMAGE);
 
-        assertEquals(TeeFramework.SCONE, properties.getTeeFramework());
-        assertEquals(preComputeProperties, properties.getPreComputeProperties());
-        assertEquals(postComputeProperties, properties.getPostComputeProperties());
-        assertEquals(LAS_IMAGE, properties.getLasImage());
+        assertNotNull(multiPropertiesMap);
+        assertEquals(2, multiPropertiesMap.size());
+
+        final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
+        assertNotNull(properties);
+        assertInstanceOf(SconeServicesProperties.class, properties);
+
+        final SconeServicesProperties sconeProperties = (SconeServicesProperties) properties;
+        assertEquals(TeeFramework.SCONE, sconeProperties.getTeeFramework());
+        assertEquals(preComputeProperties, sconeProperties.getPreComputeProperties());
+        assertEquals(postComputeProperties, sconeProperties.getPostComputeProperties());
+        assertEquals(LAS_IMAGE, sconeProperties.getLasImage());
     }
-    // endregion
+
 }

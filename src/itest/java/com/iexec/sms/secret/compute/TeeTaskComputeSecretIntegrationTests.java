@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2021-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@
 
 package com.iexec.sms.secret.compute;
 
-import com.iexec.commons.poco.contract.generated.Ownable;
 import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.sms.CommonTestSetup;
 import com.iexec.sms.api.SmsClient;
 import com.iexec.sms.api.SmsClientBuilder;
-import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import feign.FeignException;
 import feign.Logger;
@@ -43,19 +42,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static com.iexec.commons.poco.utils.SignatureUtils.signMessageHashAndGetSignature;
 import static com.iexec.sms.MockChainConfiguration.MOCK_CHAIN_PROFILE;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Slf4j
 @ActiveProfiles({"scone", MOCK_CHAIN_PROFILE, "test"})
-public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
+class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     private static final String APP_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String UPPER_CASE_APP_ADDRESS = "0xABCD1339EC7E762E639F4887E2BFE5EE8023E23E";
-    private static final String SECRET_VALUE = generateRandomAscii(4096);
+    private static final String SECRET_VALUE = generateRandomAscii();
     private static final String OWNER_ADDRESS = "0xabcd1339ec7e762e639f4887e2bfe5ee8023e23e";
     private static final String REQUESTER_ADDRESS = "0x123790ae4E14865B972ee04a5f9FD5fB153Cd5e7";
     private static final String DOMAIN = "IEXEC_SMS_DOMAIN";
@@ -73,14 +70,15 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @Autowired
     private IexecHubService iexecHubService;
 
-    /*
+    /**
      * Generate random ASCII from seed for re-testability.
      * See also {@link org.apache.commons.lang3.RandomStringUtils#randomAscii(int)}
-     * */
-    private static String generateRandomAscii(int count) {
+     */
+    private static String generateRandomAscii() {
         long seed = new Date().getTime();
         log.info("Generating random ascii from seed: {}", seed);
-        return RandomStringUtils.random(count,
+        return RandomStringUtils.random(
+                4096,
                 32,
                 127,
                 false,
@@ -92,10 +90,6 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
     @BeforeEach
     public void setUp() {
         apiClient = SmsClientBuilder.getInstance(Logger.Level.FULL, "http://localhost:" + randomServerPort);
-        final Ownable appContract = mock(Ownable.class);
-        when(appContract.getContractAddress()).thenReturn(APP_ADDRESS);
-        when(iexecHubService.getOwnableContract(APP_ADDRESS))
-                .thenReturn(appContract);
         repository.deleteAll();
     }
 
@@ -105,9 +99,8 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         final String requesterAddress = REQUESTER_ADDRESS;
         final String appAddress = APP_ADDRESS;
         final String secretValue = SECRET_VALUE;
-        final String ownerAddress = OWNER_ADDRESS;
 
-        addNewAppDeveloperSecret(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue, ownerAddress);
+        addNewAppDeveloperSecret(appAddress, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue, OWNER_ADDRESS);
         addNewRequesterSecret(requesterAddress, requesterSecretKey, secretValue);
 
         // Check the new secrets exists for the API
@@ -189,8 +182,6 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
         // We shouldn't be able to add a new secret to the database with the same index
         // and an appAddress whose only difference is the case.
         try {
-            when(iexecHubService.getOwner(UPPER_CASE_APP_ADDRESS)).thenReturn(ownerAddress);
-
             final String authorization = getAuthorizationForAppDeveloper(UPPER_CASE_APP_ADDRESS, SmsClient.APP_DEVELOPER_SECRET_INDEX, secretValue);
             apiClient.addAppDeveloperAppComputeSecret(authorization, UPPER_CASE_APP_ADDRESS, secretValue);
             Assertions.fail("A second app developer secret with the same index " +
@@ -202,17 +193,17 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
 
     @Test
     void addMultipleRequesterSecrets() {
-        List<String> keys = List.of("secret-key-1", "secret-key-2", "secret-key-3");
+        final List<String> keys = List.of("secret-key-1", "secret-key-2", "secret-key-3");
         for (String key : keys) {
             addNewRequesterSecret(REQUESTER_ADDRESS, key, SECRET_VALUE);
         }
         Assertions.assertThat(repository.count()).isEqualTo(keys.size());
-        List<TeeTaskComputeSecret> secrets = repository.findAll();
+        final List<TeeTaskComputeSecret> secrets = repository.findAll();
         final List<String> retrievedKeys = secrets
                 .stream()
                 .map(TeeTaskComputeSecret::getHeader)
                 .map(TeeTaskComputeSecretHeader::getKey)
-                .collect(Collectors.toList());
+                .toList();
         Assertions.assertThat(retrievedKeys)
                 .containsExactlyInAnyOrder("secret-key-1", "secret-key-2", "secret-key-3");
 
@@ -223,7 +214,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
             "this-is-a-really-long-key-with-far-too-many-characters-in-its-name",
             "this-is-a-key-with-invalid-characters:!*~"
     })
-    void checkInvalidRequesterSecretKey(String secretKey) {
+    void checkInvalidRequesterSecretKey(final String secretKey) {
         Assertions.assertThatThrownBy(() -> addNewRequesterSecret(REQUESTER_ADDRESS, secretKey, SECRET_VALUE))
                 .isInstanceOf(FeignException.BadRequest.class);
         Assertions.assertThat(repository.count()).isZero();
@@ -234,7 +225,7 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * and adds a new application developer secret to the database
      */
     @SuppressWarnings("SameParameterValue")
-    private void addNewAppDeveloperSecret(String appAddress, String secretIndex, String secretValue, String ownerAddress) {
+    private void addNewAppDeveloperSecret(final String appAddress, final String secretIndex, final String secretValue, final String ownerAddress) {
         when(iexecHubService.getOwner(appAddress)).thenReturn(ownerAddress);
 
         final String authorization = getAuthorizationForAppDeveloper(appAddress, secretIndex, secretValue);
@@ -260,9 +251,9 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * and adds a new requester secret to the database
      */
     @SuppressWarnings("SameParameterValue")
-    private void addNewRequesterSecret(String requesterAddress,
-                                       String secretKey,
-                                       String secretValue) {
+    private void addNewRequesterSecret(final String requesterAddress,
+                                       final String secretKey,
+                                       final String secretValue) {
         final String authorization = getAuthorizationForRequester(requesterAddress, secretKey, secretValue);
 
         // At first, no secret should be in the database
@@ -286,9 +277,9 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * given application developer secret to database.
      */
     private String getAuthorizationForAppDeveloper(
-            String appAddress,
-            String secretIndex,
-            String secretValue) {
+            final String appAddress,
+            final String secretIndex,
+            final String secretValue) {
         final String challenge = HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),
                 appAddress,
@@ -302,9 +293,9 @@ public class TeeTaskComputeSecretIntegrationTests extends CommonTestSetup {
      * given requester secret to database.
      */
     private String getAuthorizationForRequester(
-            String requesterAddress,
-            String secretKey,
-            String secretValue) {
+            final String requesterAddress,
+            final String secretKey,
+            final String secretValue) {
 
         final String challenge = HashUtils.concatenateAndHash(
                 Hash.sha3String(DOMAIN),

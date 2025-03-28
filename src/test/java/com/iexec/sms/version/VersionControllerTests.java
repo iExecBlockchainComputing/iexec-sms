@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @Import(ProjectInfoAutoConfiguration.class)
 class VersionControllerTests {
+    private final String teeFrameworkVersion = "v5";
     TeeAppProperties preComputeProperties;
     TeeAppProperties postComputeProperties;
     private VersionController versionController;
@@ -62,11 +65,13 @@ class VersionControllerTests {
     @Test
     void testVersionController() {
         TeeServicesProperties properties = new SconeServicesProperties(
+                teeFrameworkVersion,
                 preComputeProperties,
                 postComputeProperties,
                 "lasImage"
         );
-        versionController = new VersionController(buildProperties, properties);
+        final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(teeFrameworkVersion, properties);
+        versionController = new VersionController(buildProperties, sconePropertiesMap);
         assertEquals(ResponseEntity.ok(buildProperties.getVersion()), versionController.getVersion());
     }
 
@@ -76,17 +81,20 @@ class VersionControllerTests {
         TeeServicesProperties properties;
         if (teeFramework == TeeFramework.SCONE) {
             properties = new SconeServicesProperties(
+                    teeFrameworkVersion,
                     preComputeProperties,
                     postComputeProperties,
                     "lasImage"
             );
         } else {
             properties = new GramineServicesProperties(
+                    teeFrameworkVersion,
                     preComputeProperties,
                     postComputeProperties
             );
         }
-        versionController = new VersionController(buildProperties, properties);
+        final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(teeFrameworkVersion, properties);
+        versionController = new VersionController(buildProperties, sconePropertiesMap);
         versionController.initializeGaugeVersion();
 
         final Gauge info = Metrics.globalRegistry.find(VersionController.METRIC_INFO_GAUGE_NAME).gauge();

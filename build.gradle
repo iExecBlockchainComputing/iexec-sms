@@ -1,15 +1,11 @@
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '8.10.2'
-    id 'org.springframework.boot' version '2.7.18'
+    id 'org.springframework.boot' version '3.3.8'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'jacoco'
     id 'org.sonarqube' version '5.1.0.4882'
     id 'maven-publish'
-}
-
-ext {
-    openFeignVersion = '11.10'
 }
 
 if (!project.hasProperty('gitBranch')) {
@@ -39,8 +35,12 @@ allprojects {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(17))
         }
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs.add('-parameters')
     }
 }
 
@@ -55,22 +55,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.retry:spring-retry'
+
     // H2
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'com.h2database:h2:2.2.224'
 
     // Spring Doc
-    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
-    //ssl
-    implementation 'org.apache.httpcomponents:httpclient'
+    // ssl
+    implementation 'org.apache.httpcomponents.client5:httpclient5'
 
     // observability
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-
-    // feign
-    implementation "io.github.openfeign:feign-jackson:$openFeignVersion"
-    implementation "io.github.openfeign:feign-slf4j:$openFeignVersion"
 
     // expiring map
     implementation "net.jodah:expiringmap:0.5.11"

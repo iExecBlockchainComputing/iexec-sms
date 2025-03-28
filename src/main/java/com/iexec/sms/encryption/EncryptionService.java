@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ package com.iexec.sms.encryption;
 import com.iexec.common.security.CipherHelper;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
@@ -35,7 +35,7 @@ import static com.iexec.common.utils.FileHelper.createFileWithContent;
 @Service
 public class EncryptionService {
 
-    private final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
+    private static final String DEFAULT_MESSAGE = "Hello message to test AES key integrity";
     private byte[] aesKey;
 
     @Getter
@@ -84,16 +84,16 @@ public class EncryptionService {
             }
         }
 
-        final byte[] aesKey = FileHelper.readFileBytes(aesKeyPath);
+        final byte[] parsedAesKey = FileHelper.readFileBytes(aesKeyPath);
 
-        if (aesKey == null) {
+        if (parsedAesKey == null) {
             throw new ExceptionInInitializerError("Failed to load AES key");
         }
 
         log.info("AES key loaded [isNewAesKey:{}, aesKeyPath:{}, aesKeyHash:{}]",
-                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(aesKey)));
+                shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(parsedAesKey)));
 
-        return aesKey;
+        return parsedAesKey;
     }
 
     public String encrypt(String data) {

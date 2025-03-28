@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.iexec.sms.tee.challenge;
 
-import com.iexec.sms.blockchain.IexecHubService;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.encryption.EncryptionService;
 import com.iexec.sms.secret.MeasuredSecretService;
 import com.iexec.sms.tee.config.TeeChallengeCleanupConfiguration;
@@ -56,9 +56,9 @@ public class TeeChallengeService {
         this.teeChallengeCleanupConfiguration = teeChallengeCleanupConfiguration;
     }
 
-    public Optional<TeeChallenge> getOrCreate(String taskId, boolean shouldDecryptKeys) {
+    public Optional<TeeChallenge> getOrCreate(final String taskId, final boolean shouldDecryptKeys) {
         // if existing returns from the db
-        Optional<TeeChallenge> optionalTeeChallenge = teeChallengeRepository.findByTaskId(taskId);
+        final Optional<TeeChallenge> optionalTeeChallenge = teeChallengeRepository.findByTaskId(taskId);
         if (optionalTeeChallenge.isPresent()) {
             if (shouldDecryptKeys) { //eventually decrypt if wanted
                 decryptChallengeKeys(optionalTeeChallenge.get());
@@ -88,7 +88,7 @@ public class TeeChallengeService {
         }
     }
 
-    public void encryptChallengeKeys(TeeChallenge teeChallenge) {
+    public void encryptChallengeKeys(final TeeChallenge teeChallenge) {
         final EthereumCredentials credentials = teeChallenge.getCredentials();
         if (!credentials.isEncrypted()) {
             final String encPrivateKey = encryptionService.encrypt(credentials.getPrivateKey());
@@ -96,7 +96,7 @@ public class TeeChallengeService {
         }
     }
 
-    public void decryptChallengeKeys(TeeChallenge teeChallenge) {
+    public void decryptChallengeKeys(final TeeChallenge teeChallenge) {
         final EthereumCredentials credentials = teeChallenge.getCredentials();
         if (credentials.isEncrypted()) {
             final String privateKey = encryptionService.decrypt(credentials.getPrivateKey());

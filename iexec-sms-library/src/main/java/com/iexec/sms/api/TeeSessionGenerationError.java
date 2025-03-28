@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,13 @@ public enum TeeSessionGenerationError {
     EXECUTION_NOT_AUTHORIZED_INVALID_SIGNATURE,
     // endregion
 
+    // region Signature token retrieval
+    GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
+    GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
+    GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
+    GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
+    // endregion
+
     // region Pre-compute
     PRE_COMPUTE_GET_DATASET_SECRET_FAILED,
     // endregion
@@ -39,19 +46,12 @@ public enum TeeSessionGenerationError {
     // region Post-compute
     POST_COMPUTE_GET_ENCRYPTION_TOKENS_FAILED_EMPTY_BENEFICIARY_KEY,
     POST_COMPUTE_GET_STORAGE_TOKENS_FAILED,
-
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_WORKER_ADDRESS,
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_PUBLIC_ENCLAVE_CHALLENGE,
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CHALLENGE,
-    POST_COMPUTE_GET_SIGNATURE_TOKENS_FAILED_EMPTY_TEE_CREDENTIALS,
     // endregion
 
     // region Secure session generation
     SECURE_SESSION_STORAGE_CALL_FAILED,
     SECURE_SESSION_GENERATION_FAILED,
     SECURE_SESSION_NO_TEE_FRAMEWORK,
-    @Deprecated(forRemoval = true)
-    SECURE_SESSION_NO_TEE_PROVIDER,
     // endregion
 
     // region Miscellaneous

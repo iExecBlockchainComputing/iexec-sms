@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package com.iexec.sms.blockchain;
+package com.iexec.sms.chain;
 
-import lombok.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
+import com.iexec.commons.poco.chain.SignerService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.time.Duration;
+import java.security.GeneralSecurityException;
 
-@Value
-@ConstructorBinding
-@ConfigurationProperties(prefix = "blockchain")
-public class BlockchainConfig {
-    int id;
-    boolean isSidechain;
-    String nodeAddress;
-    String hubAddress;
-    Duration blockTime;
-    float gasPriceMultiplier;
-    long gasPriceCap;
+@Configuration
+public class WalletConfiguration {
+    @Bean
+    SignerService signerService(final Web3jService web3jService, final ChainConfig chainConfig) throws GeneralSecurityException {
+        return new SignerService(web3jService.getWeb3j(), chainConfig.getId());
+    }
 }

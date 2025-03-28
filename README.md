@@ -56,7 +56,7 @@ To support:
 | `IEXEC_SMS_ADMIN_STORAGE_LOCATION` | Storage location where to persist replicated backups. It must be an absolute directory path. | String | `/backup` | `/backup` |
 | `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `134` |  `134` |
 | `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `true` | `true` |
-| `IEXEC_SMS_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` | `https://bellecour.iex.ec` |
+| `IEXEC_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` | `https://bellecour.iex.ec` |
 | `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` |
 | `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` | `PT5S` |
 | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` | `1.0` |
@@ -68,14 +68,57 @@ To support:
 | `IEXEC_TEE_CHALLENGE_CLEANUP_CRON` | Cron expression to configure TEE challenges cleanup policy. | String | `@hourly` | `@hourly` |
 | `IEXEC_TEE_CHALLENGE_CLEANUP_MAX_BATCH_SIZE` | Max number of TEE challenges whose missing deadline could be set at a given time. | Integer | `500` | `500` |
 | `IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_DURATION` | Retention duration when setting missing final deadline. | Duration | `P5D` | `P5D` |
-| `IEXEC_TEE_WORKER_PRE_COMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage of TEE tasks. | String | | |
-| `IEXEC_TEE_WORKER_PRE_COMPUTE_FINGERPRINT` | Fingerprint (aka mrenclave) of the TEE enabled worker pre-compute image. | String | | |
-| `IEXEC_TEE_WORKER_PRE_COMPUTE_HEAP_SIZE_GB` | Required heap size for a worker pre-compute enclave (in Giga Bytes). | Positive integer | `3` | `3` |
-| `IEXEC_TEE_WORKER_PRE_COMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker pre-compute image. | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
-| `IEXEC_TEE_WORKER_POST_COMPUTE_IMAGE` | TEE enabled OCI image name for worker post-compute stage of TEE tasks. | String | | |
-| `IEXEC_TEE_WORKER_POST_COMPUTE_FINGERPRINT` | Fingerprint (aka mrenclave) of the TEE enabled worker post-compute image. | String | | |
-| `IEXEC_TEE_WORKER_POST_COMPUTE_HEAP_SIZE_GB` | Required heap size for a worker post-compute enclave (in Giga Bytes). | Positive integer | `3` | `3` |
-| `IEXEC_TEE_WORKER_POST_COMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image. | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
+| `TEE_WORKER_PIPELINES_0_VERSION` | Worker pipeline version | String | `v5` | `v5` |
+| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage | String | | |
+| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker pre-compute image | String | | |
+| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_HEAPSIZE` | Required heap size for a worker pre-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
+| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker pre-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
+| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_IMAGE` | TEE enabled OCI image name for worker post-compute stage | String | | |
+| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker post-compute image | String | | |
+| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_HEAPSIZE` | Required heap size for a worker post-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
+| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
+
+## Heap Size Configuration
+The heap size configuration supports the following units:
+
+- **B** for bytes
+- **KB** for kilobytes
+- **MB** for megabytes
+- **GB** for gigabytes
+- **TB** for terabytes
+
+### Example Values
+- `3GB`
+- `4096MB`
+- `1TB`
+
+### Conversion Table
+| Unit | Bytes Equivalent            |
+|------|-----------------------------|
+| 1 KB | 1,024 B                     |
+| 1 MB | 1,024 KB (1,048,576 B)      |
+| 1 GB | 1,024 MB (1,073,741,824 B)  |
+| 1 TB | 1,024 GB (1,099,511,627,776 B) |
+
+### Required Pipeline Configuration
+
+The TEE worker pipeline configurations (`application-gramine.yml` and `application-scone.yml`) **no longer provide default values** for pre-compute and post-compute settings.
+The configuration must be set by SMS operator.
+
+#### **Example Configuration (to be provided by SMS operator)**
+```yaml
+- version: v5
+  pre-compute:
+    image: iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production
+    fingerprint: <tee-worker-pre-compute-fingerprint>
+    heap-size: 3GB
+    entrypoint: java -jar /app/app.jar
+  post-compute:
+    image: iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production
+    fingerprint: <tee-worker-post-compute-fingerprint>
+    heap-size: 3GB
+    entrypoint: java -jar /app/app.jar
+```
 
 ### Scone specific environment variables
 

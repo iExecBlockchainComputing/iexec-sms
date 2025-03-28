@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,16 +47,6 @@ public interface SmsClient {
             @Param("appAddress") String appAddress,
             //@Param("secretIndex") String secretIndex,
             String secretValue
-    );
-
-    /**
-     * @deprecated Call {@code isAppDeveloperAppComputeSecretPresent(appAddress)}
-     */
-    @Deprecated(forRemoval = true)
-    @RequestLine("HEAD /apps/{appAddress}/secrets/{secretIndex}")
-    ApiResponseBody<String, List<String>> isAppDeveloperAppComputeSecretPresent(
-            @Param("appAddress") String appAddress,
-            @Param("secretIndex") String secretIndex
     );
 
     @RequestLine("HEAD /apps/{appAddress}/secrets")
@@ -119,13 +109,6 @@ public interface SmsClient {
 
     // region TEE
 
-    /**
-     * @deprecated use {@link SmsClient#generateTeeChallenge(String, String)}
-     */
-    @Deprecated(forRemoval = true)
-    @RequestLine("POST /tee/challenges/{chainTaskId}")
-    String generateTeeChallenge(@Param("chainTaskId") String chainTaskId);
-
     @Headers("Authorization: {authorization}")
     @RequestLine("POST /tee/challenges/{chainTaskId}")
     String generateTeeChallenge(@Param("authorization") String authorization, @Param("chainTaskId") String chainTaskId);
@@ -140,8 +123,17 @@ public interface SmsClient {
     @RequestLine("GET /tee/framework")
     TeeFramework getTeeFramework();
 
+    /**
+     * @deprecated Use {@link #getTeeServicesPropertiesVersion(TeeFramework, String)} instead.
+     * This endpoint will be removed in future versions.
+     */
+    @Deprecated(since = "8.7.0", forRemoval = true)
     @RequestLine("GET /tee/properties/{teeFramework}")
     <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
+
+    @RequestLine("GET /tee/properties/{teeFramework}/{version}")
+    <T extends TeeServicesProperties> T getTeeServicesPropertiesVersion(@Param("teeFramework") TeeFramework teeFramework,
+                                                                        @Param("version") String version);
     // endregion
 
     // region Metrics
