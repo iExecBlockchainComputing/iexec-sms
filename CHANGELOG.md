@@ -16,15 +16,15 @@ All notable changes to this project will be documented in this file.
 
 - Refactor `SslConfig` and `TwoWaySslClient` to use HttpClient 5 and improve ssl handling. (#285)
 - Remove references to Ownable Smart Contract wrapper in integration test. (#288)
-- Remove deprecated code from `AppComputeSecretController` and `SmsClient`. (#293)
 - Rename `blockchain` package to `chain` and `BlockchainConfig` class to `ChainConfig`. (#294)
 - Fix several SonarQube Cloud issues. (#295)
-- Harmonize YML internal variables to proper case. (#299)
 - Stop using `TestUtils` in `AuthorizationServiceTests.java`. (#300)
 
 ### Breaking API changes
 
+- Remove deprecated code from `AppComputeSecretController` and `SmsClient`. (#293)
 - Replace custom yes/no boolean serialization with standard Java boolean strings in TEE sessions. (#297)
+- Harmonize YML internal variables to proper case. (#299)
 
 ### Dependency Upgrades
 
