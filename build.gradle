@@ -8,13 +8,13 @@ plugins {
     id 'maven-publish'
 }
 
-if (!project.hasProperty('gitBranch')) {
-    ext.gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+ext {
+    gitTag = 'git tag --points-at HEAD'.execute().text.trim()
 }
 
 allprojects {
     group = 'com.iexec.sms'
-    if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
+    if (gitTag.isEmpty()) {
         version += '-NEXT-SNAPSHOT'
     }
     repositories {
