@@ -31,7 +31,7 @@ public class GramineServicesProperties extends TeeServicesProperties {
      * TEE framework version also now.
      * Use {@link GramineServicesProperties(String, TeeAppProperties, TeeAppProperties)} instead.
      */
-    @Deprecated(since = "8.7.0", forRemoval = true)
+    @Deprecated(since = "9.0.0", forRemoval = true)
     public GramineServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
                                      @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties) {
         super(TeeFramework.GRAMINE, "", preComputeProperties, postComputeProperties);

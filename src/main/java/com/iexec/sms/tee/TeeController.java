@@ -94,7 +94,7 @@ public class TeeController {
      * and potential TEE framework's specific data.
      * </p>
      */
-    @Deprecated(since = "8.7.0", forRemoval = true)
+    @Deprecated(since = "9.0.0", forRemoval = true)
     @GetMapping("/properties/{teeFramework}")
     public ResponseEntity<TeeServicesProperties> getTeeServicesProperties(
             @PathVariable TeeFramework teeFramework) {

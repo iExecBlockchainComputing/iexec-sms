@@ -127,7 +127,7 @@ public interface SmsClient {
      * @deprecated Use {@link #getTeeServicesPropertiesVersion(TeeFramework, String)} instead.
      * This endpoint will be removed in future versions.
      */
-    @Deprecated(since = "8.7.0", forRemoval = true)
+    @Deprecated(since = "9.0.0", forRemoval = true)
     @RequestLine("GET /tee/properties/{teeFramework}")
     <T extends TeeServicesProperties> T getTeeServicesProperties(@Param("teeFramework") TeeFramework teeFramework);
 
