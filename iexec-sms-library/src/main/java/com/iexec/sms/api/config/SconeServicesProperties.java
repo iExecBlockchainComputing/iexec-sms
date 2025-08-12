@@ -32,7 +32,7 @@ public class SconeServicesProperties extends TeeServicesProperties {
      * TEE framework version also now.
      * Use {@link SconeServicesProperties(String, TeeAppProperties, TeeAppProperties, String)} instead.
      */
-    @Deprecated(since = "8.7.0", forRemoval = true)
+    @Deprecated(since = "9.0.0", forRemoval = true)
     public SconeServicesProperties(@JsonProperty("preComputeProperties") TeeAppProperties preComputeProperties,
                                    @JsonProperty("postComputeProperties") TeeAppProperties postComputeProperties,
                                    @JsonProperty("lasImage") String lasImage) {
