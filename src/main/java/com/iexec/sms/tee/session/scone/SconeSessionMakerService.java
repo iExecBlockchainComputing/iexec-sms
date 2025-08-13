@@ -36,7 +36,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,7 +48,7 @@ public class SconeSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
-    private final Map<URI, AzureAttestationServer> azureAttestationServersMap;
+    private final Map<URL, AzureAttestationServer> azureAttestationServersMap;
 
     public SconeSessionMakerService(final SecretSessionBaseService secretSessionBaseService,
                                     final SconeSessionSecurityConfig attestationSecurityConfig) {
@@ -113,7 +113,7 @@ public class SconeSessionMakerService {
                 sconePostEnclave.getImageName(),
                 List.of(iexecOutVolume, postComputeTmpVolume)));
 
-        final URI validAttestationServer = resolveValidAttestationServer();
+        final URL validAttestationServer = resolveValidAttestationServer();
 
         return SconeSession.builder()
                 .name(request.getSessionId())
@@ -135,11 +135,11 @@ public class SconeSessionMakerService {
                 .build();
     }
 
-    private URI resolveValidAttestationServer() {
+    private URL resolveValidAttestationServer() {
         // The keys of the Map are shuffled to avoid always querying servers in the same order
-        final List<URI> urls = new ArrayList<>(azureAttestationServersMap.keySet());
+        final List<URL> urls = new ArrayList<>(azureAttestationServersMap.keySet());
         Collections.shuffle(urls);
-        for (final URI attestationServerUrl : urls) {
+        for (final URL attestationServerUrl : urls) {
             try {
                 azureAttestationServersMap.get(attestationServerUrl).canFetchOpenIdMetadata();
                 log.debug("Resolved attestation server [url:{}]", attestationServerUrl);

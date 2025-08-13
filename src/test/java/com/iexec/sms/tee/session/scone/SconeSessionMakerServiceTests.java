@@ -37,8 +37,8 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.yaml.snakeyaml.Yaml;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -53,14 +53,14 @@ class SconeSessionMakerServiceTests {
 
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
-    private static final URI MAA_URL;
-    private static final URI MAA_URL_OUT_OF_SERVICE;
+    private static final URL MAA_URL;
+    private static final URL MAA_URL_OUT_OF_SERVICE;
 
     static {
         try {
-            MAA_URL_OUT_OF_SERVICE = new URI("https://broken.maa.attestation.service");
-            MAA_URL = new URI("https://maa.attestation.service");
-        } catch (URISyntaxException e) {
+            MAA_URL_OUT_OF_SERVICE = new URL("https://broken.maa.attestation.service");
+            MAA_URL = new URL("https://maa.attestation.service");
+        } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -84,7 +84,7 @@ class SconeSessionMakerServiceTests {
 
     private TeeSessionRequest request;
 
-    private void setupCommonMocks(final String mode, final URI url, final List<URI> urls) throws TeeSessionGenerationException {
+    private void setupCommonMocks(final String mode, final URL url, final List<URL> urls) throws TeeSessionGenerationException {
         final SconeSessionSecurityConfig attestationSecurityConfig = new SconeSessionSecurityConfig(
                 toleratedInsecureOptions, ignoredSgxAdvisories, mode, url, urls);
         sconeSessionMakerService = new SconeSessionMakerService(
