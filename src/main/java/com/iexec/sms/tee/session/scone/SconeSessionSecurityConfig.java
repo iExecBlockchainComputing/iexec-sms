@@ -49,7 +49,7 @@ public class SconeSessionSecurityConfig {
         this.ignoredSgxAdvisories = ignoredSgxAdvisories;
         this.mode = mode;
         this.url = url;
-        if (!urls.isEmpty()) {
+        if (urls != null && !urls.isEmpty()) {
             this.urls = urls;
         } else if (url != null) {
             this.urls = List.of(url);

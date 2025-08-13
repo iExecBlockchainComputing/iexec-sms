@@ -61,7 +61,14 @@ class SconeSessionSecurityConfigTests {
     }
 
     @Test
-    void shouldNotValidateMaaConfig() {
+    void shouldNotValidateMaaConfigWithNoList() {
+        assertThatException()
+                .isThrownBy(() -> new SconeSessionSecurityConfig(List.of(), List.of(), "maa", null, null))
+                .withMessage("Attestation URL can not be null when scone session mode is 'maa'");
+    }
+
+    @Test
+    void shouldNotValidateMaaConfigWithEmptyList() {
         assertThatException()
                 .isThrownBy(() -> new SconeSessionSecurityConfig(List.of(), List.of(), "maa", null, List.of()))
                 .withMessage("Attestation URL can not be null when scone session mode is 'maa'");
