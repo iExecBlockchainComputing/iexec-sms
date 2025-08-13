@@ -16,6 +16,7 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.iexec.common.utils.FeignBuilder;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
@@ -24,27 +25,27 @@ import com.iexec.sms.tee.session.base.SecretSessionBaseService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.scone.cas.SconeSession;
+import feign.Feign;
+import feign.FeignException;
+import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.yaml.snakeyaml.Yaml;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.createTaskDescription;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -52,12 +53,14 @@ class SconeSessionMakerServiceTests {
 
     private static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     private static final String APP_ENTRYPOINT = "appEntrypoint";
-    private static final URL MAA_URL;
+    private static final URI MAA_URL;
+    private static final URI MAA_URL_OUT_OF_SERVICE;
 
     static {
         try {
-            MAA_URL = new URI("https://maa.attestation.service").toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
+            MAA_URL_OUT_OF_SERVICE = new URI("https://broken.maa.attestation.service");
+            MAA_URL = new URI("https://maa.attestation.service");
+        } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
@@ -68,14 +71,22 @@ class SconeSessionMakerServiceTests {
     @Mock
     private SecretSessionBaseService teeSecretsService;
 
-    private SconeSessionSecurityConfig attestationSecurityConfig;
+    @Mock
+    private Feign.Builder feignClientBuilder;
 
-    @InjectMocks
+    @Mock
+    private AzureAttestationServer mockedAttestationServer;
+
+    @Mock
+    private AzureAttestationServer outOfServiceAttestationServer;
+
     private SconeSessionMakerService sconeSessionMakerService;
 
     private TeeSessionRequest request;
 
-    private void setupCommonMocks() throws TeeSessionGenerationException {
+    private void setupCommonMocks(final String mode, final URI url, final List<URI> urls) throws TeeSessionGenerationException {
+        final SconeSessionSecurityConfig attestationSecurityConfig = new SconeSessionSecurityConfig(
+                toleratedInsecureOptions, ignoredSgxAdvisories, mode, url, urls);
         sconeSessionMakerService = new SconeSessionMakerService(
                 teeSecretsService,
                 attestationSecurityConfig
@@ -145,50 +156,27 @@ class SconeSessionMakerServiceTests {
                         .build());
     }
 
-    // region HardwareModeTests
-    @Nested
-    class HardwareModeTests {
-        @BeforeEach
-        void setup() throws TeeSessionGenerationException {
-            attestationSecurityConfig = new SconeSessionSecurityConfig(
-                    toleratedInsecureOptions,
-                    ignoredSgxAdvisories,
-                    "hardware",
-                    null
-            );
-            setupCommonMocks();
-        }
-
-        @Test
-        void shouldGenerateHardwareSession() throws Exception {
-            final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
-            log.info(actualCasSession.toString());
-            final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
-            final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
-            final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
-            assertThat(actualYmlMap)
-                    .usingRecursiveComparison()
-                    .isEqualTo(expectedYmlMap);
-        }
+    @Test
+    void shouldGenerateHardwareSession() throws Exception {
+        setupCommonMocks("hardware", null, List.of());
+        final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
+        log.info(actualCasSession.toString());
+        final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+        final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-hardware.yml");
+        final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
+        assertThat(actualYmlMap)
+                .usingRecursiveComparison()
+                .isEqualTo(expectedYmlMap);
     }
-    // endregion
 
-    // region MaaModeTests
-    @Nested
-    class MaaModeTests {
-        @BeforeEach
-        void setup() throws TeeSessionGenerationException {
-            attestationSecurityConfig = new SconeSessionSecurityConfig(
-                    toleratedInsecureOptions,
-                    ignoredSgxAdvisories,
-                    "maa",
-                    MAA_URL
-            );
-            setupCommonMocks();
-        }
-
-        @Test
-        void shouldGenerateMaaSession() throws Exception {
+    @Test
+    void shouldGenerateMaaSession() throws Exception {
+        try (MockedStatic<FeignBuilder> feignBuilder = mockStatic(FeignBuilder.class)) {
+            feignBuilder.when(() -> FeignBuilder.createBuilder(Logger.Level.BASIC))
+                    .thenReturn(feignClientBuilder);
+            when(feignClientBuilder.target(AzureAttestationServer.class, MAA_URL.toString()))
+                    .thenReturn(mockedAttestationServer);
+            setupCommonMocks("maa", MAA_URL, List.of(MAA_URL));
             final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
             log.info(actualCasSession.toString());
             final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
@@ -199,5 +187,37 @@ class SconeSessionMakerServiceTests {
                     .isEqualTo(expectedYmlMap);
         }
     }
-    // endregion
+
+    /**
+     * This test is repeated 10 times to have both situations where the unhealthy server is queried or not.
+     *
+     * @throws Exception if an exception occurs during test
+     */
+    @RepeatedTest(10)
+    void shouldUseAnotherMaaServerWhenOneIsDown() throws Exception {
+        try (MockedStatic<FeignBuilder> feignBuilder = mockStatic(FeignBuilder.class)) {
+            feignBuilder.when(() -> FeignBuilder.createBuilder(Logger.Level.BASIC))
+                    .thenReturn(feignClientBuilder);
+            when(feignClientBuilder.target(AzureAttestationServer.class, MAA_URL.toString()))
+                    .thenReturn(mockedAttestationServer);
+            when(mockedAttestationServer.canFetchOpenIdMetadata())
+                    .thenReturn("");
+            when(feignClientBuilder.target(AzureAttestationServer.class, MAA_URL_OUT_OF_SERVICE.toString()))
+                    .thenReturn(outOfServiceAttestationServer);
+            // Due to shuffling the collection, the test may end before the OUT-OF-SERVICE server is queried
+            lenient().when(outOfServiceAttestationServer.canFetchOpenIdMetadata())
+                    .thenThrow(FeignException.TooManyRequests.class);
+            setupCommonMocks("maa", null, List.of(MAA_URL, MAA_URL_OUT_OF_SERVICE));
+            final SconeSession actualCasSession = sconeSessionMakerService.generateSession(request);
+            log.info(actualCasSession.toString());
+            final Map<String, Object> actualYmlMap = new Yaml().load(actualCasSession.toString());
+            final String expectedYamlString = FileHelper.readFile("src/test/resources/palaemon-tee-session-maa.yml");
+            final Map<String, Object> expectedYmlMap = new Yaml().load(expectedYamlString);
+            assertThat(actualYmlMap)
+                    .usingRecursiveComparison()
+                    .isEqualTo(expectedYmlMap);
+            verify(outOfServiceAttestationServer, atMostOnce()).canFetchOpenIdMetadata();
+            verify(mockedAttestationServer).canFetchOpenIdMetadata();
+        }
+    }
 }

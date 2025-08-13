@@ -35,3 +35,4 @@ tee:
       ignored-sgx-advisories: ${IEXEC_IGNORED_SGX_ADVISORIES:} # e.g.: INTEL-SA-00220,INTEL-SA-00270
       mode: maa
       url: https://sharedweu.weu.attest.azure.net
+      urls: [ https://sharedweu.weu.attest.azure.net ]
