@@ -100,7 +100,7 @@ public class SconeSession {
             @JsonProperty("mode")
             private String mode;
             @JsonProperty("url")
-            private URL uri;
+            private URL url;
         }
     }
 
