@@ -16,6 +16,7 @@
 
 package com.iexec.sms.tee.session.scone;
 
+import com.iexec.common.utils.FeignBuilder;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.base.SecretEnclaveBase;
@@ -30,24 +31,34 @@ import com.iexec.sms.tee.session.scone.cas.SconeSession.Image;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Image.Volume;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Security;
 import com.iexec.sms.tee.session.scone.cas.SconeSession.Volumes;
+import feign.Logger;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 //TODO Rename and move
+@Slf4j
 @Service
 @ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
 public class SconeSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
     private final SconeSessionSecurityConfig attestationSecurityConfig;
+    private final Map<URL, AzureAttestationServer> azureAttestationServersMap;
 
-    public SconeSessionMakerService(
-            SecretSessionBaseService secretSessionBaseService,
-            SconeSessionSecurityConfig attestationSecurityConfig) {
+    public SconeSessionMakerService(final SecretSessionBaseService secretSessionBaseService,
+                                    final SconeSessionSecurityConfig attestationSecurityConfig) {
         this.secretSessionBaseService = secretSessionBaseService;
         this.attestationSecurityConfig = attestationSecurityConfig;
+        azureAttestationServersMap = attestationSecurityConfig.getUrls().stream()
+                .collect(Collectors.toMap(
+                        url -> url,
+                        url -> FeignBuilder.createBuilder(Logger.Level.BASIC).target(AzureAttestationServer.class, url.toString())
+                ));
     }
 
     /**
@@ -62,21 +73,19 @@ public class SconeSessionMakerService {
      * @return session config in yaml string format
      */
     @NonNull
-    public SconeSession generateSession(TeeSessionRequest request)
-            throws TeeSessionGenerationException {
-        Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
-        Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
-        Volume postComputeTmpVolume = new Volume("post-compute-tmp",
-                "/post-compute-tmp");
-        List<SconeEnclave> services = new ArrayList<>();
-        List<Image> images = new ArrayList<>();
+    public SconeSession generateSession(final TeeSessionRequest request) throws TeeSessionGenerationException {
+        final Volume iexecInVolume = new Volume("iexec_in", "/iexec_in");
+        final Volume iexecOutVolume = new Volume("iexec_out", "/iexec_out");
+        final Volume postComputeTmpVolume = new Volume("post-compute-tmp", "/post-compute-tmp");
+        final List<SconeEnclave> services = new ArrayList<>();
+        final List<Image> images = new ArrayList<>();
 
-        SecretSessionBase baseSession = secretSessionBaseService
+        final SecretSessionBase baseSession = secretSessionBaseService
                 .getSecretsTokens(request);
 
         // pre (optional)
         if (baseSession.getPreCompute() != null) {
-            SconeEnclave sconePreEnclave = toSconeEnclave(
+            final SconeEnclave sconePreEnclave = toSconeEnclave(
                     baseSession.getPreCompute(),
                     request.getTeeServicesProperties().getPreComputeProperties().getEntrypoint(),
                     true);
@@ -86,7 +95,7 @@ public class SconeSessionMakerService {
                     List.of(iexecInVolume)));
         }
         // app
-        SconeEnclave sconeAppEnclave = toSconeEnclave(
+        final SconeEnclave sconeAppEnclave = toSconeEnclave(
                 baseSession.getAppCompute(),
                 request.getTaskDescription().getAppCommand(),
                 false);
@@ -95,7 +104,7 @@ public class SconeSessionMakerService {
                 sconeAppEnclave.getImageName(),
                 List.of(iexecInVolume, iexecOutVolume)));
         // post
-        SconeEnclave sconePostEnclave = toSconeEnclave(
+        final SconeEnclave sconePostEnclave = toSconeEnclave(
                 baseSession.getPostCompute(),
                 request.getTeeServicesProperties().getPostComputeProperties().getEntrypoint(),
                 true);
@@ -103,6 +112,8 @@ public class SconeSessionMakerService {
         images.add(new Image(
                 sconePostEnclave.getImageName(),
                 List.of(iexecOutVolume, postComputeTmpVolume)));
+
+        final URL validAttestationServer = resolveValidAttestationServer();
 
         return SconeSession.builder()
                 .name(request.getSessionId())
@@ -118,13 +129,31 @@ public class SconeSessionMakerService {
                                 attestationSecurityConfig.getToleratedInsecureOptions(),
                                 attestationSecurityConfig.getIgnoredSgxAdvisories(),
                                 attestationSecurityConfig.getMode(),
-                                attestationSecurityConfig.getUrl()
+                                validAttestationServer
                         )
                 )
                 .build();
     }
 
-    private SconeEnclave toSconeEnclave(SecretEnclaveBase enclaveBase, String command, boolean addJavaEnvVars) {
+    private URL resolveValidAttestationServer() {
+        // The keys of the Map are shuffled to avoid always querying servers in the same order
+        final List<URL> urls = new ArrayList<>(azureAttestationServersMap.keySet());
+        Collections.shuffle(urls);
+        for (final URL attestationServerUrl : urls) {
+            try {
+                azureAttestationServersMap.get(attestationServerUrl).canFetchOpenIdMetadata();
+                log.debug("Resolved attestation server [url:{}]", attestationServerUrl);
+                return attestationServerUrl;
+            } catch (Exception e) {
+                log.error("Failed to check Azure attestation server liveness [url:{}]", attestationServerUrl, e);
+            }
+        }
+        return null;
+    }
+
+    private SconeEnclave toSconeEnclave(final SecretEnclaveBase enclaveBase,
+                                        final String command,
+                                        final boolean addJavaEnvVars) {
         final HashMap<String, Object> enclaveEnvironment = new HashMap<>(enclaveBase.getEnvironment());
         if (addJavaEnvVars) {
             enclaveEnvironment.putAll(
