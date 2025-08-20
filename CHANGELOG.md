@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.1.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.0.0...v9.1.0) (2025-08-20)
+
+
+### Features
+
+* configure the SMS with a list of Azure attestation servers ([#306](https://github.com/iExecBlockchainComputing/iexec-sms/issues/306)) ([2e890c0](https://github.com/iExecBlockchainComputing/iexec-sms/commit/2e890c02be9f4968bdaa5b8b5142baa235b71a90))
+
+
+### Bug Fixes
+
+* last deprecations mention a wrong version ([#304](https://github.com/iExecBlockchainComputing/iexec-sms/issues/304)) ([4626a50](https://github.com/iExecBlockchainComputing/iexec-sms/commit/4626a50a03f7a720228c1380be2845ea22f34043))
+* set level to INFO to track resolved attestation server for Scone enclaves ([#308](https://github.com/iExecBlockchainComputing/iexec-sms/issues/308)) ([ea2ed5b](https://github.com/iExecBlockchainComputing/iexec-sms/commit/ea2ed5b73357d3589d614f94be75470c5588a7de))
+
 ## [[9.0.0]](https://github.com/iExecBlockchainComputing/iexec-sms/releases/tag/v9.0.0) 2025-03-28
 
 ### New Features
