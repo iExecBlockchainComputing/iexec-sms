@@ -142,7 +142,7 @@ public class SconeSessionMakerService {
         for (final URL attestationServerUrl : urls) {
             try {
                 azureAttestationServersMap.get(attestationServerUrl).canFetchOpenIdMetadata();
-                log.debug("Resolved attestation server [url:{}]", attestationServerUrl);
+                log.info("Resolved attestation server [url:{}]", attestationServerUrl);
                 return attestationServerUrl;
             } catch (Exception e) {
                 log.error("Failed to check Azure attestation server liveness [url:{}]", attestationServerUrl, e);
