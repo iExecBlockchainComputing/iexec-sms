@@ -209,8 +209,8 @@ public class TeeController {
         String taskId = workerpoolAuthorization.getChainTaskId();
         workerAddress = Keys.toChecksumAddress(workerAddress);
         String attestingEnclave = workerpoolAuthorization.getEnclaveChallenge();
-        log.info("TEE session request [taskId:{}, workerAddress:{}]",
-                taskId, workerAddress);
+        log.info("TEE session request [taskId:{}, dealId:{}, taskIndex:{}, workerAddress:{}]",
+                taskId, workerpoolAuthorization.getDealId(), workerpoolAuthorization.getTaskIndex(), workerAddress);
         try {
             TeeSessionGenerationResponse teeSessionGenerationResponse = teeSessionService
                     .generateTeeSession(taskId, workerAddress, attestingEnclave);

@@ -16,16 +16,22 @@
 
 package com.iexec.sms.tee.session.base;
 
+import com.iexec.common.utils.FeignBuilder;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
+import com.iexec.commons.poco.bulk.DatasetCid;
+import com.iexec.commons.poco.chain.ChainDataset;
 import com.iexec.commons.poco.chain.DealParams;
+import com.iexec.commons.poco.order.DatasetOrder;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.secret.compute.*;
 import com.iexec.sms.secret.web2.Web2Secret;
 import com.iexec.sms.secret.web2.Web2SecretHeader;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
+import com.iexec.sms.tee.bulk.IpfsClient;
 import com.iexec.sms.tee.challenge.EthereumCredentials;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -35,11 +41,13 @@ import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
 import com.iexec.sms.tee.session.scone.SconeSessionMakerService;
+import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
 import static com.iexec.commons.poco.chain.DealParams.DROPBOX_RESULT_STORAGE_PROVIDER;
@@ -60,16 +68,19 @@ public class SecretSessionBaseService {
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
 
+    private final IexecHubService iexecHubService;
     private final Web3SecretService web3SecretService;
     private final Web2SecretService web2SecretService;
     private final TeeChallengeService teeChallengeService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
+            final IexecHubService iexecHubService,
             final Web3SecretService web3SecretService,
             final Web2SecretService web2SecretService,
             final TeeChallengeService teeChallengeService,
             final TeeTaskComputeSecretService teeTaskComputeSecretService) {
+        this.iexecHubService = iexecHubService;
         this.web3SecretService = web3SecretService;
         this.web2SecretService = web2SecretService;
         this.teeChallengeService = teeChallengeService;
@@ -99,7 +110,8 @@ public class SecretSessionBaseService {
         final TaskDescription taskDescription = request.getTaskDescription();
         final Map<String, String> signTokens = getSignTokens(request);
         // pre-compute
-        final boolean isPreComputeRequired = taskDescription.containsDataset() || taskDescription.containsInputFiles();
+        final boolean isPreComputeRequired = taskDescription.containsDataset() || taskDescription.containsInputFiles()
+                || !StringUtils.isEmpty(taskDescription.getDealParams().getBulkCid());
         if (isPreComputeRequired) {
             sessionBase.preCompute(getPreComputeTokens(request, signTokens));
         }
@@ -151,6 +163,28 @@ public class SecretSessionBaseService {
 
     // region pre-compute
 
+    private List<DatasetOrder> fetchData(final TaskDescription taskDescription) {
+        // should be configured as URL
+        final IpfsClient ipfsClient = FeignBuilder.createBuilder(Logger.Level.BASIC)
+                .target(IpfsClient.class, "http://ipfs:8080");
+        final String bulkCid = taskDescription.getDealParams().getBulkCid();
+        log.info("bulk [chainTaskId:{}, botIndex:{}, cid:{}]",
+                taskDescription.getChainTaskId(), taskDescription.getBotIndex(), bulkCid);
+        try {
+            // can be optimized and cached with final deadline
+            final Map<Integer, DatasetCid> datasets = ipfsClient.readBulkCid(bulkCid);
+            for (final Map.Entry<Integer, DatasetCid> entry : datasets.entrySet()) {
+                log.debug("{} -> {}", entry.getKey(), entry.getValue());
+            }
+
+            final List<DatasetOrder> tempList = ipfsClient.readOrders(datasets.get(taskDescription.getBotIndex()).orders());
+            return List.copyOf(tempList);
+        } catch (Exception e) {
+            log.error("Error during bulk computation", e);
+            return List.of();
+        }
+    }
+
     /**
      * Get tokens to be injected in the pre-compute enclave.
      *
@@ -169,6 +203,31 @@ public class SecretSessionBaseService {
         tokens.put(IEXEC_PRE_COMPUTE_OUT.name(), IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED.name(), taskDescription.containsDataset());
+
+        if (!StringUtils.isEmpty(taskDescription.getDealParams().getBulkCid())) {
+            final List<DatasetOrder> orders = fetchData(taskDescription);
+            tokens.put("BULK_SIZE", orders.size());
+            for (int i = 0; i < orders.size(); i++) {
+                final DatasetOrder order = orders.get(i);
+                log.info("order found {}", order);
+                final ChainDataset dataset = iexecHubService.getChainDataset(order.getDataset()).orElse(null);
+                if (dataset == null) {
+                    continue;
+                }
+                final String prefix = "BULK_DATASET_" + i;
+                // verify order
+                web3SecretService
+                        .getDecryptedValue(order.getDataset())
+                        .ifPresent(datasetKey ->
+                                tokens.putAll(Map.of(
+                                        prefix + "_URL", dataset.getMultiaddr(),
+                                        prefix + "_CHECKSUM", dataset.getChecksum(),
+                                        prefix + "_KEY", datasetKey,
+                                        prefix + "_FILENAME", dataset.getChainDatasetId()
+                                ))
+                        );
+            }
+        }
 
         final List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
@@ -243,6 +302,14 @@ public class SecretSessionBaseService {
         tokens.putAll(computeSecrets);
         // trusted env variables (not confidential)
         tokens.putAll(IexecEnvUtils.getComputeStageEnvMap(taskDescription));
+
+        if (!StringUtils.isEmpty(taskDescription.getDealParams().getBulkCid())) {
+            final String value = fetchData(taskDescription).stream()
+                    .map(DatasetOrder::getDataset)
+                    .collect(Collectors.joining("-"));
+            tokens.put("IEXEC_DATASET_FILENAME", value);
+        }
+
         return enclaveBase
                 .environment(tokens)
                 .build();
