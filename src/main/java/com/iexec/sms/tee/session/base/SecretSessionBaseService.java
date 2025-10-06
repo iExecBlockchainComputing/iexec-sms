@@ -170,17 +170,22 @@ public class SecretSessionBaseService {
 
     // region pre-compute
 
+    /**
+     * Fetch dataset orders related to a bulk processing slice from IPFS
+     *
+     * @param taskDescription A task part of a bulk processing deal and corresponding to one of the slices
+     * @return The list of {@code DatasetOrder} found in the slice, or an empty list if any issue arises
+     */
     private List<DatasetOrder> fetchDatasetOrders(final TaskDescription taskDescription) {
-        final String bulkCid = taskDescription.getDealParams().getBulkCid();
-        log.info("bulk [chainTaskId:{}, botIndex:{}, cid:{}]",
-                taskDescription.getChainTaskId(), taskDescription.getBotIndex(), bulkCid);
         try {
-            // can be optimized and cached with final deadline
-            final List<String> datasets = ipfsClient.readBulkCid(bulkCid);
-            final int bulkIdx = taskDescription.getBotIndex() - taskDescription.getBotFirstIndex();
-            final List<DatasetOrder> tempList = ipfsClient.readOrders(datasets.get(bulkIdx));
+            final String bulkCid = taskDescription.getDealParams().getBulkCid();
+            final int bulkSliceIndex = taskDescription.getBotIndex() - taskDescription.getBotFirstIndex();
+            log.info("Fetching dataset orders for a bulk slice [chainTaskId:{}, bulkCid:{}, bulkSliceIndex:{}]",
+                    taskDescription.getChainTaskId(), bulkCid, bulkSliceIndex);
+            final List<String> bulkSlices = ipfsClient.readBulkCid(bulkCid);
+            final List<DatasetOrder> tempList = ipfsClient.readOrders(bulkSlices.get(bulkSliceIndex));
             return List.copyOf(tempList);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Error during bulk computation", e);
             return List.of();
         }
