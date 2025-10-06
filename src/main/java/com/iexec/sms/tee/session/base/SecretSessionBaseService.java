@@ -67,8 +67,12 @@ import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 public class SecretSessionBaseService {
 
     static final String EMPTY_STRING_VALUE = "";
-    static final String BULK_DATASET_PREFIX = "BULK_DATASET_";
     static final BigInteger BULK_DATASET_VOLUME = BigInteger.TWO.pow(53).subtract(BigInteger.ONE);
+    static final String BULK_DATASET_PREFIX = "BULK_DATASET_";
+    static final String BULK_DATASET_URL_SUFFIX = "_URL";
+    static final String BULK_DATASET_CHECKSUM_SUFFIX = "_CHECKSUM";
+    static final String BULK_DATASET_KEY_SUFFIX = "_KEY";
+    static final String BULK_DATASET_FILENAME_SUFFIX = "_FILENAME";
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
 
@@ -199,17 +203,17 @@ public class SecretSessionBaseService {
         if (isBulkDatasetOrderValid(taskDescription, datasetOrder) && dataset != null) {
             final String datasetKey = web3SecretService.getDecryptedValue(datasetOrder.getDataset()).orElse("");
             return Map.of(
-                    prefix + "_URL", dataset.getMultiaddr(),
-                    prefix + "_CHECKSUM", dataset.getChecksum(),
-                    prefix + "_KEY", datasetKey,
-                    prefix + "_FILENAME", datasetOrder.getDataset()
+                    prefix + BULK_DATASET_URL_SUFFIX, dataset.getMultiaddr(),
+                    prefix + BULK_DATASET_CHECKSUM_SUFFIX, dataset.getChecksum(),
+                    prefix + BULK_DATASET_KEY_SUFFIX, datasetKey,
+                    prefix + BULK_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
             );
         } else {
             return Map.of(
-                    prefix + "_URL", "",
-                    prefix + "_CHECKSUM", "",
-                    prefix + "_KEY", "",
-                    prefix + "_FILENAME", datasetOrder.getDataset()
+                    prefix + BULK_DATASET_URL_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + BULK_DATASET_CHECKSUM_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + BULK_DATASET_KEY_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + BULK_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
             );
         }
     }
@@ -225,11 +229,11 @@ public class SecretSessionBaseService {
             final boolean isVolumeValid = BULK_DATASET_VOLUME.equals(datasetOrder.getVolume());
             final boolean isOrderNotFullyConsumed = !BULK_DATASET_VOLUME.equals(consumedVolume);
             final boolean isTagValid = taskDescription.getTag().equals(datasetOrder.getTag());
-            log.info("check bulk dataset order [chainTaskId:{}, dataset:{}, owner:{}, isSignedByOwner:{}, isVolumeValid:{}, isOrderNotFullyConsumed:{}, isTagValid:{}]",
+            log.info("Check bulk dataset order [chainTaskId:{}, dataset:{}, owner:{}, isSignedByOwner:{}, isVolumeValid:{}, isOrderNotFullyConsumed:{}, isTagValid:{}]",
                     taskDescription.getChainTaskId(), datasetOrder.getDataset(), owner, isSignedByOwner, isVolumeValid, isOrderNotFullyConsumed, isTagValid);
             return isSignedByOwner && isVolumeValid && isOrderNotFullyConsumed && isTagValid;
         } catch (Exception e) {
-            log.error("failed to perform all checks on dataset [chainTaskId:{}, dataset:{}]",
+            log.error("Failed to perform all checks on dataset [chainTaskId:{}, dataset:{}]",
                     taskDescription.getChainTaskId(), datasetOrder.getDataset());
             return false;
         }
@@ -259,7 +263,6 @@ public class SecretSessionBaseService {
             tokens.put(BULK_SIZE.name(), orders.size());
             for (int i = 0; i < orders.size(); i++) {
                 final DatasetOrder order = orders.get(i);
-                log.info("order found {}", order);
                 tokens.putAll(getBulkDatasetTokens(i, taskDescription, order));
             }
         }
@@ -344,7 +347,7 @@ public class SecretSessionBaseService {
                     .toList();
             tokens.put(BULK_SIZE.name(), addresses.size());
             for (int i = 0; i < addresses.size(); i++) {
-                tokens.put(BULK_DATASET_PREFIX + (i + 1) + "_FILENAME", addresses.get(i));
+                tokens.put(BULK_DATASET_PREFIX + (i + 1) + BULK_DATASET_FILENAME_SUFFIX, addresses.get(i));
             }
         }
 
