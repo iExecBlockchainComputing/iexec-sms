@@ -16,7 +16,6 @@
 
 package com.iexec.sms.tee.session.base;
 
-import com.iexec.common.utils.FeignBuilder;
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.commons.poco.chain.ChainDataset;
@@ -42,10 +41,8 @@ import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
 import com.iexec.sms.tee.session.gramine.GramineSessionMakerService;
 import com.iexec.sms.tee.session.scone.SconeSessionMakerService;
-import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -84,7 +81,7 @@ public class SecretSessionBaseService {
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
-            @Value("${ipfs-gateway}") final String ipfsGatewayUrl,
+            final IpfsClient ipfsClient,
             final IexecHubService iexecHubService,
             final Web3SecretService web3SecretService,
             final Web2SecretService web2SecretService,
@@ -95,9 +92,7 @@ public class SecretSessionBaseService {
         this.web2SecretService = web2SecretService;
         this.teeChallengeService = teeChallengeService;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
-        this.ipfsClient = StringUtils.isEmpty(ipfsGatewayUrl)
-                ? null
-                : FeignBuilder.createBuilder(Logger.Level.BASIC).target(IpfsClient.class, ipfsGatewayUrl);
+        this.ipfsClient = ipfsClient;
     }
 
     /**
