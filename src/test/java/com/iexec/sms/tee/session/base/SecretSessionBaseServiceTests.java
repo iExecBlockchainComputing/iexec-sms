@@ -54,7 +54,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
@@ -244,9 +243,28 @@ class SecretSessionBaseServiceTests {
     // endregion
 
     // region getPreComputeTokens
+    private DatasetOrder createDatasetOrderForBulk(final EIP712Domain pocoDomain,
+                                                   final Credentials credentials,
+                                                   final BigInteger datasetPrice,
+                                                   final BigInteger volume,
+                                                   final OrderTag orderTag) {
+        final SignerService signerService = new SignerService(null, 65535, credentials);
+        final String datasetAddress = createEthereumAddress();
+        final DatasetOrder datasetOrder = DatasetOrder.builder()
+                .dataset(datasetAddress)
+                .datasetprice(datasetPrice)
+                .volume(volume)
+                .tag(orderTag.getValue())
+                .apprestrict(BytesUtils.EMPTY_ADDRESS)
+                .requesterrestrict(BytesUtils.EMPTY_ADDRESS)
+                .workerpoolrestrict(BytesUtils.EMPTY_ADDRESS)
+                .salt(Hash.sha3String(RandomStringUtils.randomAlphanumeric(20)))
+                .build();
+        return (DatasetOrder) signerService.signOrderForDomain(datasetOrder, pocoDomain);
+    }
+
     @Test
     void shouldGetPreComputeBulkProcessingTokensForInvalidOrder() throws Exception {
-        ReflectionTestUtils.setField(teeSecretsService, "ipfsClient", ipfsClient);
         final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
         final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
@@ -255,19 +273,9 @@ class SecretSessionBaseServiceTests {
                 .build();
         final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
         final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
-        final SignerService signerService = new SignerService(null, 65535, credentials);
-        final String datasetAddress = createEthereumAddress();
-        final DatasetOrder datasetOrder = DatasetOrder.builder()
-                .dataset(datasetAddress)
-                .datasetprice(BigInteger.ONE)
-                .volume(BigInteger.ONE)
-                .tag(OrderTag.STANDARD.getValue())
-                .apprestrict(BytesUtils.EMPTY_ADDRESS)
-                .requesterrestrict(BytesUtils.EMPTY_ADDRESS)
-                .workerpoolrestrict(BytesUtils.EMPTY_ADDRESS)
-                .salt(Hash.sha3String(RandomStringUtils.randomAlphanumeric(20)))
-                .build();
-        final DatasetOrder signedDatasetOrder = (DatasetOrder) signerService.signOrderForDomain(datasetOrder, pocoDomain);
+        final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
+                pocoDomain, credentials, BigInteger.ONE, BigInteger.ONE, OrderTag.STANDARD);
+        final String datasetAddress = signedDatasetOrder.getDataset();
 
         when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
         when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(signedDatasetOrder));
@@ -294,7 +302,6 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetPreComputeBulkProcessingTokensForValidOrder() throws Exception {
-        ReflectionTestUtils.setField(teeSecretsService, "ipfsClient", ipfsClient);
         final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
         final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
@@ -303,19 +310,9 @@ class SecretSessionBaseServiceTests {
                 .build();
         final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
         final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
-        final SignerService signerService = new SignerService(null, 65535, credentials);
-        final String datasetAddress = createEthereumAddress();
-        final DatasetOrder datasetOrder = DatasetOrder.builder()
-                .dataset(datasetAddress)
-                .datasetprice(BigInteger.ZERO)
-                .volume(BULK_DATASET_VOLUME)
-                .tag(OrderTag.TEE_SCONE.getValue())
-                .apprestrict(BytesUtils.EMPTY_ADDRESS)
-                .requesterrestrict(BytesUtils.EMPTY_ADDRESS)
-                .workerpoolrestrict(BytesUtils.EMPTY_ADDRESS)
-                .salt(Hash.sha3String(RandomStringUtils.randomAlphanumeric(20)))
-                .build();
-        final DatasetOrder signedDatasetOrder = (DatasetOrder) signerService.signOrderForDomain(datasetOrder, pocoDomain);
+        final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
+                pocoDomain, credentials, BigInteger.ZERO, BULK_DATASET_VOLUME, OrderTag.TEE_SCONE);
+        final String datasetAddress = signedDatasetOrder.getDataset();
         final ChainDataset chainDataset = ChainDataset.builder()
                 .chainDatasetId(datasetAddress)
                 .multiaddr(DATASET_URL)
@@ -444,7 +441,6 @@ class SecretSessionBaseServiceTests {
     // region getAppTokens
     @Test
     void shouldGetAppComputeBulkProcessingTokens() throws TeeSessionGenerationException {
-        ReflectionTestUtils.setField(teeSecretsService, "ipfsClient", ipfsClient);
         final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
         final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
