@@ -42,8 +42,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import static com.iexec.sms.tee.session.TeeSessionTestUtils.createSessionRequest;
-import static com.iexec.sms.tee.session.TeeSessionTestUtils.createTaskDescription;
+import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -96,7 +95,7 @@ class SconeSessionMakerServiceTests {
                 .fingerprint(APP_FINGERPRINT)
                 .entrypoint(APP_ENTRYPOINT)
                 .build();
-        request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        request = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
 
         final SecretEnclaveBase preCompute = SecretEnclaveBase.builder()
                 .name("pre-compute")

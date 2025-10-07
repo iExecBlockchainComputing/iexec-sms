@@ -18,8 +18,10 @@ package com.iexec.sms.tee.session;
 
 import com.iexec.common.utils.FileHashUtils;
 import com.iexec.commons.poco.chain.DealParams;
+import com.iexec.commons.poco.order.OrderTag;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
+import com.iexec.commons.poco.utils.BytesUtils;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
@@ -36,6 +38,7 @@ import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 
 @Slf4j
 public class TeeSessionTestUtils {
+    public static final String TEST_DEAL_ID = "dealId";
     public static final String TASK_ID = "taskId";
     public static final String SESSION_ID = "sessionId";
     public static final String WORKER_ADDRESS = "workerAddress";
@@ -134,27 +137,35 @@ public class TeeSessionTestUtils {
                 .iexecSecrets(Map.of("1", REQUESTER_SECRET_KEY_1, "2", REQUESTER_SECRET_KEY_2));
     }
 
-    public static TaskDescription.TaskDescriptionBuilder createTaskDescription(TeeEnclaveConfiguration enclaveConfig) {
+    public static TaskDescription.TaskDescriptionBuilder createTaskDescription(final DealParams dealParams,
+                                                                               final TeeEnclaveConfiguration enclaveConfig) {
         final String appAddress = createEthereumAddress();
         final String requesterAddress = createEthereumAddress();
         final String beneficiaryAddress = createEthereumAddress();
         final String workerpoolAddress = createEthereumAddress();
-        final DealParams dealParams = createDealParams().build();
         return TaskDescription.builder()
-                .workerpoolOwner(workerpoolAddress)
+                .chainDealId(TEST_DEAL_ID)
                 .chainTaskId(TASK_ID)
+                .workerpoolOwner(workerpoolAddress)
                 .appUri(APP_URI)
                 .appAddress(appAddress)
                 .appEnclaveConfiguration(enclaveConfig)
-                .datasetAddress(DATASET_ADDRESS)
-                .datasetUri(DATASET_URL)
-                .datasetChecksum(DATASET_CHECKSUM)
+                .datasetAddress(BytesUtils.EMPTY_ADDRESS)
+                .tag(OrderTag.TEE_SCONE.getValue())
                 .requester(requesterAddress)
                 .beneficiary(beneficiaryAddress)
                 .dealParams(dealParams)
                 .botSize(1)
                 .botFirstIndex(0)
                 .botIndex(0);
+    }
+
+    public static TaskDescription.TaskDescriptionBuilder createTaskDescriptionWithDataset(final DealParams dealParams,
+                                                                                          final TeeEnclaveConfiguration enclaveConfiguration) {
+        return createTaskDescription(dealParams, enclaveConfiguration)
+                .datasetAddress(DATASET_ADDRESS)
+                .datasetUri(DATASET_URL)
+                .datasetChecksum(DATASET_CHECKSUM);
     }
     //endregion
 }

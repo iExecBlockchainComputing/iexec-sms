@@ -18,14 +18,20 @@ package com.iexec.sms.tee.session.base;
 
 import com.iexec.common.utils.IexecEnvUtils;
 import com.iexec.common.utils.IexecFileHelper;
+import com.iexec.commons.poco.chain.ChainDataset;
 import com.iexec.commons.poco.chain.DealParams;
+import com.iexec.commons.poco.order.DatasetOrder;
+import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
+import com.iexec.commons.poco.utils.SignatureUtils;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.secret.compute.*;
 import com.iexec.sms.secret.web2.Web2Secret;
 import com.iexec.sms.secret.web2.Web2SecretHeader;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
+import com.iexec.sms.tee.bulk.IpfsClient;
 import com.iexec.sms.tee.challenge.EthereumCredentials;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
@@ -39,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.util.*;
 
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
@@ -57,23 +64,35 @@ import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 public class SecretSessionBaseService {
 
     static final String EMPTY_STRING_VALUE = "";
+    static final BigInteger BULK_DATASET_VOLUME = BigInteger.TWO.pow(53).subtract(BigInteger.ONE);
+    static final String BULK_DATASET_PREFIX = "BULK_DATASET_";
+    static final String BULK_DATASET_URL_SUFFIX = "_URL";
+    static final String BULK_DATASET_CHECKSUM_SUFFIX = "_CHECKSUM";
+    static final String BULK_DATASET_KEY_SUFFIX = "_KEY";
+    static final String BULK_DATASET_FILENAME_SUFFIX = "_FILENAME";
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
 
+    private final IpfsClient ipfsClient;
+    private final IexecHubService iexecHubService;
     private final Web3SecretService web3SecretService;
     private final Web2SecretService web2SecretService;
     private final TeeChallengeService teeChallengeService;
     private final TeeTaskComputeSecretService teeTaskComputeSecretService;
 
     public SecretSessionBaseService(
+            final IpfsClient ipfsClient,
+            final IexecHubService iexecHubService,
             final Web3SecretService web3SecretService,
             final Web2SecretService web2SecretService,
             final TeeChallengeService teeChallengeService,
             final TeeTaskComputeSecretService teeTaskComputeSecretService) {
+        this.iexecHubService = iexecHubService;
         this.web3SecretService = web3SecretService;
         this.web2SecretService = web2SecretService;
         this.teeChallengeService = teeChallengeService;
         this.teeTaskComputeSecretService = teeTaskComputeSecretService;
+        this.ipfsClient = ipfsClient;
     }
 
     /**
@@ -99,8 +118,7 @@ public class SecretSessionBaseService {
         final TaskDescription taskDescription = request.getTaskDescription();
         final Map<String, String> signTokens = getSignTokens(request);
         // pre-compute
-        final boolean isPreComputeRequired = taskDescription.containsDataset() || taskDescription.containsInputFiles();
-        if (isPreComputeRequired) {
+        if (taskDescription.requiresPreCompute()) {
             sessionBase.preCompute(getPreComputeTokens(request, signTokens));
         }
         // app
@@ -152,6 +170,71 @@ public class SecretSessionBaseService {
     // region pre-compute
 
     /**
+     * Fetch dataset orders related to a bulk processing slice from IPFS
+     *
+     * @param taskDescription A task part of a bulk processing deal and corresponding to one of the slices
+     * @return The list of {@code DatasetOrder} found in the slice, or an empty list if any issue arises
+     */
+    private List<DatasetOrder> fetchDatasetOrders(final TaskDescription taskDescription) {
+        try {
+            final String bulkCid = taskDescription.getDealParams().getBulkCid();
+            final int bulkSliceIndex = taskDescription.getBotIndex() - taskDescription.getBotFirstIndex();
+            log.info("Fetching dataset orders for a bulk slice [chainTaskId:{}, bulkCid:{}, bulkSliceIndex:{}]",
+                    taskDescription.getChainTaskId(), bulkCid, bulkSliceIndex);
+            final List<String> bulkSlices = ipfsClient.readBulkCid(bulkCid);
+            final List<DatasetOrder> tempList = ipfsClient.readOrders(bulkSlices.get(bulkSliceIndex));
+            return List.copyOf(tempList);
+        } catch (final Exception e) {
+            log.error("Error during bulk computation", e);
+            return List.of();
+        }
+    }
+
+    private Map<String, Object> getBulkDatasetTokens(final int index,
+                                                     final TaskDescription taskDescription,
+                                                     final DatasetOrder datasetOrder) {
+        final String prefix = BULK_DATASET_PREFIX + (index + 1);
+        final ChainDataset dataset = iexecHubService.getChainDataset(datasetOrder.getDataset()).orElse(null);
+        if (isBulkDatasetOrderValid(taskDescription, datasetOrder) && dataset != null) {
+            final String datasetKey = web3SecretService.getDecryptedValue(datasetOrder.getDataset()).orElse("");
+            return Map.of(
+                    prefix + BULK_DATASET_URL_SUFFIX, dataset.getMultiaddr(),
+                    prefix + BULK_DATASET_CHECKSUM_SUFFIX, dataset.getChecksum(),
+                    prefix + BULK_DATASET_KEY_SUFFIX, datasetKey,
+                    prefix + BULK_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
+            );
+        } else {
+            return Map.of(
+                    prefix + BULK_DATASET_URL_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + BULK_DATASET_CHECKSUM_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + BULK_DATASET_KEY_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + BULK_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
+            );
+        }
+    }
+
+    boolean isBulkDatasetOrderValid(final TaskDescription taskDescription, final DatasetOrder datasetOrder) {
+        try {
+            final Signature signature = new Signature(datasetOrder.getSign());
+            final String orderHash = datasetOrder.computeHash(iexecHubService.getOrdersDomain());
+            final String owner = iexecHubService.getOwner(datasetOrder.getDataset());
+            final boolean isSignedByOwner = SignatureUtils.doesSignatureMatchesAddress(
+                    signature.getR(), signature.getS(), orderHash, owner);
+            final BigInteger consumedVolume = iexecHubService.viewConsumed(orderHash);
+            final boolean isVolumeValid = BULK_DATASET_VOLUME.equals(datasetOrder.getVolume());
+            final boolean isOrderNotFullyConsumed = !BULK_DATASET_VOLUME.equals(consumedVolume);
+            final boolean isTagValid = taskDescription.getTag().equals(datasetOrder.getTag());
+            log.info("Check bulk dataset order [chainTaskId:{}, dataset:{}, owner:{}, isSignedByOwner:{}, isVolumeValid:{}, isOrderNotFullyConsumed:{}, isTagValid:{}]",
+                    taskDescription.getChainTaskId(), datasetOrder.getDataset(), owner, isSignedByOwner, isVolumeValid, isOrderNotFullyConsumed, isTagValid);
+            return isSignedByOwner && isVolumeValid && isOrderNotFullyConsumed && isTagValid;
+        } catch (Exception e) {
+            log.error("Failed to perform all checks on dataset [chainTaskId:{}, dataset:{}]",
+                    taskDescription.getChainTaskId(), datasetOrder.getDataset());
+            return false;
+        }
+    }
+
+    /**
      * Get tokens to be injected in the pre-compute enclave.
      *
      * @param request    Session request details
@@ -169,6 +252,15 @@ public class SecretSessionBaseService {
         tokens.put(IEXEC_PRE_COMPUTE_OUT.name(), IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
         tokens.put(IS_DATASET_REQUIRED.name(), taskDescription.containsDataset());
+
+        if (taskDescription.isBulkRequest()) {
+            final List<DatasetOrder> orders = fetchDatasetOrders(taskDescription);
+            tokens.put(BULK_SIZE.name(), orders.size());
+            for (int i = 0; i < orders.size(); i++) {
+                final DatasetOrder order = orders.get(i);
+                tokens.putAll(getBulkDatasetTokens(i, taskDescription, order));
+            }
+        }
 
         final List<String> trustedEnv = new ArrayList<>();
         if (taskDescription.containsDataset()) {
@@ -243,6 +335,17 @@ public class SecretSessionBaseService {
         tokens.putAll(computeSecrets);
         // trusted env variables (not confidential)
         tokens.putAll(IexecEnvUtils.getComputeStageEnvMap(taskDescription));
+
+        if (taskDescription.isBulkRequest()) {
+            final List<String> addresses = fetchDatasetOrders(taskDescription).stream()
+                    .map(DatasetOrder::getDataset)
+                    .toList();
+            tokens.put(BULK_SIZE.name(), addresses.size());
+            for (int i = 0; i < addresses.size(); i++) {
+                tokens.put(BULK_DATASET_PREFIX + (i + 1) + BULK_DATASET_FILENAME_SUFFIX, addresses.get(i));
+            }
+        }
+
         return enclaveBase
                 .environment(tokens)
                 .build();

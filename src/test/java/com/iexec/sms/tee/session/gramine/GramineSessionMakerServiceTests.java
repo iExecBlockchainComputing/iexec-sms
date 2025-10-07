@@ -52,7 +52,7 @@ class GramineSessionMakerServiceTests {
         TeeEnclaveConfiguration enclaveConfig = TeeEnclaveConfiguration.builder()
                 .fingerprint(APP_FINGERPRINT)
                 .build();
-        TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        TeeSessionRequest request = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
 
         SecretEnclaveBase appCompute = SecretEnclaveBase.builder()
                 .name("app")

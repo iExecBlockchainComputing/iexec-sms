@@ -16,7 +16,12 @@
 
 package com.iexec.sms.tee.session.base;
 
+import com.iexec.commons.poco.chain.ChainDataset;
 import com.iexec.commons.poco.chain.DealParams;
+import com.iexec.commons.poco.chain.SignerService;
+import com.iexec.commons.poco.eip712.EIP712Domain;
+import com.iexec.commons.poco.order.DatasetOrder;
+import com.iexec.commons.poco.order.OrderTag;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
 import com.iexec.commons.poco.tee.TeeFramework;
@@ -24,17 +29,20 @@ import com.iexec.commons.poco.utils.BytesUtils;
 import com.iexec.sms.api.TeeSessionGenerationError;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
+import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecret;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretHeader;
 import com.iexec.sms.secret.compute.TeeTaskComputeSecretService;
 import com.iexec.sms.secret.web2.Web2Secret;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
+import com.iexec.sms.tee.bulk.IpfsClient;
 import com.iexec.sms.tee.challenge.EthereumCredentials;
 import com.iexec.sms.tee.challenge.TeeChallenge;
 import com.iexec.sms.tee.challenge.TeeChallengeService;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,17 +54,21 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Hash;
+import org.web3j.crypto.Keys;
 
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
+import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 import static com.iexec.sms.tee.session.TeeSessionTestUtils.*;
-import static com.iexec.sms.tee.session.base.SecretSessionBaseService.EMPTY_STRING_VALUE;
-import static com.iexec.sms.tee.session.base.SecretSessionBaseService.IEXEC_REQUESTER_SECRET_PREFIX;
+import static com.iexec.sms.tee.session.base.SecretSessionBaseService.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -92,6 +104,10 @@ class SecretSessionBaseServiceTests {
             .heapSizeInBytes(1L)
             .build();
     @Mock
+    private IpfsClient ipfsClient;
+    @Mock
+    private IexecHubService iexecHubService;
+    @Mock
     private Web3SecretService web3SecretService;
     @Mock
     private Web2SecretService web2SecretService;
@@ -109,7 +125,7 @@ class SecretSessionBaseServiceTests {
     // region getSecretsTokens
     @Test
     void shouldGetSecretsTokensWithPreCompute() throws Exception {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
+        final TaskDescription taskDescription = createTaskDescriptionWithDataset(createDealParams().build(), enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         // pre
@@ -158,10 +174,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetSecretsTokensWithoutPreCompute() throws Exception {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
-                .datasetAddress(BytesUtils.EMPTY_ADDRESS)
-                .dealParams(DealParams.builder().build())
-                .build();
+        final TaskDescription taskDescription = createTaskDescription(DealParams.builder().build(), enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         final Web2Secret requesterStorageToken = new Web2Secret(taskDescription.getRequester(), IEXEC_RESULT_IEXEC_IPFS_TOKEN, STORAGE_TOKEN);
@@ -230,9 +243,127 @@ class SecretSessionBaseServiceTests {
     // endregion
 
     // region getPreComputeTokens
+    private DatasetOrder createDatasetOrderForBulk(final EIP712Domain pocoDomain,
+                                                   final Credentials credentials,
+                                                   final BigInteger datasetPrice,
+                                                   final BigInteger volume,
+                                                   final OrderTag orderTag) {
+        final SignerService signerService = new SignerService(null, 65535, credentials);
+        final String datasetAddress = createEthereumAddress();
+        final DatasetOrder datasetOrder = DatasetOrder.builder()
+                .dataset(datasetAddress)
+                .datasetprice(datasetPrice)
+                .volume(volume)
+                .tag(orderTag.getValue())
+                .apprestrict(BytesUtils.EMPTY_ADDRESS)
+                .requesterrestrict(BytesUtils.EMPTY_ADDRESS)
+                .workerpoolrestrict(BytesUtils.EMPTY_ADDRESS)
+                .salt(Hash.sha3String(RandomStringUtils.randomAlphanumeric(20)))
+                .build();
+        return (DatasetOrder) signerService.signOrderForDomain(datasetOrder, pocoDomain);
+    }
+
     @Test
-    void shouldGetPreComputeTokens() throws Exception {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
+    void shouldGetPreComputeBulkProcessingTokensForInvalidOrder() throws Exception {
+        final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
+                pocoDomain, credentials, BigInteger.ONE, BigInteger.ONE, OrderTag.STANDARD);
+        final String datasetAddress = signedDatasetOrder.getDataset();
+
+        when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
+        when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(signedDatasetOrder));
+        when(iexecHubService.getChainDataset(datasetAddress)).thenReturn(Optional.of(ChainDataset.builder().chainDatasetId(datasetAddress).build()));
+        when(iexecHubService.getOrdersDomain()).thenReturn(pocoDomain);
+        when(iexecHubService.getOwner(datasetAddress)).thenReturn(createEthereumAddress());
+        when(iexecHubService.viewConsumed(signedDatasetOrder.computeHash(pocoDomain))).thenReturn(BigInteger.ONE);
+
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
+
+        assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
+        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
+                Map.entry("BULK_SIZE", 1),
+                Map.entry("BULK_DATASET_1_URL", ""),
+                Map.entry("BULK_DATASET_1_CHECKSUM", ""),
+                Map.entry("BULK_DATASET_1_KEY", ""),
+                Map.entry("BULK_DATASET_1_FILENAME", datasetAddress)
+        ));
+    }
+
+    @Test
+    void shouldGetPreComputeBulkProcessingTokensForValidOrder() throws Exception {
+        final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
+        final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
+                pocoDomain, credentials, BigInteger.ZERO, BULK_DATASET_VOLUME, OrderTag.TEE_SCONE);
+        final String datasetAddress = signedDatasetOrder.getDataset();
+        final ChainDataset chainDataset = ChainDataset.builder()
+                .chainDatasetId(datasetAddress)
+                .multiaddr(DATASET_URL)
+                .checksum(DATASET_CHECKSUM)
+                .build();
+
+        when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
+        when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(signedDatasetOrder));
+        when(iexecHubService.getChainDataset(datasetAddress)).thenReturn(Optional.of(chainDataset));
+        when(iexecHubService.getOrdersDomain()).thenReturn(pocoDomain);
+        when(iexecHubService.getOwner(datasetAddress)).thenReturn(credentials.getAddress());
+        when(iexecHubService.viewConsumed(signedDatasetOrder.computeHash(pocoDomain))).thenReturn(BigInteger.ZERO);
+        when(web3SecretService.getDecryptedValue(datasetAddress)).thenReturn(Optional.of(DATASET_KEY));
+
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
+
+        assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
+        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
+                Map.entry("BULK_SIZE", 1),
+                Map.entry("BULK_DATASET_1_URL", DATASET_URL),
+                Map.entry("BULK_DATASET_1_CHECKSUM", DATASET_CHECKSUM),
+                Map.entry("BULK_DATASET_1_KEY", DATASET_KEY),
+                Map.entry("BULK_DATASET_1_FILENAME", datasetAddress)
+        ));
+    }
+
+    @Test
+    void shouldNotGetBulkProcessingPreComputeTokens() throws Exception {
+        final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
+        assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
+        assertThat(enclaveBase.getEnvironment()).contains(Map.entry("BULK_SIZE", 0));
+    }
+
+    @Test
+    void shouldGetPreComputeTokensWithDataset() throws Exception {
+        final TaskDescription taskDescription = createTaskDescriptionWithDataset(createDealParams().build(), enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
         when(web3SecretService.getDecryptedValue(DATASET_ADDRESS))
                 .thenReturn(Optional.of(DATASET_KEY));
@@ -309,8 +440,30 @@ class SecretSessionBaseServiceTests {
 
     // region getAppTokens
     @Test
+    void shouldGetAppComputeBulkProcessingTokens() throws TeeSessionGenerationException {
+        final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+        final String datasetAddress = createEthereumAddress();
+        final DatasetOrder datasetOrder = DatasetOrder.builder()
+                .dataset(datasetAddress)
+                .build();
+
+        when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
+        when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(datasetOrder));
+
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
+        assertThat(enclaveBase.getName()).isEqualTo("app");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
+        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
+                Map.entry("BULK_SIZE", 1),
+                Map.entry("BULK_DATASET_1_FILENAME", datasetAddress)
+        ));
+    }
+
+    @Test
     void shouldGetAppTokensForAdvancedTaskDescription() throws TeeSessionGenerationException {
-        final TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest request = createSessionRequest(createTaskDescriptionWithDataset(createDealParams().build(), enclaveConfig).build());
 
         final String appAddress = request.getTaskDescription().getAppAddress();
         final String requesterAddress = request.getTaskDescription().getRequester();
@@ -415,7 +568,7 @@ class SecretSessionBaseServiceTests {
     @Test
     void shouldFailToGetAppTokensInvalidEnclaveConfig() {
         // invalid enclave config
-        final TaskDescription taskDescription = createTaskDescription(TeeEnclaveConfiguration.builder().build()).build();
+        final TaskDescription taskDescription = createTaskDescription(DealParams.builder().build(), TeeEnclaveConfiguration.builder().build()).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         final TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
@@ -425,7 +578,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldAddMultipleRequesterSecrets() {
-        final TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest request = createSessionRequest(createTaskDescriptionWithDataset(createDealParams().build(), enclaveConfig).build());
         final String requesterAddress = request.getTaskDescription().getRequester();
 
         final TeeTaskComputeSecret applicationSecret = getApplicationDeveloperSecret(request.getTaskDescription().getAppAddress());
@@ -449,9 +602,7 @@ class SecretSessionBaseServiceTests {
         final DealParams dealParams = createDealParams()
                 .iexecSecrets(Map.of("1", REQUESTER_SECRET_KEY_1, "-1", "out-of-bound-requester-secret"))
                 .build();
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
-                .dealParams(dealParams)
-                .build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
         final String requesterAddress = request.getTaskDescription().getRequester();
 
@@ -469,7 +620,7 @@ class SecretSessionBaseServiceTests {
     // region getPostComputeTokens
     @Test
     void shouldGetPostComputeTokens() throws Exception {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
+        final TaskDescription taskDescription = createTaskDescription(createDealParams().build(), enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         final String beneficiary = request.getTaskDescription().getBeneficiary();
@@ -514,9 +665,7 @@ class SecretSessionBaseServiceTests {
                 .iexecResultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
                 .iexecResultEncryption(true)
                 .build();
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
-                .dealParams(dealParams)
-                .build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         final String beneficiary = request.getTaskDescription().getBeneficiary();
@@ -546,7 +695,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetPostComputeTokensWithCallback() throws TeeSessionGenerationException, GeneralSecurityException {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
+        final TaskDescription taskDescription = createTaskDescription(createDealParams().build(), enclaveConfig)
                 .callback("callback")
                 .build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
@@ -583,7 +732,7 @@ class SecretSessionBaseServiceTests {
     // region getPostComputeStorageTokens
     @Test
     void shouldGetPostComputeStorageTokensWithCallback() {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
+        final TaskDescription taskDescription = createTaskDescription(createDealParams().build(), enclaveConfig)
                 .callback("callback")
                 .build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
@@ -602,7 +751,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetPostComputeStorageTokensOnIpfsWithStorageToken() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
 
         final String storageToken = "storageToken";
 
@@ -624,9 +773,7 @@ class SecretSessionBaseServiceTests {
                 .iexecResultStorageProvider(DealParams.DROPBOX_RESULT_STORAGE_PROVIDER)
                 .iexecResultStorageProxy("")
                 .build();
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
-                .dealParams(dealParams)
-                .build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
 
         final String secretValue = "Secret value";
@@ -645,7 +792,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldNotGetPostComputeStorageTokensSinceNoSecret() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
         final TaskDescription taskDescription = sessionRequest.getTaskDescription();
 
         final TeeSessionGenerationException exception = assertThrows(
@@ -660,7 +807,7 @@ class SecretSessionBaseServiceTests {
     // region getSignTokens
     @Test
     void shouldGetSignTokens() throws GeneralSecurityException {
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig).build();
+        final TaskDescription taskDescription = createTaskDescription(createDealParams().build(), enclaveConfig).build();
         final TeeSessionRequest sessionRequest = createSessionRequest(taskDescription);
         final String taskId = taskDescription.getChainTaskId();
         final EthereumCredentials credentials = EthereumCredentials.generate();
@@ -683,7 +830,7 @@ class SecretSessionBaseServiceTests {
     @NullSource
     @ValueSource(strings = {""})
     void shouldNotGetSignTokensSinceNoWorkerAddress(String emptyWorkerAddress) {
-        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
+        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(createDealParams().build(), enclaveConfig).build())
                 .workerAddress(emptyWorkerAddress)
                 .build();
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
@@ -701,7 +848,7 @@ class SecretSessionBaseServiceTests {
     @NullSource
     @ValueSource(strings = {""})
     void shouldNotGetSignTokensSinceNoEnclaveChallenge(String emptyEnclaveChallenge) {
-        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(enclaveConfig).build())
+        final TeeSessionRequest sessionRequest = createSessionRequestBuilder(createTaskDescription(createDealParams().build(), enclaveConfig).build())
                 .enclaveChallenge(emptyEnclaveChallenge)
                 .build();
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
@@ -717,7 +864,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldNotGetSignTokensSinceNoTeeChallenge() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
         when(teeChallengeService.getOrCreate(taskId, true))
@@ -734,7 +881,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldNotGetSignTokensSinceNoEnclaveCredentials() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
         when(teeChallengeService.getOrCreate(taskId, true))
@@ -751,7 +898,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldNotGetSignTokensSinceNoEnclaveCredentialsPrivateKey() {
-        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest sessionRequest = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
         final String taskId = sessionRequest.getTaskDescription().getChainTaskId();
 
         when(teeChallengeService.getOrCreate(taskId, true))
@@ -771,7 +918,7 @@ class SecretSessionBaseServiceTests {
     // region getPostcomputeEncryptionTokens
     @Test
     void shouldGetPostComputeEncryptionTokensWithEncryption() {
-        final TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest request = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(
                 () -> teeSecretsService.getPostComputeEncryptionTokens(request, ENCRYPTION_PUBLIC_KEY));
@@ -787,9 +934,7 @@ class SecretSessionBaseServiceTests {
         final DealParams dealParams = createDealParams()
                 .iexecResultEncryption(false)
                 .build();
-        final TaskDescription taskDescription = createTaskDescription(enclaveConfig)
-                .dealParams(dealParams)
-                .build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         final Map<String, String> encryptionTokens = assertDoesNotThrow(
@@ -803,7 +948,7 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldNotGetPostComputeEncryptionTokensSinceEmptyBeneficiaryKey() {
-        final TeeSessionRequest request = createSessionRequest(createTaskDescription(enclaveConfig).build());
+        final TeeSessionRequest request = createSessionRequest(createTaskDescription(createDealParams().build(), enclaveConfig).build());
 
         final TeeSessionGenerationException exception = assertThrows(
                 TeeSessionGenerationException.class,

@@ -76,7 +76,7 @@ class VersionControllerTests {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TeeFramework.class)
+    @EnumSource(value = TeeFramework.class, names = {"SCONE", "GRAMINE"})
     void shouldReturnInfoGauge(TeeFramework teeFramework) {
         TeeServicesProperties properties;
         if (teeFramework == TeeFramework.SCONE) {

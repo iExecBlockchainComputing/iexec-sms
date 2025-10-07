@@ -42,6 +42,9 @@ chain:
   gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
 
+ipfs:
+  gateway-url: https://ipfs.iex.ec
+
 metrics:
   storage:
     refresh-interval: ${IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL:30}  # In seconds
