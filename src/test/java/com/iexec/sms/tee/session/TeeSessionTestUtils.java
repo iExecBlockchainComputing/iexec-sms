@@ -38,7 +38,7 @@ import static com.iexec.sms.Web3jUtils.createEthereumAddress;
 
 @Slf4j
 public class TeeSessionTestUtils {
-    public static final String TEST_DEAL_ID = "dealId";
+    public static final String DEAL_ID = "dealId";
     public static final String TASK_ID = "taskId";
     public static final String SESSION_ID = "sessionId";
     public static final String WORKER_ADDRESS = "workerAddress";
@@ -144,7 +144,7 @@ public class TeeSessionTestUtils {
         final String beneficiaryAddress = createEthereumAddress();
         final String workerpoolAddress = createEthereumAddress();
         return TaskDescription.builder()
-                .chainDealId(TEST_DEAL_ID)
+                .chainDealId(DEAL_ID)
                 .chainTaskId(TASK_ID)
                 .workerpoolOwner(workerpoolAddress)
                 .appUri(APP_URI)
