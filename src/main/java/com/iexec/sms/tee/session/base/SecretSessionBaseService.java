@@ -65,11 +65,11 @@ public class SecretSessionBaseService {
 
     static final String EMPTY_STRING_VALUE = "";
     static final BigInteger BULK_DATASET_VOLUME = BigInteger.TWO.pow(53).subtract(BigInteger.ONE);
-    static final String BULK_DATASET_PREFIX = "BULK_DATASET_";
-    static final String BULK_DATASET_URL_SUFFIX = "_URL";
-    static final String BULK_DATASET_CHECKSUM_SUFFIX = "_CHECKSUM";
-    static final String BULK_DATASET_KEY_SUFFIX = "_KEY";
-    static final String BULK_DATASET_FILENAME_SUFFIX = "_FILENAME";
+    static final String IEXEC_DATASET_PREFIX = "IEXEC_DATASET_";
+    static final String IEXEC_DATASET_URL_SUFFIX = "_URL";
+    static final String IEXEC_DATASET_CHECKSUM_SUFFIX = "_CHECKSUM";
+    static final String IEXEC_DATASET_KEY_SUFFIX = "_KEY";
+    static final String IEXEC_DATASET_FILENAME_SUFFIX = "_FILENAME";
     static final String IEXEC_APP_DEVELOPER_SECRET_PREFIX = "IEXEC_APP_DEVELOPER_SECRET_";
     static final String IEXEC_REQUESTER_SECRET_PREFIX = "IEXEC_REQUESTER_SECRET_";
 
@@ -193,22 +193,22 @@ public class SecretSessionBaseService {
     private Map<String, Object> getBulkDatasetTokens(final int index,
                                                      final TaskDescription taskDescription,
                                                      final DatasetOrder datasetOrder) {
-        final String prefix = BULK_DATASET_PREFIX + (index + 1);
+        final String prefix = IEXEC_DATASET_PREFIX + (index + 1);
         final ChainDataset dataset = iexecHubService.getChainDataset(datasetOrder.getDataset()).orElse(null);
         if (isBulkDatasetOrderValid(taskDescription, datasetOrder) && dataset != null) {
             final String datasetKey = web3SecretService.getDecryptedValue(datasetOrder.getDataset()).orElse("");
             return Map.of(
-                    prefix + BULK_DATASET_URL_SUFFIX, dataset.getMultiaddr(),
-                    prefix + BULK_DATASET_CHECKSUM_SUFFIX, dataset.getChecksum(),
-                    prefix + BULK_DATASET_KEY_SUFFIX, datasetKey,
-                    prefix + BULK_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
+                    prefix + IEXEC_DATASET_URL_SUFFIX, dataset.getMultiaddr(),
+                    prefix + IEXEC_DATASET_CHECKSUM_SUFFIX, dataset.getChecksum(),
+                    prefix + IEXEC_DATASET_KEY_SUFFIX, datasetKey,
+                    prefix + IEXEC_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
             );
         } else {
             return Map.of(
-                    prefix + BULK_DATASET_URL_SUFFIX, EMPTY_STRING_VALUE,
-                    prefix + BULK_DATASET_CHECKSUM_SUFFIX, EMPTY_STRING_VALUE,
-                    prefix + BULK_DATASET_KEY_SUFFIX, EMPTY_STRING_VALUE,
-                    prefix + BULK_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
+                    prefix + IEXEC_DATASET_URL_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + IEXEC_DATASET_CHECKSUM_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + IEXEC_DATASET_KEY_SUFFIX, EMPTY_STRING_VALUE,
+                    prefix + IEXEC_DATASET_FILENAME_SUFFIX, datasetOrder.getDataset()
             );
         }
     }
@@ -255,7 +255,7 @@ public class SecretSessionBaseService {
 
         if (taskDescription.isBulkRequest()) {
             final List<DatasetOrder> orders = fetchDatasetOrders(taskDescription);
-            tokens.put(BULK_SIZE.name(), orders.size());
+            tokens.put(IEXEC_BULK_SLICE_SIZE.name(), orders.size());
             for (int i = 0; i < orders.size(); i++) {
                 final DatasetOrder order = orders.get(i);
                 tokens.putAll(getBulkDatasetTokens(i, taskDescription, order));
@@ -278,6 +278,8 @@ public class SecretSessionBaseService {
             log.info("No dataset key needed for this task [taskId:{}]", taskId);
         }
         trustedEnv.addAll(List.of(
+                IEXEC_DEAL_ID.name(),
+                IEXEC_TASK_INDEX.name(),
                 IEXEC_TASK_ID.name(),
                 IEXEC_INPUT_FILES_FOLDER.name(),
                 IEXEC_INPUT_FILES_NUMBER.name()));
@@ -340,9 +342,9 @@ public class SecretSessionBaseService {
             final List<String> addresses = fetchDatasetOrders(taskDescription).stream()
                     .map(DatasetOrder::getDataset)
                     .toList();
-            tokens.put(BULK_SIZE.name(), addresses.size());
+            tokens.put(IEXEC_BULK_SLICE_SIZE.name(), addresses.size());
             for (int i = 0; i < addresses.size(); i++) {
-                tokens.put(BULK_DATASET_PREFIX + (i + 1) + BULK_DATASET_FILENAME_SUFFIX, addresses.get(i));
+                tokens.put(IEXEC_DATASET_PREFIX + (i + 1) + IEXEC_DATASET_FILENAME_SUFFIX, addresses.get(i));
             }
         }
 
