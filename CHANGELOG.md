@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.2.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.1.0...v9.2.0) (2025-10-09)
+
+
+### Features
+
+* implement bulk processing feature to support multiple datasets in TEE session ([#310](https://github.com/iExecBlockchainComputing/iexec-sms/issues/310)) ([e2a758d](https://github.com/iExecBlockchainComputing/iexec-sms/commit/e2a758de861d11cd94cf52739a9899eb8694d622))
+* use validated names for new variables in TEE session ([#312](https://github.com/iExecBlockchainComputing/iexec-sms/issues/312)) ([782603c](https://github.com/iExecBlockchainComputing/iexec-sms/commit/782603cc71abb1d6af8993b33056ea0502c28515))
+
 ## [9.1.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.0.0...v9.1.0) (2025-08-20)
 
 
