@@ -21,10 +21,8 @@ import com.iexec.common.utils.IexecFileHelper;
 import com.iexec.commons.poco.chain.ChainDataset;
 import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.order.DatasetOrder;
-import com.iexec.commons.poco.security.Signature;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
-import com.iexec.commons.poco.utils.SignatureUtils;
 import com.iexec.sms.chain.IexecHubService;
 import com.iexec.sms.secret.compute.*;
 import com.iexec.sms.secret.web2.Web2Secret;
@@ -178,7 +176,7 @@ public class SecretSessionBaseService {
     private List<DatasetOrder> fetchDatasetOrders(final TaskDescription taskDescription) {
         try {
             final String bulkCid = taskDescription.getDealParams().getBulkCid();
-            final int bulkSliceIndex = taskDescription.getBotIndex() - taskDescription.getBotFirstIndex();
+            final int bulkSliceIndex = taskDescription.getBotIndex();
             log.info("Fetching dataset orders for a bulk slice [chainTaskId:{}, bulkCid:{}, bulkSliceIndex:{}]",
                     taskDescription.getChainTaskId(), bulkCid, bulkSliceIndex);
             final List<String> bulkSlices = ipfsClient.readBulkCid(bulkCid);
@@ -195,7 +193,7 @@ public class SecretSessionBaseService {
                                                      final DatasetOrder datasetOrder) {
         final String prefix = IEXEC_DATASET_PREFIX + (index + 1);
         final ChainDataset dataset = iexecHubService.getChainDataset(datasetOrder.getDataset()).orElse(null);
-        if (isBulkDatasetOrderValid(taskDescription, datasetOrder) && dataset != null) {
+        if (dataset != null && isBulkDatasetOrderCompatibleWithDeal(datasetOrder, taskDescription)) {
             final String datasetKey = web3SecretService.getDecryptedValue(datasetOrder.getDataset()).orElse("");
             return Map.of(
                     prefix + IEXEC_DATASET_URL_SUFFIX, dataset.getMultiaddr(),
@@ -213,23 +211,15 @@ public class SecretSessionBaseService {
         }
     }
 
-    boolean isBulkDatasetOrderValid(final TaskDescription taskDescription, final DatasetOrder datasetOrder) {
+    boolean isBulkDatasetOrderCompatibleWithDeal(final DatasetOrder datasetOrder, final TaskDescription taskDescription) {
         try {
-            final Signature signature = new Signature(datasetOrder.getSign());
-            final String orderHash = datasetOrder.computeHash(iexecHubService.getOrdersDomain());
-            final String owner = iexecHubService.getOwner(datasetOrder.getDataset());
-            final boolean isSignedByOwner = SignatureUtils.doesSignatureMatchesAddress(
-                    signature.getR(), signature.getS(), orderHash, owner);
-            final BigInteger consumedVolume = iexecHubService.viewConsumed(orderHash);
-            final boolean isVolumeValid = BULK_DATASET_VOLUME.equals(datasetOrder.getVolume());
-            final boolean isOrderNotFullyConsumed = !BULK_DATASET_VOLUME.equals(consumedVolume);
-            final boolean isTagValid = taskDescription.getTag().equals(datasetOrder.getTag());
-            log.info("Check bulk dataset order [chainTaskId:{}, dataset:{}, owner:{}, isSignedByOwner:{}, isVolumeValid:{}, isOrderNotFullyConsumed:{}, isTagValid:{}]",
-                    taskDescription.getChainTaskId(), datasetOrder.getDataset(), owner, isSignedByOwner, isVolumeValid, isOrderNotFullyConsumed, isTagValid);
-            return isSignedByOwner && isVolumeValid && isOrderNotFullyConsumed && isTagValid;
+            log.debug("Check dataset order against deal [chainTaskId:{}, deal:{}, dataset:{}",
+                    taskDescription.getChainTaskId(), taskDescription.getChainDealId(), datasetOrder.getDataset());
+            iexecHubService.assertDatasetDealCompatibility(datasetOrder, taskDescription.getChainDealId());
+            return true;
         } catch (Exception e) {
-            log.error("Failed to perform all checks on dataset [chainTaskId:{}, dataset:{}]",
-                    taskDescription.getChainTaskId(), datasetOrder.getDataset());
+            log.error("Failed to perform all checks on dataset [chainTaskId:{}, dataset:{}, error:{}]",
+                    taskDescription.getChainTaskId(), datasetOrder.getDataset(), e.getMessage());
             return false;
         }
     }
