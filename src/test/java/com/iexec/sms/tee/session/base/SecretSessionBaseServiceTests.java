@@ -57,6 +57,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
+import org.web3j.protocol.exceptions.JsonRpcError;
 
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -280,9 +281,7 @@ class SecretSessionBaseServiceTests {
         when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
         when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(signedDatasetOrder));
         when(iexecHubService.getChainDataset(datasetAddress)).thenReturn(Optional.of(ChainDataset.builder().chainDatasetId(datasetAddress).build()));
-        when(iexecHubService.getOrdersDomain()).thenReturn(pocoDomain);
-        when(iexecHubService.getOwner(datasetAddress)).thenReturn(createEthereumAddress());
-        when(iexecHubService.viewConsumed(signedDatasetOrder.computeHash(pocoDomain))).thenReturn(BigInteger.ONE);
+        doThrow(JsonRpcError.class).when(iexecHubService).assertDatasetDealCompatibility(signedDatasetOrder, DEAL_ID);
 
         final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
                 request,
@@ -322,9 +321,7 @@ class SecretSessionBaseServiceTests {
         when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
         when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(signedDatasetOrder));
         when(iexecHubService.getChainDataset(datasetAddress)).thenReturn(Optional.of(chainDataset));
-        when(iexecHubService.getOrdersDomain()).thenReturn(pocoDomain);
-        when(iexecHubService.getOwner(datasetAddress)).thenReturn(credentials.getAddress());
-        when(iexecHubService.viewConsumed(signedDatasetOrder.computeHash(pocoDomain))).thenReturn(BigInteger.ZERO);
+        doNothing().when(iexecHubService).assertDatasetDealCompatibility(signedDatasetOrder, DEAL_ID);
         when(web3SecretService.getDecryptedValue(datasetAddress)).thenReturn(Optional.of(DATASET_KEY));
 
         final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
