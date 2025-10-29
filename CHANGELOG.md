@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.2.1](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.2.0...v9.2.1) (2025-10-29)
+
+
+### Bug Fixes
+
+* use assertDatasetDealCompatibility new PoCo method ([#313](https://github.com/iExecBlockchainComputing/iexec-sms/issues/313)) ([4b2497c](https://github.com/iExecBlockchainComputing/iexec-sms/commit/4b2497c79657b4b046421852683b69e9aac2bc54))
+
 ## [9.2.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.1.0...v9.2.0) (2025-10-09)
 
 
