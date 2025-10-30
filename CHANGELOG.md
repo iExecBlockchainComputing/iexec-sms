@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.2.2](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.2.1...v9.2.2) (2025-10-30)
+
+
+### Bug Fixes
+
+* use iexec-commons-poco 5.3.1 to provide required sender address on Arbitrum eth_call ([#315](https://github.com/iExecBlockchainComputing/iexec-sms/issues/315)) ([a5c0920](https://github.com/iExecBlockchainComputing/iexec-sms/commit/a5c0920082ebc53c77e765ddfbf8e5ac344189df))
+
 ## [9.2.1](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.2.0...v9.2.1) (2025-10-29)
 
 
