@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class OnTeeFrameworkCondition extends SpringBootCondition {
         }
 
         if (attributes == null) {
-            log.warn("No attribute for bean annotation, won't be loaded [bean:{}",
+            log.warn("No attribute for bean annotation, won't be loaded [bean:{}]",
                     beanClassName);
             return new ConditionOutcome(
                     false,

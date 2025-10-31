@@ -1,0 +1,14 @@
+tee:
+  worker:
+    pipelines:
+      - version: # v0.1
+        pre-compute:
+          image: # e.g.: iexechub/tee-worker-pre-compute-rust:<version>
+          fingerprint:
+          heap-size: # 1GB
+          entrypoint: # /app/tee-worker-pre-compute
+        post-compute:
+          image: # e.g.: iexechub/tee-worker-post-compute-rust:<version>
+          fingerprint:
+          heap-size: # 1GB
+          entrypoint: # /app/tee-worker-post-compute

@@ -17,6 +17,7 @@
 package com.iexec.sms.tee.config;
 
 import com.iexec.commons.poco.tee.TeeFramework;
+import com.iexec.sms.api.config.TdxServicesProperties;
 import com.iexec.sms.api.config.TeeServicesProperties;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import jakarta.validation.constraints.NotBlank;
@@ -54,6 +55,21 @@ public class TeeWorkerInternalConfiguration {
             @NotBlank(message = "las image must be provided") final String lasImage) {
         return pipelineConfig.getPipelines().stream()
                 .map(pipeline -> pipeline.toTeeServicesProperties(lasImage))
+                .collect(Collectors.toUnmodifiableMap(
+                        TeeServicesProperties::getTeeFrameworkVersion,
+                        Function.identity()
+                ));
+    }
+
+    @Bean
+    @ConditionalOnTeeFramework(frameworks = TeeFramework.TDX)
+    public Map<String, TeeServicesProperties> tdxServicesPropertiesMap(
+            final TeeWorkerPipelineConfiguration pipelineConfig) {
+        return pipelineConfig.getPipelines().stream()
+                .map(pipeline -> new TdxServicesProperties(
+                        pipeline.version(),
+                        pipeline.preCompute().toTeeAppProperties(),
+                        pipeline.postCompute().toTeeAppProperties()))
                 .collect(Collectors.toUnmodifiableMap(
                         TeeServicesProperties::getTeeFrameworkVersion,
                         Function.identity()

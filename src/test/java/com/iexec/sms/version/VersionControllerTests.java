@@ -17,10 +17,7 @@
 package com.iexec.sms.version;
 
 import com.iexec.commons.poco.tee.TeeFramework;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.SconeServicesProperties;
-import com.iexec.sms.api.config.TeeAppProperties;
-import com.iexec.sms.api.config.TeeServicesProperties;
+import com.iexec.sms.api.config.*;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -64,7 +61,7 @@ class VersionControllerTests {
 
     @Test
     void testVersionController() {
-        TeeServicesProperties properties = new SconeServicesProperties(
+        final TeeServicesProperties properties = new SconeServicesProperties(
                 teeFrameworkVersion,
                 preComputeProperties,
                 postComputeProperties,
@@ -76,23 +73,13 @@ class VersionControllerTests {
     }
 
     @ParameterizedTest
-    @EnumSource(value = TeeFramework.class, names = {"SCONE", "GRAMINE"})
+    @EnumSource(value = TeeFramework.class)
     void shouldReturnInfoGauge(TeeFramework teeFramework) {
-        TeeServicesProperties properties;
-        if (teeFramework == TeeFramework.SCONE) {
-            properties = new SconeServicesProperties(
-                    teeFrameworkVersion,
-                    preComputeProperties,
-                    postComputeProperties,
-                    "lasImage"
-            );
-        } else {
-            properties = new GramineServicesProperties(
-                    teeFrameworkVersion,
-                    preComputeProperties,
-                    postComputeProperties
-            );
-        }
+        final TeeServicesProperties properties = switch (teeFramework) {
+            case TDX -> new TdxServicesProperties(teeFrameworkVersion, preComputeProperties, postComputeProperties);
+            case SCONE -> new SconeServicesProperties(teeFrameworkVersion, preComputeProperties, postComputeProperties, "lasImage");
+            case GRAMINE -> new GramineServicesProperties(teeFrameworkVersion, preComputeProperties, postComputeProperties);
+        };
         final Map<String, TeeServicesProperties> sconePropertiesMap = Map.of(teeFrameworkVersion, properties);
         versionController = new VersionController(buildProperties, sconePropertiesMap);
         versionController.initializeGaugeVersion();

@@ -26,10 +26,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "teeFramework", visible = true)
 @JsonSubTypes({
+        @JsonSubTypes.Type(name = "TDX", value = TdxServicesProperties.class),
         @JsonSubTypes.Type(name = "SCONE", value = SconeServicesProperties.class),
         @JsonSubTypes.Type(name = "GRAMINE", value = GramineServicesProperties.class)
 })
-// TODO upgrade to sealed class in Java 17
 public abstract class TeeServicesProperties {
     private final TeeFramework teeFramework;
     private final String teeFrameworkVersion;

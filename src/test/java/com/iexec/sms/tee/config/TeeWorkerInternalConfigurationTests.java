@@ -16,19 +16,15 @@
 
 package com.iexec.sms.tee.config;
 
-import com.iexec.commons.poco.tee.TeeFramework;
-import com.iexec.sms.api.config.GramineServicesProperties;
-import com.iexec.sms.api.config.SconeServicesProperties;
-import com.iexec.sms.api.config.TeeAppProperties;
-import com.iexec.sms.api.config.TeeServicesProperties;
+import com.iexec.sms.api.config.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class TeeWorkerInternalConfigurationTests {
     private static final String PRE_IMAGE = "preComputeImage";
@@ -65,7 +61,7 @@ class TeeWorkerInternalConfigurationTests {
         final TeeWorkerPipelineConfiguration.Pipeline additionalPipeline = getPipeline("v6");
 
         pipelineConfig = new TeeWorkerPipelineConfiguration(
-                Arrays.asList(pipeline, additionalPipeline)
+                List.of(pipeline, additionalPipeline)
         );
     }
 
@@ -96,17 +92,13 @@ class TeeWorkerInternalConfigurationTests {
         final Map<String, TeeServicesProperties> multiPropertiesMap =
                 teeWorkerInternalConfiguration.gramineServicesPropertiesMap(pipelineConfig);
 
-        assertNotNull(multiPropertiesMap);
-        assertEquals(2, multiPropertiesMap.size());
+        assertThat(multiPropertiesMap).isNotNull()
+                .extracting(Map::size)
+                .isEqualTo(2);
 
-        final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
-        assertNotNull(properties);
-        assertInstanceOf(GramineServicesProperties.class, properties);
-
-        final GramineServicesProperties gramineProperties = (GramineServicesProperties) properties;
-        assertEquals(TeeFramework.GRAMINE, gramineProperties.getTeeFramework());
-        assertEquals(preComputeProperties, gramineProperties.getPreComputeProperties());
-        assertEquals(postComputeProperties, gramineProperties.getPostComputeProperties());
+        assertThat(multiPropertiesMap.get(VERSION))
+                .usingRecursiveComparison()
+                .isEqualTo(new GramineServicesProperties(VERSION, preComputeProperties, postComputeProperties));
     }
 
     @Test
@@ -114,18 +106,27 @@ class TeeWorkerInternalConfigurationTests {
         final Map<String, TeeServicesProperties> multiPropertiesMap =
                 teeWorkerInternalConfiguration.sconeServicesPropertiesMap(pipelineConfig, LAS_IMAGE);
 
-        assertNotNull(multiPropertiesMap);
-        assertEquals(2, multiPropertiesMap.size());
+        assertThat(multiPropertiesMap).isNotNull()
+                .extracting(Map::size)
+                .isEqualTo(2);
 
-        final TeeServicesProperties properties = multiPropertiesMap.get(VERSION);
-        assertNotNull(properties);
-        assertInstanceOf(SconeServicesProperties.class, properties);
+        assertThat(multiPropertiesMap.get(VERSION))
+                .usingRecursiveComparison()
+                .isEqualTo(new SconeServicesProperties(VERSION, preComputeProperties, postComputeProperties, LAS_IMAGE));
+    }
 
-        final SconeServicesProperties sconeProperties = (SconeServicesProperties) properties;
-        assertEquals(TeeFramework.SCONE, sconeProperties.getTeeFramework());
-        assertEquals(preComputeProperties, sconeProperties.getPreComputeProperties());
-        assertEquals(postComputeProperties, sconeProperties.getPostComputeProperties());
-        assertEquals(LAS_IMAGE, sconeProperties.getLasImage());
+    @Test
+    void shouldBuildTdxServicesPropertiesMap() {
+        final Map<String, TeeServicesProperties> multiPropertiesMap =
+                teeWorkerInternalConfiguration.tdxServicesPropertiesMap(pipelineConfig);
+
+        assertThat(multiPropertiesMap).isNotNull()
+                .extracting(Map::size)
+                .isEqualTo(2);
+
+        assertThat(multiPropertiesMap.get(VERSION))
+                .usingRecursiveComparison()
+                .isEqualTo(new TdxServicesProperties(VERSION, preComputeProperties, postComputeProperties));
     }
 
 }
