@@ -63,10 +63,10 @@ public class TeeController {
     private final TeeServicesProperties teeServicesProperties;
 
     public TeeController(
-            AuthorizationService authorizationService,
-            TeeChallengeService teeChallengeService,
-            TeeSessionService teeSessionService,
-            @Value("${tee.worker.pipelines[0].version}") String version) {
+            final AuthorizationService authorizationService,
+            final TeeChallengeService teeChallengeService,
+            final TeeSessionService teeSessionService,
+            @Value("${tee.worker.pipelines[0].version}") final String version) {
         this.authorizationService = authorizationService;
         this.teeChallengeService = teeChallengeService;
         this.teeSessionService = teeSessionService;
