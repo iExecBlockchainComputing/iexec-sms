@@ -291,7 +291,7 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
         assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
-                Map.entry("IEXEC_BULK_SLICE_SIZE", 1),
+                Map.entry("IEXEC_BULK_SLICE_SIZE", "1"),
                 Map.entry("IEXEC_DATASET_1_URL", ""),
                 Map.entry("IEXEC_DATASET_1_CHECKSUM", ""),
                 Map.entry("IEXEC_DATASET_1_KEY", ""),
@@ -332,7 +332,7 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
         assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
-                Map.entry("IEXEC_BULK_SLICE_SIZE", 1),
+                Map.entry("IEXEC_BULK_SLICE_SIZE", "1"),
                 Map.entry("IEXEC_DATASET_1_URL", DATASET_URL),
                 Map.entry("IEXEC_DATASET_1_CHECKSUM", DATASET_CHECKSUM),
                 Map.entry("IEXEC_DATASET_1_KEY", DATASET_KEY),
@@ -355,7 +355,7 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        assertThat(enclaveBase.getEnvironment()).contains(Map.entry("IEXEC_BULK_SLICE_SIZE", 0));
+        assertThat(enclaveBase.getEnvironment()).contains(Map.entry("IEXEC_BULK_SLICE_SIZE", "0"));
     }
 
     @Test
@@ -375,12 +375,12 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.ofEntries(
+        final Map<String, String> expectedTokens = Map.ofEntries(
                 Map.entry("IEXEC_DEAL_ID", DEAL_ID),
                 Map.entry("IEXEC_TASK_INDEX", "0"),
                 Map.entry("IEXEC_TASK_ID", TASK_ID),
                 Map.entry("IEXEC_PRE_COMPUTE_OUT", "/iexec_in"),
-                Map.entry("IS_DATASET_REQUIRED", true),
+                Map.entry("IS_DATASET_REQUIRED", "true"),
                 Map.entry("IEXEC_DATASET_KEY", DATASET_KEY),
                 Map.entry("IEXEC_DATASET_URL", DATASET_URL),
                 Map.entry("IEXEC_DATASET_FILENAME", DATASET_ADDRESS),
@@ -426,12 +426,12 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.ofEntries(
+        final Map<String, String> expectedTokens = Map.ofEntries(
                 Map.entry("IEXEC_DEAL_ID", DEAL_ID),
                 Map.entry("IEXEC_TASK_INDEX", "0"),
                 Map.entry("IEXEC_TASK_ID", TASK_ID),
                 Map.entry("IEXEC_PRE_COMPUTE_OUT", "/iexec_in"),
-                Map.entry("IS_DATASET_REQUIRED", false),
+                Map.entry("IS_DATASET_REQUIRED", "false"),
                 Map.entry("IEXEC_INPUT_FILES_FOLDER", "/iexec_in"),
                 Map.entry("IEXEC_INPUT_FILES_NUMBER", "2"),
                 Map.entry("IEXEC_INPUT_FILE_URL_1", INPUT_FILE_URL_1),
@@ -462,7 +462,7 @@ class SecretSessionBaseServiceTests {
         assertThat(enclaveBase.getName()).isEqualTo("app");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
         assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
-                Map.entry("IEXEC_BULK_SLICE_SIZE", 1),
+                Map.entry("IEXEC_BULK_SLICE_SIZE", "1"),
                 Map.entry("IEXEC_DATASET_1_FILENAME", datasetAddress)
         ));
     }
@@ -483,7 +483,7 @@ class SecretSessionBaseServiceTests {
         final SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("app");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.ofEntries(
+        final Map<String, String> expectedTokens = Map.ofEntries(
                 Map.entry("IEXEC_DEAL_ID", DEAL_ID),
                 Map.entry("IEXEC_TASK_INDEX", "0"),
                 Map.entry("IEXEC_TASK_ID", TASK_ID),
@@ -541,7 +541,7 @@ class SecretSessionBaseServiceTests {
         final SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("app");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.ofEntries(
+        final Map<String, String> expectedTokens = Map.ofEntries(
                 Map.entry("IEXEC_DEAL_ID", DEAL_ID),
                 Map.entry("IEXEC_TASK_INDEX", "0"),
                 Map.entry("IEXEC_TASK_ID", TASK_ID),
@@ -652,7 +652,7 @@ class SecretSessionBaseServiceTests {
         );
         assertThat(enclaveBase.getName()).isEqualTo("post-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(POST_COMPUTE_FINGERPRINT);
-        final Map<String, Object> expectedTokens = Map.of(
+        final Map<String, String> expectedTokens = Map.of(
                 // encryption tokens
                 "RESULT_ENCRYPTION", "true",
                 "RESULT_ENCRYPTION_PUBLIC_KEY", ENCRYPTION_PUBLIC_KEY,

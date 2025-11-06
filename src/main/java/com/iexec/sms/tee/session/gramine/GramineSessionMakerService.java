@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class GramineSessionMakerService {
 
     private final SecretSessionBaseService secretSessionBaseService;
 
-    public GramineSessionMakerService(SecretSessionBaseService secretSessionBaseService) {
+    public GramineSessionMakerService(final SecretSessionBaseService secretSessionBaseService) {
         this.secretSessionBaseService = secretSessionBaseService;
     }
 
@@ -49,29 +49,25 @@ public class GramineSessionMakerService {
      * @return session config
      */
     @NonNull
-    public GramineSession generateSession(TeeSessionRequest request) throws TeeSessionGenerationException {
-        SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
-        GramineSessionBuilder gramineSession = GramineSession.builder()
+    public GramineSession generateSession(final TeeSessionRequest request) throws TeeSessionGenerationException {
+        final SecretSessionBase baseSession = secretSessionBaseService.getSecretsTokens(request);
+        final GramineSessionBuilder gramineSession = GramineSession.builder()
                 .session(request.getSessionId());
-        GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
-        GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
+        final GramineEnclave gramineAppEnclave = toGramineEnclave(baseSession.getAppCompute());
+        final GramineEnclave graminePostEnclave = toGramineEnclave(baseSession.getPostCompute());
 
-        return gramineSession.enclaves(List.of(
-                // No pre-compute for now
-                gramineAppEnclave,
-                graminePostEnclave))
+        // No pre-compute for now
+        return gramineSession
+                .enclaves(List.of(gramineAppEnclave, graminePostEnclave))
                 .build();
     }
 
-    private GramineEnclave toGramineEnclave(SecretEnclaveBase enclaveBase) {
+    private GramineEnclave toGramineEnclave(final SecretEnclaveBase enclaveBase) {
         return GramineEnclave.builder()
                 .name(enclaveBase.getName())
                 .mrenclave(enclaveBase.getMrenclave())
-                // TODO: Validate command-line arguments from the host
-                // (https://github.com/gramineproject/gsc/issues/13)
                 .command("")
                 .environment(enclaveBase.getEnvironment())
-                // TODO: Remove useless volumes when SPS is ready
                 .volumes(List.of())
                 .build();
     }

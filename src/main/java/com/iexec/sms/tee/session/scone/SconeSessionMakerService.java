@@ -154,7 +154,7 @@ public class SconeSessionMakerService {
     private SconeEnclave toSconeEnclave(final SecretEnclaveBase enclaveBase,
                                         final String command,
                                         final boolean addJavaEnvVars) {
-        final HashMap<String, Object> enclaveEnvironment = new HashMap<>(enclaveBase.getEnvironment());
+        final HashMap<String, String> enclaveEnvironment = new HashMap<>(enclaveBase.getEnvironment());
         if (addJavaEnvVars) {
             enclaveEnvironment.putAll(
                     Map.of(
