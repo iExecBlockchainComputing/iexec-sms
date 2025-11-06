@@ -19,7 +19,8 @@ package com.iexec.sms.tee.session.scone.cas;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.*;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -41,16 +42,16 @@ public class SconeEnclave {
     @JsonProperty("command")
     String command;
     @JsonProperty("environment")
-    Map<String, Object> environment;
+    Map<String, String> environment;
 
-  @Override
-  public String toString() {
-    try {
-      return new ObjectMapper().writeValueAsString(this);
-    } catch (JsonProcessingException e) {
-      log.error("Failed to write CAS session as string [session:{}]", name, e);
-      return "";
+    @Override
+    public String toString() {
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to write CAS session as string [session:{}]", name, e);
+            return "";
+        }
     }
-  }
 
 }

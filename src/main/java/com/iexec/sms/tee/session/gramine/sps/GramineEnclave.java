@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package com.iexec.sms.tee.session.gramine.sps;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.Builder;
+import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class GramineEnclave {
     @JsonProperty("command")
     String command;
     @JsonProperty("environment")
-    Map<String, Object> environment;
+    Map<String, String> environment;
     @JsonProperty("volumes")
     List<String> volumes;
 

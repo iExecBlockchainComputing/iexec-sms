@@ -188,7 +188,7 @@ public class SecretSessionBaseService {
         }
     }
 
-    private Map<String, Object> getBulkDatasetTokens(final int index,
+    private Map<String, String> getBulkDatasetTokens(final int index,
                                                      final TaskDescription taskDescription,
                                                      final DatasetOrder datasetOrder) {
         final String prefix = IEXEC_DATASET_PREFIX + (index + 1);
@@ -235,17 +235,17 @@ public class SecretSessionBaseService {
     SecretEnclaveBase getPreComputeTokens(final TeeSessionRequest request, final Map<String, String> signTokens) throws TeeSessionGenerationException {
         final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder();
         enclaveBase.name("pre-compute");
-        final Map<String, Object> tokens = new HashMap<>();
+        final Map<String, String> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
         final String taskId = taskDescription.getChainTaskId();
         enclaveBase.mrenclave(request.getTeeServicesProperties().getPreComputeProperties().getFingerprint());
         tokens.put(IEXEC_PRE_COMPUTE_OUT.name(), IexecFileHelper.SLASH_IEXEC_IN);
         // `IS_DATASET_REQUIRED` still meaningful?
-        tokens.put(IS_DATASET_REQUIRED.name(), taskDescription.containsDataset());
+        tokens.put(IS_DATASET_REQUIRED.name(), String.valueOf(taskDescription.containsDataset()));
 
         if (taskDescription.isBulkRequest()) {
             final List<DatasetOrder> orders = fetchDatasetOrders(taskDescription);
-            tokens.put(IEXEC_BULK_SLICE_SIZE.name(), orders.size());
+            tokens.put(IEXEC_BULK_SLICE_SIZE.name(), String.valueOf(orders.size()));
             for (int i = 0; i < orders.size(); i++) {
                 final DatasetOrder order = orders.get(i);
                 tokens.putAll(getBulkDatasetTokens(i, taskDescription, order));
@@ -307,7 +307,7 @@ public class SecretSessionBaseService {
         enclaveBase.name("app");
         final TaskDescription taskDescription = request.getTaskDescription();
 
-        final Map<String, Object> tokens = new HashMap<>();
+        final Map<String, String> tokens = new HashMap<>();
         final TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
         if (enclaveConfig == null) {
             throw new TeeSessionGenerationException(
@@ -323,7 +323,7 @@ public class SecretSessionBaseService {
 
         enclaveBase.mrenclave(enclaveConfig.getFingerprint());
 
-        final Map<String, Object> computeSecrets = getApplicationComputeSecrets(taskDescription);
+        final Map<String, String> computeSecrets = getApplicationComputeSecrets(taskDescription);
         tokens.putAll(computeSecrets);
         // trusted env variables (not confidential)
         tokens.putAll(IexecEnvUtils.getComputeStageEnvMap(taskDescription));
@@ -332,7 +332,7 @@ public class SecretSessionBaseService {
             final List<String> addresses = fetchDatasetOrders(taskDescription).stream()
                     .map(DatasetOrder::getDataset)
                     .toList();
-            tokens.put(IEXEC_BULK_SLICE_SIZE.name(), addresses.size());
+            tokens.put(IEXEC_BULK_SLICE_SIZE.name(), String.valueOf(addresses.size()));
             for (int i = 0; i < addresses.size(); i++) {
                 tokens.put(IEXEC_DATASET_PREFIX + (i + 1) + IEXEC_DATASET_FILENAME_SUFFIX, addresses.get(i));
             }
@@ -356,8 +356,8 @@ public class SecretSessionBaseService {
      * @param taskDescription A task description
      * @return A {@code Map} containing secrets retrieved from the database.
      */
-    private Map<String, Object> getApplicationComputeSecrets(final TaskDescription taskDescription) {
-        final Map<String, Object> tokens = new HashMap<>();
+    private Map<String, String> getApplicationComputeSecrets(final TaskDescription taskDescription) {
+        final Map<String, String> tokens = new HashMap<>();
         final List<TeeTaskComputeSecretHeader> ids = getAppComputeSecretsHeaders(taskDescription);
         log.debug("TeeTaskComputeSecret looking for secrets [chainTaskId:{}, count:{}]",
                 taskDescription.getChainTaskId(), ids.size());
@@ -434,7 +434,7 @@ public class SecretSessionBaseService {
         final SecretEnclaveBaseBuilder enclaveBase = SecretEnclaveBase.builder()
                 .name("post-compute")
                 .mrenclave(request.getTeeServicesProperties().getPostComputeProperties().getFingerprint());
-        final Map<String, Object> tokens = new HashMap<>();
+        final Map<String, String> tokens = new HashMap<>();
         final TaskDescription taskDescription = request.getTaskDescription();
         final List<Web2SecretHeader> ids = getPostComputeSecretHeaders(taskDescription, request.getWorkerAddress());
         log.debug("Web2Secret looking for secrets [chainTaskId:{}, count:{}]",
