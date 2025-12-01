@@ -308,20 +308,22 @@ public class SecretSessionBaseService {
         final TaskDescription taskDescription = request.getTaskDescription();
 
         final Map<String, String> tokens = new HashMap<>();
-        final TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
-        if (enclaveConfig == null) {
-            throw new TeeSessionGenerationException(
-                    APP_COMPUTE_NO_ENCLAVE_CONFIG,
-                    "Enclave configuration must not be null");
-        }
-        if (!enclaveConfig.getValidator().isValid()) {
-            throw new TeeSessionGenerationException(
-                    APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
-                    "Invalid enclave configuration: " +
-                            enclaveConfig.getValidator().validate().toString());
-        }
+        if (taskDescription.requiresSgx()) {
+            final TeeEnclaveConfiguration enclaveConfig = taskDescription.getAppEnclaveConfiguration();
+            if (enclaveConfig == null) {
+                throw new TeeSessionGenerationException(
+                        APP_COMPUTE_NO_ENCLAVE_CONFIG,
+                        "Enclave configuration must not be null");
+            }
+            if (!enclaveConfig.getValidator().isValid()) {
+                throw new TeeSessionGenerationException(
+                        APP_COMPUTE_INVALID_ENCLAVE_CONFIG,
+                        "Invalid enclave configuration: " +
+                                enclaveConfig.getValidator().validate().toString());
+            }
 
-        enclaveBase.mrenclave(enclaveConfig.getFingerprint());
+            enclaveBase.mrenclave(enclaveConfig.getFingerprint());
+        }
 
         final Map<String, String> computeSecrets = getApplicationComputeSecrets(taskDescription);
         tokens.putAll(computeSecrets);

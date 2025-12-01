@@ -78,7 +78,7 @@ public class AuthorizationService {
             return Optional.of(GET_CHAIN_DEAL_FAILED);
         }
 
-        final boolean isTeeTaskOnchain = TeeUtils.isTeeTag(chainDeal.getTag());
+        final boolean isTeeTaskOnchain = TeeUtils.getTeeFramework(chainDeal.getTag()) != null;
         if (!isTeeTaskOnchain) {
             log.error("Could not match onchain task type [isTeeTaskOnchain:{}, chainTaskId:{}]",
                     isTeeTaskOnchain, chainTaskId);

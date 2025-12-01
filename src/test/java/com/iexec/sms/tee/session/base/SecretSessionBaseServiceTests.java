@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -467,9 +468,13 @@ class SecretSessionBaseServiceTests {
         ));
     }
 
-    @Test
-    void shouldGetAppTokensForAdvancedTaskDescription() throws TeeSessionGenerationException {
-        final TeeSessionRequest request = createSessionRequest(createTaskDescriptionWithDataset(createDealParams().build(), enclaveConfig).build());
+    @ParameterizedTest
+    @EnumSource(value = TeeFramework.class, names = {"SCONE", "TDX"})
+    void shouldGetAppTokensForAdvancedTaskDescription(final TeeFramework teeFramework) throws TeeSessionGenerationException {
+        final TaskDescription taskDescription = createTaskDescriptionWithDataset(createDealParams().build(), enclaveConfig)
+                .teeFramework(teeFramework)
+                .build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
 
         final String appAddress = request.getTaskDescription().getAppAddress();
         final String requesterAddress = request.getTaskDescription().getRequester();
@@ -482,7 +487,7 @@ class SecretSessionBaseServiceTests {
 
         final SecretEnclaveBase enclaveBase = teeSecretsService.getAppTokens(request);
         assertThat(enclaveBase.getName()).isEqualTo("app");
-        assertThat(enclaveBase.getMrenclave()).isEqualTo(APP_FINGERPRINT);
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(teeFramework != TeeFramework.TDX ? APP_FINGERPRINT : null);
         final Map<String, String> expectedTokens = Map.ofEntries(
                 Map.entry("IEXEC_DEAL_ID", DEAL_ID),
                 Map.entry("IEXEC_TASK_INDEX", "0"),
@@ -512,29 +517,13 @@ class SecretSessionBaseServiceTests {
 
     @Test
     void shouldGetTokensWithEmptyAppComputeSecretWhenSecretsDoNotExist() throws TeeSessionGenerationException {
-        final String appAddress = "0xapp";
-        final String requesterAddress = "0xrequester";
         final DealParams dealParams = createDealParams()
                 .iexecSecrets(Map.of())
                 .build();
-        final TaskDescription taskDescription = TaskDescription.builder()
-                .chainDealId(DEAL_ID)
-                .chainTaskId(TASK_ID)
-                .appUri(APP_URI)
-                .appAddress(appAddress)
-                .appEnclaveConfiguration(enclaveConfig)
-                .datasetAddress(DATASET_ADDRESS)
-                .datasetUri(DATASET_URL)
-                .datasetChecksum(DATASET_CHECKSUM)
-                .requester(requesterAddress)
-                .dealParams(dealParams)
-                .botSize(1)
-                .botFirstIndex(0)
-                .botIndex(0)
-                .build();
+        final TaskDescription taskDescription = createTaskDescriptionWithDataset(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
 
-        final TeeTaskComputeSecret applicationSecret = getApplicationDeveloperSecret(appAddress);
+        final TeeTaskComputeSecret applicationSecret = getApplicationDeveloperSecret(taskDescription.getAppAddress());
         when(teeTaskComputeSecretService.getSecretsForTeeSession(List.of(applicationSecret.getHeader())))
                 .thenReturn(List.of());
 
@@ -568,7 +557,7 @@ class SecretSessionBaseServiceTests {
                 .sessionId(SESSION_ID)
                 .workerAddress(WORKER_ADDRESS)
                 .enclaveChallenge(ENCLAVE_CHALLENGE)
-                .taskDescription(TaskDescription.builder().build())
+                .taskDescription(TaskDescription.builder().teeFramework(TeeFramework.SCONE).build())
                 .build();
         final TeeSessionGenerationException exception = assertThrows(TeeSessionGenerationException.class,
                 () -> teeSecretsService.getAppTokens(request));

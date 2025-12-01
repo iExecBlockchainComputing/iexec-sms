@@ -17,14 +17,15 @@
 package com.iexec.sms.tee.config;
 
 import com.iexec.sms.api.config.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.unit.DataSize;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TeeWorkerInternalConfigurationTests {
     private static final String PRE_IMAGE = "preComputeImage";
@@ -34,7 +35,8 @@ class TeeWorkerInternalConfigurationTests {
     private static final String POST_FINGERPRINT = "postComputeFingerprint";
     private static final String POST_ENTRYPOINT = "postComputeEntrypoint";
     private static final String LAS_IMAGE = "lasImage";
-    private static final String VERSION = "v5";
+    private static final String VERSION_5 = "v5";
+    private static final String VERSION_6 = "v6";
     private static final long HEAP_SIZE_B = 3221225472L;
 
     private final TeeAppProperties preComputeProperties = TeeAppProperties.builder()
@@ -50,22 +52,19 @@ class TeeWorkerInternalConfigurationTests {
             .heapSizeInBytes(HEAP_SIZE_B)
             .build();
 
-    private TeeWorkerInternalConfiguration teeWorkerInternalConfiguration;
-    private TeeWorkerPipelineConfiguration pipelineConfig;
+    private final TeeWorkerInternalConfiguration teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
 
-    @BeforeEach
-    void setUp() {
-        teeWorkerInternalConfiguration = new TeeWorkerInternalConfiguration();
+    private TeeWorkerPipelineConfiguration getPipelineConfig(final boolean multiplePipelines) {
+        final List<TeeWorkerPipelineConfiguration.Pipeline> pipelines = new ArrayList<>();
+        pipelines.add(getPipeline(VERSION_5));
+        if (multiplePipelines) {
+            pipelines.add(getPipeline(VERSION_6));
+        }
 
-        final TeeWorkerPipelineConfiguration.Pipeline pipeline = getPipeline(VERSION);
-        final TeeWorkerPipelineConfiguration.Pipeline additionalPipeline = getPipeline("v6");
-
-        pipelineConfig = new TeeWorkerPipelineConfiguration(
-                List.of(pipeline, additionalPipeline)
-        );
+        return new TeeWorkerPipelineConfiguration(List.copyOf(pipelines));
     }
 
-    private static TeeWorkerPipelineConfiguration.Pipeline getPipeline(final String version) {
+    private TeeWorkerPipelineConfiguration.Pipeline getPipeline(final String version) {
         final TeeWorkerPipelineConfiguration.StageConfig validPreComputeStageConfig = new TeeWorkerPipelineConfiguration.StageConfig(
                 PRE_IMAGE,
                 PRE_FINGERPRINT,
@@ -90,43 +89,50 @@ class TeeWorkerInternalConfigurationTests {
     @Test
     void shouldBuildGramineServicesPropertiesMap() {
         final Map<String, TeeServicesProperties> multiPropertiesMap =
-                teeWorkerInternalConfiguration.gramineServicesPropertiesMap(pipelineConfig);
+                teeWorkerInternalConfiguration.gramineServicesPropertiesMap(getPipelineConfig(true));
 
         assertThat(multiPropertiesMap).isNotNull()
                 .extracting(Map::size)
                 .isEqualTo(2);
 
-        assertThat(multiPropertiesMap.get(VERSION))
+        assertThat(multiPropertiesMap.get(VERSION_5))
                 .usingRecursiveComparison()
-                .isEqualTo(new GramineServicesProperties(VERSION, preComputeProperties, postComputeProperties));
+                .isEqualTo(new GramineServicesProperties(VERSION_5, preComputeProperties, postComputeProperties));
     }
 
     @Test
     void shouldBuildSconeServicesPropertiesMap() {
         final Map<String, TeeServicesProperties> multiPropertiesMap =
-                teeWorkerInternalConfiguration.sconeServicesPropertiesMap(pipelineConfig, LAS_IMAGE);
+                teeWorkerInternalConfiguration.sconeServicesPropertiesMap(getPipelineConfig(true), LAS_IMAGE);
 
         assertThat(multiPropertiesMap).isNotNull()
                 .extracting(Map::size)
                 .isEqualTo(2);
 
-        assertThat(multiPropertiesMap.get(VERSION))
+        assertThat(multiPropertiesMap.get(VERSION_5))
                 .usingRecursiveComparison()
-                .isEqualTo(new SconeServicesProperties(VERSION, preComputeProperties, postComputeProperties, LAS_IMAGE));
+                .isEqualTo(new SconeServicesProperties(VERSION_5, preComputeProperties, postComputeProperties, LAS_IMAGE));
     }
 
     @Test
     void shouldBuildTdxServicesPropertiesMap() {
         final Map<String, TeeServicesProperties> multiPropertiesMap =
-                teeWorkerInternalConfiguration.tdxServicesPropertiesMap(pipelineConfig);
+                teeWorkerInternalConfiguration.tdxServicesPropertiesMap(getPipelineConfig(false));
 
         assertThat(multiPropertiesMap).isNotNull()
                 .extracting(Map::size)
-                .isEqualTo(2);
+                .isEqualTo(1);
 
-        assertThat(multiPropertiesMap.get(VERSION))
+        assertThat(multiPropertiesMap.get(VERSION_5))
                 .usingRecursiveComparison()
-                .isEqualTo(new TdxServicesProperties(VERSION, preComputeProperties, postComputeProperties));
+                .isEqualTo(new TdxServicesProperties(VERSION_5, preComputeProperties, postComputeProperties));
     }
 
+    @Test
+    void shouldNotBuildTdxServicesPropertiesMapWhenMultiplePipelines() {
+        final TeeWorkerPipelineConfiguration pipelineConfig = getPipelineConfig(true);
+        assertThatThrownBy(() -> teeWorkerInternalConfiguration.tdxServicesPropertiesMap(pipelineConfig))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Only a singleton pipeline list is currently supported for TDX");
+    }
 }

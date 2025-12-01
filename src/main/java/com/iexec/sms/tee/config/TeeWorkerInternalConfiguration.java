@@ -65,6 +65,9 @@ public class TeeWorkerInternalConfiguration {
     @ConditionalOnTeeFramework(frameworks = TeeFramework.TDX)
     public Map<String, TeeServicesProperties> tdxServicesPropertiesMap(
             final TeeWorkerPipelineConfiguration pipelineConfig) {
+        if (pipelineConfig.getPipelines().size() != 1) {
+            throw new IllegalStateException("Only a singleton pipeline list is currently supported for TDX");
+        }
         return pipelineConfig.getPipelines().stream()
                 .map(pipeline -> new TdxServicesProperties(
                         pipeline.version(),
