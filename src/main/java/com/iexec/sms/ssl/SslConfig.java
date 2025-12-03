@@ -20,7 +20,8 @@ import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hc.core5.ssl.SSLContexts;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.net.ssl.SSLContext;
@@ -35,7 +36,7 @@ import java.security.cert.CertificateException;
 @Slf4j
 @Value
 @ConfigurationProperties(prefix = "tee.ssl")
-@ConditionalOnTeeFramework(frameworks = TeeFramework.SCONE)
+@ConditionalOnTeeFramework(frameworks = {TeeFramework.SCONE, TeeFramework.TDX})
 public class SslConfig {
 
     String keystore;
@@ -48,14 +49,14 @@ public class SslConfig {
      */
     public SSLContext getFreshSslContext() {
         try {
-            return SSLContexts.custom()
-                    .setKeyStoreType(keystoreType)
-                    .loadKeyMaterial(new File(keystore),
-                            keystorePassword,
-                            keystorePassword,
-                            (aliases, socket) -> keyAlias)
-                    .loadTrustMaterial(null, (chain, authType) -> true) //TODO: Add CAS certificate to truststore
-                    .build();
+            final SSLContextBuilder sslContextBuilder = SSLContextBuilder.create();
+            if (!StringUtils.isEmpty(keystore)) {
+                sslContextBuilder.setKeyStoreType(keystoreType).loadKeyMaterial(
+                        new File(keystore), keystorePassword, keystorePassword,
+                        ((aliases, sslParameters) -> keyAlias));
+            }
+            sslContextBuilder.loadTrustMaterial(null, (chain, authType) -> true); //TODO: Add CAS certificate to truststore
+            return sslContextBuilder.build();
         } catch (IOException | NoSuchAlgorithmException | KeyStoreException | UnrecoverableKeyException |
                  CertificateException | KeyManagementException e) {
             log.warn("Failed to create a fresh SSL context", e);

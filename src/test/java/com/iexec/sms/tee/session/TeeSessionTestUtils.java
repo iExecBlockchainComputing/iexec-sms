@@ -21,6 +21,7 @@ import com.iexec.commons.poco.chain.DealParams;
 import com.iexec.commons.poco.order.OrderTag;
 import com.iexec.commons.poco.task.TaskDescription;
 import com.iexec.commons.poco.tee.TeeEnclaveConfiguration;
+import com.iexec.commons.poco.tee.TeeUtils;
 import com.iexec.commons.poco.utils.BytesUtils;
 import com.iexec.sms.api.config.SconeServicesProperties;
 import com.iexec.sms.api.config.TeeAppProperties;
@@ -152,6 +153,7 @@ public class TeeSessionTestUtils {
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(BytesUtils.EMPTY_ADDRESS)
                 .tag(OrderTag.TEE_SCONE.getValue())
+                .teeFramework(TeeUtils.getTeeFramework(OrderTag.TEE_SCONE.getValue()))
                 .requester(requesterAddress)
                 .beneficiary(beneficiaryAddress)
                 .dealParams(dealParams)

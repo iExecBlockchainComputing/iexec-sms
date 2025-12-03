@@ -62,16 +62,19 @@ public class TeeSessionService {
         }
 
         final TeeEnclaveConfiguration teeEnclaveConfiguration = taskDescription.getAppEnclaveConfiguration();
-        if (teeEnclaveConfiguration == null) {
+        if (taskDescription.requiresSgx() && teeEnclaveConfiguration == null) {
             throw new TeeSessionGenerationException(
                     APP_COMPUTE_NO_ENCLAVE_CONFIG,
                     String.format("TEE enclave configuration can't be null [taskId:%s]", taskId));
         }
 
         final TeeServicesProperties teeServicesProperties;
-
         try {
-            teeServicesProperties = resolveTeeServiceProperties(teeEnclaveConfiguration.getVersion());
+            if (taskDescription.requiresSgx()) {
+                teeServicesProperties = resolveTeeServiceProperties(teeEnclaveConfiguration.getVersion());
+            } else {
+                teeServicesProperties = teeServicesPropertiesMap.values().stream().findFirst().orElseThrow();
+            }
         } catch (NoSuchElementException e) {
             // TODO Add appropriate error type
             throw new TeeSessionGenerationException(
@@ -94,7 +97,6 @@ public class TeeSessionService {
                     String.format("TEE framework can't be null [taskId:%s]", taskId));
         }
 
-        // /!\ TODO clean expired tasks sessions
         final String secretProvisioningUrl = teeSessionHandler.buildAndPostSession(request);
         return new TeeSessionGenerationResponse(sessionId, secretProvisioningUrl);
     }

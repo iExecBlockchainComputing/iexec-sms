@@ -16,17 +16,40 @@
 
 package com.iexec.sms.tee.session.tdx;
 
+import com.iexec.common.utils.FeignBuilder;
 import com.iexec.commons.poco.tee.TeeFramework;
 import com.iexec.sms.api.TeeSessionGenerationError;
+import com.iexec.sms.ssl.SslConfig;
 import com.iexec.sms.tee.ConditionalOnTeeFramework;
 import com.iexec.sms.tee.session.generic.TeeSessionGenerationException;
 import com.iexec.sms.tee.session.generic.TeeSessionHandler;
 import com.iexec.sms.tee.session.generic.TeeSessionRequest;
+import com.iexec.sms.tee.session.tdx.storage.TdxSession;
+import com.iexec.sms.tee.session.tdx.storage.TdxSessionStorageApiClient;
+import com.iexec.sms.tee.session.tdx.storage.TdxSessionStorageConfiguration;
+import feign.Client;
+import feign.Logger;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.springframework.stereotype.Service;
 
 @Service
 @ConditionalOnTeeFramework(frameworks = TeeFramework.TDX)
 public class TdxSessionHandlerService implements TeeSessionHandler {
+    private final TdxSessionMakerService sessionService;
+    private final TdxSessionStorageConfiguration storageConfiguration;
+    private final TdxSessionStorageApiClient storageClient;
+
+    public TdxSessionHandlerService(
+            final SslConfig sslConfig,
+            final TdxSessionMakerService sessionService,
+            final TdxSessionStorageConfiguration storageConfiguration) {
+        this.sessionService = sessionService;
+        this.storageConfiguration = storageConfiguration;
+        this.storageClient = FeignBuilder.createBuilder(Logger.Level.FULL)
+                .client(new Client.Default(sslConfig.getFreshSslContext().getSocketFactory(), NoopHostnameVerifier.INSTANCE))
+                .target(TdxSessionStorageApiClient.class, storageConfiguration.getPostUrl());
+    }
+
     /**
      * Build and post secret session on secret provisioning service.
      *
@@ -36,9 +59,15 @@ public class TdxSessionHandlerService implements TeeSessionHandler {
      */
     @Override
     public String buildAndPostSession(final TeeSessionRequest request) throws TeeSessionGenerationException {
-        throw new TeeSessionGenerationException(
-                TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
-                "Not implemented yet"
-        );
+        final TdxSession session = sessionService.generateSession(request);
+
+        try {
+            storageClient.postSession(session);
+            return storageConfiguration.getRemoteAttestationUrl();
+        } catch (Exception e) {
+            throw new TeeSessionGenerationException(
+                    TeeSessionGenerationError.SECURE_SESSION_STORAGE_CALL_FAILED,
+                    "Failed to post session: " + e.getMessage());
+        }
     }
 }
