@@ -62,7 +62,7 @@ import static com.iexec.sms.secret.ReservedSecretKeyName.*;
 public class SecretSessionBaseService {
 
     static final String EMPTY_STRING_VALUE = "";
-    static final BigInteger BULK_DATASET_VOLUME = BigInteger.TWO.pow(53).subtract(BigInteger.ONE);
+    static final BigInteger BULK_DATASET_VOLUME = BigInteger.TWO.pow(53).subtract(BigInteger.TWO);
     static final String IEXEC_DATASET_PREFIX = "IEXEC_DATASET_";
     static final String IEXEC_DATASET_URL_SUFFIX = "_URL";
     static final String IEXEC_DATASET_CHECKSUM_SUFFIX = "_CHECKSUM";
@@ -213,9 +213,14 @@ public class SecretSessionBaseService {
 
     boolean isBulkDatasetOrderCompatibleWithDeal(final DatasetOrder datasetOrder, final TaskDescription taskDescription) {
         try {
-            log.debug("Check dataset order against deal [chainTaskId:{}, deal:{}, dataset:{}",
+            log.debug("Check dataset order against deal [chainTaskId:{}, deal:{}, dataset:{}]",
                     taskDescription.getChainTaskId(), taskDescription.getChainDealId(), datasetOrder.getDataset());
             iexecHubService.assertDatasetDealCompatibility(datasetOrder, taskDescription.getChainDealId());
+            // if BULK_DATASET_VOLUME is greater than dataset order volume, it is an error
+            if (BULK_DATASET_VOLUME.compareTo(datasetOrder.getVolume()) > 0) {
+                throw new IllegalStateException(
+                        String.format("Dataset order volume %s is invalid for bulk processing", datasetOrder.getVolume()));
+            }
             return true;
         } catch (Exception e) {
             log.error("Failed to perform all checks on dataset [chainTaskId:{}, dataset:{}, error:{}]",

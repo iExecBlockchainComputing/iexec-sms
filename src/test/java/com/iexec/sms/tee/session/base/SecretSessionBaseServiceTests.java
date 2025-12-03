@@ -245,11 +245,11 @@ class SecretSessionBaseServiceTests {
     // endregion
 
     // region getPreComputeTokens
-    private DatasetOrder createDatasetOrderForBulk(final EIP712Domain pocoDomain,
-                                                   final Credentials credentials,
-                                                   final BigInteger datasetPrice,
+    private DatasetOrder createDatasetOrderForBulk(final BigInteger datasetPrice,
                                                    final BigInteger volume,
-                                                   final OrderTag orderTag) {
+                                                   final OrderTag orderTag) throws Exception {
+        final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
+        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
         final SignerService signerService = new SignerService(null, 65535, credentials);
         final String datasetAddress = createEthereumAddress();
         final DatasetOrder datasetOrder = DatasetOrder.builder()
@@ -265,18 +265,31 @@ class SecretSessionBaseServiceTests {
         return (DatasetOrder) signerService.signOrderForDomain(datasetOrder, pocoDomain);
     }
 
+    private Map<String, String> expectedTokens(final String datasetAddress, final boolean empty) {
+        return Map.ofEntries(
+                Map.entry("IEXEC_BULK_SLICE_SIZE", "1"),
+                Map.entry("IEXEC_DATASET_1_URL", empty ? "" : DATASET_URL),
+                Map.entry("IEXEC_DATASET_1_CHECKSUM", empty ? "" : DATASET_CHECKSUM),
+                Map.entry("IEXEC_DATASET_1_KEY", empty ? "" : DATASET_KEY),
+                Map.entry("IEXEC_DATASET_1_FILENAME", datasetAddress)
+        );
+    }
+
     @Test
-    void shouldGetPreComputeBulkProcessingTokensForInvalidOrder() throws Exception {
+    void validateBulkDatasetVolume() {
+        assertThat(BULK_DATASET_VOLUME.longValue()).isEqualTo(9007199254740990L);
+    }
+
+    @Test
+    void shouldGetPreComputeBulkProcessingTokensForPoCoRejectedOrder() throws Exception {
         final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
         final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
         final TeeSessionRequest request = createSessionRequest(taskDescription);
         final TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
-        final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
-        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
         final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
-                pocoDomain, credentials, BigInteger.ONE, BigInteger.ONE, OrderTag.STANDARD);
+                BigInteger.ONE, BigInteger.ONE, OrderTag.STANDARD);
         final String datasetAddress = signedDatasetOrder.getDataset();
 
         when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
@@ -291,13 +304,36 @@ class SecretSessionBaseServiceTests {
 
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
-                Map.entry("IEXEC_BULK_SLICE_SIZE", "1"),
-                Map.entry("IEXEC_DATASET_1_URL", ""),
-                Map.entry("IEXEC_DATASET_1_CHECKSUM", ""),
-                Map.entry("IEXEC_DATASET_1_KEY", ""),
-                Map.entry("IEXEC_DATASET_1_FILENAME", datasetAddress)
-        ));
+        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(
+                expectedTokens(datasetAddress, true));
+    }
+
+    @Test
+    void shouldGetPreComputeBulkProcessingTokensForSmsRejectedOrder() throws Exception {
+        final DealParams dealParams = DealParams.builder().bulkCid("bulkCid").build();
+        final TaskDescription taskDescription = createTaskDescription(dealParams, enclaveConfig).build();
+        final TeeSessionRequest request = createSessionRequest(taskDescription);
+        final TeeChallenge challenge = TeeChallenge.builder()
+                .credentials(EthereumCredentials.generate())
+                .build();
+        final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
+                BigInteger.ONE, BigInteger.ONE, OrderTag.STANDARD);
+        final String datasetAddress = signedDatasetOrder.getDataset();
+
+        when(ipfsClient.readBulkCid("bulkCid")).thenReturn(List.of("ordersCid"));
+        when(ipfsClient.readOrders("ordersCid")).thenReturn(List.of(signedDatasetOrder));
+        when(iexecHubService.getChainDataset(datasetAddress)).thenReturn(Optional.of(ChainDataset.builder().chainDatasetId(datasetAddress).build()));
+        doNothing().when(iexecHubService).assertDatasetDealCompatibility(signedDatasetOrder, DEAL_ID);
+
+        final SecretEnclaveBase enclaveBase = teeSecretsService.getPreComputeTokens(
+                request,
+                getSignTokens(challenge.getCredentials().getPrivateKey())
+        );
+
+        assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
+        assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
+        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(
+                expectedTokens(datasetAddress, true));
     }
 
     @Test
@@ -308,10 +344,8 @@ class SecretSessionBaseServiceTests {
         final TeeChallenge challenge = TeeChallenge.builder()
                 .credentials(EthereumCredentials.generate())
                 .build();
-        final EIP712Domain pocoDomain = new EIP712Domain(65535, "");
-        final Credentials credentials = Credentials.create(Keys.createEcKeyPair());
         final DatasetOrder signedDatasetOrder = createDatasetOrderForBulk(
-                pocoDomain, credentials, BigInteger.ZERO, BULK_DATASET_VOLUME, OrderTag.TEE_SCONE);
+                BigInteger.ZERO, BULK_DATASET_VOLUME, OrderTag.TEE_SCONE);
         final String datasetAddress = signedDatasetOrder.getDataset();
         final ChainDataset chainDataset = ChainDataset.builder()
                 .chainDatasetId(datasetAddress)
@@ -332,13 +366,8 @@ class SecretSessionBaseServiceTests {
 
         assertThat(enclaveBase.getName()).isEqualTo("pre-compute");
         assertThat(enclaveBase.getMrenclave()).isEqualTo(PRE_COMPUTE_FINGERPRINT);
-        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(Map.ofEntries(
-                Map.entry("IEXEC_BULK_SLICE_SIZE", "1"),
-                Map.entry("IEXEC_DATASET_1_URL", DATASET_URL),
-                Map.entry("IEXEC_DATASET_1_CHECKSUM", DATASET_CHECKSUM),
-                Map.entry("IEXEC_DATASET_1_KEY", DATASET_KEY),
-                Map.entry("IEXEC_DATASET_1_FILENAME", datasetAddress)
-        ));
+        assertThat(enclaveBase.getEnvironment()).containsAllEntriesOf(
+                expectedTokens(datasetAddress, false));
     }
 
     @Test
