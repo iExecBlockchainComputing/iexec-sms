@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.3.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.2.2...v9.3.0) (2025-12-16)
+
+
+### Features
+
+* allow to start SMS for TDX framework and to expose TEE properties ([#317](https://github.com/iExecBlockchainComputing/iexec-sms/issues/317)) ([0b596f5](https://github.com/iExecBlockchainComputing/iexec-sms/commit/0b596f5bc5d418a64344546b0eb71f4473982b06))
+* enforce String serialization for TEE sessions tokens values ([#319](https://github.com/iExecBlockchainComputing/iexec-sms/issues/319)) ([c79711a](https://github.com/iExecBlockchainComputing/iexec-sms/commit/c79711a52289f71ea3233a55cfb7cc8d67c887a6))
+* generate and post TDX session to session storage ([#320](https://github.com/iExecBlockchainComputing/iexec-sms/issues/320)) ([71f5f90](https://github.com/iExecBlockchainComputing/iexec-sms/commit/71f5f90e8906ddebb7139850daf6db469e6c8dd8))
+
+
+### Bug Fixes
+
+* add application checksum to TDX session ([#322](https://github.com/iExecBlockchainComputing/iexec-sms/issues/322)) ([daeddee](https://github.com/iExecBlockchainComputing/iexec-sms/commit/daeddeeab39ce2edfd28f63d2d2cd4f94ffc5406))
+* check each dataset order volume is valid for a bulk processing deal ([#321](https://github.com/iExecBlockchainComputing/iexec-sms/issues/321)) ([a9b33bf](https://github.com/iExecBlockchainComputing/iexec-sms/commit/a9b33bf31f3d467b5f033c9ac89c94e130f0cc31))
+
 ## [9.2.2](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.2.1...v9.2.2) (2025-10-30)
 
 
