@@ -4,27 +4,26 @@
 
 The _iExec Secret Management Service_ (SMS) stores user secrets and provisions them to authorized Trusted Execution Environment (TEE) applications running on the iExec network.
 
-Two TEE frameworks for TEE tasks are supported on the iExec platform:
-
-* Scone
-* Gramine
+> [!IMPORTANT]
+> Support for Intel TDX based TEE enclaves is being introduced on the iExec platform.
+> The Scone and Gramine TEE SGX frameworks are being deprecated and their support will be removed in the future.
 
 ### Details
 
-* Confidential assets you have (password, token, API key, AES key, ..) should be securely transferred from your machine to the SMS over a TLS channel (iExec SDK is recommended). This operation is only done once.
+* Confidential assets you own (password, token, API key, AES key, ..) should be securely transferred from your machine to the SMS over a TLS channel (iExec SDK is recommended). This operation is only done once.
 * Internally, secrets are encrypted with standard AES encryption before being written to disk. 
 * The iExec SMS secret provisioning policy is based on on-chain ACL (PoCo). PoCo smart contracts define simple ACL rules where individuals have ownership of on-chain objects they have deployed (workerpool, application, secret-dataset & requester).
 * Each individual who is the owner of an object could define a policy on it. For example, "As a Requester (0xAlice), I only authorize my confidential Secret-Dataset (0xSecretOfAlice) to be used by the application of Bob (0xAppOfBob) I trust which will run on the Workerpool of Carl (0xWorkerpoolOfCarl)".
-* When the secure application of Bob starts, the secret of Alice is written into a temporary session and sent over TLS to a dedicated  Configuration & Attestation Service (CAS) enclave responsible for communicating with the final application enclave.
+* When the secure application of Bob starts, the secret of Alice is written into a temporary session and sent over TLS to a dedicated Configuration & Attestation Service (CAS) enclave responsible for communicating with the final application enclave.
 * If the application enclave is legit (measurable with its mrenclave with Scone), it will receive the secrets.
-* To sum up, if all checks are correct, the secret of Alice will cross the following environments: Alice-Host -> iExec-SMS -> Scone-CAS -> Bob-Scone-Application
+* To sum up, if all checks are correct, the secret of Alice will cross the following environments:
+  Alice-Host -> iExec-SMS -> TEE Session Storage (depends on TEE framework) -> Bob-Application (running in a TEE enclave)
 
 ## Configuration
 
 The _iExec Secret Management Service_ is available as an OCI image on [Docker Hub](https://hub.docker.com/r/iexechub/iexec-sms/tags).
 
 A single _iExec Secret Management Service_ instance supports a single TEE framework.
-To support both Scone and Gramine TEE tasks, two instances of _iExec SMS_ must be configured.
 
 To run properly, the _iExec Secret Management Service_ requires:
 * A blockchain node. iExec smart contracts must be deployed on the blockchain network.
@@ -33,52 +32,59 @@ To run properly, the _iExec Secret Management Service_ requires:
     * for Scone TEE tasks:
         * a Scontain _Configuration and Attestation Service_ (CAS).
         * a valid OCI image configuration of a Scontain _Local Attestation Service_ (LAS). This service will be deployed by an iExec Worker to compute TEE tasks.
-    * for Gramine TEE tasks:
-        * an _iExec Secret Provisioner Service_ (_iExec SPS_) instance.
+    * for TDX TEE tasks:
+        * an _iExec Session Storage_ instance.
+        * a _iExec Secret Broker Server_ instance.
 
 The _iExec Secret Management Service_ can be started locally for development purpose.
 It is not advised to use an instance with such configuration in production.
 
 To support:
 * Scone TEE tasks, set `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK=scone`, then configure the SMS with properties of all following tables.
-* Gramine TEE tasks, set `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK=gramine`, then configure the SMS with properties of following table.
+* TDX TEE tasks, set `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK=tdx`, then configure the SMS with properties of following table.
 
-### Environment variables (Scone or Gramine TEE framework)
+### Properties and environment variables
 
-| Environment variable | Description | Type | Default Scone-configuration value |  Default Gramine-configuration value |
+| Property name | Environment variable | Description | Type | Default value |
 | --- | --- | --- | --- | --- |
-| `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK` | Define which TEE framework this _iExec SMS_ supports. | `scone` or `gramine` | | |
-| `IEXEC_SMS_PORT` | Server HTTP port. | Positive integer | `13300` | `13300` |
-| `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/data/sms-h2` | `jdbc:h2:file:/data/sms-h2` |
-| `IEXEC_SMS_H2_CONSOLE` | Whether to enable the H2 console. | Boolean | `false` | `false` |
-| `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` | `src/main/resources/iexec-sms-aes.key` |
-| `IEXEC_SMS_ADMIN_API_KEY` | API key used to authorize calls to `/admin` endpoints. | String | | |
-| `IEXEC_SMS_ADMIN_STORAGE_LOCATION` | Storage location where to persist replicated backups. It must be an absolute directory path. | String | `/backup` | `/backup` |
-| `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `134` |  `134` |
-| `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `true` | `true` |
-| `IEXEC_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` | `https://bellecour.iex.ec` |
-| `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` |
-| `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` | `PT5S` |
-| `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` | `1.0` |
-| `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` | `22000000000` |
-| `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` | `localhost` |
-| `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | `8081` | `8080` |
-| `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` | `localhost` |
-| `IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT`|  Secret provisioner server port for retrieving secrets from attested enclaves. | Positive integer | `18765` | `4433` |
-| `IEXEC_TEE_CHALLENGE_CLEANUP_CRON` | Cron expression to configure TEE challenges cleanup policy. | String | `@hourly` | `@hourly` |
-| `IEXEC_TEE_CHALLENGE_CLEANUP_MAX_BATCH_SIZE` | Max number of TEE challenges whose missing deadline could be set at a given time. | Integer | `500` | `500` |
-| `IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_DURATION` | Retention duration when setting missing final deadline. | Duration | `P5D` | `P5D` |
-| `TEE_WORKER_PIPELINES_0_VERSION` | Worker pipeline version | String | `v5` | `v5` |
-| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage | String | | |
-| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker pre-compute image | String | | |
-| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_HEAPSIZE` | Required heap size for a worker pre-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
-| `TEE_WORKER_PIPELINES_0_PRECOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker pre-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
-| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_IMAGE` | TEE enabled OCI image name for worker post-compute stage | String | | |
-| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker post-compute image | String | | |
-| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_HEAPSIZE` | Required heap size for a worker post-compute enclave using units like KB, MB, GB | DataSize | `3GB` | `3GB` |
-| `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image | String | `java -jar /app/app.jar` | `/bin/bash /apploader.sh` |
+| `spring.profiles.active` | `IEXEC_SMS_TEE_RUNTIME_FRAMEWORK` | Define which TEE framework this _iExec SMS_ supports. | `scone` or `tdx` | |
+| `server.port` | `IEXEC_SMS_PORT` | Server HTTP port. | Positive integer | `13300` |
+| `spring.datasource.url` | `IEXEC_SMS_H2_URL` | JDBC URL of the database. | URL | `jdbc:h2:file:/data/sms-h2` |
+| `spring.h2.console.enabled` | `IEXEC_SMS_H2_CONSOLE` | Whether to enable the H2 console. | Boolean | `false` |
+| `encryption.aes-key-path` | `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` |
+| `admin.api-key` | `IEXEC_SMS_ADMIN_API_KEY` | API key used to authorize calls to `/admin` endpoints. | String | |
+| `admin.storage-location` | `IEXEC_SMS_ADMIN_STORAGE_LOCATION` | Storage location where to persist replicated backups. It must be an absolute directory path. | String | `/backup` |
+| `chain.id` | `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `134` |
+| `chain.sidechain` | `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `true` |
+| `chain.node-address` | `IEXEC_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` |
+| `chain.hub-address` | `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` |
+| `chain.block-time` | `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` |
+| `chain.gas-price-multiplier` | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` |
+| `chain.gas-price-cap` | `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` |
+| `tee.secret-provisioner.web.hostname` | `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` |
+| `tee.secret-provisioner.web.port` | `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | |
+| `tee.secret-provisioner.enclave.hostname` | `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` |
+| `tee.secret-provisioner.enclave.port` | `IEXEC_SECRET_PROVISIONER_ENCLAVE_PORT`|  Secret provisioner server port for retrieving secrets from attested enclaves. | Positive integer | |
+| `tee.challenge.cleanup.cron` | `IEXEC_TEE_CHALLENGE_CLEANUP_CRON` | Cron expression to configure TEE challenges cleanup policy. | String | `@hourly` |
+| `tee.challenge.cleanup.missing-deadline-max-batch-size` | `IEXEC_TEE_CHALLENGE_CLEANUP_MAX_BATCH_SIZE` | Max number of TEE challenges whose missing deadline could be set at a given time. | Integer | `500` |
+| `tee.challenge.cleanup.missing-deadline-retention-duration` | `IEXEC_TEE_CHALLENGE_CLEANUP_RETENTION_DURATION` | Retention duration when setting missing final deadline. | Duration | `P5D` |
+| `tee.worker.pipelines[].version` | `TEE_WORKER_PIPELINES_0_VERSION` | Worker pipeline version | String | `v5` |
+| `tee.worker.pipelines[].pre-compute.image` | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_IMAGE` | TEE enabled OCI image name for worker pre-compute stage | String | |
+| `tee.worker.pipelines[].pre-compute.fingerprint` | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker pre-compute image | String | |
+| `tee.worker.pipelines[].pre-compute.heap-size` | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_HEAPSIZE` | Required heap size for a worker pre-compute enclave using units like KB, MB, GB | DataSize | `1GB` |
+| `tee.worker.pipelines[].pre-compute.entrypoint` | `TEE_WORKER_PIPELINES_0_PRECOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker pre-compute image | String | `/app/tee-worker-pre-compute` |
+| `tee.worker.pipelines[].post-compute.image` | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_IMAGE` | TEE enabled OCI image name for worker post-compute stage | String | |
+| `tee.worker.pipelines[].post-compute.fingerprint` | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_FINGERPRINT` | Fingerprint (mrenclave) of the TEE enabled worker post-compute image | String | |
+| `tee.worker.pipelines[].post-compute.heap-size` | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_HEAPSIZE` | Required heap size for a worker post-compute enclave using units like KB, MB, GB | DataSize | `1GB` |
+| `tee.worker.pipelines[].post-compute.entrypoint` | `TEE_WORKER_PIPELINES_0_POSTCOMPUTE_ENTRYPOINT` | Command executed when starting a container from the TEE enabled worker post-compute image | String | `/app/tee-worker-post-compute` |
+
+> [!IMPORTANT]
+> The environment variables are starting to be sunset in order to bring better configurability in the future.
+> It is recommended to use variables derived from application properties to benefit from Spring framework features
+> (see [Relaxed Binding](https://docs.spring.io/spring-boot/3.3/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding)).
 
 ## Heap Size Configuration
+
 The heap size configuration supports the following units:
 
 - **B** for bytes
@@ -88,36 +94,38 @@ The heap size configuration supports the following units:
 - **TB** for terabytes
 
 ### Example Values
+
 - `3GB`
 - `4096MB`
 - `1TB`
 
 ### Conversion Table
-| Unit | Bytes Equivalent            |
-|------|-----------------------------|
-| 1 KB | 1,024 B                     |
-| 1 MB | 1,024 KB (1,048,576 B)      |
-| 1 GB | 1,024 MB (1,073,741,824 B)  |
-| 1 TB | 1,024 GB (1,099,511,627,776 B) |
+
+| Unit | Bytes Equivalent           |
+|------|----------------------------|
+| 1 KB | 1,024 B                    |
+| 1 MB | 1,024 KB (1,048,576 B)     |
+| 1 GB | 1,024 MB (1,073,741,824 B) |
 
 ### Required Pipeline Configuration
 
-The TEE worker pipeline configurations (`application-gramine.yml` and `application-scone.yml`) **no longer provide default values** for pre-compute and post-compute settings.
+The TEE worker pipeline configurations (`application-scone.yml` and `application-tdx.yml`) **no longer provide default values** for pre-compute and post-compute settings.
 The configuration must be set by SMS operator.
 
 #### **Example Configuration (to be provided by SMS operator)**
+
 ```yaml
 - version: v5
   pre-compute:
-    image: iexechub/tee-worker-pre-compute:<version>-sconify-<scone-version>-production
+    image: iexechub/tee-worker-pre-compute-rust:<version>-sconify-<scone-version>-production
     fingerprint: <tee-worker-pre-compute-fingerprint>
-    heap-size: 3GB
-    entrypoint: java -jar /app/app.jar
+    heap-size: 1GB
+    entrypoint: /app/tee-worker-pre-compute
   post-compute:
-    image: iexechub/tee-worker-post-compute:<version>-sconify-<scone-version>-production
+    image: iexechub/tee-worker-post-compute-rust:<version>-sconify-<scone-version>-production
     fingerprint: <tee-worker-post-compute-fingerprint>
-    heap-size: 3GB
-    entrypoint: java -jar /app/app.jar
+    heap-size: 1GB
+    entrypoint: /app/tee-worker-post-compute
 ```
 
 ### Scone specific environment variables
