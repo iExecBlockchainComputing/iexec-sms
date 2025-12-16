@@ -46,8 +46,7 @@ public class TdxSessionMakerService {
         if (baseSession.getPreCompute() != null) {
             tdxEnclaves.add(toTdxEnclave(baseSession.getPreCompute(), request.getTeeServicesProperties().getPreComputeProperties()));
         }
-        // FIXME fingerprint should be dapp checksum from TaskDescription after commons-poco update
-        tdxEnclaves.add(toTdxEnclave(baseSession.getAppCompute(), request.getTaskDescription().getAppUri(), ""));
+        tdxEnclaves.add(toTdxEnclave(baseSession.getAppCompute(), request.getTaskDescription().getAppUri(), request.getTaskDescription().getAppChecksum()));
         tdxEnclaves.add(toTdxEnclave(baseSession.getPostCompute(), request.getTeeServicesProperties().getPostComputeProperties()));
         return new TdxSession(request.getSessionId(), TDX_SESSION_VERSION, List.copyOf(tdxEnclaves));
     }

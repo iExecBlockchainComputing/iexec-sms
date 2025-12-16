@@ -60,6 +60,7 @@ public class TeeSessionTestUtils {
     public static final String REQUESTER_SECRET_KEY_2 = "requesterSecretKey2";
     public static final String REQUESTER_SECRET_VALUE_2 = "requesterSecretValue2";
     public static final String APP_URI = "appUri";
+    public static final String APP_CHECKSUM = "appChecksum";
     public static final String APP_FINGERPRINT = "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b";
     public static final String APP_ENTRYPOINT = "appEntrypoint";
     public static final String ARGS = "args";
@@ -150,6 +151,7 @@ public class TeeSessionTestUtils {
                 .workerpoolOwner(workerpoolAddress)
                 .appUri(APP_URI)
                 .appAddress(appAddress)
+                .appChecksum(APP_CHECKSUM)
                 .appEnclaveConfiguration(enclaveConfig)
                 .datasetAddress(BytesUtils.EMPTY_ADDRESS)
                 .tag(OrderTag.TEE_SCONE.getValue())

@@ -91,7 +91,7 @@ class TdxSessionMakerServiceTests {
         final TdxSession tdxSession = tdxSessionMakerService.generateSession(request);
         final List<TdxSession.Service> services = List.of(
                 new TdxSession.Service(preCompute.getName(), "pre-compute-image", "pre-compute-fingerprint", Map.of("PRE_COMPUTE", "PRE_COMPUTE")),
-                new TdxSession.Service(appCompute.getName(), APP_URI, "", Map.of("APP_COMPUTE", "APP_COMPUTE")),
+                new TdxSession.Service(appCompute.getName(), APP_URI, APP_CHECKSUM, Map.of("APP_COMPUTE", "APP_COMPUTE")),
                 new TdxSession.Service(postCompute.getName(), "post-compute-image", "post-compute-fingerprint", Map.of("POST_COMPUTE", "POST_COMPUTE"))
         );
         assertThat(tdxSession)
@@ -118,7 +118,7 @@ class TdxSessionMakerServiceTests {
                 .thenReturn(secretSessionBase);
         final TdxSession tdxSession = tdxSessionMakerService.generateSession(request);
         final List<TdxSession.Service> services = List.of(
-                new TdxSession.Service(appCompute.getName(), APP_URI, "", Map.of("APP_COMPUTE", "APP_COMPUTE")),
+                new TdxSession.Service(appCompute.getName(), APP_URI, APP_CHECKSUM, Map.of("APP_COMPUTE", "APP_COMPUTE")),
                 new TdxSession.Service(postCompute.getName(), "post-compute-image", "post-compute-fingerprint", Map.of("POST_COMPUTE", "POST_COMPUTE"))
         );
         assertThat(tdxSession)
