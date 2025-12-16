@@ -61,6 +61,8 @@ To support:
 | `chain.block-time` | `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` |
 | `chain.gas-price-multiplier` | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` |
 | `chain.gas-price-cap` | `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` |
+| `ipfs.gateway-url` | | Url of the IPFS gateway to use to fetch bulk processing related data when handling such a task. | URL | |
+| `metrics.storage.refresh-interval` | `IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL` | Time interval in seconds between consecutive queries to fetch database content statistics. | Integer | 30 |
 | `tee.secret-provisioner.web.hostname` | `IEXEC_SECRET_PROVISIONER_WEB_HOSTNAME` | Secret provisioner server host for session management. Used to post sessions of secrets. | String | `localhost` |
 | `tee.secret-provisioner.web.port` | `IEXEC_SECRET_PROVISIONER_WEB_PORT` | Secret provisioner server port for session management. | Positive integer | |
 | `tee.secret-provisioner.enclave.hostname` | `IEXEC_SECRET_PROVISIONER_ENCLAVE_HOSTNAME` | Secret provisioner server host for retrieving secrets from attested enclaves. Typically used by workers to execute TEE tasks. | Positive integer | `localhost` |
