@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.3.1](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.3.0...v9.3.1) (2026-04-30)
+
+
+### Bug Fixes
+
+* remove sconification steps ([#324](https://github.com/iExecBlockchainComputing/iexec-sms/issues/324)) ([1353d61](https://github.com/iExecBlockchainComputing/iexec-sms/commit/1353d61dcbd37f8f2b1d814fbe184becbf9d40ed))
+* SameSecretException was used in an antipattern ([#326](https://github.com/iExecBlockchainComputing/iexec-sms/issues/326)) ([364e1f5](https://github.com/iExecBlockchainComputing/iexec-sms/commit/364e1f537f185ac55205340806a2e656a078a8b5))
+
 ## [9.3.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.2.2...v9.3.0) (2025-12-16)
 
 
