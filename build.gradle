@@ -157,12 +157,3 @@ tasks.register('buildImage', Exec) {
     dependsOn bootJar
     commandLine 'docker', 'build', '--build-arg', 'jar=' + jarPathForOCI, '-t', ociImageName + ':dev', '.'
 }
-
-tasks.register('buildSconeImage', Exec) {
-    group "Build"
-    description "Build an OCI image compatible with scontain TEE framework"
-    dependsOn buildImage
-    commandLine "docker/sconify.sh"
-    environment "IMG_FROM", "$ociImageName:dev"
-    environment "IMG_TO", "$ociImageName-unlocked:dev"
-}
