@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,13 @@ package com.iexec.sms.secret;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.NotAnExistingSecretException;
-import com.iexec.sms.secret.web2.SameSecretException;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -35,6 +34,7 @@ import java.security.SecureRandom;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class SecretControllerTests {
 
     private static final String AUTHORIZATION = "AUTHORIZATION";
@@ -58,11 +58,6 @@ class SecretControllerTests {
     private SecretController secretController;
 
     private static final SecureRandom seed = new SecureRandom();
-
-    @BeforeEach
-    public void init() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     //region isWeb3SecretSet
     @Test
@@ -233,7 +228,7 @@ class SecretControllerTests {
     }
 
     @Test
-    void failToUpdateWeb2SecretWhenSecretIsMissing() throws NotAnExistingSecretException, SameSecretException {
+    void failToUpdateWeb2SecretWhenSecretIsMissing() throws NotAnExistingSecretException {
         when(authorizationService.getChallengeForSetWeb2Secret(WEB2_OWNER_ADDRESS, WEB2_SECRET_NAME, WEB2_SECRET_VALUE))
                 .thenReturn(CHALLENGE);
         when(authorizationService.isSignedByHimself(CHALLENGE, AUTHORIZATION, WEB2_OWNER_ADDRESS))

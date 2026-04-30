@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @DataJpaTest
+@ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Web2SecretServiceTests {
     private static final String OWNER_ADDRESS = "ownerAddress";
@@ -73,7 +75,6 @@ class Web2SecretServiceTests {
 
     @BeforeEach
     void beforeEach() {
-        MockitoAnnotations.openMocks(this);
         memoryLogAppender.reset();
         web2SecretRepository.deleteAll();
         web2CacheSecretService.clear();
@@ -215,7 +216,7 @@ class Web2SecretServiceTests {
 
     // region updateSecret
     @Test
-    void shouldUpdateSecret() throws NotAnExistingSecretException, SameSecretException {
+    void shouldUpdateSecret() throws NotAnExistingSecretException {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
         final String newSecretValue = "newSecretValue";
         final String newEncryptedSecretValue = "newEncryptedSecretValue";
@@ -223,7 +224,8 @@ class Web2SecretServiceTests {
         when(encryptionService.encrypt(newSecretValue))
                 .thenReturn(newEncryptedSecretValue);
 
-        final Web2Secret newSecret = web2SecretService.updateSecret(OWNER_ADDRESS, SECRET_ADDRESS, newSecretValue);
+        web2SecretService.updateSecret(OWNER_ADDRESS, SECRET_ADDRESS, newSecretValue);
+        final Web2Secret newSecret = web2SecretRepository.findById(encryptedSecret.getHeader()).orElseThrow();
         assertAll(
                 () -> assertThat(newSecret).extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
                 () -> assertThat(newSecret).extracting(Web2Secret::getValue).isEqualTo(newEncryptedSecretValue),
@@ -243,17 +245,17 @@ class Web2SecretServiceTests {
     }
 
     @Test
-    void shouldNotUpdateSecretIfSameValue() {
+    void shouldNotUpdateSecretIfSameValue() throws NotAnExistingSecretException {
         final Web2Secret encryptedSecret = new Web2Secret(OWNER_ADDRESS, SECRET_ADDRESS, ENCRYPTED_SECRET_VALUE);
         web2SecretRepository.save(encryptedSecret);
         when(encryptionService.encrypt(PLAIN_SECRET_VALUE))
                 .thenReturn(ENCRYPTED_SECRET_VALUE);
 
-        final SameSecretException exception = assertThrows(SameSecretException.class,
-                () -> web2SecretService.updateSecret(OWNER_ADDRESS, SECRET_ADDRESS, PLAIN_SECRET_VALUE));
+        web2SecretService.updateSecret(OWNER_ADDRESS, SECRET_ADDRESS, PLAIN_SECRET_VALUE);
+        final Web2Secret newSecret = web2SecretRepository.findById(encryptedSecret.getHeader()).orElseThrow();
         assertAll(
-                () -> assertEquals(OWNER_ADDRESS, exception.getOwnerAddress()),
-                () -> assertEquals(SECRET_ADDRESS, exception.getSecretAddress()),
+                () -> assertThat(newSecret).extracting(Web2Secret::getHeader).usingRecursiveComparison().isEqualTo(new Web2SecretHeader(OWNER_ADDRESS, SECRET_ADDRESS)),
+                () -> assertThat(newSecret).extracting(Web2Secret::getValue).isEqualTo(ENCRYPTED_SECRET_VALUE),
                 () -> assertThat(web2SecretRepository.count()).isOne()
         );
     }
