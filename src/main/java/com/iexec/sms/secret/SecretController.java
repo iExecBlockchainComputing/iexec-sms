@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.iexec.sms.secret;
 
 import com.iexec.sms.authorization.AuthorizationService;
 import com.iexec.sms.secret.web2.NotAnExistingSecretException;
-import com.iexec.sms.secret.web2.SameSecretException;
 import com.iexec.sms.secret.web2.Web2SecretService;
 import com.iexec.sms.secret.web3.Web3SecretService;
 import lombok.extern.slf4j.Slf4j;
@@ -115,7 +114,7 @@ public class SecretController {
                                                    @RequestParam String ownerAddress,
                                                    @RequestParam String secretName,
                                                    @RequestBody String newSecretValue) {
-        String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
+        final String challenge = authorizationService.getChallengeForSetWeb2Secret(ownerAddress, secretName, newSecretValue);
 
         if (!authorizationService.isSignedByHimself(challenge, authorization, ownerAddress)) {
             log.error("Unauthorized to updateWeb2Secret [expectedChallenge:{}]", challenge);
@@ -128,8 +127,6 @@ public class SecretController {
 
         try {
             web2SecretService.updateSecret(ownerAddress, secretName, newSecretValue);
-            return ResponseEntity.noContent().build();
-        } catch (SameSecretException ignored) {
             return ResponseEntity.noContent().build();
         } catch (NoSuchElementException | NotAnExistingSecretException e) {
             return ResponseEntity.notFound().build();

@@ -128,11 +128,9 @@ public class Web2SecretService {
      * @param ownerAddress   Address of the secret owner.
      * @param secretAddress  Address of the secret.
      * @param newSecretValue New, unencrypted value of the secret.
-     * @return The {@link Web2Secret} that has been saved.
      * @throws NotAnExistingSecretException thrown when the requested secret does not exist.
-     * @throws SameSecretException          thrown when the requested secret already contains the encrypted value.
      */
-    public Web2Secret updateSecret(String ownerAddress, String secretAddress, String newSecretValue) throws NotAnExistingSecretException, SameSecretException {
+    public void updateSecret(String ownerAddress, String secretAddress, String newSecretValue) throws NotAnExistingSecretException {
         final Optional<Web2Secret> oSecret = getSecret(ownerAddress, secretAddress);
         if (oSecret.isEmpty()) {
             log.error("Secret does not exist, can't update it [ownerAddress:{}, secretAddress:{}]",
@@ -145,12 +143,11 @@ public class Web2SecretService {
         if (Objects.equals(secret.getValue(), encryptedValue)) {
             log.info("No need to update secret [ownerAddress:{}, secretAddress:{}]",
                     ownerAddress, secretAddress);
-            throw new SameSecretException(ownerAddress, secretAddress);
+            return;
         }
 
         final Web2Secret newSecret = secret.withValue(encryptedValue);
         final Web2Secret savedSecret = web2SecretRepository.save(newSecret);
         cacheSecretService.putSecretExistenceInCache(savedSecret.getHeader(), true);
-        return savedSecret;
     }
 }
