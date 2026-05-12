@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 IEXEC BLOCKCHAIN TECH
+ * Copyright 2025-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
@@ -39,8 +41,8 @@ class SconeSessionSecurityConfigTests {
 
     static {
         try {
-            MAA_URL = new URL("https://maa.attestation.service");
-        } catch (MalformedURLException e) {
+            MAA_URL = new URI("https://maa.attestation.service").toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
             throw new RuntimeException(e);
         }
     }
