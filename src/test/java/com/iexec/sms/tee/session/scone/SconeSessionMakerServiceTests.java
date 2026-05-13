@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.yaml.snakeyaml.Yaml;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -57,9 +59,9 @@ class SconeSessionMakerServiceTests {
 
     static {
         try {
-            MAA_URL_OUT_OF_SERVICE = new URL("https://broken.maa.attestation.service");
-            MAA_URL = new URL("https://maa.attestation.service");
-        } catch (MalformedURLException e) {
+            MAA_URL_OUT_OF_SERVICE = new URI("https://broken.maa.attestation.service").toURL();
+            MAA_URL = new URI("https://maa.attestation.service").toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
             throw new RuntimeException(e);
         }
     }

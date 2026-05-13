@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ public class TeeSessionService {
     }
 
     private String createSessionId(final String taskId) {
-        final String randomString = RandomStringUtils.randomAlphanumeric(10);
+        final String randomString = RandomStringUtils.secure().nextAlphanumeric(10);
         return String.format("%s0000%s", randomString, taskId);
     }
 
