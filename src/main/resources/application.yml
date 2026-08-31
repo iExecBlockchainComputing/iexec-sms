@@ -34,12 +34,12 @@ encryption:
   aes-key-path: ${IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH:/data/iexec-sms-aes.key}
 
 chain:
-  id: ${IEXEC_CHAIN_ID:134}
-  sidechain: ${IEXEC_IS_SIDECHAIN:true}
-  node-address: ${IEXEC_BLOCKCHAIN_NODE_ADDRESS:https://bellecour.iex.ec}
-  hub-address: ${IEXEC_HUB_ADDRESS:0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f}
+  id: ${IEXEC_CHAIN_ID:421614}
+  sidechain: ${IEXEC_IS_SIDECHAIN:false}
+  node-address: ${IEXEC_BLOCKCHAIN_NODE_ADDRESS:https://sepolia-rollup.arbitrum.io/rpc}
+  hub-address: ${IEXEC_HUB_ADDRESS:0xB2157BF2fAb286b2A4170E3491Ac39770111Da3E}
   block-time: ${IEXEC_BLOCK_TIME:PT5S}
-  gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.0} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast
+  gas-price-multiplier: ${IEXEC_GAS_PRICE_MULTIPLIER:1.1} # txs will be sent with networkGasPrice*gasPriceMultiplier, 4.0 means superfast
   gas-price-cap: ${IEXEC_GAS_PRICE_CAP:22000000000} #in Wei, will be used for txs if networkGasPrice*gasPriceMultiplier > gasPriceCap
 
 ipfs:
