@@ -54,12 +54,12 @@ To support:
 | `encryption.aes-key-path` | `IEXEC_SMS_STORAGE_ENCRYPTION_AES_KEY_PATH` | Path to the key created and used to encrypt secrets. | String | `src/main/resources/iexec-sms-aes.key` |
 | `admin.api-key` | `IEXEC_SMS_ADMIN_API_KEY` | API key used to authorize calls to `/admin` endpoints. | String | |
 | `admin.storage-location` | `IEXEC_SMS_ADMIN_STORAGE_LOCATION` | Storage location where to persist replicated backups. It must be an absolute directory path. | String | `/backup` |
-| `chain.id` | `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `134` |
-| `chain.sidechain` | `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `true` |
-| `chain.node-address` | `IEXEC_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://bellecour.iex.ec` |
-| `chain.hub-address` | `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0x3eca1B216A7DF1C7689aEb259fFB83ADFB894E7f` |
+| `chain.id` | `IEXEC_CHAIN_ID` | Chain ID of the blockchain network to connect. | Positive integer | `421614` |
+| `chain.sidechain` | `IEXEC_IS_SIDECHAIN` | Define whether iExec on-chain protocol is built on top of token (`false`) or native currency (`true`). | Boolean | `false` |
+| `chain.node-address` | `IEXEC_BLOCKCHAIN_NODE_ADDRESS` | URL to connect to the blockchain node. | URL | `https://sepolia-rollup.arbitrum.io/rpc` |
+| `chain.hub-address` | `IEXEC_HUB_ADDRESS` | Proxy contract address to interact with the iExec on-chain protocol. | String | `0xB2157BF2fAb286b2A4170E3491Ac39770111Da3E` |
 | `chain.block-time` | `IEXEC_BLOCK_TIME` | Duration between consecutive blocks on the blockchain network. | String | `PT5S` |
-| `chain.gas-price-multiplier` | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.0` |
+| `chain.gas-price-multiplier` | `IEXEC_GAS_PRICE_MULTIPLIER` | Transactions will be sent with `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER`. | Float | `1.1` |
 | `chain.gas-price-cap` | `IEXEC_GAS_PRICE_CAP` | In Wei, will be used for transactions if `networkGasPrice * IEXEC_GAS_PRICE_MULTIPLIER > IEXEC_GAS_PRICE_CAP`. | Integer | `22000000000` |
 | `ipfs.gateway-url` | | Url of the IPFS gateway to use to fetch bulk processing related data when handling such a task. | URL | |
 | `metrics.storage.refresh-interval` | `IEXEC_SMS_METRICS_STORAGE_REFRESH_INTERVAL` | Time interval in seconds between consecutive queries to fetch database content statistics. | Integer | 30 |
