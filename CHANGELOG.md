@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.4.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.3.1...v9.4.0) (2026-09-01)
+
+
+### Features
+
+* start application on Arbitrum Sepolia by default ([#332](https://github.com/iExecBlockchainComputing/iexec-sms/issues/332)) ([37463df](https://github.com/iExecBlockchainComputing/iexec-sms/commit/37463dfb75aa11d20d26dddbf032599a32904a02))
+* upgrade to Java 21 ([#330](https://github.com/iExecBlockchainComputing/iexec-sms/issues/330)) ([49ae93e](https://github.com/iExecBlockchainComputing/iexec-sms/commit/49ae93eadb5846d753926638c10a5725a99ffc36))
+* upgrade to Spring Boot 3.5.8 ([#328](https://github.com/iExecBlockchainComputing/iexec-sms/issues/328)) ([38e8690](https://github.com/iExecBlockchainComputing/iexec-sms/commit/38e8690ddb1e5bccac805d903c2765d645210b5a))
+
 ## [9.3.1](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.3.0...v9.3.1) (2026-04-30)
 
 
