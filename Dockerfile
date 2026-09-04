@@ -1,15 +1,33 @@
-FROM eclipse-temurin:21.0.11_10-jre-noble
+FROM eclipse-temurin:21.0.12_8-jre-noble AS extractor
 
 ARG jar
 
 RUN test -n "$jar"
 
+WORKDIR /extractor
+
+COPY $jar iexec-sms.jar
+
+RUN java -Djarmode=tools -jar iexec-sms.jar extract --layers
+
+FROM eclipse-temurin:21.0.12_8-jre-noble
+
 RUN apt-get update \
-    && apt-get install -y curl \
+    && apt-get install -y curl=8.5.0-2ubuntu10.13 \
+    && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY $jar /app/iexec-sms.jar
+RUN groupadd -g 1001 appuser \
+    && useradd -g 1001 --no-create-home -s /sbin/nologin -u 1001 appuser
 
-COPY src/main/resources/ssl-keystore-dev.p12 /app/ssl-keystore-dev.p12
+RUN install -d -g 1001 -o 1001 /app /data
 
-ENTRYPOINT [ "java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/iexec-sms.jar" ]
+COPY --from=extractor --chown=1001:1001 /extractor/iexec-sms/dependencies/ /app
+COPY --from=extractor --chown=1001:1001 /extractor/iexec-sms/snapshot-dependencies/ /app
+COPY --from=extractor --chown=1001:1001 /extractor/iexec-sms/application/ /app
+
+COPY src/main/resources/ssl-keystore-dev.p12 ssl-keystore-dev.p12
+
+USER 1001
+WORKDIR /app
+ENTRYPOINT [ "java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "iexec-sms.jar" ]
