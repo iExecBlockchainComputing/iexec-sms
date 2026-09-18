@@ -21,13 +21,6 @@ allprojects {
         mavenLocal()
         mavenCentral()
         maven {
-            url = 'https://docker-regis-adm.iex.ec/repository/maven-public/'
-            credentials {
-                username = nexusUser
-                password = nexusPassword
-            }
-        }
-        maven {
             url = 'https://jitpack.io'
         }
     }
@@ -46,8 +39,8 @@ allprojects {
 
 dependencies {
     // iexec
-    implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
-    implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
+    implementation "com.github.iexecblockchaincomputing:iexec-commons-poco:$iexecCommonsPocoVersion"
+    implementation "com.github.iexecblockchaincomputing:iexec-common:$iexecCommonVersion"
     implementation project(':iexec-sms-library')
 
     // spring
@@ -107,8 +100,8 @@ testing {
             dependencies {
                 implementation project()
                 implementation project(':iexec-sms-library')
-                implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
-                implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
+                implementation "com.github.iexecblockchaincomputing:iexec-commons-poco:$iexecCommonsPocoVersion"
+                implementation "com.github.iexecblockchaincomputing:iexec-common:$iexecCommonVersion"
                 implementation 'org.apache.commons:commons-lang3'
                 implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
                 implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -139,10 +132,10 @@ publishing {
     repositories {
         maven {
             credentials {
-                username = nexusUser
-                password = nexusPassword
+                username = mvnRepositoryUsername
+                password = mvnRepositoryPassword
             }
-            url = project.hasProperty('nexusUrl') ? nexusUrl : ''
+            url = project.hasProperty('mvnRepositoryUrl') ? mvnRepositoryUrl : ''
         }
     }
 }
