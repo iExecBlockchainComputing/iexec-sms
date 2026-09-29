@@ -1,22 +1,15 @@
 plugins {
     id 'java'
     id 'io.freefair.lombok' version '8.14.4'
-    id 'org.springframework.boot' version '3.5.8'
+    id 'org.springframework.boot' version '3.5.16'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
     id 'org.sonarqube' version '6.3.1.5724'
     id 'maven-publish'
 }
 
-ext {
-    gitTag = 'git tag --points-at HEAD'.execute().text.trim()
-}
-
 allprojects {
-    group = 'com.iexec.sms'
-    if (gitTag.isEmpty()) {
-        version += '-NEXT-SNAPSHOT'
-    }
+    group = 'com.github.iExecBlockchainComputing'
     repositories {
         mavenLocal()
         mavenCentral()
@@ -34,20 +27,20 @@ allprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.compilerArgs.add('-parameters')
+        options.compilerArgs.add('-Xlint:all')
     }
 }
 
 dependencies {
     // iexec
-    implementation "com.github.iexecblockchaincomputing:iexec-commons-poco:$iexecCommonsPocoVersion"
-    implementation "com.github.iexecblockchaincomputing:iexec-common:$iexecCommonVersion"
+    implementation "com.github.iExecBlockchainComputing:iexec-commons-poco:$iexecCommonsPocoVersion"
+    implementation "com.github.iExecBlockchainComputing:iexec-common:$iexecCommonVersion"
     implementation project(':iexec-sms-library')
 
     // spring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.retry:spring-retry'
 
     // H2
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -100,8 +93,8 @@ testing {
             dependencies {
                 implementation project()
                 implementation project(':iexec-sms-library')
-                implementation "com.github.iexecblockchaincomputing:iexec-commons-poco:$iexecCommonsPocoVersion"
-                implementation "com.github.iexecblockchaincomputing:iexec-common:$iexecCommonVersion"
+                implementation "com.github.iExecBlockchainComputing:iexec-commons-poco:$iexecCommonsPocoVersion"
+                implementation "com.github.iExecBlockchainComputing:iexec-common:$iexecCommonVersion"
                 implementation 'org.apache.commons:commons-lang3'
                 implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
                 implementation 'org.springframework.boot:spring-boot-starter-web'
