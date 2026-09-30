@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package com.iexec.sms.encryption;
 
 
-import com.iexec.common.security.CipherHelper;
+import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.BytesUtils;
 import jakarta.annotation.PostConstruct;
@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.web3j.crypto.Hash;
 
 import java.io.File;
+import java.util.Base64;
 
 import static com.iexec.common.utils.FileHelper.createFileWithContent;
 
@@ -74,7 +75,7 @@ public class EncryptionService {
         final boolean shouldGenerateKey = !new File(aesKeyPath).exists();
 
         if (shouldGenerateKey) {
-            final byte[] newAesKey = CipherHelper.generateAesKey();
+            final byte[] newAesKey = Base64.getEncoder().encode(CipherUtils.generateAesKey());
 
             if (newAesKey == null) {
                 throw new ExceptionInInitializerError("Failed to generate AES key");
@@ -84,11 +85,13 @@ public class EncryptionService {
             }
         }
 
-        final byte[] parsedAesKey = FileHelper.readFileBytes(aesKeyPath);
+        final byte[] encodedAesKey = FileHelper.readFileBytes(aesKeyPath);
 
-        if (parsedAesKey == null) {
+        if (encodedAesKey == null) {
             throw new ExceptionInInitializerError("Failed to load AES key");
         }
+
+        final byte[] parsedAesKey = Base64.getDecoder().decode(encodedAesKey);
 
         log.info("AES key loaded [isNewAesKey:{}, aesKeyPath:{}, aesKeyHash:{}]",
                 shouldGenerateKey, aesKeyPath, BytesUtils.bytesToString(Hash.sha3(parsedAesKey)));
@@ -96,24 +99,28 @@ public class EncryptionService {
         return parsedAesKey;
     }
 
-    public String encrypt(String data) {
-        if (StringUtils.isNotBlank(data)) {
-            final byte[] encryptedData = CipherHelper.aesEncrypt(data.getBytes(), aesKey);
-            if (encryptedData != null) {
-                return new String(encryptedData);
-            }
+    public String encrypt(final String data) {
+        if (StringUtils.isBlank(data)) {
+            return "";
         }
-        return "";
+        try {
+            log.info("encrypting data {}", data);
+            final String encryptedData = Base64.getEncoder().encodeToString(CipherUtils.aesEncrypt(data.getBytes(), aesKey));
+            log.info("encrypted data {}", encryptedData);
+            return encryptedData;
+        } catch (Exception e) {
+            log.warn("Operation failed", e);
+            return "";
+        }
     }
 
     public String decrypt(String encryptedData) {
-        if (StringUtils.isNotBlank(encryptedData)) {
-            final byte[] decryptedData = CipherHelper.aesDecrypt(encryptedData.getBytes(), aesKey);
-            if (decryptedData != null) {
-                return new String(decryptedData);
-            }
+        try {
+            return new String(CipherUtils.aesDecrypt(Base64.getDecoder().decode(encryptedData), aesKey));
+        } catch (Exception e) {
+            log.warn("Operation failed", e);
+            return "";
         }
-        return "";
     }
 
     boolean checkOrFixReadOnlyPermissions(String aesKeyPath) {

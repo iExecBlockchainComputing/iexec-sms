@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2026 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.iexec.sms.MemoryLogAppender;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -178,4 +179,20 @@ class EncryptionServiceTests {
         );
     }
     // endregion
+
+    @Test
+    void encryptDecrypt() {
+        final String aesKeyPath = tempDir.getAbsolutePath() + "aesKey";
+
+        final EncryptionService service = new EncryptionService(new EncryptionConfiguration(aesKeyPath));
+
+        for (int i = 0; i < 10; i++) {
+            String data = RandomStringUtils.randomAlphanumeric(1, 4096);
+            String encryptedData = service.encrypt(data);
+            String decryptedData = service.decrypt(encryptedData);
+            assertThat(decryptedData).isEqualTo(data);
+        }
+
+    }
+
 }
