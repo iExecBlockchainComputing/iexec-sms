@@ -16,11 +16,11 @@
 
 package com.iexec.sms.encryption;
 
-import lombok.Data;
+import lombok.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@Data
+@Value
 @ConfigurationProperties(prefix = "encryption")
 public class EncryptionConfiguration {
-    private final String aesKeyPath;
+    String aesKeyPath;
 }
