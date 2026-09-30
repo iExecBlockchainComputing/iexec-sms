@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [9.4.1](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.4.0...v9.4.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* jitpack iExec dependencies group syntax and Github Actions migration ([#337](https://github.com/iExecBlockchainComputing/iexec-sms/issues/337)) ([933766d](https://github.com/iExecBlockchainComputing/iexec-sms/commit/933766db1b8e679d11718f4c6d651d4f0287f90e))
+
 ## [9.4.0](https://github.com/iExecBlockchainComputing/iexec-sms/compare/v9.3.1...v9.4.0) (2026-09-18)
 
 
